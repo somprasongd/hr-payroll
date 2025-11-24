@@ -1,0 +1,233 @@
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+
+	"hrms/shared/common/storage/sqldb/transactor"
+)
+
+type Repository struct {
+	dbCtx transactor.DBTXContext
+}
+
+func NewRepository(dbCtx transactor.DBTXContext) Repository {
+	return Repository{dbCtx: dbCtx}
+}
+
+type Cycle struct {
+	ID             uuid.UUID  `db:"id"`
+	PeriodStart    time.Time  `db:"period_start_date"`
+	PeriodEnd      time.Time  `db:"period_end_date"`
+	Status         string     `db:"status"`
+	CreatedAt      time.Time  `db:"created_at"`
+	UpdatedAt      time.Time  `db:"updated_at"`
+	DeletedAt      *time.Time `db:"deleted_at"`
+	TotalEmployees int        `db:"total_employees"`
+	TotalRaise     float64    `db:"total_raise_amount"`
+}
+
+type Item struct {
+	ID             uuid.UUID `db:"id"`
+	CycleID        uuid.UUID `db:"cycle_id"`
+	EmployeeID     uuid.UUID `db:"employee_id"`
+	EmployeeName   string    `db:"employee_name"`
+	TenureDays     int       `db:"tenure_days"`
+	CurrentSalary  float64   `db:"current_salary"`
+	CurrentSSOWage *float64  `db:"current_sso_wage"`
+	RaisePercent   float64   `db:"raise_percent"`
+	RaiseAmount    float64   `db:"raise_amount"`
+	NewSalary      float64   `db:"new_salary"`
+	NewSSOWage     float64   `db:"new_sso_wage"`
+	UpdatedAt      time.Time `db:"updated_at"`
+}
+
+type ListResult struct {
+	Rows  []Cycle
+	Total int
+}
+
+func (r Repository) List(ctx context.Context, page, limit int, status string, year *int) (ListResult, error) {
+	db := r.dbCtx(ctx)
+	offset := (page - 1) * limit
+	where := "deleted_at IS NULL"
+	args := []interface{}{limit, offset}
+	argIdx := 3
+	if status != "" && status != "all" {
+		where += fmt.Sprintf(" AND status = $%d", argIdx)
+		args = append(args, status)
+		argIdx++
+	}
+	if year != nil {
+		where += fmt.Sprintf(" AND EXTRACT(YEAR FROM period_start_date) = $%d", argIdx)
+		args = append(args, *year)
+		argIdx++
+	}
+	q := fmt.Sprintf(`
+SELECT id, period_start_date, period_end_date, status, created_at, updated_at, deleted_at,
+  COALESCE((SELECT COUNT(1) FROM salary_raise_item sri WHERE sri.cycle_id = src.id),0) AS total_employees,
+  COALESCE((SELECT SUM(raise_amount) FROM salary_raise_item sri WHERE sri.cycle_id = src.id),0) AS total_raise_amount
+FROM salary_raise_cycle src
+WHERE %s
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2`, where)
+	rows, err := db.QueryxContext(ctx, q, args...)
+	if err != nil {
+		return ListResult{}, err
+	}
+	defer rows.Close()
+
+	var items []Cycle
+	for rows.Next() {
+		var c Cycle
+		if err := rows.StructScan(&c); err != nil {
+			return ListResult{}, err
+		}
+		items = append(items, c)
+	}
+	var total int
+	countQ := "SELECT COUNT(1) FROM salary_raise_cycle WHERE " + where
+	if err := db.GetContext(ctx, &total, countQ, args[2:]...); err != nil {
+		return ListResult{}, err
+	}
+	return ListResult{Rows: items, Total: total}, nil
+}
+
+func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Cycle, []Item, error) {
+	db := r.dbCtx(ctx)
+	const q = `SELECT id, period_start_date, period_end_date, status, created_at, updated_at, deleted_at FROM salary_raise_cycle WHERE id=$1 AND deleted_at IS NULL LIMIT 1`
+	var c Cycle
+	if err := db.GetContext(ctx, &c, q, id); err != nil {
+		return nil, nil, err
+	}
+	items, err := r.ListItems(ctx, id, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return &c, items, nil
+}
+
+func (r Repository) Create(ctx context.Context, periodStart, periodEnd time.Time, actor uuid.UUID) (*Cycle, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+INSERT INTO salary_raise_cycle (period_start_date, period_end_date, status, created_by, updated_by)
+VALUES ($1,$2,'pending',$3,$3)
+RETURNING id, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
+	var c Cycle
+	if err := db.GetContext(ctx, &c, q, periodStart, periodEnd, actor); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r Repository) UpdateStatus(ctx context.Context, id uuid.UUID, status string, actor uuid.UUID) (*Cycle, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+UPDATE salary_raise_cycle
+SET status=$1, updated_by=$2
+WHERE id=$3 AND deleted_at IS NULL
+RETURNING id, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
+	var c Cycle
+	if err := db.GetContext(ctx, &c, q, status, actor, id); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, error) {
+	db := r.dbCtx(ctx)
+	const qi = `SELECT sri.id, sri.cycle_id, sri.employee_id,
+       (e.first_name || ' ' || e.last_name) AS employee_name,
+       sri.tenure_days, sri.current_salary, sri.current_sso_wage,
+       sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
+       sri.updated_at
+FROM salary_raise_item sri
+JOIN employees e ON e.id = sri.employee_id
+WHERE sri.id=$1 LIMIT 1`
+	var it Item
+	if err := db.GetContext(ctx, &it, qi, id); err != nil {
+		return nil, nil, err
+	}
+	cycle, _, err := r.Get(ctx, it.CycleID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &it, cycle, nil
+}
+
+func (r Repository) DeleteCycle(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	res, err := db.ExecContext(ctx, `UPDATE salary_raise_cycle SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL`, actor, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search string) ([]Item, error) {
+	db := r.dbCtx(ctx)
+	where := "sri.cycle_id = $1"
+	args := []interface{}{cycleID}
+	if s := strings.TrimSpace(search); s != "" {
+		args = append(args, "%"+s+"%")
+		where += fmt.Sprintf(" AND (LOWER(e.first_name) LIKE $%d OR LOWER(e.last_name) LIKE $%d)", len(args), len(args))
+	}
+	q := fmt.Sprintf(`SELECT sri.id, sri.cycle_id, sri.employee_id,
+       (e.first_name || ' ' || e.last_name) AS employee_name,
+       sri.tenure_days, sri.current_salary, sri.current_sso_wage,
+       sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
+       sri.updated_at
+FROM salary_raise_item sri
+JOIN employees e ON e.id = sri.employee_id
+WHERE %s
+ORDER BY employee_name`, where)
+	var out []Item
+	if err := db.SelectContext(ctx, &out, q, args...); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, percent, amount, newSSO *float64, actor uuid.UUID) (*Item, error) {
+	db := r.dbCtx(ctx)
+	sets := []string{"updated_by=$1"}
+	args := []interface{}{actor}
+	argIdx := 2
+	if percent != nil {
+		sets = append(sets, fmt.Sprintf("raise_percent=$%d", argIdx))
+		args = append(args, *percent)
+		argIdx++
+	}
+	if amount != nil {
+		sets = append(sets, fmt.Sprintf("raise_amount=$%d", argIdx))
+		args = append(args, *amount)
+		argIdx++
+	}
+	if newSSO != nil {
+		sets = append(sets, fmt.Sprintf("new_sso_wage=$%d", argIdx))
+		args = append(args, *newSSO)
+		argIdx++
+	}
+	if len(sets) == 1 {
+		return nil, fmt.Errorf("no fields to update")
+	}
+	args = append(args, id)
+	setClause := strings.Join(sets, ",")
+	q := fmt.Sprintf(`UPDATE salary_raise_item SET %s WHERE id=$%d RETURNING id, cycle_id, employee_id,
+       (SELECT (first_name || ' ' || last_name) FROM employees e WHERE e.id = salary_raise_item.employee_id) AS employee_name,
+       tenure_days, current_salary, current_sso_wage,
+       raise_percent, raise_amount, new_salary, new_sso_wage, updated_at`, setClause, argIdx)
+	var out Item
+	if err := db.GetContext(ctx, &out, q, args...); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

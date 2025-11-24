@@ -1,0 +1,82 @@
+package create
+
+import (
+	"time"
+
+	"github.com/gofiber/fiber/v3"
+
+	"hrms/modules/payrollconfig/internal/repository"
+	"hrms/shared/common/contextx"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/mediator"
+	"hrms/shared/common/response"
+)
+
+type RequestBody struct {
+	StartDate                  time.Time `json:"startDate"`
+	HourlyRate                 float64   `json:"hourlyRate"`
+	OtHourlyRate               float64   `json:"otHourlyRate"`
+	AttendanceBonusNoLate      float64   `json:"attendanceBonusNoLate"`
+	AttendanceBonusNoLeave     float64   `json:"attendanceBonusNoLeave"`
+	HousingAllowance           float64   `json:"housingAllowance"`
+	WaterRatePerUnit           float64   `json:"waterRatePerUnit"`
+	ElectricityRatePerUnit     float64   `json:"electricityRatePerUnit"`
+	InternetFeeMonthly         float64   `json:"internetFeeMonthly"`
+	SocialSecurityRateEmployee float64   `json:"socialSecurityRateEmployee"`
+	SocialSecurityRateEmployer float64   `json:"socialSecurityRateEmployer"`
+	Note                       *string   `json:"note"`
+}
+
+func (p RequestBody) ToRecord() repository.Record {
+	return repository.Record{
+		StartDate:                  p.StartDate,
+		HourlyRate:                 p.HourlyRate,
+		OtHourlyRate:               p.OtHourlyRate,
+		AttendanceBonusNoLate:      p.AttendanceBonusNoLate,
+		AttendanceBonusNoLeave:     p.AttendanceBonusNoLeave,
+		HousingAllowance:           p.HousingAllowance,
+		WaterRatePerUnit:           p.WaterRatePerUnit,
+		ElectricityRatePerUnit:     p.ElectricityRatePerUnit,
+		InternetFeeMonthly:         p.InternetFeeMonthly,
+		SocialSecurityRateEmployee: p.SocialSecurityRateEmployee,
+		SocialSecurityRateEmployer: p.SocialSecurityRateEmployer,
+		Note:                       p.Note,
+	}
+}
+
+// Create payroll config
+// @Summary Create payroll config
+// @Description สร้างเวอร์ชัน config ใหม่
+// @Tags Payroll Config
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body RequestBody true "config payload"
+// @Success 201 {object} Response
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Router /admin/payroll-configs [post]
+func NewEndpoint(router fiber.Router) {
+	router.Post("/", func(c fiber.Ctx) error {
+		var req RequestBody
+		if err := c.Bind().Body(&req); err != nil {
+			return errs.BadRequest("invalid request body")
+		}
+
+		user, ok := contextx.UserFromContext(c.Context())
+		if !ok {
+			return errs.Unauthorized("missing user")
+		}
+
+		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
+			Payload: req,
+			ActorID: user.ID,
+		})
+		if err != nil {
+			return err
+		}
+
+		return response.JSON(c, fiber.StatusCreated, resp.Config)
+	})
+}

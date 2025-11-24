@@ -1,0 +1,3838 @@
+basePath: /api/v1
+definitions:
+  accum.ListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/repository.AccumRecord'
+        type: array
+    type: object
+  changepassword.RequestBody:
+    properties:
+      currentPassword:
+        type: string
+      newPassword:
+        type: string
+    type: object
+  changepassword.Response:
+    properties:
+      message:
+        type: string
+    type: object
+  create.Request:
+    properties:
+      advanceDate:
+        type: string
+      amount:
+        type: number
+      employeeId:
+        type: string
+    type: object
+  dto.Config:
+    properties:
+      attendanceBonusNoLate:
+        type: number
+      attendanceBonusNoLeave:
+        type: number
+      createdAt:
+        type: string
+      electricityRatePerUnit:
+        type: number
+      endDate:
+        type: string
+      hourlyRate:
+        type: number
+      housingAllowance:
+        type: number
+      id:
+        type: string
+      internetFeeMonthly:
+        type: number
+      note:
+        type: string
+      otHourlyRate:
+        type: number
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      startDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      versionNo:
+        type: integer
+      waterRatePerUnit:
+        type: number
+    type: object
+  dto.FTItem:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      entryType:
+        type: string
+      id:
+        type: string
+      quantity:
+        type: number
+      status:
+        type: string
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  dto.ListItem:
+    properties:
+      email:
+        type: string
+      employeeNumber:
+        type: string
+      employeeTypeName:
+        type: string
+      employmentStartDate:
+        type: string
+      fullNameTh:
+        type: string
+      id:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.PTItem:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      eveningIn:
+        type: string
+      eveningMinutes:
+        type: integer
+      eveningOut:
+        type: string
+      id:
+        type: string
+      morningIn:
+        type: string
+      morningMinutes:
+        type: integer
+      morningOut:
+        type: string
+      status:
+        type: string
+      totalHours:
+        type: number
+      totalMinutes:
+        type: integer
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  dto.Run:
+    properties:
+      approvedAt:
+        type: string
+      approvedBy:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      payDate:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodStartDate:
+        type: string
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalNetPay:
+        type: number
+      totals:
+        $ref: '#/definitions/dto.RunTotals'
+      updatedAt:
+        type: string
+    type: object
+  dto.RunTotals:
+    properties:
+      totalDeduction:
+        type: number
+      totalIncome:
+        type: number
+      totalNetPay:
+        type: number
+    type: object
+  dto.User:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      lastLoginAt:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  effective.Response:
+    properties:
+      attendanceBonusNoLate:
+        type: number
+      attendanceBonusNoLeave:
+        type: number
+      createdAt:
+        type: string
+      electricityRatePerUnit:
+        type: number
+      endDate:
+        type: string
+      hourlyRate:
+        type: number
+      housingAllowance:
+        type: number
+      id:
+        type: string
+      internetFeeMonthly:
+        type: number
+      note:
+        type: string
+      otHourlyRate:
+        type: number
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      startDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      versionNo:
+        type: integer
+      waterRatePerUnit:
+        type: number
+    type: object
+  feature.Response:
+    properties:
+      employeeTypes:
+        items:
+          $ref: '#/definitions/repository.MasterRecord'
+        type: array
+      idDocumentTypes:
+        items:
+          $ref: '#/definitions/repository.MasterRecord'
+        type: array
+      personTitles:
+        items:
+          $ref: '#/definitions/repository.MasterRecord'
+        type: array
+    type: object
+  ft.CreateRequest:
+    properties:
+      employeeId:
+        type: string
+      entryType:
+        type: string
+      quantity:
+        type: number
+      workDate:
+        type: string
+    type: object
+  ft.CreateResponse:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      entryType:
+        type: string
+      id:
+        type: string
+      quantity:
+        type: number
+      status:
+        type: string
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  ft.GetResponse:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      entryType:
+        type: string
+      id:
+        type: string
+      quantity:
+        type: number
+      status:
+        type: string
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  ft.ListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.FTItem'
+        type: array
+      meta:
+        properties:
+          currentPage:
+            type: integer
+          totalItems:
+            type: integer
+          totalPages:
+            type: integer
+        type: object
+    type: object
+  ft.UpdateRequest:
+    properties:
+      entryType:
+        type: string
+      quantity:
+        type: number
+      status:
+        description: pending|approved
+        type: string
+      workDate:
+        type: string
+    type: object
+  ft.UpdateResponse:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      entryType:
+        type: string
+      id:
+        type: string
+      quantity:
+        type: number
+      status:
+        type: string
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_dto.Cycle:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_bonus_internal_dto.Item'
+        type: array
+      payrollMonthDate:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalBonusAmount:
+        type: number
+      totalEmployees:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_dto.Item:
+    properties:
+      bonusAmount:
+        type: number
+      bonusMonths:
+        type: number
+      currentSalary:
+        type: number
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      lateMinutes:
+        type: integer
+      leaveDays:
+        type: number
+      leaveDoubleDays:
+        type: number
+      leaveHours:
+        type: number
+      otHours:
+        type: number
+      tenureDays:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_bonus_internal_feature_approve.Request:
+    properties:
+      status:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_feature_approve.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_bonus_internal_dto.Item'
+        type: array
+      message:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalBonusAmount:
+        type: number
+      totalEmployees:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_feature_create.Command:
+    properties:
+      actorID:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      repo:
+        $ref: '#/definitions/hrms_modules_bonus_internal_repository.Repository'
+      tx: {}
+    type: object
+  hrms_modules_bonus_internal_feature_create.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_bonus_internal_dto.Item'
+        type: array
+      payrollMonthDate:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalBonusAmount:
+        type: number
+      totalEmployees:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_feature_get.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_bonus_internal_dto.Item'
+        type: array
+      payrollMonthDate:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalBonusAmount:
+        type: number
+      totalEmployees:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_feature_items.ListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/hrms_modules_bonus_internal_repository.Item'
+        type: array
+    type: object
+  hrms_modules_bonus_internal_feature_items.UpdateCommand:
+    properties:
+      actor:
+        type: string
+      bonusAmount:
+        type: number
+      bonusMonths:
+        type: number
+      id:
+        type: string
+      repo:
+        $ref: '#/definitions/hrms_modules_bonus_internal_repository.Repository'
+    type: object
+  hrms_modules_bonus_internal_feature_items.UpdateResponse:
+    properties:
+      bonusAmount:
+        type: number
+      bonusMonths:
+        type: number
+      currentSalary:
+        type: number
+      cycleID:
+        type: string
+      employeeID:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      lateMinutes:
+        type: integer
+      leaveDays:
+        type: number
+      leaveDouble:
+        type: number
+      leaveHours:
+        type: number
+      otHours:
+        type: number
+      tenureDays:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/hrms_modules_bonus_internal_dto.Cycle'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_bonus_internal_dto.Meta'
+    type: object
+  hrms_modules_bonus_internal_repository.Item:
+    properties:
+      bonusAmount:
+        type: number
+      bonusMonths:
+        type: number
+      currentSalary:
+        type: number
+      cycleID:
+        type: string
+      employeeID:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      lateMinutes:
+        type: integer
+      leaveDays:
+        type: number
+      leaveDouble:
+        type: number
+      leaveHours:
+        type: number
+      otHours:
+        type: number
+      tenureDays:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_bonus_internal_repository.Repository:
+    type: object
+  hrms_modules_employee_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_employee_internal_feature_create.RequestBody:
+    properties:
+      allowDoctorFee:
+        type: boolean
+      allowElectric:
+        type: boolean
+      allowHousing:
+        type: boolean
+      allowInternet:
+        type: boolean
+      allowWater:
+        type: boolean
+      bankAccountNo:
+        type: string
+      bankName:
+        type: string
+      basePayAmount:
+        type: number
+      email:
+        type: string
+      employeeNumber:
+        type: string
+      employeeTypeId:
+        type: string
+      employmentEndDate:
+        type: string
+      employmentStartDate:
+        type: string
+      firstName:
+        type: string
+      idDocumentNumber:
+        type: string
+      idDocumentTypeId:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+      providentFundContribute:
+        type: boolean
+      providentFundRateEmployee:
+        type: number
+      providentFundRateEmployer:
+        type: number
+      ssoContribute:
+        type: boolean
+      ssoDeclaredWage:
+        type: number
+      titleId:
+        type: string
+      withholdTax:
+        type: boolean
+    type: object
+  hrms_modules_employee_internal_feature_create.Response:
+    properties:
+      allowDoctorFee:
+        type: boolean
+      allowElectric:
+        type: boolean
+      allowHousing:
+        type: boolean
+      allowInternet:
+        type: boolean
+      allowWater:
+        type: boolean
+      bankAccountNo:
+        type: string
+      bankName:
+        type: string
+      basePayAmount:
+        type: number
+      createdAt:
+        type: string
+      email:
+        type: string
+      employeeNumber:
+        type: string
+      employeeTypeId:
+        type: string
+      employmentEndDate:
+        type: string
+      employmentStartDate:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      idDocumentNumber:
+        type: string
+      idDocumentTypeId:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+      providentFundContribute:
+        type: boolean
+      providentFundRateEmployee:
+        type: number
+      providentFundRateEmployer:
+        type: number
+      ssoContribute:
+        type: boolean
+      ssoDeclaredWage:
+        type: number
+      status:
+        type: string
+      titleId:
+        type: string
+      updatedAt:
+        type: string
+      withholdTax:
+        type: boolean
+    type: object
+  hrms_modules_employee_internal_feature_get.Response:
+    properties:
+      allowDoctorFee:
+        type: boolean
+      allowElectric:
+        type: boolean
+      allowHousing:
+        type: boolean
+      allowInternet:
+        type: boolean
+      allowWater:
+        type: boolean
+      bankAccountNo:
+        type: string
+      bankName:
+        type: string
+      basePayAmount:
+        type: number
+      createdAt:
+        type: string
+      email:
+        type: string
+      employeeNumber:
+        type: string
+      employeeTypeId:
+        type: string
+      employmentEndDate:
+        type: string
+      employmentStartDate:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      idDocumentNumber:
+        type: string
+      idDocumentTypeId:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+      providentFundContribute:
+        type: boolean
+      providentFundRateEmployee:
+        type: number
+      providentFundRateEmployer:
+        type: number
+      ssoContribute:
+        type: boolean
+      ssoDeclaredWage:
+        type: number
+      status:
+        type: string
+      titleId:
+        type: string
+      updatedAt:
+        type: string
+      withholdTax:
+        type: boolean
+    type: object
+  hrms_modules_employee_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.ListItem'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_employee_internal_dto.Meta'
+    type: object
+  hrms_modules_employee_internal_feature_update.Response:
+    properties:
+      allowDoctorFee:
+        type: boolean
+      allowElectric:
+        type: boolean
+      allowHousing:
+        type: boolean
+      allowInternet:
+        type: boolean
+      allowWater:
+        type: boolean
+      bankAccountNo:
+        type: string
+      bankName:
+        type: string
+      basePayAmount:
+        type: number
+      createdAt:
+        type: string
+      email:
+        type: string
+      employeeNumber:
+        type: string
+      employeeTypeId:
+        type: string
+      employmentEndDate:
+        type: string
+      employmentStartDate:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      idDocumentNumber:
+        type: string
+      idDocumentTypeId:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+      providentFundContribute:
+        type: boolean
+      providentFundRateEmployee:
+        type: number
+      providentFundRateEmployer:
+        type: number
+      ssoContribute:
+        type: boolean
+      ssoDeclaredWage:
+        type: number
+      status:
+        type: string
+      titleId:
+        type: string
+      updatedAt:
+        type: string
+      withholdTax:
+        type: boolean
+    type: object
+  hrms_modules_payoutpt_internal_feature_create.Command:
+    properties:
+      actor:
+        type: string
+      employeeId:
+        type: string
+      repo:
+        $ref: '#/definitions/hrms_modules_payoutpt_internal_repository.Repository'
+      tx: {}
+      worklogIds:
+        items:
+          type: string
+        type: array
+    type: object
+  hrms_modules_payoutpt_internal_feature_create.Response:
+    properties:
+      payout:
+        $ref: '#/definitions/repository.Payout'
+    type: object
+  hrms_modules_payoutpt_internal_feature_get.Response:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repository.PayoutItem'
+        type: array
+      payout:
+        $ref: '#/definitions/repository.Payout'
+    type: object
+  hrms_modules_payoutpt_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/repository.Payout'
+        type: array
+      meta:
+        $ref: '#/definitions/list.Meta'
+    type: object
+  hrms_modules_payoutpt_internal_repository.Repository:
+    type: object
+  hrms_modules_payrollconfig_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_payrollconfig_internal_feature_create.RequestBody:
+    properties:
+      attendanceBonusNoLate:
+        type: number
+      attendanceBonusNoLeave:
+        type: number
+      electricityRatePerUnit:
+        type: number
+      hourlyRate:
+        type: number
+      housingAllowance:
+        type: number
+      internetFeeMonthly:
+        type: number
+      note:
+        type: string
+      otHourlyRate:
+        type: number
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      startDate:
+        type: string
+      waterRatePerUnit:
+        type: number
+    type: object
+  hrms_modules_payrollconfig_internal_feature_create.Response:
+    properties:
+      attendanceBonusNoLate:
+        type: number
+      attendanceBonusNoLeave:
+        type: number
+      createdAt:
+        type: string
+      electricityRatePerUnit:
+        type: number
+      endDate:
+        type: string
+      hourlyRate:
+        type: number
+      housingAllowance:
+        type: number
+      id:
+        type: string
+      internetFeeMonthly:
+        type: number
+      note:
+        type: string
+      otHourlyRate:
+        type: number
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      startDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      versionNo:
+        type: integer
+      waterRatePerUnit:
+        type: number
+    type: object
+  hrms_modules_payrollconfig_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.Config'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_payrollconfig_internal_dto.Meta'
+    type: object
+  hrms_modules_payrollrun_internal_dto.Item:
+    properties:
+      bonusAmount:
+        type: number
+      deductionTotal:
+        type: number
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      incomeTotal:
+        type: number
+      lateMinutesDeduction:
+        type: number
+      lateMinutesQty:
+        type: integer
+      leaveDaysDeduction:
+        type: number
+      leaveDaysQty:
+        type: number
+      netPay:
+        type: number
+      otAmount:
+        type: number
+      otHours:
+        type: number
+      runId:
+        type: string
+      salaryAmount:
+        type: number
+      ssoMonthAmount:
+        type: number
+      status:
+        type: string
+      taxMonthAmount:
+        type: number
+    type: object
+  hrms_modules_payrollrun_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_payrollrun_internal_feature_create.Command:
+    properties:
+      actorID:
+        type: string
+      payDate:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodStartDate:
+        type: string
+      repo:
+        $ref: '#/definitions/hrms_modules_payrollrun_internal_repository.Repository'
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      tx: {}
+    type: object
+  hrms_modules_payrollrun_internal_feature_create.Response:
+    properties:
+      approvedAt:
+        type: string
+      approvedBy:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      payDate:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodStartDate:
+        type: string
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalNetPay:
+        type: number
+      totals:
+        $ref: '#/definitions/dto.RunTotals'
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_payrollrun_internal_feature_get.Response:
+    properties:
+      approvedAt:
+        type: string
+      approvedBy:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      payDate:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodStartDate:
+        type: string
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalNetPay:
+        type: number
+      totals:
+        $ref: '#/definitions/dto.RunTotals'
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_payrollrun_internal_feature_items.ListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/hrms_modules_payrollrun_internal_dto.Item'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_payrollrun_internal_dto.Meta'
+    type: object
+  hrms_modules_payrollrun_internal_feature_items.UpdateResponse:
+    properties:
+      bonusAmount:
+        type: number
+      deductionTotal:
+        type: number
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      incomeTotal:
+        type: number
+      lateMinutesDeduction:
+        type: number
+      lateMinutesQty:
+        type: integer
+      leaveDaysDeduction:
+        type: number
+      leaveDaysQty:
+        type: number
+      netPay:
+        type: number
+      otAmount:
+        type: number
+      otHours:
+        type: number
+      runId:
+        type: string
+      salaryAmount:
+        type: number
+      ssoMonthAmount:
+        type: number
+      status:
+        type: string
+      taxMonthAmount:
+        type: number
+    type: object
+  hrms_modules_payrollrun_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.Run'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_payrollrun_internal_dto.Meta'
+    type: object
+  hrms_modules_payrollrun_internal_feature_update.Command:
+    properties:
+      actorID:
+        type: string
+      actorRole:
+        type: string
+      id:
+        type: string
+      payDate:
+        type: string
+      repo:
+        $ref: '#/definitions/hrms_modules_payrollrun_internal_repository.Repository'
+      status:
+        type: string
+      tx: {}
+    type: object
+  hrms_modules_payrollrun_internal_feature_update.Response:
+    properties:
+      approvedAt:
+        type: string
+      approvedBy:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      payDate:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodStartDate:
+        type: string
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalNetPay:
+        type: number
+      totals:
+        $ref: '#/definitions/dto.RunTotals'
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_payrollrun_internal_repository.Repository:
+    type: object
+  hrms_modules_salaryadvance_internal_dto.Item:
+    properties:
+      advanceDate:
+        type: string
+      amount:
+        type: number
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      payrollMonthDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryadvance_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_salaryadvance_internal_feature_create.Response:
+    properties:
+      advanceDate:
+        type: string
+      amount:
+        type: number
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      payrollMonthDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryadvance_internal_feature_get.Response:
+    properties:
+      advanceDate:
+        type: string
+      amount:
+        type: number
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      payrollMonthDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryadvance_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryadvance_internal_dto.Item'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_salaryadvance_internal_dto.Meta'
+    type: object
+  hrms_modules_salaryadvance_internal_feature_update.Response:
+    properties:
+      advanceDate:
+        type: string
+      amount:
+        type: number
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      payrollMonthDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_dto.Cycle:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Item'
+        type: array
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalRaiseAmount:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_dto.Item:
+    properties:
+      currentSalary:
+        type: number
+      currentSsoWage:
+        type: number
+      employeeId:
+        type: string
+      id:
+        type: string
+      newSalary:
+        type: number
+      newSsoWage:
+        type: number
+      raiseAmount:
+        type: number
+      raisePercent:
+        type: number
+      tenureDays:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_salaryraise_internal_feature_approve.Request:
+    properties:
+      status:
+        description: approved|rejected
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_feature_approve.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Item'
+        type: array
+      message:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalRaiseAmount:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_feature_create.Command:
+    properties:
+      actorID:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      repo:
+        $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Repository'
+      tx: {}
+    type: object
+  hrms_modules_salaryraise_internal_feature_create.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Item'
+        type: array
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalRaiseAmount:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_feature_get.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Item'
+        type: array
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalRaiseAmount:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_feature_items.ListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Item'
+        type: array
+    type: object
+  hrms_modules_salaryraise_internal_feature_items.UpdateCommand:
+    properties:
+      actorID:
+        type: string
+      id:
+        type: string
+      newSsoWage:
+        type: number
+      raiseAmount:
+        type: number
+      raisePercent:
+        type: number
+      repo:
+        $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Repository'
+    type: object
+  hrms_modules_salaryraise_internal_feature_items.UpdateResponse:
+    properties:
+      currentSSOWage:
+        type: number
+      currentSalary:
+        type: number
+      cycleID:
+        type: string
+      employeeID:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      newSSOWage:
+        type: number
+      newSalary:
+        type: number
+      raiseAmount:
+        type: number
+      raisePercent:
+        type: number
+      tenureDays:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Cycle'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Meta'
+    type: object
+  hrms_modules_salaryraise_internal_repository.Item:
+    properties:
+      currentSSOWage:
+        type: number
+      currentSalary:
+        type: number
+      cycleID:
+        type: string
+      employeeID:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      newSSOWage:
+        type: number
+      newSalary:
+        type: number
+      raiseAmount:
+        type: number
+      raisePercent:
+        type: number
+      tenureDays:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_repository.Repository:
+    type: object
+  hrms_modules_user_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_user_internal_feature_create.RequestBody:
+    properties:
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  hrms_modules_user_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.User'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_user_internal_dto.Meta'
+    type: object
+  items.GetResponse:
+    properties:
+      advanceAmount:
+        type: number
+      advanceDiffAmount:
+        type: number
+      advanceRepayAmount:
+        type: number
+      attendanceBonusNoLate:
+        type: number
+      attendanceBonusNoLeave:
+        type: number
+      bankAccount:
+        type: string
+      bonusAmount:
+        type: number
+      deductionTotal:
+        type: number
+      electricAmount:
+        type: number
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      housingAllowance:
+        type: number
+      id:
+        type: string
+      incomeTotal:
+        type: number
+      internetAmount:
+        type: number
+      lateMinutesDeduction:
+        type: number
+      lateMinutesQty:
+        type: integer
+      leaveDaysDeduction:
+        type: number
+      leaveDaysQty:
+        type: number
+      leaveDoubleDeduction:
+        type: number
+      leaveDoubleQty:
+        type: number
+      leaveHoursDeduction:
+        type: number
+      leaveHoursQty:
+        type: number
+      loanOutstandingPrev:
+        type: number
+      loanOutstandingTotal:
+        type: number
+      loanRepayments:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      netPay:
+        type: number
+      otAmount:
+        type: number
+      otHours:
+        type: number
+      othersIncome:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      pfAccumPrev:
+        type: number
+      pfAccumTotal:
+        type: number
+      pfMonthAmount:
+        type: number
+      runId:
+        type: string
+      salaryAmount:
+        type: number
+      ssoAccumPrev:
+        type: number
+      ssoAccumTotal:
+        type: number
+      ssoDeclaredWage:
+        type: number
+      ssoMonthAmount:
+        type: number
+      status:
+        type: string
+      taxAccumPrev:
+        type: number
+      taxAccumTotal:
+        type: number
+      taxMonthAmount:
+        type: number
+      waterAmount:
+        type: number
+    type: object
+  items.UpdateRequest:
+    properties:
+      bonusAmount:
+        type: number
+      lateMinutesDeduction:
+        type: number
+      lateMinutesQty:
+        type: integer
+      otAmount:
+        type: number
+      otHours:
+        type: number
+      othersIncome:
+        items:
+          properties:
+            description:
+              type: string
+            value:
+              type: number
+          type: object
+        type: array
+      salaryAmount:
+        type: number
+      ssoMonthAmount:
+        type: number
+      taxMonthAmount:
+        type: number
+    type: object
+  list.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  login.RequestBody:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  login.Response:
+    properties:
+      accessToken:
+        type: string
+      expiresIn:
+        type: integer
+      refreshToken:
+        type: string
+      tokenType:
+        type: string
+      user:
+        $ref: '#/definitions/login.userPayload'
+    type: object
+  login.userPayload:
+    properties:
+      id:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  logout.RequestBody:
+    properties:
+      refreshToken:
+        type: string
+    type: object
+  pt.CreateRequest:
+    properties:
+      employeeId:
+        type: string
+      eveningIn:
+        type: string
+      eveningOut:
+        type: string
+      morningIn:
+        type: string
+      morningOut:
+        type: string
+      status:
+        description: pending|approved
+        type: string
+      workDate:
+        type: string
+    type: object
+  pt.CreateResponse:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      eveningIn:
+        type: string
+      eveningMinutes:
+        type: integer
+      eveningOut:
+        type: string
+      id:
+        type: string
+      morningIn:
+        type: string
+      morningMinutes:
+        type: integer
+      morningOut:
+        type: string
+      status:
+        type: string
+      totalHours:
+        type: number
+      totalMinutes:
+        type: integer
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  pt.GetResponse:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      eveningIn:
+        type: string
+      eveningMinutes:
+        type: integer
+      eveningOut:
+        type: string
+      id:
+        type: string
+      morningIn:
+        type: string
+      morningMinutes:
+        type: integer
+      morningOut:
+        type: string
+      status:
+        type: string
+      totalHours:
+        type: number
+      totalMinutes:
+        type: integer
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  pt.ListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.PTItem'
+        type: array
+      meta:
+        properties:
+          currentPage:
+            type: integer
+          totalItems:
+            type: integer
+          totalPages:
+            type: integer
+        type: object
+    type: object
+  pt.UpdateRequest:
+    properties:
+      eveningIn:
+        type: string
+      eveningOut:
+        type: string
+      morningIn:
+        type: string
+      morningOut:
+        type: string
+      status:
+        description: pending|approved
+        type: string
+      workDate:
+        type: string
+    type: object
+  pt.UpdateResponse:
+    properties:
+      createdAt:
+        type: string
+      employeeId:
+        type: string
+      eveningIn:
+        type: string
+      eveningMinutes:
+        type: integer
+      eveningOut:
+        type: string
+      id:
+        type: string
+      morningIn:
+        type: string
+      morningMinutes:
+        type: integer
+      morningOut:
+        type: string
+      status:
+        type: string
+      totalHours:
+        type: number
+      totalMinutes:
+        type: integer
+      updatedAt:
+        type: string
+      workDate:
+        type: string
+    type: object
+  refresh.RequestBody:
+    properties:
+      refreshToken:
+        type: string
+    type: object
+  refresh.Response:
+    properties:
+      accessToken:
+        type: string
+      expiresIn:
+        type: integer
+      refreshToken:
+        type: string
+    type: object
+  repository.AccumRecord:
+    properties:
+      accumType:
+        type: string
+      accumYear:
+        type: integer
+      amount:
+        type: number
+      id:
+        type: string
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+    type: object
+  repository.MasterRecord:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  repository.Payout:
+    properties:
+      amount:
+        type: number
+      createdAt:
+        type: string
+      employeeID:
+        type: string
+      hourlyRate:
+        type: number
+      id:
+        type: string
+      itemCount:
+        type: integer
+      paidAt:
+        type: string
+      paidBy:
+        type: string
+      status:
+        type: string
+      totalHours:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  repository.PayoutItem:
+    properties:
+      id:
+        type: string
+      totalHours:
+        type: number
+      workDate:
+        type: string
+      worklogID:
+        type: string
+    type: object
+  resetpassword.RequestBody:
+    properties:
+      newPassword:
+        type: string
+    type: object
+  resetpassword.Response:
+    properties:
+      message:
+        type: string
+    type: object
+  update.Request:
+    properties:
+      advanceDate:
+        type: string
+      amount:
+        type: number
+    type: object
+  updaterole.RequestBody:
+    properties:
+      role:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: HR Payroll REST API
+  title: HR Payroll API
+  version: "1.0"
+paths:
+  /admin/payroll-configs:
+    get:
+      description: ดึงประวัติการตั้งค่าทั้งหมด (Admin)
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollconfig_internal_feature_list.Response'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List payroll configurations
+      tags:
+      - Payroll Config
+    post:
+      consumes:
+      - application/json
+      description: สร้างเวอร์ชัน config ใหม่
+      parameters:
+      - description: config payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_payrollconfig_internal_feature_create.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollconfig_internal_feature_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create payroll config
+      tags:
+      - Payroll Config
+  /admin/payroll-configs/effective:
+    get:
+      description: ดึง config ที่มีผล ณ วันที่ระบุ
+      parameters:
+      - description: YYYY-MM-DD
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/effective.Response'
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get effective payroll config
+      tags:
+      - Payroll Config
+  /admin/users:
+    get:
+      description: ดึงรายชื่อผู้ใช้งานทั้งหมด (Admin)
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: role filter
+        in: query
+        name: role
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_user_internal_feature_list.Response'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - Admin Users
+    post:
+      consumes:
+      - application/json
+      description: สร้างผู้ใช้งานใหม่ (Admin)
+      parameters:
+      - description: user payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_user_internal_feature_create.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "409":
+          description: Conflict
+      security:
+      - BearerAuth: []
+      summary: Create user
+      tags:
+      - Admin Users
+  /admin/users/{id}:
+    delete:
+      description: ลบผู้ใช้งาน (Admin)
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete user (soft delete)
+      tags:
+      - Admin Users
+    get:
+      description: ดูข้อมูลผู้ใช้งาน (Admin)
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get user detail
+      tags:
+      - Admin Users
+    patch:
+      consumes:
+      - application/json
+      description: แก้ไข role ผู้ใช้งาน (Admin)
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: role payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/updaterole.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update user role
+      tags:
+      - Admin Users
+  /admin/users/{id}/password-reset:
+    post:
+      consumes:
+      - application/json
+      description: Admin รีเซ็ต password ให้ user
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/resetpassword.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resetpassword.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Admin reset password
+      tags:
+      - Admin Users
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: เข้าสู่ระบบเพื่อรับ Access/Refresh Token
+      parameters:
+      - description: credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/login.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/login.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+      summary: Login
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: ยกเลิก Refresh Token ปัจจุบัน
+      parameters:
+      - description: refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/logout.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Logout (revoke refresh token)
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: ขอ Access Token ใหม่ด้วย Refresh Token
+      parameters:
+      - description: refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/refresh.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/refresh.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+      summary: Refresh token
+      tags:
+      - Auth
+  /bonus-cycles:
+    get:
+      description: ดึงรอบจ่ายโบนัส
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_bonus_internal_feature_list.Response'
+      security:
+      - BearerAuth: []
+      summary: List bonus cycles
+      tags:
+      - Bonus
+    post:
+      consumes:
+      - application/json
+      description: สร้างรอบโบนัส (pending)
+      parameters:
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_bonus_internal_feature_create.Command'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_bonus_internal_feature_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create bonus cycle
+      tags:
+      - Bonus
+  /bonus-cycles/{id}:
+    delete:
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete bonus cycle
+      tags:
+      - Bonus
+    get:
+      description: ดูรายละเอียดรอบโบนัส (รวม items)
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_bonus_internal_feature_get.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get bonus cycle detail
+      tags:
+      - Bonus
+  /bonus-cycles/{id}/items:
+    get:
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: search employee name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_bonus_internal_feature_items.ListResponse'
+      security:
+      - BearerAuth: []
+      summary: List bonus items
+      tags:
+      - Bonus
+  /bonus-cycles/{id}/status:
+    post:
+      consumes:
+      - application/json
+      description: อนุมัติ/ปฏิเสธรอบโบนัส
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: status payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_bonus_internal_feature_approve.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_bonus_internal_feature_approve.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update status bonus cycle
+      tags:
+      - Bonus
+  /bonus-items/{id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: item id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_bonus_internal_feature_items.UpdateCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_bonus_internal_feature_items.UpdateResponse'
+      security:
+      - BearerAuth: []
+      summary: Update bonus item
+      tags:
+      - Bonus
+  /employees:
+    get:
+      description: ค้นหาและดึงรายชื่อพนักงาน (Admin, Staff)
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: ค้นหาจากชื่อ/รหัส
+        in: query
+        name: search
+        type: string
+      - description: active|terminated|all
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_list.Response'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List employees
+      tags:
+      - Employees
+    post:
+      consumes:
+      - application/json
+      description: เพิ่มข้อมูลพนักงานใหม่
+      parameters:
+      - description: employee payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_employee_internal_feature_create.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "409":
+          description: Conflict
+      security:
+      - BearerAuth: []
+      summary: Create employee
+      tags:
+      - Employees
+  /employees/{id}:
+    delete:
+      description: ลบพนักงาน (Admin)
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete employee (soft delete)
+      tags:
+      - Employees
+    get:
+      description: ดึงข้อมูลพนักงานรายบุคคล
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_get.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get employee detail
+      tags:
+      - Employees
+    put:
+      consumes:
+      - application/json
+      description: แก้ไขข้อมูลพนักงาน
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: employee payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_employee_internal_feature_create.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_update.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update employee
+      tags:
+      - Employees
+  /employees/{id}/accumulations:
+    get:
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/accum.ListResponse'
+      security:
+      - BearerAuth: []
+      summary: List accumulations
+      tags:
+      - Employees
+  /master/all:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.Response'
+      security:
+      - BearerAuth: []
+      summary: Get master data (person titles, employee types, id document types)
+      tags:
+      - Master
+  /master/employee-types:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.Response'
+      security:
+      - BearerAuth: []
+      summary: Get master data (person titles, employee types, id document types)
+      tags:
+      - Master
+  /master/id-document-types:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.Response'
+      security:
+      - BearerAuth: []
+      summary: Get master data (person titles, employee types, id document types)
+      tags:
+      - Master
+  /master/person-titles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.Response'
+      security:
+      - BearerAuth: []
+      summary: Get master data (person titles, employee types, id document types)
+      tags:
+      - Master
+  /me:
+    get:
+      description: ดูข้อมูลโปรไฟล์ตัวเอง
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.User'
+        "401":
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: Get my profile
+      tags:
+      - Me
+  /me/password:
+    put:
+      consumes:
+      - application/json
+      description: ผู้ใช้เปลี่ยนรหัสผ่านของตัวเอง
+      parameters:
+      - description: password payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/changepassword.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/changepassword.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "422":
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Change own password
+      tags:
+      - Me
+  /payouts/pt:
+    get:
+      parameters:
+      - description: filter by employee
+        in: query
+        name: employeeId
+        type: string
+      - description: to_pay|paid|all
+        in: query
+        name: status
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payoutpt_internal_feature_list.Response'
+      security:
+      - BearerAuth: []
+      summary: List part-time payouts
+      tags:
+      - Part-Time Payout
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_payoutpt_internal_feature_create.Command'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_payoutpt_internal_feature_create.Response'
+      security:
+      - BearerAuth: []
+      summary: Create part-time payout
+      tags:
+      - Part-Time Payout
+  /payouts/pt/{id}:
+    get:
+      parameters:
+      - description: payout id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payoutpt_internal_feature_get.Response'
+      security:
+      - BearerAuth: []
+      summary: Get payout detail
+      tags:
+      - Part-Time Payout
+  /payouts/pt/{id}/pay:
+    post:
+      parameters:
+      - description: payout id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repository.Payout'
+      security:
+      - BearerAuth: []
+      summary: Mark payout paid
+      tags:
+      - Part-Time Payout
+  /payroll-items/{id}:
+    get:
+      description: ดูรายละเอียดสลิปพนักงาน
+      parameters:
+      - description: item id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/items.GetResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get payroll item detail
+      tags:
+      - Payroll Run
+    patch:
+      consumes:
+      - application/json
+      description: แก้ไขยอดในสลิป (เฉพาะรันที่ไม่ approved)
+      parameters:
+      - description: item id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/items.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_items.UpdateResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Adjust payroll item
+      tags:
+      - Payroll Run
+  /payroll-runs:
+    get:
+      description: ดึงประวัติงวดเงินเดือน
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: processing|pending|approved|all
+        in: query
+        name: status
+        type: string
+      - description: filter by year of payrollMonthDate
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_list.Response'
+      security:
+      - BearerAuth: []
+      summary: List payroll runs
+      tags:
+      - Payroll Run
+    post:
+      consumes:
+      - application/json
+      description: สร้างงวดจ่ายเงินเดือน
+      parameters:
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_create.Command'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create payroll run
+      tags:
+      - Payroll Run
+  /payroll-runs/{id}:
+    delete:
+      description: ลบงวดเงินเดือน (เฉพาะ processing/pending)
+      parameters:
+      - description: run id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete payroll run
+      tags:
+      - Payroll Run
+    get:
+      description: ดูข้อมูลงวดเงินเดือน
+      parameters:
+      - description: run id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_get.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get payroll run detail
+      tags:
+      - Payroll Run
+    patch:
+      consumes:
+      - application/json
+      description: แก้ payDate หรืออนุมัติ run
+      parameters:
+      - description: run id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_update.Command'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_update.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update/approve payroll run
+      tags:
+      - Payroll Run
+  /payroll-runs/{id}/items:
+    get:
+      description: รายการสลิปเงินเดือนใน run
+      parameters:
+      - description: run id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: employee name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_items.ListResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: List payroll items
+      tags:
+      - Payroll Run
+  /salary-advances:
+    get:
+      description: ดูรายการเบิกเงินล่วงหน้า
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: employee id
+        in: query
+        name: employeeId
+        type: string
+      - description: YYYY-MM-01
+        in: query
+        name: payrollMonth
+        type: string
+      - description: pending|processed
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_list.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List salary advances
+      tags:
+      - Salary Advance
+    post:
+      consumes:
+      - application/json
+      description: สร้างรายการเบิกเงินล่วงหน้า (status pending)
+      parameters:
+      - description: salary advance payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/create.Request'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create salary advance
+      tags:
+      - Salary Advance
+  /salary-advances/{id}:
+    delete:
+      description: ลบรายการเบิก (เฉพาะ pending)
+      parameters:
+      - description: advance id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete salary advance
+      tags:
+      - Salary Advance
+    get:
+      description: ดูรายละเอียดรายการเบิกเงินล่วงหน้า
+      parameters:
+      - description: advance id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_get.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get salary advance detail
+      tags:
+      - Salary Advance
+    patch:
+      consumes:
+      - application/json
+      description: แก้ไขยอด/วันที่ (เฉพาะ pending)
+      parameters:
+      - description: advance id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/update.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_update.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update salary advance
+      tags:
+      - Salary Advance
+  /salary-raise-cycles:
+    get:
+      description: ดึงรอบปรับเงินเดือน
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_list.Response'
+      security:
+      - BearerAuth: []
+      summary: List salary raise cycles
+      tags:
+      - Salary Raise
+    post:
+      consumes:
+      - application/json
+      description: สร้างรอบปรับเงินเดือน (pending)
+      parameters:
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_create.Command'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create salary raise cycle
+      tags:
+      - Salary Raise
+  /salary-raise-cycles/{id}:
+    delete:
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete salary raise cycle
+      tags:
+      - Salary Raise
+    get:
+      description: ดูรอบปรับเงินเดือน (รวม items)
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_get.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get salary raise cycle detail
+      tags:
+      - Salary Raise
+  /salary-raise-cycles/{id}/items:
+    get:
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: search employee name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items.ListResponse'
+      security:
+      - BearerAuth: []
+      summary: List salary raise items
+      tags:
+      - Salary Raise
+  /salary-raise-cycles/{id}/status:
+    post:
+      consumes:
+      - application/json
+      description: อนุมัติ/ปฏิเสธรอบปรับเงินเดือน
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: status payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_approve.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_approve.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update status salary raise cycle
+      tags:
+      - Salary Raise
+  /salary-raise-items/{id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: item id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items.UpdateCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items.UpdateResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update salary raise item
+      tags:
+      - Salary Raise
+  /worklogs/ft:
+    get:
+      description: รายการ worklog (Full-time)
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: employee id
+        in: query
+        name: employeeId
+        type: string
+      - description: pending|approved|all
+        in: query
+        name: status
+        type: string
+      - description: late|leave_day|leave_double|leave_hours|ot
+        in: query
+        name: entryType
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: startDate
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: endDate
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ft.ListResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List worklogs FT
+      tags:
+      - Worklogs FT
+    post:
+      consumes:
+      - application/json
+      description: บันทึก worklog (Full-time) สถานะเริ่มต้น pending
+      parameters:
+      - description: worklog payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ft.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/ft.CreateResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create worklog FT
+      tags:
+      - Worklogs FT
+  /worklogs/ft/{id}:
+    delete:
+      description: ลบ worklog (Full-time) ได้เฉพาะสถานะ pending
+      parameters:
+      - description: worklog id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete worklog FT
+      tags:
+      - Worklogs FT
+    get:
+      description: ดึง worklog (Full-time) ตาม id
+      parameters:
+      - description: worklog id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ft.GetResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get worklog FT detail
+      tags:
+      - Worklogs FT
+    patch:
+      consumes:
+      - application/json
+      description: แก้ไข worklog (Full-time). เปลี่ยนสถานะเป็น approved ได้, revert
+        approved ไม่ได้
+      parameters:
+      - description: worklog id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: worklog payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ft.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ft.UpdateResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update worklog FT
+      tags:
+      - Worklogs FT
+  /worklogs/pt:
+    get:
+      description: รายการ worklog (Part-time)
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: employee id
+        in: query
+        name: employeeId
+        type: string
+      - description: pending|approved|all
+        in: query
+        name: status
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: startDate
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: endDate
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pt.ListResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List worklogs PT
+      tags:
+      - Worklogs PT
+    post:
+      consumes:
+      - application/json
+      description: บันทึก worklog (Part-time)
+      parameters:
+      - description: worklog payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pt.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/pt.CreateResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create worklog PT
+      tags:
+      - Worklogs PT
+  /worklogs/pt/{id}:
+    delete:
+      description: ลบ worklog (Part-time) ได้เฉพาะสถานะ pending
+      parameters:
+      - description: worklog id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete worklog PT
+      tags:
+      - Worklogs PT
+    get:
+      description: ดึง worklog (Part-time) ตาม id
+      parameters:
+      - description: worklog id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pt.GetResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get worklog PT detail
+      tags:
+      - Worklogs PT
+    patch:
+      consumes:
+      - application/json
+      description: แก้ไข worklog (Part-time). เปลี่ยนสถานะเป็น approved ได้, revert
+        approved ไม่ได้
+      parameters:
+      - description: worklog id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: worklog payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pt.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pt.UpdateResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update worklog PT
+      tags:
+      - Worklogs PT
+securityDefinitions:
+  BearerAuth:
+    description: Add "Bearer <access token>"
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

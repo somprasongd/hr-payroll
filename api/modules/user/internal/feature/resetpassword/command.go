@@ -1,0 +1,55 @@
+package resetpassword
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"strings"
+
+	"github.com/google/uuid"
+
+	"hrms/modules/user/internal/repository"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/mediator"
+	"hrms/shared/common/password"
+)
+
+type Command struct {
+	ID          uuid.UUID
+	NewPassword string
+	Actor       uuid.UUID
+}
+
+type Response struct {
+	Message string `json:"message"`
+}
+
+type Handler struct {
+	repo repository.Repository
+}
+
+var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
+
+func NewHandler(repo repository.Repository) *Handler {
+	return &Handler{repo: repo}
+}
+
+func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if strings.TrimSpace(cmd.NewPassword) == "" {
+		return nil, errs.BadRequest("newPassword is required")
+	}
+
+	hash, err := password.Hash(cmd.NewPassword)
+	if err != nil {
+		return nil, errs.Internal("failed to hash password")
+	}
+
+	if err := h.repo.ResetPassword(ctx, cmd.ID, hash, cmd.Actor); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.NotFound("user not found")
+		}
+		return nil, errs.Internal("failed to reset password")
+	}
+
+	return &Response{Message: "Password has been reset successfully."}, nil
+}

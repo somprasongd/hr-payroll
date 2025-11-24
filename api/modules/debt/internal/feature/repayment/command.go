@@ -1,0 +1,65 @@
+package repayment
+
+import (
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+
+	"hrms/modules/debt/internal/dto"
+	"hrms/modules/debt/internal/repository"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/mediator"
+	"hrms/shared/common/storage/sqldb/transactor"
+)
+
+type Command struct {
+	EmployeeID uuid.UUID `json:"employeeId"`
+	TxnDate    time.Time `json:"txnDate"`
+	Amount     float64   `json:"amount"`
+	Reason     *string   `json:"reason,omitempty"`
+	ActorID    uuid.UUID
+}
+
+type Response struct {
+	dto.Item
+}
+
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+}
+
+var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
+
+func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
+	return &Handler{
+		repo: repo,
+		tx:   tx,
+	}
+}
+
+func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if cmd.EmployeeID == uuid.Nil || cmd.TxnDate.IsZero() || cmd.Amount <= 0 {
+		return nil, errs.BadRequest("employeeId, txnDate, amount are required")
+	}
+	rec := repository.Record{
+		EmployeeID: cmd.EmployeeID,
+		TxnDate:    cmd.TxnDate,
+		Amount:     cmd.Amount,
+		Reason:     cmd.Reason,
+		TxnType:    "repayment",
+		Status:     "approved",
+	}
+
+	var created *repository.Record
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+		var err error
+		created, err = h.repo.InsertRepayment(ctxTx, rec, cmd.ActorID)
+		return err
+	}); err != nil {
+		return nil, errs.Internal("failed to create repayment")
+	}
+
+	return &Response{Item: dto.FromRecord(*created)}, nil
+}

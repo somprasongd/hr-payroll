@@ -1,0 +1,405 @@
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
+
+	"hrms/shared/common/storage/sqldb/transactor"
+)
+
+type Repository struct {
+	dbCtx transactor.DBTXContext
+}
+
+func NewRepository(dbCtx transactor.DBTXContext) Repository {
+	return Repository{dbCtx: dbCtx}
+}
+
+type ListRecord struct {
+	ID                  uuid.UUID `db:"id"`
+	EmployeeNumber      string    `db:"employee_number"`
+	FullNameTh          string    `db:"full_name_th"`
+	EmployeeTypeName    string    `db:"employee_type_name"`
+	Phone               *string   `db:"phone"`
+	Email               *string   `db:"email"`
+	EmploymentStartDate time.Time `db:"employment_start_date"`
+	Status              string    `db:"status"`
+}
+
+type DetailRecord struct {
+	ID                        uuid.UUID  `db:"id"`
+	EmployeeNumber            string     `db:"employee_number"`
+	TitleID                   uuid.UUID  `db:"title_id"`
+	FirstName                 string     `db:"first_name"`
+	LastName                  string     `db:"last_name"`
+	IDDocumentTypeID          uuid.UUID  `db:"id_document_type_id"`
+	IDDocumentNumber          string     `db:"id_document_number"`
+	Phone                     *string    `db:"phone"`
+	Email                     *string    `db:"email"`
+	EmployeeTypeID            uuid.UUID  `db:"employee_type_id"`
+	BasePayAmount             float64    `db:"base_pay_amount"`
+	EmploymentStartDate       time.Time  `db:"employment_start_date"`
+	EmploymentEndDate         *time.Time `db:"employment_end_date"`
+	BankName                  *string    `db:"bank_name"`
+	BankAccountNo             *string    `db:"bank_account_no"`
+	SSOContribute             bool       `db:"sso_contribute"`
+	SSODeclaredWage           *float64   `db:"sso_declared_wage"`
+	ProvidentFundContribute   bool       `db:"provident_fund_contribute"`
+	ProvidentFundRateEmployee float64    `db:"provident_fund_rate_employee"`
+	ProvidentFundRateEmployer float64    `db:"provident_fund_rate_employer"`
+	WithholdTax               bool       `db:"withhold_tax"`
+	AllowHousing              bool       `db:"allow_housing"`
+	AllowWater                bool       `db:"allow_water"`
+	AllowElectric             bool       `db:"allow_electric"`
+	AllowInternet             bool       `db:"allow_internet"`
+	AllowDoctorFee            bool       `db:"allow_doctor_fee"`
+	CreatedAt                 time.Time  `db:"created_at"`
+	UpdatedAt                 time.Time  `db:"updated_at"`
+	Status                    string     `db:"status"`
+}
+
+type ListResult struct {
+	Rows  []ListRecord
+	Total int
+}
+
+type AccumRecord struct {
+	ID        uuid.UUID `db:"id"`
+	AccumType string    `db:"accum_type"`
+	AccumYear *int      `db:"accum_year"`
+	Amount    float64   `db:"amount"`
+	UpdatedAt time.Time `db:"updated_at"`
+	UpdatedBy uuid.UUID `db:"updated_by"`
+}
+
+func (r Repository) List(ctx context.Context, page, limit int, search, status string) (ListResult, error) {
+	db := r.dbCtx(ctx)
+	offset := (page - 1) * limit
+	if offset < 0 {
+		offset = 0
+	}
+
+	var (
+		where []string
+		args  []interface{}
+	)
+	where = append(where, "e.deleted_at IS NULL")
+
+	switch status {
+	case "terminated":
+		where = append(where, "e.employment_end_date IS NOT NULL")
+	case "all":
+		// no extra filter
+	default: // active
+		where = append(where, "e.employment_end_date IS NULL")
+	}
+
+	if s := strings.TrimSpace(search); s != "" {
+		val := "%" + strings.ToLower(s) + "%"
+		args = append(args, val, val, val)
+		where = append(where, fmt.Sprintf("(LOWER(e.employee_number) LIKE $%d OR LOWER(e.first_name) LIKE $%d OR LOWER(e.last_name) LIKE $%d)", len(args)-2, len(args)-1, len(args)))
+	}
+
+	whereClause := strings.Join(where, " AND ")
+
+	args = append(args, limit, offset)
+	query := fmt.Sprintf(`
+SELECT 
+  e.id,
+  e.employee_number,
+  (pt.name_th || e.first_name || ' ' || e.last_name) AS full_name_th,
+  et.name_th AS employee_type_name,
+  e.phone,
+  e.email,
+  e.employment_start_date,
+  CASE WHEN e.employment_end_date IS NULL THEN 'active' ELSE 'terminated' END AS status
+FROM employees e
+JOIN person_title pt ON pt.id = e.title_id
+JOIN employee_type et ON et.id = e.employee_type_id
+WHERE %s
+ORDER BY e.created_at DESC
+LIMIT $%d OFFSET $%d
+`, whereClause, len(args)-1, len(args))
+
+	rows, err := db.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return ListResult{}, err
+	}
+	defer rows.Close()
+
+	var list []ListRecord
+	for rows.Next() {
+		var rec ListRecord
+		if err := rows.StructScan(&rec); err != nil {
+			return ListResult{}, err
+		}
+		list = append(list, rec)
+	}
+
+	countArgs := args[:len(args)-2]
+	countQuery := fmt.Sprintf("SELECT COUNT(1) FROM employees e WHERE %s", whereClause)
+	var total int
+	if err := db.GetContext(ctx, &total, countQuery, countArgs...); err != nil {
+		return ListResult{}, err
+	}
+
+	return ListResult{Rows: list, Total: total}, nil
+}
+
+func (r Repository) Get(ctx context.Context, id uuid.UUID) (*DetailRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+SELECT 
+  e.id,
+  e.employee_number,
+  e.title_id,
+  e.first_name,
+  e.last_name,
+  e.id_document_type_id,
+  e.id_document_number,
+  e.phone,
+  e.email,
+  e.employee_type_id,
+  e.base_pay_amount,
+  e.employment_start_date,
+  e.employment_end_date,
+  e.bank_name,
+  e.bank_account_no,
+  e.sso_contribute,
+  e.sso_declared_wage,
+  e.provident_fund_contribute,
+  e.provident_fund_rate_employee,
+  e.provident_fund_rate_employer,
+  e.withhold_tax,
+  e.allow_housing,
+  e.allow_water,
+  e.allow_electric,
+  e.allow_internet,
+  e.allow_doctor_fee,
+  e.created_at,
+  e.updated_at,
+  CASE WHEN e.employment_end_date IS NULL THEN 'active' ELSE 'terminated' END AS status
+FROM employees e
+WHERE e.id = $1 AND e.deleted_at IS NULL
+LIMIT 1`
+	var rec DetailRecord
+	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+func (r Repository) ListAccum(ctx context.Context, employeeID uuid.UUID) ([]AccumRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `SELECT id, accum_type, accum_year, amount, updated_at, updated_by FROM payroll_accumulation WHERE employee_id=$1 ORDER BY accum_type, COALESCE(accum_year, -1)`
+	var out []AccumRecord
+	if err := db.SelectContext(ctx, &out, q, employeeID); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r Repository) CreateAccum(ctx context.Context, employeeID uuid.UUID, rec AccumRecord, actor uuid.UUID) (*AccumRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+INSERT INTO payroll_accumulation (employee_id, accum_type, accum_year, amount, updated_by)
+VALUES ($1,$2,$3,$4,$5)
+ON CONFLICT (employee_id, accum_type, COALESCE(accum_year, -1))
+DO UPDATE SET amount = EXCLUDED.amount, updated_by = EXCLUDED.updated_by
+RETURNING id, accum_type, accum_year, amount, updated_at, updated_by`
+	var out AccumRecord
+	if err := db.GetContext(ctx, &out, q, employeeID, rec.AccumType, rec.AccumYear, rec.Amount, actor); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (r Repository) DeleteAccum(ctx context.Context, id uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	res, err := db.ExecContext(ctx, `DELETE FROM payroll_accumulation WHERE id=$1`, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (r Repository) Create(ctx context.Context, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+INSERT INTO employees (
+  employee_number, title_id, first_name, last_name,
+  id_document_type_id, id_document_number,
+  phone, email, employee_type_id, base_pay_amount,
+  employment_start_date, employment_end_date,
+  bank_name, bank_account_no,
+  sso_contribute, sso_declared_wage,
+  provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
+  withhold_tax,
+  allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+  created_by, updated_by
+) VALUES (
+  :employee_number, :title_id, :first_name, :last_name,
+  :id_document_type_id, :id_document_number,
+  :phone, :email, :employee_type_id, :base_pay_amount,
+  :employment_start_date, :employment_end_date,
+  :bank_name, :bank_account_no,
+  :sso_contribute, :sso_declared_wage,
+  :provident_fund_contribute, :provident_fund_rate_employee, :provident_fund_rate_employer,
+  :withhold_tax,
+  :allow_housing, :allow_water, :allow_electric, :allow_internet, :allow_doctor_fee,
+  :created_by, :updated_by
+) RETURNING *`
+
+	payload.CreatedAt = time.Now()
+	payload.UpdatedAt = payload.CreatedAt
+
+	// use NamedQuery via sqlx
+	stmt, err := db.PrepareNamedContext(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	params := map[string]interface{}{
+		"employee_number":              payload.EmployeeNumber,
+		"title_id":                     payload.TitleID,
+		"first_name":                   payload.FirstName,
+		"last_name":                    payload.LastName,
+		"id_document_type_id":          payload.IDDocumentTypeID,
+		"id_document_number":           payload.IDDocumentNumber,
+		"phone":                        payload.Phone,
+		"email":                        payload.Email,
+		"employee_type_id":             payload.EmployeeTypeID,
+		"base_pay_amount":              payload.BasePayAmount,
+		"employment_start_date":        payload.EmploymentStartDate,
+		"employment_end_date":          payload.EmploymentEndDate,
+		"bank_name":                    payload.BankName,
+		"bank_account_no":              payload.BankAccountNo,
+		"sso_contribute":               payload.SSOContribute,
+		"sso_declared_wage":            payload.SSODeclaredWage,
+		"provident_fund_contribute":    payload.ProvidentFundContribute,
+		"provident_fund_rate_employee": payload.ProvidentFundRateEmployee,
+		"provident_fund_rate_employer": payload.ProvidentFundRateEmployer,
+		"withhold_tax":                 payload.WithholdTax,
+		"allow_housing":                payload.AllowHousing,
+		"allow_water":                  payload.AllowWater,
+		"allow_electric":               payload.AllowElectric,
+		"allow_internet":               payload.AllowInternet,
+		"allow_doctor_fee":             payload.AllowDoctorFee,
+		"created_by":                   actor,
+		"updated_by":                   actor,
+	}
+
+	var rec DetailRecord
+	if err := stmt.GetContext(ctx, &rec, params); err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+func (r Repository) Update(ctx context.Context, id uuid.UUID, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+UPDATE employees SET
+  employee_number=:employee_number,
+  title_id=:title_id,
+  first_name=:first_name,
+  last_name=:last_name,
+  id_document_type_id=:id_document_type_id,
+  id_document_number=:id_document_number,
+  phone=:phone,
+  email=:email,
+  employee_type_id=:employee_type_id,
+  base_pay_amount=:base_pay_amount,
+  employment_start_date=:employment_start_date,
+  employment_end_date=:employment_end_date,
+  bank_name=:bank_name,
+  bank_account_no=:bank_account_no,
+  sso_contribute=:sso_contribute,
+  sso_declared_wage=:sso_declared_wage,
+  provident_fund_contribute=:provident_fund_contribute,
+  provident_fund_rate_employee=:provident_fund_rate_employee,
+  provident_fund_rate_employer=:provident_fund_rate_employer,
+  withhold_tax=:withhold_tax,
+  allow_housing=:allow_housing,
+  allow_water=:allow_water,
+  allow_electric=:allow_electric,
+  allow_internet=:allow_internet,
+  allow_doctor_fee=:allow_doctor_fee,
+  updated_by=:updated_by
+WHERE id=:id AND deleted_at IS NULL
+RETURNING *`
+
+	stmt, err := db.PrepareNamedContext(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	params := map[string]interface{}{
+		"id":                           id,
+		"employee_number":              payload.EmployeeNumber,
+		"title_id":                     payload.TitleID,
+		"first_name":                   payload.FirstName,
+		"last_name":                    payload.LastName,
+		"id_document_type_id":          payload.IDDocumentTypeID,
+		"id_document_number":           payload.IDDocumentNumber,
+		"phone":                        payload.Phone,
+		"email":                        payload.Email,
+		"employee_type_id":             payload.EmployeeTypeID,
+		"base_pay_amount":              payload.BasePayAmount,
+		"employment_start_date":        payload.EmploymentStartDate,
+		"employment_end_date":          payload.EmploymentEndDate,
+		"bank_name":                    payload.BankName,
+		"bank_account_no":              payload.BankAccountNo,
+		"sso_contribute":               payload.SSOContribute,
+		"sso_declared_wage":            payload.SSODeclaredWage,
+		"provident_fund_contribute":    payload.ProvidentFundContribute,
+		"provident_fund_rate_employee": payload.ProvidentFundRateEmployee,
+		"provident_fund_rate_employer": payload.ProvidentFundRateEmployer,
+		"withhold_tax":                 payload.WithholdTax,
+		"allow_housing":                payload.AllowHousing,
+		"allow_water":                  payload.AllowWater,
+		"allow_electric":               payload.AllowElectric,
+		"allow_internet":               payload.AllowInternet,
+		"allow_doctor_fee":             payload.AllowDoctorFee,
+		"updated_by":                   actor,
+	}
+
+	var rec DetailRecord
+	if err := stmt.GetContext(ctx, &rec, params); err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL`
+	res, err := db.ExecContext(ctx, q, actor, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func IsUniqueViolation(err error) bool {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		return pqErr.Code == "23505"
+	}
+	return false
+}

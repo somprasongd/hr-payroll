@@ -1,0 +1,35 @@
+package get
+
+import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+
+	"hrms/modules/payoutpt/internal/repository"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/mediator"
+	"hrms/shared/common/response"
+)
+
+// @Summary Get payout detail
+// @Tags Part-Time Payout
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "payout id"
+// @Success 200 {object} Response
+// @Router /payouts/pt/{id} [get]
+func NewEndpoint(router fiber.Router, repo repository.Repository) {
+	router.Get("/:id", func(c fiber.Ctx) error {
+		id, err := uuid.Parse(c.Params("id"))
+		if err != nil {
+			return errs.BadRequest("invalid payout id")
+		}
+		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
+			ID:   id,
+			Repo: repo,
+		})
+		if err != nil {
+			return err
+		}
+		return response.JSON(c, fiber.StatusOK, resp)
+	})
+}

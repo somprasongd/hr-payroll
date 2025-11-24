@@ -1,0 +1,76 @@
+package dto
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+
+	"hrms/modules/bonus/internal/repository"
+)
+
+type Cycle struct {
+	ID               uuid.UUID `json:"id"`
+	PayrollMonth     time.Time `json:"payrollMonthDate"`
+	PeriodStart      time.Time `json:"periodStartDate"`
+	PeriodEnd        time.Time `json:"periodEndDate"`
+	Status           string    `json:"status"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
+	TotalEmployees   int       `json:"totalEmployees,omitempty"`
+	TotalBonusAmount float64   `json:"totalBonusAmount,omitempty"`
+	Items            []Item    `json:"items,omitempty"`
+}
+
+type Item struct {
+	ID            uuid.UUID `json:"id"`
+	EmployeeID    uuid.UUID `json:"employeeId"`
+	EmployeeName  string    `json:"employeeName,omitempty"`
+	TenureDays    int       `json:"tenureDays"`
+	CurrentSalary float64   `json:"currentSalary"`
+	LateMinutes   int       `json:"lateMinutes"`
+	LeaveDays     float64   `json:"leaveDays"`
+	LeaveDouble   float64   `json:"leaveDoubleDays"`
+	LeaveHours    float64   `json:"leaveHours"`
+	OtHours       float64   `json:"otHours"`
+	BonusMonths   float64   `json:"bonusMonths"`
+	BonusAmount   float64   `json:"bonusAmount"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
+type Meta struct {
+	CurrentPage int `json:"currentPage"`
+	TotalPages  int `json:"totalPages"`
+	TotalItems  int `json:"totalItems"`
+}
+
+func FromCycle(r repository.Cycle) Cycle {
+	return Cycle{
+		ID:               r.ID,
+		PayrollMonth:     r.PayrollMonth,
+		PeriodStart:      r.PeriodStart,
+		PeriodEnd:        r.PeriodEnd,
+		Status:           r.Status,
+		CreatedAt:        r.CreatedAt,
+		UpdatedAt:        r.UpdatedAt,
+		TotalEmployees:   r.TotalEmployees,
+		TotalBonusAmount: r.TotalBonus,
+	}
+}
+
+func FromItem(r repository.Item) Item {
+	return Item{
+		ID:            r.ID,
+		EmployeeID:    r.EmployeeID,
+		EmployeeName:  r.EmployeeName,
+		TenureDays:    r.TenureDays,
+		CurrentSalary: r.CurrentSalary,
+		LateMinutes:   r.LateMinutes,
+		LeaveDays:     r.LeaveDays,
+		LeaveDouble:   r.LeaveDouble,
+		LeaveHours:    r.LeaveHours,
+		OtHours:       r.OtHours,
+		BonusMonths:   r.BonusMonths,
+		BonusAmount:   r.BonusAmount,
+		UpdatedAt:     r.UpdatedAt,
+	}
+}

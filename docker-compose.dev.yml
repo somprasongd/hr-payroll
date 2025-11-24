@@ -1,0 +1,14 @@
+services:
+  pg18:
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hr-payroll-dev
+    ports:
+      - "54322:5432"
+    volumes:
+      - pg18-data-dev:/var/lib/postgresql/data
+
+volumes:
+  pg18-data-dev:

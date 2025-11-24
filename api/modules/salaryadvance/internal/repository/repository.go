@@ -1,0 +1,161 @@
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
+
+	"hrms/shared/common/storage/sqldb/transactor"
+)
+
+type Repository struct {
+	dbCtx transactor.DBTXContext
+}
+
+func NewRepository(dbCtx transactor.DBTXContext) Repository {
+	return Repository{dbCtx: dbCtx}
+}
+
+type Record struct {
+	ID           uuid.UUID  `db:"id"`
+	EmployeeID   uuid.UUID  `db:"employee_id"`
+	PayrollMonth time.Time  `db:"payroll_month_date"`
+	AdvanceDate  time.Time  `db:"advance_date"`
+	Amount       float64    `db:"amount"`
+	Status       string     `db:"status"`
+	CreatedAt    time.Time  `db:"created_at"`
+	UpdatedAt    time.Time  `db:"updated_at"`
+	EmployeeName string     `db:"employee_name"`
+	DeletedAt    *time.Time `db:"deleted_at"`
+}
+
+type ListResult struct {
+	Rows  []Record
+	Total int
+}
+
+func (r Repository) List(ctx context.Context, page, limit int, empID *uuid.UUID, payrollMonth *time.Time, status string) (ListResult, error) {
+	db := r.dbCtx(ctx)
+	offset := (page - 1) * limit
+	var where []string
+	var args []interface{}
+	where = append(where, "sa.deleted_at IS NULL")
+
+	if empID != nil {
+		args = append(args, *empID)
+		where = append(where, fmt.Sprintf("sa.employee_id = $%d", len(args)))
+	}
+	if payrollMonth != nil {
+		args = append(args, *payrollMonth)
+		where = append(where, fmt.Sprintf("sa.payroll_month_date = $%d", len(args)))
+	}
+	if s := strings.TrimSpace(status); s != "" {
+		args = append(args, s)
+		where = append(where, fmt.Sprintf("sa.status = $%d", len(args)))
+	}
+
+	whereClause := strings.Join(where, " AND ")
+	args = append(args, limit, offset)
+
+	q := fmt.Sprintf(`
+SELECT sa.*,
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
+FROM salary_advance sa
+WHERE %s
+ORDER BY sa.advance_date DESC, sa.created_at DESC
+LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
+
+	rows, err := db.QueryxContext(ctx, q, args...)
+	if err != nil {
+		return ListResult{}, err
+	}
+	defer rows.Close()
+
+	var list []Record
+	for rows.Next() {
+		var rec Record
+		if err := rows.StructScan(&rec); err != nil {
+			return ListResult{}, err
+		}
+		list = append(list, rec)
+	}
+
+	countArgs := args[:len(args)-2]
+	countQ := fmt.Sprintf(`SELECT COUNT(1) FROM salary_advance sa WHERE %s`, whereClause)
+	var total int
+	if err := db.GetContext(ctx, &total, countQ, countArgs...); err != nil {
+		return ListResult{}, err
+	}
+	return ListResult{Rows: list, Total: total}, nil
+}
+
+func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Record, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+SELECT sa.*,
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
+FROM salary_advance sa
+WHERE sa.id=$1 AND sa.deleted_at IS NULL
+LIMIT 1`
+	var rec Record
+	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+func (r Repository) Create(ctx context.Context, rec Record, actor uuid.UUID) (*Record, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+INSERT INTO salary_advance (
+  employee_id, payroll_month_date, advance_date, amount, status,
+  created_by, updated_by
+) VALUES ($1,$2,$3,$4,'pending',$5,$5)
+RETURNING *`
+	var out Record
+	if err := db.GetContext(ctx, &out, q, rec.EmployeeID, rec.PayrollMonth, rec.AdvanceDate, rec.Amount, actor); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (r Repository) Update(ctx context.Context, id uuid.UUID, rec Record, actor uuid.UUID) (*Record, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+UPDATE salary_advance
+SET advance_date=$1, payroll_month_date=$2, amount=$3, updated_by=$4
+WHERE id=$5 AND deleted_at IS NULL AND status='pending'
+RETURNING *`
+	var out Record
+	if err := db.GetContext(ctx, &out, q, rec.AdvanceDate, rec.PayrollMonth, rec.Amount, actor, id); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `UPDATE salary_advance SET deleted_at = now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL AND status='pending'`
+	res, err := db.ExecContext(ctx, q, actor, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func IsUniqueViolation(err error) bool {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		return pqErr.Code == "23505"
+	}
+	return false
+}
