@@ -1,0 +1,42 @@
+{
+  "Index": {
+    "welcomeBack": "Welcome Back",
+    "signInDescription": "Sign in to your HR & Payroll account",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "rememberMe": "Remember Me",
+    "login": "Login",
+    "loggingIn": "Logging in...",
+    "copyright": "© 2024 Your Company. All Rights Reserved",
+    "validation": {
+      "usernameRequired": "Username is required",
+      "usernameLength": "Username must be at least 3 characters",
+      "passwordLength": "Password must be at least 6 characters"
+    }
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "mainContentArea": "Main Content Area",
+    "mainContentDescription": "Content for the selected menu item will be displayed here.",
+    "mainContentExample": "For example, a dashboard with charts, a table of employees, or a payroll processing form",
+    "welcome": "Welcome, {name}",
+    "loggedInAs": "You are logged in as {role}",
+    "logout": "Logout",
+    "searchPlaceholder": "Search for employees..."
+  },
+  "Menu": {
+    "dashboard": "Dashboard",
+    "employeeManagement": "Employee Management",
+    "attendance": "Attendance",
+    "leaveManagement": "Leave Management",
+    "payrollExpenses": "Payroll & Expenses",
+    "reports": "Reports",
+    "humanResources": "Human Resources",
+    "systemManagement": "System Management",
+    "settings": "Settings",
+    "collapse": "Collapse"
+  }
+}
+

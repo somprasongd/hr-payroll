@@ -1,0 +1,42 @@
+{
+  "Index": {
+    "welcomeBack": "ยินดีต้อนรับกลับมา",
+    "signInDescription": "เข้าสู่ระบบ HR & Payroll ของคุณ",
+    "username": "ชื่อผู้ใช้งาน",
+    "usernamePlaceholder": "กรอกชื่อผู้ใช้งาน",
+    "password": "รหัสผ่าน",
+    "passwordPlaceholder": "กรอกรหัสผ่าน",
+    "rememberMe": "จำฉันไว้ในระบบ",
+    "login": "เข้าสู่ระบบ",
+    "loggingIn": "กำลังเข้าสู่ระบบ...",
+    "copyright": "© 2024 Your Company. All Rights Reserved",
+    "validation": {
+      "usernameRequired": "กรุณากรอกชื่อผู้ใช้งาน",
+      "usernameLength": "ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 3 ตัวอักษร",
+      "passwordLength": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร"
+    }
+  },
+  "Dashboard": {
+    "title": "แดชบอร์ด",
+    "mainContentArea": "พื้นที่เนื้อหาหลัก",
+    "mainContentDescription": "เนื้อหาสำหรับรายการเมนูที่เลือกจะแสดงที่นี่",
+    "mainContentExample": "ตัวอย่างเช่น แดชบอร์ดพร้อมกราฟ ตารางข้อมูลพนักงาน หรือฟอร์มประมวลผลเงินเดือน",
+    "welcome": "ยินดีต้อนรับ, {name}",
+    "loggedInAs": "คุณเข้าสู่ระบบในฐานะ {role}",
+    "logout": "ออกจากระบบ",
+    "searchPlaceholder": "ค้นหาพนักงาน..."
+  },
+  "Menu": {
+    "dashboard": "แดชบอร์ดหลัก",
+    "employeeManagement": "จัดการพนักงาน",
+    "attendance": "บันทึกเวลาทำงาน",
+    "leaveManagement": "การลันเดียว",
+    "payrollExpenses": "ยอดเงินเดือน & ค่าใช้",
+    "reports": "รายงาน",
+    "humanResources": "โมนีส",
+    "systemManagement": "ธุรกรรมการจัน",
+    "settings": "การตั้งค่า",
+    "collapse": "ย่อ"
+  }
+}
+

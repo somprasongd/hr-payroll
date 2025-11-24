@@ -1,0 +1,42 @@
+{
+  "Index": {
+    "welcomeBack": "ပြန်လည်ကြိုဆိုပါတယ်",
+    "signInDescription": "သင့် HR & Payroll အကောင့်သို့ အကောင့်ဝင်ပါ",
+    "username": "အသုံးပြုသူအမည်",
+    "usernamePlaceholder": "သင့်အသုံးပြုသူအမည်ကို ထည့်သွင်းပါ",
+    "password": "စကားဝှက်",
+    "passwordPlaceholder": "သင့်စကားဝှက်ကို ထည့်သွင်းပါ",
+    "rememberMe": "ကျွန်တော့်ကို မှတ်ထားပါ",
+    "login": "အကောင့်ဝင်မည်",
+    "loggingIn": "အကောင့်ဝင်နေသည်...",
+    "copyright": "© 2024 Your Company. All Rights Reserved",
+    "validation": {
+      "usernameRequired": "အသုံးပြုသူအမည် လိုအပ်ပါသည်",
+      "usernameLength": "အသုံးပြုသူအမည်သည် အနည်းဆုံး ၃ လုံး ရှိရမည်",
+      "passwordLength": "စကားဝှက်သည် အနည်းဆုံး ၆ လုံး ရှိရမည်"
+    }
+  },
+  "Dashboard": {
+    "title": "ဒက်ရှ်ဘုတ်",
+    "mainContentArea": "အဓိက အကြောင်းအရာ ဧရိယာ",
+    "mainContentDescription": "ရွေးချယ်ထားသော မီနူးအတွက် အကြောင်းအရာများကို ဤနေရာတွင် ပြသမည်",
+    "mainContentExample": "ဥပမာ၊ ဇယားများပါသော ဒက်ရှ်ဘုတ်၊ ဝန်ထမ်းဇယား သို့မဟုတ် လစာလုပ်ငန်းစဉ်ဖောင်",
+    "welcome": "ကြိုဆိုပါတယ်, {name}",
+    "loggedInAs": "သင်သည် {role} အဖြစ် အကောင့်ဝင်ထားသည်",
+    "logout": "အကောင့်ထွက်မည်",
+    "searchPlaceholder": "ဝန်ထမ်းများကို ရှာဖွေပါ..."
+  },
+  "Menu": {
+    "dashboard": "ဒက်ရှ်ဘုတ်",
+    "employeeManagement": "ဝန်ထမ်းစီမံခန့်ခွဲမှု",
+    "attendance": "တက်ရောက်မှု",
+    "leaveManagement": "ခွင့်စီမံခန့်ခွဲမှု",
+    "payrollExpenses": "လစာနှင့် ကုန်ကျစရိတ်",
+    "reports": "အစီရင်ခံစာများ",
+    "humanResources": "လူ့စွမ်းအား",
+    "systemManagement": "စနစ်စီမံခန့်ခွဲမှု",
+    "settings": "ဆက်တင်များ",
+    "collapse": "ခေါက်သိမ်းရန်"
+  }
+}
+

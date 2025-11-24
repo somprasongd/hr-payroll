@@ -10,10 +10,18 @@ GOCACHE_DIR := $(ROOT_DIR)/.cache/go-build
 BUILD_VERSION := $(or ${BUILD_VERSION}, $(shell git describe --tags --abbrev=0 2>/dev/null || echo "latest"))
 BUILD_TIME := $(shell date +"%Y-%m-%dT%H:%M:%S%z")
 
-.PHONY: run
-run:
+.PHONY: run-api
+run-api:
 	cd $(APP_DIR) && \
 	GOCACHE=$(GOCACHE_DIR) go run ./cmd/api
+
+.PHONY: run-web
+run-web:
+	cd web && npm run dev
+
+.PHONY: run
+run:
+	$(MAKE) -j 2 run-api run-web
 
 .PHONY: build
 build:
@@ -25,12 +33,23 @@ build:
 	-X 'hrms/build.Time=${BUILD_TIME}'" \
 	-o $(BIN_DIR)/hr-payroll-api ./cmd/api
 
-.PHONY: image
-image:
+.PHONY: image-api
+image-api:
 	docker build \
 	-t hr-payroll-api:${BUILD_VERSION} \
-		--build-arg VERSION=${BUILD_VERSION} \
-		.
+	-f api/Dockerfile \
+	--build-arg VERSION=${BUILD_VERSION} \
+	.
+
+.PHONY: image-web
+image-web:
+	docker build \
+	-t hr-payroll-web:${BUILD_VERSION} \
+	-f web/Dockerfile \
+	web
+
+.PHONY: image
+image: image-api image-web
 
 .PHONY: devup
 devup:
