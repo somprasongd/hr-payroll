@@ -23,13 +23,33 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const handleLanguageChange = (newLocale: string) => {
+    // Get actual current pathname from browser
+    let currentPath = '/dashboard'; // fallback
+    if (typeof window !== 'undefined') {
+      const fullPath = window.location.pathname;
+      // Remove locale prefix (e.g., /th/settings -> /settings)
+      const pathWithoutLocale = fullPath.replace(/^\/(en|th|my)/, '') || '/dashboard';
+      currentPath = pathWithoutLocale;
+    }
+
+    // Debug: Check current pathname
+    console.log('[Language Switch]', {
+      currentLocale: locale,
+      newLocale,
+      usePathname: pathname, // from hook (might be wrong)
+      actualPathname: currentPath, // from window.location (correct)
+      willNavigateTo: `/${newLocale}${currentPath}`,
+    });
+
     // Save the selected language to localStorage and cookie
     if (typeof window !== 'undefined') {
       localStorage.setItem('preferredLocale', newLocale);
       // Set cookie for server-side access
       document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`; // 1 year
     }
-    router.replace(pathname, { locale: newLocale as 'en' | 'th' | 'my' });
+    
+    // Use the actual current path
+    router.push(currentPath, { locale: newLocale as 'en' | 'th' | 'my' });
   };
 
   return (

@@ -1,6 +1,7 @@
 package create
 
 import (
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -13,7 +14,7 @@ import (
 )
 
 type RequestBody struct {
-	StartDate                  time.Time `json:"startDate"`
+	StartDate                  string    `json:"startDate"`
 	HourlyRate                 float64   `json:"hourlyRate"`
 	OtHourlyRate               float64   `json:"otHourlyRate"`
 	AttendanceBonusNoLate      float64   `json:"attendanceBonusNoLate"`
@@ -25,11 +26,13 @@ type RequestBody struct {
 	SocialSecurityRateEmployee float64   `json:"socialSecurityRateEmployee"`
 	SocialSecurityRateEmployer float64   `json:"socialSecurityRateEmployer"`
 	Note                       *string   `json:"note"`
+
+	ParsedStartDate time.Time `json:"-"`
 }
 
 func (p RequestBody) ToRecord() repository.Record {
 	return repository.Record{
-		StartDate:                  p.StartDate,
+		StartDate:                  p.ParsedStartDate,
 		HourlyRate:                 p.HourlyRate,
 		OtHourlyRate:               p.OtHourlyRate,
 		AttendanceBonusNoLate:      p.AttendanceBonusNoLate,
@@ -61,8 +64,15 @@ func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {
 		var req RequestBody
 		if err := c.Bind().Body(&req); err != nil {
+			log.Println(err)
 			return errs.BadRequest("invalid request body")
 		}
+
+		parsedStart, err := time.Parse("2006-01-02", req.StartDate)
+		if err != nil {
+			return errs.BadRequest("startDate must be in format YYYY-MM-DD")
+		}
+		req.ParsedStartDate = parsedStart
 
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {

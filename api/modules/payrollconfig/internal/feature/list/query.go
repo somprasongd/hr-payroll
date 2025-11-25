@@ -2,6 +2,7 @@ package list
 
 import (
 	"context"
+	"log"
 	"math"
 
 	"hrms/modules/payrollconfig/internal/dto"
@@ -40,6 +41,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 
 	res, err := h.repo.List(ctx, q.Page, q.Limit)
 	if err != nil {
+		log.Println(err)
 		return nil, errs.Internal("failed to list payroll configs")
 	}
 

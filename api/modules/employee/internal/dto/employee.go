@@ -8,6 +8,8 @@ import (
 	"hrms/modules/employee/internal/repository"
 )
 
+const dateLayout = "2006-01-02"
+
 type ListItem struct {
 	ID                  uuid.UUID `json:"id"`
 	EmployeeNumber      string    `json:"employeeNumber"`
@@ -15,7 +17,7 @@ type ListItem struct {
 	EmployeeTypeName    string    `json:"employeeTypeName"`
 	Phone               *string   `json:"phone,omitempty"`
 	Email               *string   `json:"email,omitempty"`
-	EmploymentStartDate time.Time `json:"employmentStartDate"`
+	EmploymentStartDate string    `json:"employmentStartDate"`
 	Status              string    `json:"status"`
 }
 
@@ -26,35 +28,35 @@ type Meta struct {
 }
 
 type Detail struct {
-	ID                        uuid.UUID  `json:"id"`
-	EmployeeNumber            string     `json:"employeeNumber"`
-	TitleID                   uuid.UUID  `json:"titleId"`
-	FirstName                 string     `json:"firstName"`
-	LastName                  string     `json:"lastName"`
-	IDDocumentTypeID          uuid.UUID  `json:"idDocumentTypeId"`
-	IDDocumentNumber          string     `json:"idDocumentNumber"`
-	Phone                     *string    `json:"phone,omitempty"`
-	Email                     *string    `json:"email,omitempty"`
-	EmployeeTypeID            uuid.UUID  `json:"employeeTypeId"`
-	BasePayAmount             float64    `json:"basePayAmount"`
-	EmploymentStartDate       time.Time  `json:"employmentStartDate"`
-	EmploymentEndDate         *time.Time `json:"employmentEndDate,omitempty"`
-	BankName                  *string    `json:"bankName,omitempty"`
-	BankAccountNo             *string    `json:"bankAccountNo,omitempty"`
-	SSOContribute             bool       `json:"ssoContribute"`
-	SSODeclaredWage           *float64   `json:"ssoDeclaredWage,omitempty"`
-	ProvidentFundContribute   bool       `json:"providentFundContribute"`
-	ProvidentFundRateEmployee float64    `json:"providentFundRateEmployee"`
-	ProvidentFundRateEmployer float64    `json:"providentFundRateEmployer"`
-	WithholdTax               bool       `json:"withholdTax"`
-	AllowHousing              bool       `json:"allowHousing"`
-	AllowWater                bool       `json:"allowWater"`
-	AllowElectric             bool       `json:"allowElectric"`
-	AllowInternet             bool       `json:"allowInternet"`
-	AllowDoctorFee            bool       `json:"allowDoctorFee"`
-	CreatedAt                 time.Time  `json:"createdAt"`
-	UpdatedAt                 time.Time  `json:"updatedAt"`
-	Status                    string     `json:"status"`
+	ID                        uuid.UUID `json:"id"`
+	EmployeeNumber            string    `json:"employeeNumber"`
+	TitleID                   uuid.UUID `json:"titleId"`
+	FirstName                 string    `json:"firstName"`
+	LastName                  string    `json:"lastName"`
+	IDDocumentTypeID          uuid.UUID `json:"idDocumentTypeId"`
+	IDDocumentNumber          string    `json:"idDocumentNumber"`
+	Phone                     *string   `json:"phone,omitempty"`
+	Email                     *string   `json:"email,omitempty"`
+	EmployeeTypeID            uuid.UUID `json:"employeeTypeId"`
+	BasePayAmount             float64   `json:"basePayAmount"`
+	EmploymentStartDate       string    `json:"employmentStartDate"`
+	EmploymentEndDate         *string   `json:"employmentEndDate,omitempty"`
+	BankName                  *string   `json:"bankName,omitempty"`
+	BankAccountNo             *string   `json:"bankAccountNo,omitempty"`
+	SSOContribute             bool      `json:"ssoContribute"`
+	SSODeclaredWage           *float64  `json:"ssoDeclaredWage,omitempty"`
+	ProvidentFundContribute   bool      `json:"providentFundContribute"`
+	ProvidentFundRateEmployee float64   `json:"providentFundRateEmployee"`
+	ProvidentFundRateEmployer float64   `json:"providentFundRateEmployer"`
+	WithholdTax               bool      `json:"withholdTax"`
+	AllowHousing              bool      `json:"allowHousing"`
+	AllowWater                bool      `json:"allowWater"`
+	AllowElectric             bool      `json:"allowElectric"`
+	AllowInternet             bool      `json:"allowInternet"`
+	AllowDoctorFee            bool      `json:"allowDoctorFee"`
+	CreatedAt                 time.Time `json:"createdAt"`
+	UpdatedAt                 time.Time `json:"updatedAt"`
+	Status                    string    `json:"status"`
 }
 
 func FromListRecord(r repository.ListRecord) ListItem {
@@ -65,12 +67,18 @@ func FromListRecord(r repository.ListRecord) ListItem {
 		EmployeeTypeName:    r.EmployeeTypeName,
 		Phone:               r.Phone,
 		Email:               r.Email,
-		EmploymentStartDate: r.EmploymentStartDate,
+		EmploymentStartDate: r.EmploymentStartDate.Format(dateLayout),
 		Status:              r.Status,
 	}
 }
 
 func FromDetailRecord(r repository.DetailRecord) Detail {
+	var endDateStr *string
+	if r.EmploymentEndDate != nil {
+		val := r.EmploymentEndDate.Format(dateLayout)
+		endDateStr = &val
+	}
+
 	return Detail{
 		ID:                        r.ID,
 		EmployeeNumber:            r.EmployeeNumber,
@@ -83,8 +91,8 @@ func FromDetailRecord(r repository.DetailRecord) Detail {
 		Email:                     r.Email,
 		EmployeeTypeID:            r.EmployeeTypeID,
 		BasePayAmount:             r.BasePayAmount,
-		EmploymentStartDate:       r.EmploymentStartDate,
-		EmploymentEndDate:         r.EmploymentEndDate,
+		EmploymentStartDate:       r.EmploymentStartDate.Format(dateLayout),
+		EmploymentEndDate:         endDateStr,
 		BankName:                  r.BankName,
 		BankAccountNo:             r.BankAccountNo,
 		SSOContribute:             r.SSOContribute,

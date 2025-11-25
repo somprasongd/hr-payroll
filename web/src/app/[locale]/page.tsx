@@ -18,15 +18,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuthStore } from "@/store/auth-store"
 import { useState } from "react"
 import { useTranslations } from 'next-intl';
-import { User, Lock, Eye, EyeOff, Users } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Users, AlertCircle } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRouter } from "@/i18n/routing";
+import { authService } from "@/services/auth.service";
+import { ApiError } from "@/lib/api-client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const t = useTranslations('Index');
-  const { login } = useAuthStore()
+  const { login, returnUrl, setReturnUrl } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string>('')
   const router = useRouter();
 
   const formSchema = z.object({
@@ -48,18 +52,48 @@ export default function LoginPage() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      login({
-        id: "1",
+    setError('')
+    
+    try {
+      const response = await authService.login({
         username: values.username,
-        role: "Admin"
-      }, "fake-jwt-token")
+        password: values.password,
+      })
+      
+      // Debug: Log raw response
+      console.log('[Raw API Response]', response);
+      
+      // Debug: Log response to verify token and refreshToken
+      console.log('[Login Response]', {
+        hasAccessToken: !!response.accessToken,
+        hasRefreshToken: !!response.refreshToken,
+        hasUser: !!response.user,
+        tokenPreview: response.accessToken?.substring(0, 20) + '...',
+        refreshTokenPreview: response.refreshToken?.substring(0, 20) + '...',
+      });
+      
+      // Store authentication data (using accessToken as token)
+      login(response.user, response.accessToken, response.refreshToken)
+      
+      // Debug: Verify localStorage
+      console.log('[After Login]', {
+        localStorageToken: localStorage.getItem('token')?.substring(0, 20) + '...',
+        localStorageRefreshToken: localStorage.getItem('refreshToken')?.substring(0, 20) + '...',
+      });
+      
+      // Redirect to return URL or dashboard
+      const redirectTo = returnUrl || '/dashboard'
+      setReturnUrl(null) // Clear return URL
+      router.push(redirectTo)
+    } catch (err) {
+      const apiError = err as ApiError
+      setError(apiError.message || t('errors.loginFailed'))
+      console.error('Login error:', apiError)
+    } finally {
       setLoading(false)
-      router.push('/dashboard')
-    }, 1000)
+    }
   }
 
   return (
@@ -81,6 +115,12 @@ export default function LoginPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField

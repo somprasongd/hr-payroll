@@ -39,6 +39,9 @@ func NewEndpoint(router fiber.Router) {
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
+		if err := req.ParseDates(); err != nil {
+			return err
+		}
 
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {

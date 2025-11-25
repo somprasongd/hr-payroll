@@ -95,9 +95,9 @@ EXECUTE FUNCTION payroll_config_guard_create_policy();
 ALTER TABLE payroll_config
   ADD CONSTRAINT payroll_config_no_overlap
   EXCLUDE USING gist (
-    effective_daterange WITH &&,
-    status              WITH =
+    effective_daterange WITH &&
   )
+  WHERE (status = 'active')
   DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -115,7 +115,11 @@ BEGIN
   start_date := lower(NEW.effective_daterange);
 
   UPDATE payroll_config pc
-  SET effective_daterange = daterange(lower(pc.effective_daterange), start_date, '[)'),
+  SET effective_daterange = CASE
+        WHEN lower(pc.effective_daterange) < start_date
+          THEN daterange(lower(pc.effective_daterange), start_date, '[)')
+        ELSE pc.effective_daterange -- หากวันเริ่มซ้ำกัน ให้เปลี่ยนแค่สถานะ ไม่แตะช่วงเวลา
+      END,
       status              = CASE WHEN pc.status = 'active' THEN 'retired' ELSE pc.status END,
       updated_at          = now(),
       updated_by          = NEW.updated_by

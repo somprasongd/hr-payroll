@@ -76,7 +76,7 @@ func validatePayload(p RequestBody) error {
 		strings.TrimSpace(p.IDDocumentNumber) == "" ||
 		p.EmployeeTypeID == uuid.Nil ||
 		p.BasePayAmount <= 0 ||
-		p.EmploymentStartDate.IsZero() {
+		p.ParsedEmploymentStartDate.IsZero() {
 		return errs.BadRequest("missing required fields")
 	}
 	return nil

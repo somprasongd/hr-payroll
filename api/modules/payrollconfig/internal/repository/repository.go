@@ -53,7 +53,7 @@ func (r Repository) List(ctx context.Context, page, limit int) (ListResult, erro
 	const baseQuery = `
 SELECT
   id,
-  version_no,
+  COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
   status,
@@ -71,6 +71,7 @@ SELECT
   created_at,
   updated_at
 FROM payroll_config
+WHERE effective_daterange IS NOT NULL
 ORDER BY version_no DESC
 LIMIT $1 OFFSET $2`
 
@@ -89,7 +90,7 @@ LIMIT $1 OFFSET $2`
 		items = append(items, rec)
 	}
 
-	const countQ = `SELECT COUNT(1) FROM payroll_config`
+	const countQ = `SELECT COUNT(1) FROM payroll_config WHERE effective_daterange IS NOT NULL`
 	var total int
 	if err := db.GetContext(ctx, &total, countQ); err != nil {
 		return ListResult{}, err
@@ -103,7 +104,7 @@ func (r Repository) GetEffective(ctx context.Context, date time.Time) (*Record, 
 	const q = `
 SELECT
   id,
-  version_no,
+  COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
   status,
@@ -120,7 +121,8 @@ SELECT
   note,
   created_at,
   updated_at
-FROM get_effective_payroll_config($1)
+FROM get_effective_payroll_config($1) pc
+WHERE pc.id IS NOT NULL
 LIMIT 1`
 	var rec Record
 	if err := db.GetContext(ctx, &rec, q, date); err != nil {
@@ -153,7 +155,7 @@ INSERT INTO payroll_config (
 )
 RETURNING
   id,
-  version_no,
+  COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
   status,

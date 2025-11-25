@@ -2298,8 +2298,6 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden
-      security:
-      - BearerAuth: []
       summary: Logout (revoke refresh token)
       tags:
       - Auth

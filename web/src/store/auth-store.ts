@@ -10,9 +10,13 @@ interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
+  returnUrl: string | null;
+  login: (user: User, token: string, refreshToken: string) => void;
   logout: () => void;
+  setReturnUrl: (url: string | null) => void;
+  updateToken: (token: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,23 +24,42 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
-      login: (user, token) => {
+      returnUrl: null,
+      login: (user, token, refreshToken) => {
         if (typeof window !== 'undefined') {
-            localStorage.setItem('token', token);
+          localStorage.setItem('token', token);
+          localStorage.setItem('refreshToken', refreshToken);
         }
-        set({ user, token, isAuthenticated: true });
+        set({ user, token, refreshToken, isAuthenticated: true });
       },
       logout: () => {
         if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
         }
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, refreshToken: null, isAuthenticated: false, returnUrl: null });
+      },
+      setReturnUrl: (url) => {
+        set({ returnUrl: url });
+      },
+      updateToken: (token) => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', token);
+        }
+        set({ token });
       },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ 
+        user: state.user, 
+        token: state.token, 
+        refreshToken: state.refreshToken,
+        isAuthenticated: state.isAuthenticated,
+        returnUrl: state.returnUrl,
+      }),
     }
   )
 );

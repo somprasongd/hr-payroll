@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"time"
 
 	"hrms/modules/payrollconfig/internal/dto"
@@ -36,6 +37,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	}
 	rec, err := h.repo.GetEffective(ctx, q.Date)
 	if err != nil {
+		log.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("config not found for date")
 		}

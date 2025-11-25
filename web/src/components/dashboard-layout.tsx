@@ -3,7 +3,7 @@
 import { useAuthStore } from "@/store/auth-store";
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { useRouter } from "@/i18n/routing";
+import { useRouter, usePathname } from "@/i18n/routing";
 import { 
   LayoutDashboard, 
   Users, 
@@ -15,14 +15,10 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Search,
-  Bell,
-  LogOut,
   Menu,
-  X
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -35,21 +31,41 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
 } from "@/components/ui/sheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
-export default function DashboardPage() {
-  const t = useTranslations();
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
   const tMenu = useTranslations('Menu');
   const tDashboard = useTranslations('Dashboard');
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const [activeMenu, setActiveMenu] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Determine active menu based on pathname
+  const getActiveMenu = () => {
+    if (pathname === '/dashboard') return 'dashboard';
+    if (pathname.startsWith('/settings')) return 'settings';
+    if (pathname.startsWith('/employees')) return 'employees';
+    if (pathname.startsWith('/attendance')) return 'attendance';
+    if (pathname.startsWith('/leave')) return 'leave';
+    if (pathname.startsWith('/payroll')) return 'payroll';
+    if (pathname.startsWith('/reports')) return 'reports';
+    if (pathname.startsWith('/hr')) return 'hr';
+    return 'dashboard';
+  };
+
+  const [activeMenu, setActiveMenu] = useState(getActiveMenu());
+
+  useEffect(() => {
+    setActiveMenu(getActiveMenu());
+  }, [pathname]);
 
   const handleLogout = () => {
     logout();
@@ -57,13 +73,13 @@ export default function DashboardPage() {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: tMenu('dashboard') },
-    { id: 'employees', icon: Users, label: tMenu('employeeManagement') },
-    { id: 'attendance', icon: Clock, label: tMenu('attendance') },
-    { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement') },
-    { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses') },
-    { id: 'reports', icon: FileText, label: tMenu('reports') },
-    { id: 'hr', icon: Briefcase, label: tMenu('humanResources') },
+    { id: 'dashboard', icon: LayoutDashboard, label: tMenu('dashboard'), path: '/dashboard' },
+    { id: 'employees', icon: Users, label: tMenu('employeeManagement'), path: '/employees' },
+    { id: 'attendance', icon: Clock, label: tMenu('attendance'), path: '/attendance' },
+    { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement'), path: '/leave' },
+    { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
+    { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
+    { id: 'hr', icon: Briefcase, label: tMenu('humanResources'), path: '/hr' },
   ];
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -90,7 +106,7 @@ export default function DashboardPage() {
             <button
               key={item.id}
               onClick={() => {
-                setActiveMenu(item.id);
+                router.push(item.path);
                 if (isMobile) setMobileMenuOpen(false);
               }}
               className={cn(
@@ -111,7 +127,7 @@ export default function DashboardPage() {
       <div className="border-t border-gray-200 p-3 space-y-1">
         <button
           onClick={() => {
-            setActiveMenu('settings');
+            router.push('/settings');
             if (isMobile) setMobileMenuOpen(false);
           }}
           className={cn(
@@ -229,23 +245,7 @@ export default function DashboardPage() {
         {/* Content Area */}
         <main className="flex-1 overflow-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
-              {tMenu(activeMenu)}
-            </h1>
-            
-            <div className="bg-white rounded-lg border border-gray-200 p-6 md:p-12">
-              <div className="text-center space-y-4">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-                  {tDashboard('mainContentArea')}
-                </h2>
-                <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto">
-                  {tDashboard('mainContentDescription')}
-                </p>
-                <p className="text-xs md:text-sm text-gray-500 max-w-2xl mx-auto">
-                  {tDashboard('mainContentExample')}
-                </p>
-              </div>
-            </div>
+            {children}
           </div>
         </main>
       </div>

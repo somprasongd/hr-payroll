@@ -9,24 +9,24 @@ import (
 )
 
 type Config struct {
-	ID                         uuid.UUID  `json:"id"`
-	VersionNo                  int64      `json:"versionNo"`
-	StartDate                  time.Time  `json:"startDate"`
-	EndDate                    *time.Time `json:"endDate,omitempty"`
-	Status                     string     `json:"status"`
-	HourlyRate                 float64    `json:"hourlyRate"`
-	OtHourlyRate               float64    `json:"otHourlyRate"`
-	AttendanceBonusNoLate      float64    `json:"attendanceBonusNoLate"`
-	AttendanceBonusNoLeave     float64    `json:"attendanceBonusNoLeave"`
-	HousingAllowance           float64    `json:"housingAllowance"`
-	WaterRatePerUnit           float64    `json:"waterRatePerUnit"`
-	ElectricityRatePerUnit     float64    `json:"electricityRatePerUnit"`
-	InternetFeeMonthly         float64    `json:"internetFeeMonthly"`
-	SocialSecurityRateEmployee float64    `json:"socialSecurityRateEmployee"`
-	SocialSecurityRateEmployer float64    `json:"socialSecurityRateEmployer"`
-	Note                       *string    `json:"note,omitempty"`
-	CreatedAt                  time.Time  `json:"createdAt"`
-	UpdatedAt                  time.Time  `json:"updatedAt"`
+	ID                         uuid.UUID `json:"id"`
+	VersionNo                  int64     `json:"versionNo"`
+	StartDate                  string    `json:"startDate"`
+	EndDate                    *string   `json:"endDate,omitempty"`
+	Status                     string    `json:"status"`
+	HourlyRate                 float64   `json:"hourlyRate"`
+	OtHourlyRate               float64   `json:"otHourlyRate"`
+	AttendanceBonusNoLate      float64   `json:"attendanceBonusNoLate"`
+	AttendanceBonusNoLeave     float64   `json:"attendanceBonusNoLeave"`
+	HousingAllowance           float64   `json:"housingAllowance"`
+	WaterRatePerUnit           float64   `json:"waterRatePerUnit"`
+	ElectricityRatePerUnit     float64   `json:"electricityRatePerUnit"`
+	InternetFeeMonthly         float64   `json:"internetFeeMonthly"`
+	SocialSecurityRateEmployee float64   `json:"socialSecurityRateEmployee"`
+	SocialSecurityRateEmployer float64   `json:"socialSecurityRateEmployer"`
+	Note                       *string   `json:"note,omitempty"`
+	CreatedAt                  time.Time `json:"createdAt"`
+	UpdatedAt                  time.Time `json:"updatedAt"`
 }
 
 type Meta struct {
@@ -36,11 +36,19 @@ type Meta struct {
 }
 
 func FromRecord(r repository.Record) Config {
+	const dateFmt = "2006-01-02"
+
+	var endDateStr *string
+	if r.EndDate != nil {
+		val := r.EndDate.Format(dateFmt)
+		endDateStr = &val
+	}
+
 	return Config{
 		ID:                         r.ID,
 		VersionNo:                  r.VersionNo,
-		StartDate:                  r.StartDate,
-		EndDate:                    r.EndDate,
+		StartDate:                  r.StartDate.Format(dateFmt),
+		EndDate:                    endDateStr,
 		Status:                     r.Status,
 		HourlyRate:                 r.HourlyRate,
 		OtHourlyRate:               r.OtHourlyRate,

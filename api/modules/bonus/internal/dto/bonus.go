@@ -8,11 +8,13 @@ import (
 	"hrms/modules/bonus/internal/repository"
 )
 
+const dateLayout = "2006-01-02"
+
 type Cycle struct {
 	ID               uuid.UUID `json:"id"`
-	PayrollMonth     time.Time `json:"payrollMonthDate"`
-	PeriodStart      time.Time `json:"periodStartDate"`
-	PeriodEnd        time.Time `json:"periodEndDate"`
+	PayrollMonth     string    `json:"payrollMonthDate"`
+	PeriodStart      string    `json:"periodStartDate"`
+	PeriodEnd        string    `json:"periodEndDate"`
 	Status           string    `json:"status"`
 	CreatedAt        time.Time `json:"createdAt"`
 	UpdatedAt        time.Time `json:"updatedAt"`
@@ -46,9 +48,9 @@ type Meta struct {
 func FromCycle(r repository.Cycle) Cycle {
 	return Cycle{
 		ID:               r.ID,
-		PayrollMonth:     r.PayrollMonth,
-		PeriodStart:      r.PeriodStart,
-		PeriodEnd:        r.PeriodEnd,
+		PayrollMonth:     r.PayrollMonth.Format(dateLayout),
+		PeriodStart:      r.PeriodStart.Format(dateLayout),
+		PeriodEnd:        r.PeriodEnd.Format(dateLayout),
 		Status:           r.Status,
 		CreatedAt:        r.CreatedAt,
 		UpdatedAt:        r.UpdatedAt,

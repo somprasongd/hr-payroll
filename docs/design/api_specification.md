@@ -13,6 +13,7 @@ Content-Type: application/json
 - **Transport:** HTTPS เท่านั้น
 - **Authentication:** `Bearer <Access Token>` (JWT)
 - **ID Format:** ใช้ **UUID v7** เป็น Primary Key (`id`) สำหรับทุก Resource แทน integer และ public_id เดิม
+- **Date-only Fields:** ช่องที่เป็นวันที่อย่างเดียวส่งและรับเป็น String รูปแบบ `YYYY-MM-DD` (ไม่พ่วงเวลา)
 
 ### 1.2 Error Response Format (RFC 7807)
 
@@ -572,8 +573,8 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 | --- | --- | --- | --- | --- |
 | `data[].id` | รหัส Config (UUIDv7) | UUID | **Yes** | `"019347f5..."` |
 | `data[].versionNo` | เลขเวอร์ชัน (Running Number) | Integer | **Yes** | `2` |
-| `data[].startDate` | วันที่มีผลบังคับใช้ (จาก effective_daterange) | Date (ISO) | **Yes** | `"2026-01-01"` |
-| `data[].endDate` | วันที่สิ้นสุด (Null = infinity) | Date (ISO) | No | `null` |
+| `data[].startDate` | วันที่มีผลบังคับใช้ (จาก effective_daterange) | String (YYYY-MM-DD) | **Yes** | `"2026-01-01"` |
+| `data[].endDate` | วันที่สิ้นสุด (Null = infinity) | String (YYYY-MM-DD) | No | `null` |
 | `data[].status` | สถานะ (`active`, `retired`) | Enum | **Yes** | `"active"` |
 | `data[].hourlyRate` | ค่าแรงรายชั่วโมง (Part-time) | Number | **Yes** | `400.00` |
 | `data[].otHourlyRate` | ค่า OT ต่อชั่วโมง | Number | **Yes** | `600.00` |
@@ -679,7 +680,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 | **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
 | --- | --- | --- | --- | --- |
-| `startDate` | วันที่เริ่มมีผลบังคับใช้ | Date (ISO) | **Yes** | `"2026-01-01"` |
+| `startDate` | วันที่เริ่มมีผลบังคับใช้ | String (YYYY-MM-DD) | **Yes** | `"2026-01-01"` |
 | `hourlyRate` | ค่าจ้างรายชั่วโมง (Part-time) | Number | **Yes** | `420.00` |
 | `otHourlyRate` | ค่าโอทีต่อชั่วโมง | Number | **Yes** | `630.00` |
 | `attendanceBonusNoLate` | เบี้ยขยัน (ไม่สาย) | Number | **Yes** | `500.00` |

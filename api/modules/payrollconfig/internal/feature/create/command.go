@@ -56,8 +56,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 }
 
 func validatePayload(p RequestBody) error {
-	if p.StartDate.IsZero() {
-		return errs.BadRequest("startDate is required")
+	if p.ParsedStartDate.IsZero() {
+		return errs.BadRequest("startDate is required (YYYY-MM-DD)")
 	}
 	if p.HourlyRate <= 0 || p.OtHourlyRate <= 0 {
 		return errs.BadRequest("hourlyRate and otHourlyRate must be positive")

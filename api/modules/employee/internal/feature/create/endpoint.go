@@ -13,6 +13,27 @@ import (
 	"hrms/shared/common/response"
 )
 
+const dateLayout = "2006-01-02"
+
+func (p *RequestBody) ParseDates() error {
+	start, err := time.Parse(dateLayout, p.EmploymentStartDate)
+	if err != nil {
+		return errs.BadRequest("employmentStartDate must be YYYY-MM-DD")
+	}
+	p.ParsedEmploymentStartDate = start
+
+	if p.EmploymentEndDate != nil && *p.EmploymentEndDate != "" {
+		end, err := time.Parse(dateLayout, *p.EmploymentEndDate)
+		if err != nil {
+			return errs.BadRequest("employmentEndDate must be YYYY-MM-DD")
+		}
+		p.ParsedEmploymentEndDate = &end
+	} else {
+		p.ParsedEmploymentEndDate = nil
+	}
+	return nil
+}
+
 type RequestBody struct {
 	EmployeeNumber            string     `json:"employeeNumber"`
 	TitleID                   uuid.UUID  `json:"titleId"`
@@ -24,8 +45,8 @@ type RequestBody struct {
 	Email                     *string    `json:"email"`
 	EmployeeTypeID            uuid.UUID  `json:"employeeTypeId"`
 	BasePayAmount             float64    `json:"basePayAmount"`
-	EmploymentStartDate       time.Time  `json:"employmentStartDate"`
-	EmploymentEndDate         *time.Time `json:"employmentEndDate"`
+	EmploymentStartDate       string     `json:"employmentStartDate"`
+	EmploymentEndDate         *string    `json:"employmentEndDate"`
 	BankName                  *string    `json:"bankName"`
 	BankAccountNo             *string    `json:"bankAccountNo"`
 	SSOContribute             bool       `json:"ssoContribute"`
@@ -39,6 +60,9 @@ type RequestBody struct {
 	AllowElectric             bool       `json:"allowElectric"`
 	AllowInternet             bool       `json:"allowInternet"`
 	AllowDoctorFee            bool       `json:"allowDoctorFee"`
+
+	ParsedEmploymentStartDate time.Time  `json:"-"`
+	ParsedEmploymentEndDate   *time.Time `json:"-"`
 }
 
 func (p RequestBody) ToDetailRecord() repository.DetailRecord {
@@ -53,8 +77,8 @@ func (p RequestBody) ToDetailRecord() repository.DetailRecord {
 		Email:                     p.Email,
 		EmployeeTypeID:            p.EmployeeTypeID,
 		BasePayAmount:             p.BasePayAmount,
-		EmploymentStartDate:       p.EmploymentStartDate,
-		EmploymentEndDate:         p.EmploymentEndDate,
+		EmploymentStartDate:       p.ParsedEmploymentStartDate,
+		EmploymentEndDate:         p.ParsedEmploymentEndDate,
 		BankName:                  p.BankName,
 		BankAccountNo:             p.BankAccountNo,
 		SSOContribute:             p.SSOContribute,
@@ -90,6 +114,9 @@ func NewEndpoint(router fiber.Router) {
 		var req RequestBody
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
+		}
+		if err := req.ParseDates(); err != nil {
+			return err
 		}
 
 		user, ok := contextx.UserFromContext(c.Context())
