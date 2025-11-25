@@ -68,6 +68,11 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // Skip 401 handling for login requests
+    if (originalRequest?.url?.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+
     // If error is not 401 or no config, reject immediately
     if (!originalRequest || error.response?.status !== 401) {
       return Promise.reject(error);

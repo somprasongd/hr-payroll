@@ -89,7 +89,11 @@ export default function LoginPage() {
       router.push(redirectTo)
     } catch (err) {
       const apiError = err as ApiError
-      setError(apiError.message || t('errors.loginFailed'))
+      if (apiError.statusCode === 401) {
+        setError(t('errors.loginFailed'))
+      } else {
+        setError(apiError.message || t('errors.loginFailed'))
+      }
       console.error('Login error:', apiError)
     } finally {
       setLoading(false)

@@ -19,20 +19,20 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, setReturnUrl } = useAuthStore();
+  const { isAuthenticated, setReturnUrl, _hasHydrated } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (_hasHydrated && !isAuthenticated) {
       // Save current path for return after login (without locale prefix)
       setReturnUrl(pathname);
       
       // Redirect to login
       router.push('/');
     }
-  }, [isAuthenticated, pathname, router, setReturnUrl]);
+  }, [isAuthenticated, pathname, router, setReturnUrl, _hasHydrated]);
 
-  // Show loading while checking authentication
-  if (!isAuthenticated) {
+  // Show loading while checking authentication or hydrating
+  if (!_hasHydrated || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
