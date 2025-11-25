@@ -2,12 +2,13 @@ package list
 
 import (
 	"context"
-	"log"
 	"math"
 
+	"go.uber.org/zap"
 	"hrms/modules/payrollconfig/internal/dto"
 	"hrms/modules/payrollconfig/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -41,7 +42,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 
 	res, err := h.repo.List(ctx, q.Page, q.Limit)
 	if err != nil {
-		log.Println(err)
+		logger.FromContext(ctx).Error("failed to list payroll configs", zap.Error(err))
 		return nil, errs.Internal("failed to list payroll configs")
 	}
 

@@ -6,9 +6,11 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -30,6 +32,7 @@ func NewListHandler() *listHandler { return &listHandler{} }
 func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, error) {
 	items, err := q.Repo.ListItems(ctx, q.CycleID, q.Search)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to list salary raise items", zap.Error(err))
 		return nil, errs.Internal("failed to list salary raise items")
 	}
 	return &ListResponse{Data: items}, nil

@@ -7,10 +7,12 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -43,8 +45,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	updated, err := cmd.Repo.UpdateStatus(ctx, cmd.ID, cmd.Status, cmd.Actor)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			logger.FromContext(ctx).Warn("bonus cycle not found or status cannot change", zap.Error(err), zap.String("status", cmd.Status))
 			return nil, errs.NotFound("cycle not found or cannot change status")
 		}
+		logger.FromContext(ctx).Error("failed to update bonus cycle status", zap.Error(err), zap.String("status", cmd.Status))
 		return nil, errs.Internal("failed to update status")
 	}
 	return &Response{

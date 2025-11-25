@@ -9,11 +9,13 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/worklog/internal/dto"
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -52,6 +54,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")
 		}
+		logger.FromContext(ctx).Error("failed to load worklog", zap.Error(err))
 		return nil, errs.Internal("failed to load worklog")
 	}
 
@@ -78,6 +81,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")
 		}
+		logger.FromContext(ctx).Error("failed to update worklog", zap.Error(err))
 		return nil, errs.Internal("failed to update worklog")
 	}
 

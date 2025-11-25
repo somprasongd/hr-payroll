@@ -7,10 +7,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -37,6 +39,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("bonus item not found")
 		}
+		logger.FromContext(ctx).Error("failed to load bonus item", zap.Error(err))
 		return nil, errs.Internal("failed to load bonus item")
 	}
 	if cycle.Status != "pending" {
@@ -47,6 +50,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 	updated, err := cmd.Repo.UpdateItem(ctx, cmd.ID, cmd.BonusMonths, cmd.BonusAmount, cmd.Actor)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to update bonus item", zap.Error(err))
 		return nil, errs.Internal("failed to update bonus item")
 	}
 	return &UpdateResponse{Item: *updated}, nil

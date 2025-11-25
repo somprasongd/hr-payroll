@@ -96,7 +96,76 @@
     "notesPlaceholder": "e.g. Adjusted wages according to new law or Updated electricity rates to actual costs",
     "reset": "Reset",
     "saveChanges": "Save Changes",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "next": "Next",
+    "back": "Back"
+  },
+  "Employees": {
+    "title": "Employee Management",
+    "description": "Manage employee information, contracts, and benefits",
+    "listTitle": "Employee List",
+    "createTitle": "Create New Employee",
+    "editTitle": "Edit Employee",
+    "searchPlaceholder": "Search by name, ID...",
+    "createButton": "Add Employee",
+    "personalInfo": "Personal Information",
+    "employmentInfo": "Employment Details",
+    "financialInfo": "Financial & Benefits",
+    "fields": {
+      "employeeNumber": "Employee ID",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "title": "Title",
+      "idCardType": "ID Document Type",
+      "idCardNumber": "ID Document Number",
+      "phone": "Phone",
+      "email": "Email",
+      "employeeType": "Employee Type",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "basePay": "Base Pay / Hourly Wage",
+      "bank": "Bank",
+      "accountNo": "Account Number",
+      "sso": "Social Security",
+      "ssoWage": "SSO Declared Wage",
+      "pvd": "Provident Fund",
+      "pvdRateEmployee": "PVD Employee Rate (%)",
+      "pvdRateEmployer": "PVD Employer Rate (%)",
+      "tax": "Withhold Tax",
+      "allowances": "Allowances",
+      "housing": "Housing",
+      "water": "Water",
+      "electric": "Electricity",
+      "internet": "Internet",
+      "doctorFee": "Doctor Fee",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "terminated": "Terminated",
+      "all": "All"
+    },
+    "messages": {
+      "createSuccess": "Employee created successfully",
+      "updateSuccess": "Employee updated successfully",
+      "deleteSuccess": "Employee deleted successfully",
+      "deleteTitle": "Delete Employee",
+      "confirmDelete": "Are you sure you want to delete this employee?",
+      "noEmployeesFound": "No employees found"
+    },
+    "placeholders": {
+      "selectTitle": "Select title",
+      "selectType": "Select type"
+    },
+    "cancel": "Cancel",
+    "next": "Next",
+    "back": "Back",
+    "validation": {
+      "required": "This field is required",
+      "email": "Invalid email address",
+      "positive": "Value must be positive"
+    },
+    "submitError": "Failed to save employee. Please try again."
   }
 }
 

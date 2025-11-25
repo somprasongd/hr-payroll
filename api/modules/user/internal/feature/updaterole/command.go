@@ -6,10 +6,12 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/user/internal/dto"
 	"hrms/modules/user/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -42,11 +44,13 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("user not found")
 		}
+		logger.FromContext(ctx).Error("failed to update user role", zap.Error(err))
 		return nil, errs.Internal("failed to update role")
 	}
 
 	user, err := h.repo.GetUser(ctx, cmd.ID)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to fetch updated user", zap.Error(err))
 		return nil, errs.Internal("failed to fetch updated user")
 	}
 	return &Response{User: dto.FromRecord(*user)}, nil

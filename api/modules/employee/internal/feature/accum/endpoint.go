@@ -17,7 +17,7 @@ import (
 // @Param id path string true "employee id"
 // @Success 200 {object} ListResponse
 // @Router /employees/{id}/accumulations [get]
-func Register(router fiber.Router) {
+func RegisterRead(router fiber.Router) {
 	router.Get("/:id/accumulations", func(c fiber.Ctx) error {
 		empID, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -31,7 +31,9 @@ func Register(router fiber.Router) {
 		}
 		return response.JSON(c, fiber.StatusOK, resp.Data)
 	})
+}
 
+func RegisterMutate(router fiber.Router) {
 	// create/update
 	router.Post("/:id/accumulations", func(c fiber.Ctx) error {
 		empID, err := uuid.Parse(c.Params("id"))

@@ -7,10 +7,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -30,6 +32,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
 		}
+		logger.FromContext(ctx).Error("failed to load worklog", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to load worklog")
 	}
 	if rec.Status != "pending" {
@@ -39,6 +42,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
 		}
+		logger.FromContext(ctx).Error("failed to delete worklog", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete worklog")
 	}
 	return mediator.NoResponse{}, nil

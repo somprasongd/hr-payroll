@@ -7,10 +7,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -42,6 +44,7 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 	}
 	res, err := q.Repo.ListItems(ctx, q.RunID, q.Page, q.Limit, q.Search)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to list payroll items", zap.Error(err))
 		return nil, errs.Internal("failed to list payroll items")
 	}
 	var data []dto.Item

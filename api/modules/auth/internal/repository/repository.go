@@ -87,6 +87,6 @@ func (r Repository) LogAccess(ctx context.Context, userID uuid.UUID, status stri
 	db := r.dbCtx(ctx)
 	const q = `INSERT INTO user_access_logs (user_id, status, ip_address, user_agent) VALUES ($1,$2,$3,$4)`
 	if _, err := db.ExecContext(ctx, q, userID, status, ip, ua); err != nil {
-		logger.Log().Warn("failed to log access", zap.Error(err))
+		logger.FromContext(ctx).Warn("failed to log access", zap.Error(err))
 	}
 }

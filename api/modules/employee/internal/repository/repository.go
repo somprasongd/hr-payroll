@@ -63,6 +63,10 @@ type DetailRecord struct {
 	CreatedAt                 time.Time  `db:"created_at"`
 	UpdatedAt                 time.Time  `db:"updated_at"`
 	Status                    string     `db:"status"`
+	CreatedBy                 uuid.UUID  `db:"created_by"`
+	UpdatedBy                 uuid.UUID  `db:"updated_by"`
+	DeletedAt                 *time.Time `db:"deleted_at"`
+	DeletedBy                 *uuid.UUID `db:"deleted_by"`
 }
 
 type ListResult struct {

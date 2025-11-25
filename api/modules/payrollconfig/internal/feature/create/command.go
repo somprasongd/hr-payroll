@@ -4,10 +4,12 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollconfig/internal/dto"
 	"hrms/modules/payrollconfig/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -49,6 +51,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return err
 	})
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to create payroll config", zap.Error(err))
 		return nil, errs.Internal("failed to create payroll config")
 	}
 

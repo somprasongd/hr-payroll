@@ -67,11 +67,13 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.Unauthorized("invalid credentials")
 		}
+		logger.FromContext(ctx).Error("failed to query user", zap.Error(err))
 		return nil, errs.Internal("failed to query user")
 	}
 
 	ok, err := password.Verify(cmd.Password, user.PasswordHash)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to verify password", zap.Error(err))
 		return nil, errs.Internal("failed to verify password")
 	}
 	if !ok {
@@ -81,10 +83,12 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	accessToken, _, err := h.tokenSvc.GenerateAccessToken(user.ID, user.Username, user.Role)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to generate access token", zap.Error(err))
 		return nil, errs.Internal("failed to generate access token")
 	}
 	refreshToken, refreshExp, err := h.tokenSvc.GenerateRefreshToken(user.ID, user.Username, user.Role)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to generate refresh token", zap.Error(err))
 		return nil, errs.Internal("failed to generate refresh token")
 	}
 
@@ -95,7 +99,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		h.repo.LogAccess(ctxTx, user.ID, "success", cmd.IP, cmd.UserAgent)
 		return nil
 	}); err != nil {
-		logger.Log().Error("failed to persist session", zap.Error(err))
+		logger.FromContext(ctx).Error("failed to persist session", zap.Error(err))
 		return nil, errs.Internal("failed to persist session")
 	}
 

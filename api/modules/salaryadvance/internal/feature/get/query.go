@@ -6,10 +6,12 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/salaryadvance/internal/dto"
 	"hrms/modules/salaryadvance/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -37,6 +39,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("salary advance not found")
 		}
+		logger.FromContext(ctx).Error("failed to get salary advance", zap.Error(err))
 		return nil, errs.Internal("failed to get salary advance")
 	}
 	return &Response{Item: dto.FromRecord(*rec)}, nil

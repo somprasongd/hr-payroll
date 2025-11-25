@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -72,6 +74,7 @@ func (h *upsertHandler) Handle(ctx context.Context, cmd *UpsertCommand) (*Upsert
 	}
 	out, err := h.repo.CreateAccum(ctx, cmd.EmployeeID, rec, cmd.Actor)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to upsert accumulation", zap.Error(err))
 		return nil, errs.Internal("failed to upsert accumulation")
 	}
 	return &UpsertResponse{Record: *out}, nil
@@ -82,6 +85,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("accumulation not found")
 		}
+		logger.FromContext(ctx).Error("failed to delete accumulation", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete accumulation")
 	}
 	return mediator.NoResponse{}, nil

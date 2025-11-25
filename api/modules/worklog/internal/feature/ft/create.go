@@ -7,11 +7,13 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/worklog/internal/dto"
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -52,6 +54,7 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		created, err = cmd.Repo.Insert(ctxTx, rec)
 		return err
 	}); err != nil {
+		logger.FromContext(ctx).Error("failed to create worklog", zap.Error(err))
 		return nil, errs.Internal("failed to create worklog")
 	}
 

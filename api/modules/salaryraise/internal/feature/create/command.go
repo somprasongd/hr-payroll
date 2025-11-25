@@ -5,10 +5,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/salaryraise/internal/dto"
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -64,6 +66,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.ActorID)
 		return err
 	}); err != nil {
+		logger.FromContext(ctx).Error("failed to create salary raise cycle", zap.Error(err))
 		return nil, errs.Internal("failed to create cycle (ensure only one pending cycle exists)")
 	}
 

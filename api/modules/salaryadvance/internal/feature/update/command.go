@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/salaryadvance/internal/dto"
 	"hrms/modules/salaryadvance/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -54,6 +56,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("salary advance not found")
 		}
+		logger.FromContext(ctx).Error("failed to load salary advance", zap.Error(err))
 		return nil, errs.Internal("failed to load salary advance")
 	}
 	if curr.Status != "pending" {
@@ -77,6 +80,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.BadRequest("cannot update processed salary advance")
 		}
+		logger.FromContext(ctx).Error("failed to update salary advance", zap.Error(err))
 		return nil, errs.Internal("failed to update salary advance")
 	}
 

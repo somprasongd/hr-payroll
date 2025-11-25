@@ -92,6 +92,21 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [activeTab, setActiveTab] = useState('rates');
+
+
+
+  const handleNext = () => {
+    if (activeTab === 'rates') setActiveTab('bonuses');
+    else if (activeTab === 'bonuses') setActiveTab('utilities');
+    else if (activeTab === 'utilities') setActiveTab('social');
+  };
+
+  const handleBack = () => {
+    if (activeTab === 'bonuses') setActiveTab('rates');
+    else if (activeTab === 'utilities') setActiveTab('bonuses');
+    else if (activeTab === 'social') setActiveTab('utilities');
+  };
 
   // Fetch effective config
   const fetchEffectiveConfig = async () => {
@@ -294,7 +309,7 @@ export default function SettingsPage() {
       )}
 
       {/* Configuration Form */}
-      <Tabs defaultValue="rates" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="rates">{t('rates')}</TabsTrigger>
           <TabsTrigger value="bonuses">{t('bonuses')}</TabsTrigger>
@@ -509,28 +524,28 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Notes - Only show on last tab */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('notes')}</CardTitle>
+              <CardDescription>{t('notesDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                id="note"
+                value={formData.note}
+                onChange={(e) => handleInputChange('note', e.target.value)}
+                placeholder={t('notesPlaceholder')}
+                rows={4}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Notes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('notes')}</CardTitle>
-          <CardDescription>{t('notesDescription')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            id="note"
-            value={formData.note}
-            onChange={(e) => handleInputChange('note', e.target.value)}
-            placeholder={t('notesPlaceholder')}
-            rows={4}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
-      <div className="flex justify-end gap-3">
+      {/* Navigation Buttons */}
+      <div className="flex justify-between">
         <Button 
           variant="outline" 
           onClick={() => fetchEffectiveConfig()}
@@ -538,24 +553,40 @@ export default function SettingsPage() {
         >
           {t('reset')}
         </Button>
-        <Button 
-          onClick={handleSaveConfig}
-          disabled={saving || loading}
-          className="gap-2"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {t('saving')}
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              {t('saveChanges')}
-            </>
-          )}
-        </Button>
+        
+        <div className="flex gap-3">
+          {activeTab !== 'rates' && (
+          <Button variant="outline" onClick={handleBack}>
+            {t('back')}
+          </Button>
+        )}
+        
+        {activeTab !== 'social' ? (
+          <Button onClick={handleNext}>
+            {t('next')}
+          </Button>
+        ) : (
+          <Button 
+            onClick={handleSaveConfig}
+            disabled={saving || loading}
+            className="gap-2"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t('saving')}
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                {t('saveChanges')}
+              </>
+            )}
+          </Button>
+        )}
+        </div>
       </div>
     </div>
   );
 }
+

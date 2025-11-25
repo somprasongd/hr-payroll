@@ -17,7 +17,7 @@ func ErrorHandler() fiber.Handler {
 				return response.ProblemJSON(c, ae)
 			}
 
-			logger.Log().Error("unhandled error", zap.Error(err))
+			logger.FromContext(c.Context()).Error("unhandled error", zap.Error(err))
 			return response.ProblemJSON(c, errs.Internal("internal server error"))
 		}
 		return nil

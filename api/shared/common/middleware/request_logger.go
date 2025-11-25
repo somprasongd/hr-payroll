@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"runtime/debug"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -14,24 +15,46 @@ import (
 func RequestLogger() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		start := time.Now()
+		method := c.Method()
+		path := c.Path()
+
 		requestID := c.Get("X-Request-ID")
 		if requestID == "" {
 			requestID = uuid.New().String()
 		}
 		c.Set("X-Request-ID", requestID)
 
-		ctx := logger.NewContext(c.Context(), logger.With(zap.String("request_id", requestID)))
+		reqLogger := logger.With(
+			zap.String("request_id", requestID),
+			zap.String("method", method),
+			zap.String("path", path),
+		)
+
+		ctx := logger.NewContext(c.Context(), reqLogger)
 		c.SetContext(ctx)
+
+		defer func() {
+			if r := recover(); r != nil {
+				reqLogger.Error("panic recovered",
+					zap.Any("error", r),
+					zap.ByteString("stack", debug.Stack()),
+				)
+				panic(r)
+			}
+		}()
 
 		err := c.Next()
 
 		duration := time.Since(start)
-		logger.FromContext(ctx).Info("request completed",
-			zap.Int("status", c.Response().StatusCode()),
-			zap.String("method", c.Method()),
-			zap.String("path", c.Path()),
-			zap.Duration("duration", duration),
-		)
+		status := c.Response().StatusCode()
+
+		if err != nil {
+			reqLogger.Error("request error", zap.Error(err))
+		}
+
+		reqLogger.Info("request completed",
+			zap.Int("status", status),
+			zap.Duration("duration", duration))
 
 		return err
 	}

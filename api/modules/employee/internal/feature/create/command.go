@@ -7,10 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/dto"
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -54,8 +56,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			logger.FromContext(ctx).Warn("duplicate employee number", zap.Error(err))
 			return nil, errs.Conflict("employeeNumber already exists for active employee")
 		}
+		logger.FromContext(ctx).Error("failed to create employee", zap.Error(err))
 		return nil, errs.Internal("failed to create employee")
 	}
 

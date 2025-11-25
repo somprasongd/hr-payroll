@@ -8,10 +8,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/worklog/internal/dto"
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -51,6 +53,7 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 
 	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.Status, q.EntryType, q.StartDate, q.EndDate)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to list worklogs", zap.Error(err))
 		return nil, errs.Internal("failed to list worklogs")
 	}
 

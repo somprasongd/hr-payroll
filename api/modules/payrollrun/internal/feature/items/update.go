@@ -8,11 +8,13 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -55,11 +57,13 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll item not found")
 		}
+		logger.FromContext(ctx).Error("failed to load payroll item", zap.Error(err))
 		return nil, errs.Internal("failed to load payroll item")
 	}
 	// ensure parent run pending
 	run, err := cmd.Repo.Get(ctx, item.RunID)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to load payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to load run for item")
 	}
 	if run.Status != "pending" {
@@ -105,6 +109,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		updated, err = cmd.Repo.UpdateItem(ctxTx, cmd.ID, cmd.ActorID, fields)
 		return err
 	}); err != nil {
+		logger.FromContext(ctx).Error("failed to update payroll item", zap.Error(err))
 		return nil, errs.Internal("failed to update payroll item")
 	}
 

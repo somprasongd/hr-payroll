@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -48,6 +50,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 
 	res, err := h.repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.Type, q.Status, q.StartDate, q.EndDate)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to list debt transactions", zap.Error(err))
 		return nil, errs.Internal("failed to list debt transactions")
 	}
 

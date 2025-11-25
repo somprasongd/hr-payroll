@@ -7,10 +7,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -38,6 +40,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("raise item not found")
 		}
+		logger.FromContext(ctx).Error("failed to load raise item", zap.Error(err))
 		return nil, errs.Internal("failed to load raise item")
 	}
 	if cycle.Status != "pending" {
@@ -48,6 +51,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 	updated, err := cmd.Repo.UpdateItem(ctx, cmd.ID, cmd.RaisePercent, cmd.RaiseAmount, cmd.NewSSOWage, cmd.ActorID)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to update raise item", zap.Error(err))
 		return nil, errs.Internal("failed to update raise item")
 	}
 	return &UpdateResponse{Item: *updated}, nil

@@ -17,9 +17,9 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 }
 
 type MasterRecord struct {
-	ID   uuid.UUID `db:"id"`
-	Code string    `db:"code"`
-	Name string    `db:"name_th"`
+	ID   uuid.UUID `db:"id" json:"id"`
+	Code string    `db:"code" json:"code"`
+	Name string    `db:"name_th" json:"name"`
 }
 
 func (r Repository) PersonTitles(ctx context.Context) ([]MasterRecord, error) {

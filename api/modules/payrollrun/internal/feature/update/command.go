@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -53,6 +55,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll run not found")
 		}
+		logger.FromContext(ctx).Error("failed to load payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to load payroll run")
 	}
 	if run.Status == "approved" {
@@ -80,6 +83,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.BadRequest("cannot update payroll run")
 		}
+		logger.FromContext(ctx).Error("failed to update payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to update payroll run")
 	}
 

@@ -6,10 +6,12 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -34,6 +36,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll run not found")
 		}
+		logger.FromContext(ctx).Error("failed to get payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to get payroll run")
 	}
 	return &Response{Run: dto.FromRun(*run)}, nil

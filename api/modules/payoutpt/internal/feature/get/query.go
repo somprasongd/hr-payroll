@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -34,10 +36,12 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payout not found")
 		}
+		logger.FromContext(ctx).Error("failed to get payout", zap.Error(err))
 		return nil, errs.Internal("failed to get payout")
 	}
 	items, err := q.Repo.ListItems(ctx, q.ID)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to list payout items", zap.Error(err))
 		return nil, errs.Internal("failed to list payout items")
 	}
 	return &Response{Payout: *p, Items: items}, nil

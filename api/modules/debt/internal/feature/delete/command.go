@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/debt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -33,6 +35,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("debt transaction not found")
 		}
+		logger.FromContext(ctx).Error("failed to load debt transaction", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to load transaction")
 	}
 	if rec.Status != "pending" {
@@ -42,6 +45,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("debt transaction not found")
 		}
+		logger.FromContext(ctx).Error("failed to delete debt transaction", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete transaction")
 	}
 	return mediator.NoResponse{}, nil

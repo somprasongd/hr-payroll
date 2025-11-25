@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -38,8 +40,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return err
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			logger.FromContext(ctx).Warn("payout not payable", zap.Error(err))
 			return nil, errs.BadRequest("payout not found or not payable")
 		}
+		logger.FromContext(ctx).Error("failed to mark payout paid", zap.Error(err))
 		return nil, errs.Internal("failed to mark payout paid")
 	}
 	return &Response{Payout: payout}, nil

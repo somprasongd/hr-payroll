@@ -53,8 +53,11 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	create.NewEndpoint(group)
 	get.NewEndpoint(group)
 	update.NewEndpoint(group)
-	// Admin only
+	// Admin & HR
+	adminOrHR := group.Group("", middleware.RequireRoles("admin", "hr"))
+	delete.NewEndpoint(adminOrHR)
+	accum.RegisterRead(adminOrHR)
+	// Admin only (mutations)
 	admin := group.Group("", middleware.RequireRoles("admin"))
-	delete.NewEndpoint(admin)
-	accum.Register(admin)
+	accum.RegisterMutate(admin)
 }

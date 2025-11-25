@@ -5,9 +5,11 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -49,8 +51,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}); err != nil {
 		var appErr *errs.AppError
 		if errors.As(err, &appErr) {
+			logger.FromContext(ctx).Warn("payout creation failed with app error", zap.Error(err))
 			return nil, err
 		}
+		logger.FromContext(ctx).Error("failed to create payout", zap.Error(err))
 		return nil, errs.Internal("failed to create payout")
 	}
 	return &Response{Payout: payout}, nil

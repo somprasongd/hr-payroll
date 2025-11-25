@@ -7,10 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"hrms/modules/auth/internal/repository"
 	"hrms/modules/auth/internal/service"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/jwt"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -58,6 +60,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.Unauthorized("refresh token not found")
 		}
+		logger.FromContext(ctx).Error("failed to validate refresh token", zap.Error(err))
 		return nil, errs.Internal("failed to validate refresh token")
 	}
 	if rec.RevokedAt.Valid || time.Now().After(rec.ExpiresAt) {
@@ -87,6 +90,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil
 	})
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to refresh token", zap.Error(err))
 		return nil, errs.Internal("failed to refresh token")
 	}
 

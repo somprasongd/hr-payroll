@@ -5,10 +5,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/salaryadvance/internal/dto"
 	"hrms/modules/salaryadvance/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -62,6 +64,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		created, err = h.repo.Create(ctxTx, rec, cmd.ActorID)
 		return err
 	}); err != nil {
+		logger.FromContext(ctx).Error("failed to create salary advance", zap.Error(err))
 		return nil, errs.Internal("failed to create salary advance")
 	}
 

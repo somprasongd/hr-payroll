@@ -3,7 +3,7 @@
 import { useAuthStore } from "@/store/auth-store";
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { useRouter, usePathname } from "@/i18n/routing";
+import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { 
   LayoutDashboard, 
   Users, 
@@ -39,8 +39,113 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+interface SidebarProps {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+  isMobile?: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
+  activeMenu: string;
+}
+
+function Sidebar({ 
+  collapsed, 
+  setCollapsed, 
+  isMobile = false, 
+  setMobileMenuOpen,
+  activeMenu 
+}: SidebarProps) {
   const tMenu = useTranslations('Menu');
+  
+  const menuItems = [
+    { id: 'dashboard', icon: LayoutDashboard, label: tMenu('dashboard'), path: '/dashboard' },
+    { id: 'employees', icon: Users, label: tMenu('employeeManagement'), path: '/employees' },
+    { id: 'attendance', icon: Clock, label: tMenu('attendance'), path: '/attendance' },
+    { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement'), path: '/leave' },
+    { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
+    { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
+    { id: 'hr', icon: Briefcase, label: tMenu('humanResources'), path: '/hr' },
+  ];
+
+  return (
+    <>
+      {/* Logo */}
+      <div className="h-16 flex items-center justify-center border-b border-gray-200 px-4">
+        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+          <Briefcase className="w-6 h-6 text-white" />
+        </div>
+        {(!collapsed || isMobile) && (
+          <div className="ml-3">
+            <div className="font-bold text-sm">HR & Payroll</div>
+            <div className="text-xs text-gray-500">System</div>
+          </div>
+        )}
+      </div>
+
+      {/* Menu Items */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeMenu === item.id;
+          return (
+            <Link
+              key={item.id}
+              href={item.path}
+              onClick={() => {
+                if (isMobile) setMobileMenuOpen(false);
+              }}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+                isActive 
+                  ? "bg-blue-50 text-blue-600 font-medium" 
+                  : "text-gray-700 hover:bg-gray-100"
+              )}
+            >
+              <Icon className="w-5 h-5 flex-shrink-0" />
+              {(!collapsed || isMobile) && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Settings & Collapse */}
+      <div className="border-t border-gray-200 p-3 space-y-1">
+        <Link
+          href="/settings"
+          onClick={() => {
+            if (isMobile) setMobileMenuOpen(false);
+          }}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+            activeMenu === 'settings'
+              ? "bg-blue-50 text-blue-600 font-medium"
+              : "text-gray-700 hover:bg-gray-100"
+          )}
+        >
+          <Settings className="w-5 h-5 flex-shrink-0" />
+          {(!collapsed || isMobile) && <span>{tMenu('settings')}</span>}
+        </Link>
+        
+        {!isMobile && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            {collapsed ? (
+              <ChevronRight className="w-5 h-5 flex-shrink-0" />
+            ) : (
+              <>
+                <ChevronLeft className="w-5 h-5 flex-shrink-0" />
+                <span>{tMenu('collapse')}</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
   const tDashboard = useTranslations('Dashboard');
   const { user, logout } = useAuthStore();
   const router = useRouter();
@@ -72,94 +177,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push('/');
   };
 
-  const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: tMenu('dashboard'), path: '/dashboard' },
-    { id: 'employees', icon: Users, label: tMenu('employeeManagement'), path: '/employees' },
-    { id: 'attendance', icon: Clock, label: tMenu('attendance'), path: '/attendance' },
-    { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement'), path: '/leave' },
-    { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
-    { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
-    { id: 'hr', icon: Briefcase, label: tMenu('humanResources'), path: '/hr' },
-  ];
-
-  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <>
-      {/* Logo */}
-      <div className="h-16 flex items-center justify-center border-b border-gray-200 px-4">
-        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-          <Briefcase className="w-6 h-6 text-white" />
-        </div>
-        {(!collapsed || isMobile) && (
-          <div className="ml-3">
-            <div className="font-bold text-sm">HR & Payroll</div>
-            <div className="text-xs text-gray-500">System</div>
-          </div>
-        )}
-      </div>
-
-      {/* Menu Items */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeMenu === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                router.push(item.path);
-                if (isMobile) setMobileMenuOpen(false);
-              }}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-                isActive 
-                  ? "bg-blue-50 text-blue-600 font-medium" 
-                  : "text-gray-700 hover:bg-gray-100"
-              )}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {(!collapsed || isMobile) && <span>{item.label}</span>}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Settings & Collapse */}
-      <div className="border-t border-gray-200 p-3 space-y-1">
-        <button
-          onClick={() => {
-            router.push('/settings');
-            if (isMobile) setMobileMenuOpen(false);
-          }}
-          className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-            activeMenu === 'settings'
-              ? "bg-blue-50 text-blue-600 font-medium"
-              : "text-gray-700 hover:bg-gray-100"
-          )}
-        >
-          <Settings className="w-5 h-5 flex-shrink-0" />
-          {(!collapsed || isMobile) && <span>{tMenu('settings')}</span>}
-        </button>
-        
-        {!isMobile && (
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            {collapsed ? (
-              <ChevronRight className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <>
-                <ChevronLeft className="w-5 h-5 flex-shrink-0" />
-                <span>{tMenu('collapse')}</span>
-              </>
-            )}
-          </button>
-        )}
-      </div>
-    </>
-  );
-
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Desktop Sidebar */}
@@ -169,14 +186,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           collapsed ? "w-20" : "w-64"
         )}
       >
-        <SidebarContent />
+        <Sidebar 
+          collapsed={collapsed} 
+          setCollapsed={setCollapsed} 
+          setMobileMenuOpen={setMobileMenuOpen}
+          activeMenu={activeMenu}
+        />
       </aside>
 
       {/* Mobile Menu Sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-64 p-0">
           <div className="flex flex-col h-full bg-white">
-            <SidebarContent isMobile />
+            <Sidebar 
+              collapsed={false} 
+              setCollapsed={setCollapsed} 
+              isMobile={true}
+              setMobileMenuOpen={setMobileMenuOpen}
+              activeMenu={activeMenu}
+            />
           </div>
         </SheetContent>
       </Sheet>

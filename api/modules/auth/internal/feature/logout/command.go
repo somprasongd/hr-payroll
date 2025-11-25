@@ -7,10 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"hrms/modules/auth/internal/repository"
 	"hrms/modules/auth/internal/service"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/jwt"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -49,6 +51,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.Unauthorized("refresh token not found")
 		}
+		logger.FromContext(ctx).Error("failed to load refresh token", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to revoke token")
 	}
 	if rec.UserID != claims.UserID {
@@ -62,6 +65,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	}
 
 	if err := h.repo.RevokeRefreshToken(ctx, tokenHash); err != nil {
+		logger.FromContext(ctx).Error("failed to revoke refresh token", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to revoke token")
 	}
 

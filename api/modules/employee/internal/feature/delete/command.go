@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -32,6 +34,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("employee not found")
 		}
+		logger.FromContext(ctx).Error("failed to delete employee", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete employee")
 	}
 	return mediator.NoResponse{}, nil

@@ -7,10 +7,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -34,6 +36,7 @@ func (h *getHandler) Handle(ctx context.Context, q *GetQuery) (*GetResponse, err
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll item not found")
 		}
+		logger.FromContext(ctx).Error("failed to load payroll item", zap.Error(err))
 		return nil, errs.Internal("failed to load payroll item")
 	}
 	return &GetResponse{ItemDetail: dto.FromItemDetail(*item)}, nil

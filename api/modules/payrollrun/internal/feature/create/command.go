@@ -7,10 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -62,6 +64,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		created, err = cmd.Repo.Create(ctxTx, run, cmd.ActorID)
 		return err
 	}); err != nil {
+		logger.FromContext(ctx).Error("failed to create payroll run", zap.Error(err))
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
 			return nil, errs.Conflict("payroll run for this month already exists")

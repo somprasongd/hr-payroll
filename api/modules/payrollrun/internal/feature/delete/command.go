@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -30,6 +32,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("payroll run not found")
 		}
+		logger.FromContext(ctx).Error("failed to load payroll run", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to load payroll run")
 	}
 	if run.Status == "approved" {
@@ -39,6 +42,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("payroll run not found or not deletable")
 		}
+		logger.FromContext(ctx).Error("failed to delete payroll run", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete payroll run")
 	}
 	return mediator.NoResponse{}, nil

@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -30,6 +32,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("bonus cycle not found")
 		}
+		logger.FromContext(ctx).Error("failed to load bonus cycle", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to load bonus cycle")
 	}
 	if cycle.Status == "approved" {
@@ -39,6 +42,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("bonus cycle not found")
 		}
+		logger.FromContext(ctx).Error("failed to delete bonus cycle", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete bonus cycle")
 	}
 	return mediator.NoResponse{}, nil

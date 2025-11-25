@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/user/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
 )
@@ -41,6 +43,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	hash, err := password.Hash(cmd.NewPassword)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to hash new password", zap.Error(err))
 		return nil, errs.Internal("failed to hash password")
 	}
 
@@ -48,6 +51,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("user not found")
 		}
+		logger.FromContext(ctx).Error("failed to reset password", zap.Error(err))
 		return nil, errs.Internal("failed to reset password")
 	}
 

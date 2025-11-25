@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -89,6 +91,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		}
 		return h.repo.InsertInstallments(ctxTx, createdParent.ID, cmd.EmployeeID, installments, cmd.ActorID)
 	}); err != nil {
+		logger.FromContext(ctx).Error("failed to create debt plan", zap.Error(err))
 		return nil, errs.Internal("failed to create debt plan")
 	}
 

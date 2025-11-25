@@ -90,8 +90,8 @@ CREATE TABLE employees (
   CONSTRAINT employees_dates_valid CHECK (employment_end_date IS NULL OR employment_end_date >= employment_start_date),
   CONSTRAINT employees_bank_pair CHECK (bank_account_no IS NULL OR bank_name IS NOT NULL),
   CONSTRAINT employees_sso_pair CHECK (
-    (NOT sso_contribute AND sso_declared_wage IS NULL) OR
-    (sso_contribute AND sso_declared_wage IS NOT NULL)
+    (NOT sso_contribute AND COALESCE(NEW.sso_declared_wage, 0) <= 0) OR
+    (sso_contribute AND COALESCE(NEW.sso_declared_wage, 0) > 0)
   )
 );
 
@@ -127,9 +127,18 @@ BEGIN
   END IF;
 
   -- สอดคล้อง SSO
-  IF (NOT NEW.sso_contribute AND NEW.sso_declared_wage IS NOT NULL) OR
-    (NEW.sso_contribute AND NEW.sso_declared_wage IS NULL) THEN
-    RAISE EXCEPTION 'sso_contribute and sso_declared_wage must be consistent';
+  IF NOT NEW.sso_contribute THEN
+    -- ต้องเป็น NULL หรือ 0 เท่านั้น
+    IF NEW.sso_declared_wage IS NOT NULL
+      AND NEW.sso_declared_wage <> 0 THEN
+      RAISE EXCEPTION 'when sso_contribute = false, sso_declared_wage must be NULL or 0';
+    END IF;
+  ELSE
+    -- sso_contribute = true → ต้องกรอกและ > 0
+    IF NEW.sso_declared_wage IS NULL
+      OR NEW.sso_declared_wage <= 0 THEN
+      RAISE EXCEPTION 'when sso_contribute = true, sso_declared_wage must be > 0';
+    END IF;
   END IF;
 
   RETURN NEW;

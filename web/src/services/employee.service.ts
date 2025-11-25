@@ -1,0 +1,129 @@
+import { apiClient } from '@/lib/api-client';
+
+export interface Employee {
+  id: string;
+  employeeNumber: string;
+  titleId: string;
+  firstName: string;
+  lastName: string;
+  idDocumentTypeId: string;
+  idDocumentNumber: string;
+  phone?: string;
+  email?: string;
+  employeeTypeId: string;
+  basePayAmount: number;
+  employmentStartDate: string;
+  employmentEndDate?: string;
+  bankName?: string;
+  bankAccountNo?: string;
+  ssoContribute: boolean;
+  ssoDeclaredWage?: number;
+  providentFundContribute: boolean;
+  providentFundRateEmployee?: number;
+  providentFundRateEmployer?: number;
+  withholdTax: boolean;
+  allowHousing: boolean;
+  allowWater: boolean;
+  allowElectric: boolean;
+  allowInternet: boolean;
+  allowDoctorFee: boolean;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Display fields (joined)
+  employeeTypeName?: string;
+  fullNameTh?: string;
+  status?: 'active' | 'terminated';
+}
+
+export interface CreateEmployeeRequest {
+  employeeNumber: string;
+  titleId: string;
+  firstName: string;
+  lastName: string;
+  idDocumentTypeId: string;
+  idDocumentNumber: string;
+  phone?: string;
+  email?: string;
+  employeeTypeId: string;
+  basePayAmount: number;
+  employmentStartDate: string;
+  bankName?: string;
+  bankAccountNo?: string;
+  ssoContribute: boolean;
+  ssoDeclaredWage?: number;
+  providentFundContribute: boolean;
+  providentFundRateEmployee?: number;
+  providentFundRateEmployer?: number;
+  withholdTax?: boolean;
+  allowHousing?: boolean;
+  allowWater?: boolean;
+  allowElectric?: boolean;
+  allowInternet?: boolean;
+  allowDoctorFee: boolean;
+}
+
+export interface UpdateEmployeeRequest {
+  basePayAmount?: number;
+  allowDoctorFee?: boolean;
+  providentFundContribute?: boolean;
+  providentFundRateEmployee?: number;
+  providentFundRateEmployer?: number;
+  // Add other updatable fields as needed based on API spec or requirements
+  titleId?: string;
+  firstName?: string;
+  lastName?: string;
+  idDocumentTypeId?: string;
+  idDocumentNumber?: string;
+  phone?: string;
+  email?: string;
+  employeeTypeId?: string;
+  employmentStartDate?: string;
+  employmentEndDate?: string;
+  bankName?: string;
+  bankAccountNo?: string;
+  ssoContribute?: boolean;
+  ssoDeclaredWage?: number;
+  withholdTax?: boolean;
+  allowHousing?: boolean;
+  allowWater?: boolean;
+  allowElectric?: boolean;
+  allowInternet?: boolean;
+}
+
+export interface EmployeeListResponse {
+  data: Employee[];
+  meta: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+  };
+}
+
+export const employeeService = {
+  getEmployees: async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.search) query.append('search', params.search);
+    if (params?.status) query.append('status', params.status);
+    
+    return apiClient.get<EmployeeListResponse>(`/employees?${query.toString()}`);
+  },
+
+  getEmployee: async (id: string) => {
+    return apiClient.get<Employee>(`/employees/${id}`);
+  },
+
+  createEmployee: async (data: CreateEmployeeRequest) => {
+    return apiClient.post<Employee>('/employees', data);
+  },
+
+  updateEmployee: async (id: string, data: UpdateEmployeeRequest) => {
+    return apiClient.put<Employee>(`/employees/${id}`, data);
+  },
+
+  deleteEmployee: async (id: string) => {
+    return apiClient.delete(`/employees/${id}`);
+  },
+};

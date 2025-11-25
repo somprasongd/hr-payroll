@@ -86,16 +86,18 @@ func (t *sqlTransactor) WithinTransaction(ctx context.Context, txFunc func(ctxWi
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	log := logger.FromContext(ctx)
+
 	go func() {
 		for _, hook := range hooks {
 			func(h PostCommitHook) {
 				defer func() {
 					if r := recover(); r != nil {
-						logger.Log().Error(fmt.Sprintf("post-commit hook panic: %v", r))
+						log.Error(fmt.Sprintf("post-commit hook panic: %v", r))
 					}
 				}()
 				if err := h(ctx); err != nil {
-					logger.Log().Error(fmt.Sprintf("post-commit hook error: %v", err))
+					log.Error(fmt.Sprintf("post-commit hook error: %v", err))
 				}
 			}(hook)
 		}

@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/salaryadvance/internal/dto"
 	"hrms/modules/salaryadvance/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -46,6 +48,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 
 	res, err := h.repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.PayrollMonth, q.Status)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to list salary advances", zap.Error(err))
 		return nil, errs.Internal("failed to list salary advances")
 	}
 

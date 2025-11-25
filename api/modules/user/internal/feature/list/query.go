@@ -5,9 +5,11 @@ import (
 	"math"
 	"strings"
 
+	"go.uber.org/zap"
 	"hrms/modules/user/internal/dto"
 	"hrms/modules/user/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
@@ -43,6 +45,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 
 	result, err := h.repo.ListUsers(ctx, q.Page, q.Limit, q.Role)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to list users", zap.Error(err))
 		return nil, errs.Internal("failed to list users")
 	}
 
