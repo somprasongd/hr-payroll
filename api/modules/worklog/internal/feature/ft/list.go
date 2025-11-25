@@ -92,7 +92,7 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 // @Failure 403
 // @Router /worklogs/ft [get]
 func Register(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor) {
-	router.Get("/", func(c fiber.Ctx) error {
+	handler := func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
 		status := c.Query("status", "pending")
@@ -135,7 +135,11 @@ func Register(router fiber.Router, repo repository.FTRepository, tx transactor.T
 			return err
 		}
 		return response.JSON(c, fiber.StatusOK, resp)
-	})
+	}
+
+	// Support both /worklogs/ft and /worklogs/ft/
+	router.Get("/", handler)
+	router.Get("", handler)
 
 	// register detail/create/update/delete
 	registerGet(router, repo)

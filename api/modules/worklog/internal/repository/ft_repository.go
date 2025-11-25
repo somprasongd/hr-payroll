@@ -30,6 +30,7 @@ type FTRecord struct {
 	UpdatedAt  time.Time  `db:"updated_at"`
 	UpdatedBy  uuid.UUID  `db:"updated_by"`
 	DeletedAt  *time.Time `db:"deleted_at"`
+	DeletedBy  *uuid.UUID `db:"deleted_by"`
 }
 
 type FTListResult struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -37,19 +38,15 @@ type updateHandler struct{}
 func NewUpdateHandler() *updateHandler { return &updateHandler{} }
 
 type UpdateRequest struct {
-	WorkDate   time.Time `json:"workDate"`
-	MorningIn  *string   `json:"morningIn"`
-	MorningOut *string   `json:"morningOut"`
-	EveningIn  *string   `json:"eveningIn"`
-	EveningOut *string   `json:"eveningOut"`
-	Status     string    `json:"status"` // pending|approved
+	WorkDate   string  `json:"workDate"`
+	MorningIn  *string `json:"morningIn"`
+	MorningOut *string `json:"morningOut"`
+	EveningIn  *string `json:"eveningIn"`
+	EveningOut *string `json:"eveningOut"`
+	Status     string  `json:"status"` // pending|approved
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
-	if err := validateUpdatePayload(cmd.Payload); err != nil {
-		return nil, err
-	}
-
 	current, err := cmd.Repo.Get(ctx, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -58,17 +55,23 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		logger.FromContext(ctx).Error("failed to load worklog", zap.Error(err))
 		return nil, errs.Internal("failed to load worklog")
 	}
-	if current.Status == "approved" && cmd.Payload.Status != "approved" {
+
+	parsedDate, morningIn, morningOut, eveningIn, eveningOut, status, err := normalizeUpdatePayload(&cmd.Payload, current)
+	if err != nil {
+		return nil, err
+	}
+
+	if current.Status == "approved" && status != "approved" {
 		return nil, errs.BadRequest("cannot revert approved worklog")
 	}
 
 	rec := repository.PTRecord{
-		WorkDate:   cmd.Payload.WorkDate,
-		MorningIn:  cmd.Payload.MorningIn,
-		MorningOut: cmd.Payload.MorningOut,
-		EveningIn:  cmd.Payload.EveningIn,
-		EveningOut: cmd.Payload.EveningOut,
-		Status:     cmd.Payload.Status,
+		WorkDate:   parsedDate,
+		MorningIn:  morningIn,
+		MorningOut: morningOut,
+		EveningIn:  eveningIn,
+		EveningOut: eveningOut,
+		Status:     status,
 		UpdatedBy:  cmd.ActorID,
 	}
 
@@ -89,17 +92,60 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	return &UpdateResponse{PTItem: dto.FromPT(*updated)}, nil
 }
 
-func validateUpdatePayload(p UpdateRequest) error {
-	tmp := CreateRequest{
-		EmployeeID: uuid.New(), // bypass employee validation
-		WorkDate:   p.WorkDate,
-		MorningIn:  p.MorningIn,
-		MorningOut: p.MorningOut,
-		EveningIn:  p.EveningIn,
-		EveningOut: p.EveningOut,
-		Status:     p.Status,
+func normalizeUpdatePayload(p *UpdateRequest, current *repository.PTRecord) (time.Time, *string, *string, *string, *string, string, error) {
+	// work date (fallback to current)
+	var workDate time.Time
+	if strings.TrimSpace(p.WorkDate) == "" {
+		workDate = current.WorkDate
+	} else {
+		d, err := time.Parse("2006-01-02", strings.TrimSpace(p.WorkDate))
+		if err != nil {
+			return time.Time{}, nil, nil, nil, nil, "", errs.BadRequest("workDate must be YYYY-MM-DD")
+		}
+		workDate = d
 	}
-	return validatePayload(tmp)
+
+	// time fields: keep current if nil; empty string means clear
+	parseTime := func(val *string, currentVal *string, field string) (*string, error) {
+		if val == nil {
+			return currentVal, nil
+		}
+		trimmed := strings.TrimSpace(*val)
+		if trimmed == "" {
+			return nil, nil
+		}
+		if _, err := time.Parse("15:04", trimmed); err != nil {
+			return nil, errs.BadRequest(field + " must be HH:MM")
+		}
+		return &trimmed, nil
+	}
+
+	mIn, err := parseTime(p.MorningIn, current.MorningIn, "morningIn")
+	if err != nil {
+		return time.Time{}, nil, nil, nil, nil, "", err
+	}
+	mOut, err := parseTime(p.MorningOut, current.MorningOut, "morningOut")
+	if err != nil {
+		return time.Time{}, nil, nil, nil, nil, "", err
+	}
+	eIn, err := parseTime(p.EveningIn, current.EveningIn, "eveningIn")
+	if err != nil {
+		return time.Time{}, nil, nil, nil, nil, "", err
+	}
+	eOut, err := parseTime(p.EveningOut, current.EveningOut, "eveningOut")
+	if err != nil {
+		return time.Time{}, nil, nil, nil, nil, "", err
+	}
+
+	status := strings.TrimSpace(p.Status)
+	if status == "" {
+		status = current.Status
+	}
+	if status != "pending" && status != "approved" {
+		return time.Time{}, nil, nil, nil, nil, "", errs.BadRequest("invalid status")
+	}
+
+	return workDate, mIn, mOut, eIn, eOut, status, nil
 }
 
 // @Summary Update worklog PT

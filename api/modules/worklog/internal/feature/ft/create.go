@@ -35,13 +35,14 @@ type createHandler struct{}
 func NewCreateHandler() *createHandler { return &createHandler{} }
 
 func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*CreateResponse, error) {
-	if err := validateFTPayload(cmd.Payload); err != nil {
+	parsedDate, err := validateFTPayload(&cmd.Payload)
+	if err != nil {
 		return nil, err
 	}
 	rec := repository.FTRecord{
 		EmployeeID: cmd.Payload.EmployeeID,
 		EntryType:  cmd.Payload.EntryType,
-		WorkDate:   cmd.Payload.WorkDate,
+		WorkDate:   parsedDate,
 		Quantity:   cmd.Payload.Quantity,
 		Status:     "pending",
 		CreatedBy:  cmd.ActorID,
@@ -64,27 +65,32 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 type CreateRequest struct {
 	EmployeeID uuid.UUID `json:"employeeId"`
 	EntryType  string    `json:"entryType"`
-	WorkDate   time.Time `json:"workDate"`
+	WorkDate   string    `json:"workDate"`
 	Quantity   float64   `json:"quantity"`
 }
 
-func validateFTPayload(p CreateRequest) error {
+func validateFTPayload(p *CreateRequest) (time.Time, error) {
 	if p.EmployeeID == uuid.Nil {
-		return errs.BadRequest("employeeId is required")
+		return time.Time{}, errs.BadRequest("employeeId is required")
 	}
 	entry := strings.TrimSpace(p.EntryType)
 	switch entry {
 	case "late", "leave_day", "leave_double", "leave_hours", "ot":
 	default:
-		return errs.BadRequest("invalid entryType")
+		return time.Time{}, errs.BadRequest("invalid entryType")
 	}
-	if p.WorkDate.IsZero() {
-		return errs.BadRequest("workDate is required")
+	dateStr := strings.TrimSpace(p.WorkDate)
+	if dateStr == "" {
+		return time.Time{}, errs.BadRequest("workDate is required")
+	}
+	parsedDate, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return time.Time{}, errs.BadRequest("workDate must be YYYY-MM-DD")
 	}
 	if p.Quantity <= 0 {
-		return errs.BadRequest("quantity must be > 0")
+		return time.Time{}, errs.BadRequest("quantity must be > 0")
 	}
-	return nil
+	return parsedDate, nil
 }
 
 // @Summary Create worklog FT

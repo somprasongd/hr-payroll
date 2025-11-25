@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  LogOut
+  LogOut,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -60,7 +61,9 @@ function Sidebar({
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: tMenu('dashboard'), path: '/dashboard' },
     { id: 'employees', icon: Users, label: tMenu('employeeManagement'), path: '/employees' },
-    { id: 'attendance', icon: Clock, label: tMenu('attendance'), path: '/attendance' },
+    { id: 'attendance', icon: Clock, label: tMenu('attendance'), path: '/attendance', disabled: true },
+    { id: 'worklog-ft', icon: User, label: tMenu('worklogFT'), path: '/worklogs/ft', indent: true },
+    { id: 'worklog-pt', icon: Clock, label: tMenu('worklogPT'), path: '/worklogs/pt', indent: true },
     { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement'), path: '/leave' },
     { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
     { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
@@ -83,7 +86,7 @@ function Sidebar({
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeMenu === item.id;
@@ -96,6 +99,8 @@ function Sidebar({
               }}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+                item.indent ? "pl-7" : "",
+                item.disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : "",
                 isActive 
                   ? "bg-blue-50 text-blue-600 font-medium" 
                   : "text-gray-700 hover:bg-gray-100"
@@ -178,6 +183,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname === '/dashboard') return 'dashboard';
     if (pathname.startsWith('/settings')) return 'settings';
     if (pathname.startsWith('/employees')) return 'employees';
+    if (pathname.startsWith('/worklogs/ft')) return 'worklog-ft';
+    if (pathname.startsWith('/worklogs/pt')) return 'worklog-pt';
     if (pathname.startsWith('/attendance')) return 'attendance';
     if (pathname.startsWith('/leave')) return 'leave';
     if (pathname.startsWith('/payroll')) return 'payroll';

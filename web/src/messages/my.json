@@ -34,6 +34,8 @@
     "dashboard": "ဒက်ရှ်ဘုတ်",
     "employeeManagement": "ဝန်ထမ်းစီမံခန့်ခွဲမှု",
     "attendance": "တက်ရောက်မှု",
+    "worklogFT": "အချိန်ပြည့်",
+    "worklogPT": "အချိန်ပိုင်း",
     "leaveManagement": "ခွင့်စီမံခန့်ခွဲမှု",
     "payrollExpenses": "လစာနှင့် ကုန်ကျစရိတ်",
     "reports": "အစီရင်ခံစာများ",
@@ -286,6 +288,188 @@
     "editRoleDescription": "{username} အတွက် အခန်းကဏ္ဍ မွမ်းမံပါ",
     "deleteConfirmTitle": "သေချာပါသလား?",
     "deleteConfirmDescription": "ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။ ဤအရာသည် {username} ကို အပြီးတိုင် ဖျက်ဆီးပါမည်။"
+  },
+  "Worklogs": {
+    "FT": {
+      "title": "အချိန်ပြည့် လုပ်ငန်းမှတ်တမ်း",
+      "description": "အချိန်ပြည့် ဝန်ထမ်းများအတွက် နောက်ကျမှု၊ ခွင့်နှင့် OT မှတ်တမ်းများ စီမံခန့်ခွဲပါ",
+      "createButton": "မှတ်တမ်းအသစ် ဖန်တီးပါ",
+      "createTitle": "မှတ်တမ်းအသစ် ဖန်တီးပါ",
+      "editTitle": "မှတ်တမ်း ပြင်ဆင်ပါ",
+      "formDescription": "အချိန်မှတ်တမ်း အချက်အလက်များ ဖြည့်ပါ",
+      "noData": "မှတ်တမ်း မရှိပါ",
+      "fields": {
+        "employee": "ဝန်ထမ်း",
+        "workDate": "ရက်စွဲ",
+        "entryType": "အမျိုးအစား",
+        "quantity": "ပမာဏ"
+      },
+      "placeholders": {
+        "selectEmployee": "ဝန်ထမ်း ရွေးပါ",
+        "quantity": "ပမာဏ ထည့်ပါ"
+      },
+      "entryTypes": {
+        "late": "နောက်ကျ",
+        "leave_day": "ခွင့် (နေ့)",
+        "leave_double": "ခွင့် (လစာ ၂ ဆ)",
+        "leave_hours": "ခွင့် (နာရီ)",
+        "ot": "အချိန်ပို"
+      },
+      "statuses": {
+        "pending": "စောင့်ဆိုင်းဆဲ",
+        "approved": "အတည်ပြုပြီး"
+      },
+      "units": {
+        "minutes": "မိနစ်",
+        "hours": "နာရီ",
+        "days": "ရက်"
+      },
+      "filters": {
+        "employee": "ဝန်ထမ်း",
+        "entryType": "အမျိုးအစား",
+        "status": "အခြေအနေ",
+        "startDate": "စတင်ရက်",
+        "endDate": "ပြီးဆုံးရက်",
+        "allEmployees": "ဝန်ထမ်းအားလုံး",
+        "allTypes": "အမျိုးအစားအားလုံး",
+        "allStatuses": "အခြေအနေအားလုံး"
+      },
+      "table": {
+        "employee": "ဝန်ထမ်း",
+        "workDate": "ရက်စွဲ",
+        "entryType": "အမျိုးအစား",
+        "quantity": "ပမာဏ",
+        "status": "အခြေအနေ",
+        "actions": "လုပ်ဆောင်ချက်များ"
+      },
+      "pagination": {
+        "page": "စာမျက်နှာ",
+        "of": "မှ",
+        "previous": "ရှေ့",
+        "next": "နောက်"
+      },
+      "validation": {
+        "employeeRequired": "ဝန်ထမ်း ရွေးချယ်ပါ",
+        "workDateRequired": "ရက်စွဲ ရွေးချယ်ပါ",
+        "quantityRequired": "မှန်ကန်သော ပမာဏ ထည့်ပါ"
+      },
+      "success": {
+        "created": "အောင်မြင်စွာ ဖန်တီးပြီး",
+        "createdDescription": "မှတ်တမ်း ဖန်တီးပြီးပါပြီ",
+        "updated": "အောင်မြင်စွာ ပြင်ဆင်ပြီး",
+        "updatedDescription": "မှတ်တမ်း ပြင်ဆင်ပြီးပါပြီ",
+        "deleted": "အောင်မြင်စွာ ဖျက်ပြီး",
+        "deletedDescription": "မှတ်တမ်း ဖျက်ပြီးပါပြီ"
+      },
+      "errors": {
+        "fetchFailed": "ဒေတာ ရယူ၍မရပါ",
+        "fetchFailedDescription": "ထပ်ကြိုးစားပါ",
+        "saveFailed": "သိမ်းဆည်း၍မရပါ",
+        "saveFailedDescription": "ဒေတာ စစ်ဆေး၍ ထပ်ကြိုးစားပါ",
+        "deleteFailed": "ဖျက်၍မရပါ",
+        "deleteFailedDescription": "ထပ်ကြိုးစားပါ",
+        "cannotEdit": "ပြင်ဆင်၍မရပါ",
+        "cannotEditDescription": "စောင့်ဆိုင်းဆဲ မှတ်တမ်းများကိုသာ ပြင်ဆင်နိုင်သည်",
+        "cannotDelete": "ဖျက်၍မရပါ",
+        "cannotDeleteDescription": "စောင့်ဆိုင်းဆဲ မှတ်တမ်းများကိုသာ ဖျက်နိုင်သည်"
+      },
+      "deleteDialog": {
+        "title": "ဖျက်ရန် အတည်ပြုပါ",
+        "description": "ဤမှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား?"
+      }
+    },
+    "PT": {
+      "title": "အချိန်ပိုင်း အချိန်မှတ်တမ်း",
+      "description": "အချိန်ပိုင်း ဝန်ထမ်းများအတွက် အချိန်မှတ်တမ်းများ စီမံခန့်ခွဲပါ",
+      "createButton": "အချိန် မှတ်တမ်းတင်ပါ",
+      "createTitle": "အလုပ်အချိန် မှတ်တမ်းတင်ပါ",
+      "editTitle": "အလုပ်အချိန် ပြင်ဆင်ပါ",
+      "formDescription": "ဝန်ထမ်း ဝင်/ထွက် အချိန်မှတ်တမ်းတင်ပါ",
+      "noData": "အချိန်မှတ်တမ်း မရှိပါ",
+      "totalHours": "စုစုပေါင်း နာရီ",
+      "fields": {
+        "employee": "ဝန်ထမ်း",
+        "workDate": "ရက်စွဲ",
+        "morningShift": "နံနက် ရက်ချိန်း",
+        "eveningShift": "ညနေ ရက်ချိန်း",
+        "timeIn": "ဝင်",
+        "timeOut": "ထွက်"
+      },
+      "placeholders": {
+        "selectEmployee": "ဝန်ထမ်း ရွေးပါ"
+      },
+      "statuses": {
+        "pending": "စောင့်ဆိုင်းဆဲ",
+        "approved": "အတည်ပြုပြီး",
+        "to_pay": "ပေးချေဖို့",
+        "paid": "ပေးချေပြီး"
+      },
+      "units": {
+        "hours": "နာရီ"
+      },
+      "filters": {
+        "employee": "ဝန်ထမ်း",
+        "status": "အခြေအနေ",
+        "startDate": "စတင်ရက်",
+        "endDate": "ပြီးဆုံးရက်",
+        "allEmployees": "ဝန်ထမ်းအားလုံး",
+        "allStatuses": "အခြေအနေအားလုံး"
+      },
+      "table": {
+        "employee": "ဝန်ထမ်း",
+        "workDate": "ရက်စွဲ",
+        "morningShift": "နံနက် ရက်ချိန်း",
+        "eveningShift": "ညနေ ရက်ချိန်း",
+        "totalHours": "စုစုပေါင်း နာရီ",
+        "status": "အခြေအနေ",
+        "actions": "လုပ်ဆောင်ချက်များ"
+      },
+      "pagination": {
+        "page": "စာမျက်နှာ",
+        "of": "မှ",
+        "previous": "ရှေ့",
+        "next": "နောက်"
+      },
+      "validation": {
+        "employeeRequired": "ဝန်ထမ်း ရွေးချယ်ပါ",
+        "workDateRequired": "ရက်စွဲ ရွေးချယ်ပါ",
+        "atLeastOneShift": "အနည်းဆုံး တစ်ချိန်းကို ဖြည့်ပါ",
+        "completeMorningShift": "နံနက် ဝင်/ထွက် အချိန်ကို ပြည့်စုံစွာ ဖြည့်ပါ",
+        "completeEveningShift": "ညနေ ဝင်/ထွက် အချိန်ကို ပြည့်စုံစွာ ဖြည့်ပါ"
+      },
+      "success": {
+        "created": "အောင်မြင်စွာ ဖန်တီးပြီး",
+        "createdDescription": "အချိန်မှတ်တမ်း ဖန်တီးပြီးပါပြီ",
+        "updated": "အောင်မြင်စွာ ပြင်ဆင်ပြီး",
+        "updated Description": "အချိန်မှတ်တမ်း ပြင်ဆင်ပြီးပါပြီ",
+        "deleted": "အောင်မြင်စွာ ဖျက်ပြီး",
+        "deletedDescription": "အချိန်မှတ်တမ်း ဖျက်ပြီးပါပြီ"
+      },
+      "errors": {
+        "fetchFailed": "ဒေတာ ရယူ၍မရပါ",
+        "fetchFailedDescription": "ထပ်ကြိုးစားပါ",
+        "saveFailed": "သိမ်းဆည်း၍မရပါ",
+        "saveFailedDescription": "ဒေတာ စစ်ဆေး၍ ထပ်ကြိုးစားပါ",
+        "deleteFailed": "ဖျက်၍မရပါ",
+        "deleteFailedDescription": "ထပ်ကြိုးစားပါ",
+        "cannotEdit": "ပြင်ဆင်၍မရပါ",
+        "cannotEditDescription": "စောင့်ဆိုင်းဆဲ မှတ်တမ်းများကိုသာ ပြင်ဆင်နိုင်သည်",
+        "cannotDelete": "ဖျက်၍မရပါ",
+        "cannotDeleteDescription": "စောင့်ဆိုင်းဆဲ မှတ်တမ်းများကိုသာ ဖျက်နိုင်သည်"
+      },
+      "deleteDialog": {
+        "title": "ဖျက်ရန် အတည်ပြုပါ",
+        "description": "ဤမှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား?"
+      }
+    }
+  },
+  "Common": {
+    "cancel": "မလုပ်တော့ပါ",
+    "save": "သိမ်းဆည်းရန်",
+    "saving": "သိမ်းဆည်းနေသည်...",
+    "delete": "ဖျက်ရန်",
+    "loading": "လုပ်ဆောင်နေသည်...",
+    "clearFilters": "စစ်ထုတ်မှုများ ရှင်းလင်းရန်"
   }
 }
 

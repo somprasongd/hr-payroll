@@ -34,6 +34,8 @@
     "dashboard": "แดชบอร์ดหลัก",
     "employeeManagement": "จัดการพนักงาน",
     "attendance": "บันทึกเวลาทำงาน",
+    "worklogFT": "พนักงานประจำ",
+    "worklogPT": "พาร์ทไทม์",
     "leaveManagement": "การลันเดียว",
     "payrollExpenses": "ยอดเงินเดือน & ค่าใช้",
     "reports": "รายงาน",
@@ -286,6 +288,188 @@
     "editRoleDescription": "แก้ไขสิทธิ์การใช้งานสำหรับ {username}",
     "deleteConfirmTitle": "ยืนยันการลบผู้ใช้งาน",
     "deleteConfirmDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งาน {username}? การกระทำนี้ไม่สามารถย้อนกลับได้"
+  },
+  "Worklogs": {
+    "FT": {
+      "title": "บันทึกเวลาพนักงานประจำ",
+      "description": "จัดการบันทึกการมาสาย ลา และ OT ของพนักงานประจำ",
+      "createButton": "บันทึกรายการใหม่",
+      "createTitle": "บันทึกรายการใหม่",
+      "editTitle": "แก้ไขรายการ",
+      "formDescription": "กรอกข้อมูลการบันทึกเวลาทำงาน",
+      "noData": "ไม่พบข้อมูลบันทึกเวลา",
+      "fields": {
+        "employee": "พนักงาน",
+        "workDate": "วันที่",
+        "entryType": "ประเภท",
+        "quantity": "จำนวน"
+      },
+      "placeholders": {
+        "selectEmployee": "เลือกพนักงาน",
+        "quantity": "กรอกจำนวน"
+      },
+      "entryTypes": {
+        "late": "มาสาย",
+        "leave_day": "ลา (วัน)",
+        "leave_double": "ลา (2 แรง)",
+        "leave_hours": "ลา (ชั่วโมง)",
+        "ot": "OT"
+      },
+      "statuses": {
+        "pending": "รอดำเนินการ",
+        "approved": "อนุมัติแล้ว"
+      },
+      "units": {
+        "minutes": "นาที",
+        "hours": "ชั่วโมง",
+        "days": "วัน"
+      },
+      "filters": {
+        "employee": "พนักงาน",
+        "entryType": "ประเภท",
+        "status": "สถานะ",
+        "startDate": "วันที่เริ่มต้น",
+        "endDate": "วันที่สิ้นสุด",
+        "allEmployees": "ทุกคน",
+        "allTypes": "ทุกประเภท",
+        "allStatuses": "ทุกสถานะ"
+      },
+      "table": {
+        "employee": "พนักงาน",
+        "workDate": "วันที่",
+        "entryType": "ประเภท",
+        "quantity": "จำนวน",
+        "status": "สถานะ",
+        "actions": "จัดการ"
+      },
+      "pagination": {
+        "page": "หน้า",
+        "of": "จาก",
+        "previous": "ก่อนหน้า",
+        "next": "ถัดไป"
+      },
+      "validation": {
+        "employeeRequired": "กรุณาเลือกพนักงาน",
+        "workDateRequired": "กรุณาเลือกวันที่",
+        "quantityRequired": "กรุณากรอกจำนวนที่ถูกต้อง"
+      },
+      "success": {
+        "created": "บันทึกสำเร็จ",
+        "createdDescription": "บันทึกรายการเรียบร้อยแล้ว",
+        "updated": "แก้ไขสำเร็จ",
+        "updatedDescription": "แก้ไขรายการเรียบร้อยแล้ว",
+        "deleted": "ลบสำเร็จ",
+        "deletedDescription": "ลบรายการเรียบร้อยแล้ว"
+      },
+      "errors": {
+        "fetchFailed": "ไม่สามารถโหลดข้อมูล",
+        "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "saveFailed": "ไม่สามารถบันทึกข้อมูล",
+        "saveFailedDescription": "กรุณาตรวจสอบข้อมูลและลองใหม่",
+        "deleteFailed": "ไม่สามารถลบรายการ",
+        "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "cannotEdit": "ไม่สามารถแก้ไขได้",
+        "cannotEditDescription": "สามารถแก้ไขได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
+        "cannotDelete": "ไม่สามารถลบได้",
+        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น"
+      },
+      "deleteDialog": {
+        "title": "ยืนยันการลบ",
+        "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?"
+      }
+    },
+    "PT": {
+      "title": "บันทึกเวลาพาร์ทไทม์",
+      "description": "จัดการลงเวลาเข้า-ออกของพนักงานพาร์ทไทม์",
+      "createButton": "บันทึกเวลาใหม่",
+      "createTitle": "บันทึกเวลาทำงาน",
+      "editTitle": "แก้ไขเวลาทำงาน",
+      "formDescription": "บันทึกเวลาเข้า-ออกของพนักงาน",
+      "noData": "ไม่พบข้อมูลบันทึกเวลา",
+      "totalHours": "ชั่วโมงรวม",
+      "fields": {
+        "employee": "พนักงาน",
+        "workDate": "วันที่",
+        "morningShift": "กะเช้า",
+        "eveningShift": "กะบ่าย",
+        "timeIn": "เข้า",
+        "timeOut": "ออก"
+      },
+      "placeholders": {
+        "selectEmployee": "เลือกพนักงาน"
+      },
+      "statuses": {
+        "pending": "รอดำเนินการ",
+        "approved": "อนุมัติแล้ว",
+        "to_pay": "รอจ่ายเงิน",
+        "paid": "จ่ายแล้ว"
+      },
+      "units": {
+        "hours": "ชั่วโมง"
+      },
+      "filters": {
+        "employee": "พนักงาน",
+        "status": "สถานะ",
+        "startDate": "วันที่เริ่มต้น",
+        "endDate": "วันที่สิ้นสุด",
+        "allEmployees": "ทุกคน",
+        "allStatuses": "ทุกสถานะ"
+      },
+      "table": {
+        "employee": "พนักงาน",
+        "workDate": "วันที่",
+        "morningShift": "กะเช้า",
+        "eveningShift": "กะบ่าย",
+        "totalHours": "ชั่วโมงรวม",
+        "status": "สถานะ",
+        "actions": "จัดการ"
+      },
+      "pagination": {
+        "page": "หน้า",
+        "of": "จาก",
+        "previous": "ก่อนหน้า",
+        "next": "ถัดไป"
+      },
+      "validation": {
+        "employeeRequired": "กรุณาเลือกพนักงาน",
+        "workDateRequired": "กรุณาเลือกวันที่",
+        "atLeastOneShift": "กรุณากรอกเวลาอย่างน้อยหนึ่งกะ",
+        "completeMorningShift": "กรุณากรอกเวลาเข้า-ออกกะเช้าให้ครบ",
+        "completeEveningShift": "กรุณากรอกเวลาเข้า-ออกกะบ่ายให้ครบ"
+      },
+      "success": {
+        "created": "บันทึกสำเร็จ",
+        "createdDescription": "บันทึกเวลาเรียบร้อยแล้ว",
+        "updated": "แก้ไขสำเร็จ",
+        "updatedDescription": "แก้ไขเวลาเรียบร้อยแล้ว",
+        "deleted": "ลบสำเร็จ",
+        "deletedDescription": "ลบรายการเรียบร้อยแล้ว"
+      },
+      "errors": {
+        "fetchFailed": "ไม่สามารถโหลดข้อมูล",
+        "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "saveFailed": "ไม่สามารถบันทึกข้อมูล",
+        "saveFailedDescription": "กรุณาตรวจสอบข้อมูลและลองใหม่",
+        "deleteFailed": "ไม่สามารถลบรายการ",
+        "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "cannotEdit": "ไม่สามารถแก้ไขได้",
+        "cannotEditDescription": "สามารถแก้ไขได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
+        "cannotDelete": "ไม่สามารถลบได้",
+        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น"
+      },
+      "deleteDialog": {
+        "title": "ยืนยันการลบ",
+        "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?"
+      }
+    }
+  },
+  "Common": {
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "saving": "กำลังบันทึก...",
+    "delete": "ลบ",
+    "loading": "กำลังโหลด...",
+    "clearFilters": "ล้างตัวกรอง"
   }
 }
 

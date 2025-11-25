@@ -36,7 +36,7 @@ func NewCreateHandler() *createHandler { return &createHandler{} }
 
 type CreateRequest struct {
 	EmployeeID uuid.UUID `json:"employeeId"`
-	WorkDate   time.Time `json:"workDate"`
+	WorkDate   string    `json:"workDate"`
 	MorningIn  *string   `json:"morningIn"`
 	MorningOut *string   `json:"morningOut"`
 	EveningIn  *string   `json:"eveningIn"`
@@ -45,13 +45,14 @@ type CreateRequest struct {
 }
 
 func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*CreateResponse, error) {
-	if err := validatePayload(cmd.Payload); err != nil {
+	parsedDate, err := validatePayload(&cmd.Payload)
+	if err != nil {
 		return nil, err
 	}
 
 	rec := repository.PTRecord{
 		EmployeeID: cmd.Payload.EmployeeID,
-		WorkDate:   cmd.Payload.WorkDate,
+		WorkDate:   parsedDate,
 		MorningIn:  cmd.Payload.MorningIn,
 		MorningOut: cmd.Payload.MorningOut,
 		EveningIn:  cmd.Payload.EveningIn,
@@ -74,29 +75,34 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	return &CreateResponse{PTItem: dto.FromPT(*created)}, nil
 }
 
-func validatePayload(p CreateRequest) error {
+func validatePayload(p *CreateRequest) (time.Time, error) {
 	if p.EmployeeID == uuid.Nil {
-		return errs.BadRequest("employeeId is required")
+		return time.Time{}, errs.BadRequest("employeeId is required")
 	}
-	if p.WorkDate.IsZero() {
-		return errs.BadRequest("workDate is required")
+	dateStr := strings.TrimSpace(p.WorkDate)
+	if dateStr == "" {
+		return time.Time{}, errs.BadRequest("workDate is required")
+	}
+	parsedDate, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return time.Time{}, errs.BadRequest("workDate must be YYYY-MM-DD")
 	}
 	p.Status = strings.TrimSpace(p.Status)
 	if p.Status == "" {
 		p.Status = "pending"
 	}
 	if p.Status != "pending" && p.Status != "approved" {
-		return errs.BadRequest("invalid status")
+		return time.Time{}, errs.BadRequest("invalid status")
 	}
 	// time pairing is enforced by DB; just ensure strings look like HH:MM?
 	for _, t := range []*string{p.MorningIn, p.MorningOut, p.EveningIn, p.EveningOut} {
 		if t != nil && *t != "" {
 			if _, err := time.Parse("15:04", *t); err != nil {
-				return errs.BadRequest("time format must be HH:MM")
+				return time.Time{}, errs.BadRequest("time format must be HH:MM")
 			}
 		}
 	}
-	return nil
+	return parsedDate, nil
 }
 
 // @Summary Create worklog PT

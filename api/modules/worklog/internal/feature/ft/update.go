@@ -38,17 +38,13 @@ type updateHandler struct{}
 func NewUpdateHandler() *updateHandler { return &updateHandler{} }
 
 type UpdateRequest struct {
-	EntryType string    `json:"entryType"`
-	WorkDate  time.Time `json:"workDate"`
-	Quantity  float64   `json:"quantity"`
-	Status    string    `json:"status"` // pending|approved
+	EntryType string   `json:"entryType"`
+	WorkDate  string   `json:"workDate"`
+	Quantity  *float64 `json:"quantity"`
+	Status    string   `json:"status"` // pending|approved
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
-	if err := validateUpdatePayload(cmd.Payload); err != nil {
-		return nil, err
-	}
-
 	current, err := cmd.Repo.Get(ctx, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -58,16 +54,21 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		return nil, errs.Internal("failed to load worklog")
 	}
 
+	entryType, workDate, quantity, status, err := normalizeUpdatePayload(&cmd.Payload, current)
+	if err != nil {
+		return nil, err
+	}
+
 	// only allow delete/update on pending; status transitions pending->approved allowed; approved cannot change status back
-	if current.Status == "approved" && cmd.Payload.Status != "approved" {
+	if current.Status == "approved" && status != "approved" {
 		return nil, errs.BadRequest("cannot revert approved worklog")
 	}
 
 	rec := repository.FTRecord{
-		EntryType: cmd.Payload.EntryType,
-		WorkDate:  cmd.Payload.WorkDate,
-		Quantity:  cmd.Payload.Quantity,
-		Status:    cmd.Payload.Status,
+		EntryType: entryType,
+		WorkDate:  workDate,
+		Quantity:  quantity,
+		Status:    status,
 		UpdatedBy: cmd.ActorID,
 	}
 
@@ -88,23 +89,48 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	return &UpdateResponse{FTItem: dto.FromFT(*updated)}, nil
 }
 
-func validateUpdatePayload(p UpdateRequest) error {
-	if err := validateFTPayload(CreateRequest{
-		EmployeeID: uuid.New(), // placeholder for validation of fields
-		EntryType:  p.EntryType,
-		WorkDate:   p.WorkDate,
-		Quantity:   p.Quantity,
-	}); err != nil {
-		return err
+func normalizeUpdatePayload(p *UpdateRequest, current *repository.FTRecord) (string, time.Time, float64, string, error) {
+	entryType := strings.TrimSpace(p.EntryType)
+	if entryType == "" {
+		entryType = current.EntryType
+	} else {
+		switch entryType {
+		case "late", "leave_day", "leave_double", "leave_hours", "ot":
+		default:
+			return "", time.Time{}, 0, "", errs.BadRequest("invalid entryType")
+		}
 	}
-	p.Status = strings.TrimSpace(p.Status)
-	if p.Status == "" {
-		p.Status = "pending"
+
+	var workDate time.Time
+	if strings.TrimSpace(p.WorkDate) == "" {
+		workDate = current.WorkDate
+	} else {
+		parsedDate, err := time.Parse("2006-01-02", strings.TrimSpace(p.WorkDate))
+		if err != nil {
+			return "", time.Time{}, 0, "", errs.BadRequest("workDate must be YYYY-MM-DD")
+		}
+		workDate = parsedDate
 	}
-	if p.Status != "pending" && p.Status != "approved" {
-		return errs.BadRequest("invalid status")
+
+	var quantity float64
+	if p.Quantity == nil {
+		quantity = current.Quantity
+	} else {
+		if *p.Quantity <= 0 {
+			return "", time.Time{}, 0, "", errs.BadRequest("quantity must be > 0")
+		}
+		quantity = *p.Quantity
 	}
-	return nil
+
+	status := strings.TrimSpace(p.Status)
+	if status == "" {
+		status = current.Status
+	}
+	if status != "pending" && status != "approved" {
+		return "", time.Time{}, 0, "", errs.BadRequest("invalid status")
+	}
+
+	return entryType, workDate, quantity, status, nil
 }
 
 // @Summary Update worklog FT
