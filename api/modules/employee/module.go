@@ -1,7 +1,9 @@
 package employee
 
 import (
-	"hrms/modules/employee/internal/feature/accum"
+	accdelete "hrms/modules/employee/internal/feature/accum/delete"
+	acclist "hrms/modules/employee/internal/feature/accum/list"
+	accupsert "hrms/modules/employee/internal/feature/accum/upsert"
 	"hrms/modules/employee/internal/feature/create"
 	"hrms/modules/employee/internal/feature/delete"
 	"hrms/modules/employee/internal/feature/get"
@@ -40,9 +42,9 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor))
 	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.ctx.Transactor))
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo))
-	mediator.Register[*accum.ListQuery, *accum.ListResponse](accum.NewListHandler(m.repo))
-	mediator.Register[*accum.UpsertCommand, *accum.UpsertResponse](accum.NewUpsertHandler(m.repo))
-	mediator.Register[*accum.DeleteCommand, mediator.NoResponse](accum.NewDeleteHandler(m.repo))
+	mediator.Register[*acclist.Query, *acclist.Response](acclist.NewHandler(m.repo))
+	mediator.Register[*accupsert.Command, *accupsert.Response](accupsert.NewHandler(m.repo))
+	mediator.Register[*accdelete.Command, mediator.NoResponse](accdelete.NewHandler(m.repo))
 	return nil
 }
 
@@ -56,8 +58,9 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	// Admin & HR
 	adminOrHR := group.Group("", middleware.RequireRoles("admin", "hr"))
 	delete.NewEndpoint(adminOrHR)
-	accum.RegisterRead(adminOrHR)
+	acclist.NewEndpoint(adminOrHR)
 	// Admin only (mutations)
 	admin := group.Group("", middleware.RequireRoles("admin"))
-	accum.RegisterMutate(admin)
+	accupsert.NewEndpoint(admin)
+	accdelete.NewEndpoint(admin)
 }

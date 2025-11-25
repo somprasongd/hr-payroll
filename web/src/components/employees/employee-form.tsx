@@ -34,6 +34,7 @@ import {
 
 import { Employee, CreateEmployeeRequest, UpdateEmployeeRequest } from '@/services/employee.service';
 import { masterDataService, AllMasterData } from '@/services/master-data.service';
+import { AccumulationView } from './accumulation-view';
 
 
 
@@ -41,15 +42,17 @@ interface EmployeeFormProps {
   initialData?: Employee;
   onSubmit: (data: CreateEmployeeRequest | UpdateEmployeeRequest) => Promise<void>;
   isEditing?: boolean;
+  defaultTab?: string;
 }
 
-    export function EmployeeForm({ initialData, onSubmit, isEditing = false }: EmployeeFormProps) {
+    export function EmployeeForm({ initialData, onSubmit, isEditing = false, defaultTab = 'personal' }: EmployeeFormProps) {
   const t = useTranslations('Employees');
+  const tAccum = useTranslations('Accumulation');
   const router = useRouter();
   const [masterData, setMasterData] = useState<AllMasterData | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('personal');
+  const [activeTab, setActiveTab] = useState(defaultTab);
   
   // Refs for auto-focus
   const employmentInputRef = React.useRef<HTMLInputElement>(null);
@@ -162,6 +165,9 @@ interface EmployeeFormProps {
   const ssoContribute = form.watch('ssoContribute');
   const basePayAmount = form.watch('basePayAmount');
   const employeeTypeId = form.watch('employeeTypeId');
+  const firstName = form.watch('firstName');
+  const lastName = form.watch('lastName');
+  const employeeNumber = form.watch('employeeNumber');
 
   useEffect(() => {
     if (ssoContribute && masterData?.employeeTypes) {
@@ -196,18 +202,22 @@ interface EmployeeFormProps {
         setTimeout(() => {
           employmentInputRef.current?.focus();
         }, 100);
+
       } else if (activeTab === 'employment') {
         setActiveTab('financial');
         setTimeout(() => {
           financialInputRef.current?.focus();
         }, 100);
+      } else if (activeTab === 'financial' && isEditing) {
+        setActiveTab('accumulation');
       }
     }
   };
 
   const handleBack = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    if (activeTab === 'financial') setActiveTab('employment');
+    if (activeTab === 'accumulation') setActiveTab('financial');
+    else if (activeTab === 'financial') setActiveTab('employment');
     else if (activeTab === 'employment') setActiveTab('personal');
   };
 
@@ -227,11 +237,38 @@ interface EmployeeFormProps {
             </AlertDescription>
           </Alert>
         )}
+        
+        {/* Dynamic Header Info */}
+        <div className="bg-muted/50 p-4 rounded-lg border mb-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-muted-foreground">{t('fields.employeeNumber')}:</span>
+              <span className="font-medium">{employeeNumber || '-'}</span>
+            </div>
+            <div className="hidden md:block w-px h-4 bg-border" />
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-muted-foreground">{t('fields.firstName')} - {t('fields.lastName')}:</span>
+              <span className="font-medium">
+                {firstName || '-'} {lastName || ''}
+              </span>
+            </div>
+            <div className="hidden md:block w-px h-4 bg-border" />
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-muted-foreground">{t('fields.employeeType')}:</span>
+              <span className="font-medium">
+                {masterData?.employeeTypes?.find(t => t.id === employeeTypeId)?.name || 
+                 masterData?.employeeTypes?.find(t => t.id === employeeTypeId)?.Name || '-'}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isEditing ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="personal">{t('personalInfo')}</TabsTrigger>
             <TabsTrigger value="employment">{t('employmentInfo')}</TabsTrigger>
             <TabsTrigger value="financial">{t('financialInfo')}</TabsTrigger>
+            {isEditing && <TabsTrigger value="accumulation">{tAccum('title')}</TabsTrigger>}
           </TabsList>
           
           <TabsContent value="personal">
@@ -694,6 +731,12 @@ interface EmployeeFormProps {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isEditing && initialData?.id && (
+            <TabsContent value="accumulation">
+              <AccumulationView employeeId={initialData.id} />
+            </TabsContent>
+          )}
         </Tabs>
 
         <div className="flex justify-end space-x-4">
@@ -713,6 +756,25 @@ interface EmployeeFormProps {
               </Button>
               <Button type="button" onClick={handleNext}>
                 {t('next')}
+              </Button>
+            </>
+          ) : activeTab === 'financial' && isEditing ? (
+            <>
+              <Button type="button" variant="outline" onClick={handleBack}>
+                {t('back')}
+              </Button>
+              <Button type="button" onClick={handleNext}>
+                {t('next')}
+              </Button>
+            </>
+          ) : activeTab === 'accumulation' ? (
+            <>
+              <Button type="button" variant="outline" onClick={handleBack}>
+                {t('back')}
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? t('messages.updateSuccess') : t('createButton')}
               </Button>
             </>
           ) : (

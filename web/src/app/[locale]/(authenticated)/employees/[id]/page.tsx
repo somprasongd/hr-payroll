@@ -7,10 +7,14 @@ import { EmployeeForm } from '@/components/employees/employee-form';
 import { employeeService, Employee, UpdateEmployeeRequest, CreateEmployeeRequest } from '@/services/employee.service';
 import { Loader2 } from 'lucide-react';
 
+import { useSearchParams } from 'next/navigation';
+
 export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const t = useTranslations('Employees');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab');
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +59,12 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
         <h1 className="text-3xl font-bold tracking-tight">{t('editTitle')}</h1>
         <p className="text-muted-foreground">{t('description')}</p>
       </div>
-      <EmployeeForm initialData={employee} onSubmit={handleSubmit} isEditing />
+      <EmployeeForm 
+        initialData={employee} 
+        onSubmit={handleSubmit} 
+        isEditing 
+        defaultTab={tab || 'personal'} 
+      />
     </div>
   );
 }

@@ -75,12 +75,12 @@ type ListResult struct {
 }
 
 type AccumRecord struct {
-	ID        uuid.UUID `db:"id"`
-	AccumType string    `db:"accum_type"`
-	AccumYear *int      `db:"accum_year"`
-	Amount    float64   `db:"amount"`
-	UpdatedAt time.Time `db:"updated_at"`
-	UpdatedBy uuid.UUID `db:"updated_by"`
+	ID        uuid.UUID `db:"id" json:"id"`
+	AccumType string    `db:"accum_type" json:"accumType"`
+	AccumYear *int      `db:"accum_year" json:"accumYear"`
+	Amount    float64   `db:"amount" json:"amount"`
+	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
+	UpdatedBy uuid.UUID `db:"updated_by" json:"updatedBy"`
 }
 
 func (r Repository) List(ctx context.Context, page, limit int, search, status string) (ListResult, error) {

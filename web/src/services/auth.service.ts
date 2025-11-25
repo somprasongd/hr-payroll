@@ -11,6 +11,11 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
@@ -52,9 +57,16 @@ export const authService = {
   },
 
   /**
+   * Change own password
+   */
+  async changePassword(data: ChangePasswordRequest): Promise<void> {
+    return apiClient.put<void>('/me/password', data);
+  },
+
+  /**
    * Verify token and get current user info
    */
   async me(): Promise<LoginResponse['user']> {
-    return apiClient.get<LoginResponse['user']>('/auth/me');
+    return apiClient.get<LoginResponse['user']>('/me');
   },
 };

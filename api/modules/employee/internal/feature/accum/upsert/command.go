@@ -1,9 +1,7 @@
-package accum
+package upsert
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"strings"
 
 	"github.com/google/uuid"
@@ -15,7 +13,7 @@ import (
 	"hrms/shared/common/mediator"
 )
 
-type UpsertCommand struct {
+type Command struct {
 	EmployeeID uuid.UUID `json:"-"`
 	AccumType  string    `json:"accumType"`
 	AccumYear  *int      `json:"accumYear"`
@@ -23,32 +21,21 @@ type UpsertCommand struct {
 	Actor      uuid.UUID
 }
 
-type UpsertResponse struct {
-	Record repository.AccumRecord `json:"record"`
+type Response struct {
+	repository.AccumRecord
 }
 
-type DeleteCommand struct {
-	ID uuid.UUID
-}
-
-type upsertHandler struct {
-	repo repository.Repository
-}
-type deleteHandler struct {
+type Handler struct {
 	repo repository.Repository
 }
 
-func NewUpsertHandler(repo repository.Repository) *upsertHandler {
-	return &upsertHandler{repo: repo}
-}
-func NewDeleteHandler(repo repository.Repository) *deleteHandler {
-	return &deleteHandler{repo: repo}
+var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
+
+func NewHandler(repo repository.Repository) *Handler {
+	return &Handler{repo: repo}
 }
 
-var _ mediator.RequestHandler[*UpsertCommand, *UpsertResponse] = (*upsertHandler)(nil)
-var _ mediator.RequestHandler[*DeleteCommand, mediator.NoResponse] = (*deleteHandler)(nil)
-
-func (h *upsertHandler) Handle(ctx context.Context, cmd *UpsertCommand) (*UpsertResponse, error) {
+func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	cmd.AccumType = strings.TrimSpace(cmd.AccumType)
 	validTypes := map[string]struct{}{
 		"tax": {}, "sso": {}, "sso_employer": {}, "pf": {}, "pf_employer": {}, "loan_outstanding": {},
@@ -77,16 +64,5 @@ func (h *upsertHandler) Handle(ctx context.Context, cmd *UpsertCommand) (*Upsert
 		logger.FromContext(ctx).Error("failed to upsert accumulation", zap.Error(err))
 		return nil, errs.Internal("failed to upsert accumulation")
 	}
-	return &UpsertResponse{Record: *out}, nil
-}
-
-func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
-	if err := h.repo.DeleteAccum(ctx, cmd.ID); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return mediator.NoResponse{}, errs.NotFound("accumulation not found")
-		}
-		logger.FromContext(ctx).Error("failed to delete accumulation", zap.Error(err))
-		return mediator.NoResponse{}, errs.Internal("failed to delete accumulation")
-	}
-	return mediator.NoResponse{}, nil
+	return &Response{AccumRecord: *out}, nil
 }

@@ -26,8 +26,9 @@
     "mainContentExample": "For example, a dashboard with charts, a table of employees, or a payroll processing form",
     "welcome": "Welcome, {name}",
     "loggedInAs": "You are logged in as {role}",
-    "logout": "Logout",
-    "searchPlaceholder": "Search for employees..."
+    "logout": "Log out",
+    "profile": "My Profile",
+    "searchPlaceholder": "Search employees..."
   },
   "Menu": {
     "dashboard": "Dashboard",
@@ -166,6 +167,48 @@
       "positive": "Value must be positive"
     },
     "submitError": "Failed to save employee. Please try again."
+  },
+  "Accumulation": {
+    "title": "Accumulation",
+    "adjustTitle": "Adjust Accumulation",
+    "adjustDescription": "Update the accumulation amount for {type}",
+    "types": {
+      "sso": "Social Security",
+      "tax": "Withholding Tax",
+      "pf": "Provident Fund",
+      "loan_outstanding": "Accumulated Debt"
+    },
+    "amount": "Amount",
+    "selectYear": "Select Year",
+    "lifetime": "Lifetime",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "Profile": {
+    "title": "My Profile",
+    "description": "Manage your personal information and password",
+    "personalInfo": "User Information",
+    "personalInfoDescription": "Your account details",
+    "username": "Username",
+    "role": "Role",
+    "lastLogin": "Last Login",
+    "loading": "Loading...",
+    "errorLoadingProfile": "Failed to load profile",
+    "password": {
+      "title": "Change Password",
+      "description": "Update your password for security",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "submit": "Change Password",
+      "successTitle": "Success",
+      "success": "Password changed successfully",
+      "errorTitle": "Error",
+      "error": "Failed to change password. Please check your current password.",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "minLength": "Password must be at least 6 characters",
+      "required": "Required"
+    }
   }
 }
 

@@ -261,6 +261,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <LanguageSwitcher />
                 </div>
                 <DropdownMenuSeparator className="sm:hidden" />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="cursor-pointer">
+                    <Users className="w-4 h-4 mr-2" />
+                    {tDashboard('profile')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
                   {tDashboard('logout')}

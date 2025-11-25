@@ -26,8 +26,9 @@
     "mainContentExample": "ဥပမာ၊ ဇယားများပါသော ဒက်ရှ်ဘုတ်၊ ဝန်ထမ်းဇယား သို့မဟုတ် လစာလုပ်ငန်းစဉ်ဖောင်",
     "welcome": "ကြိုဆိုပါတယ်, {name}",
     "loggedInAs": "သင်သည် {role} အဖြစ် အကောင့်ဝင်ထားသည်",
-    "logout": "အကောင့်ထွက်မည်",
-    "searchPlaceholder": "ဝန်ထမ်းများကို ရှာဖွေပါ..."
+    "logout": "Log out",
+    "profile": "My Profile",
+    "searchPlaceholder": "Search employees..."
   },
   "Menu": {
     "dashboard": "ဒက်ရှ်ဘုတ်",
@@ -166,6 +167,22 @@
       "positive": "တန်ဖိုးသည် အပေါင်းကိန်း ဖြစ်ရမည်"
     },
     "submitError": "ဝန်ထမ်းအချက်အလက် သိမ်းဆည်းမရပါ၊ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ"
+  },
+  "Accumulation": {
+    "title": "စုဆောင်းငွေ",
+    "adjustTitle": "စုဆောင်းငွေ ပြင်ဆင်ရန်",
+    "adjustDescription": "{type} အတွက် စုဆောင်းငွေ ပမာဏကို မွမ်းမံပါ",
+    "types": {
+      "sso": "လူမှုဖူလုံရေး",
+      "tax": "အခွန်",
+      "pf": "စုဆောင်းငွေ",
+      "loan_outstanding": "အကြွေးလက်ကျန်"
+    },
+    "amount": "ပမာဏ",
+    "selectYear": "နှစ်ရွေးချယ်ပါ",
+    "lifetime": "တစ်သက်တာ",
+    "cancel": "မလုပ်တော့ပါ",
+    "save": "သိမ်းဆည်းရန်"
   }
 }
 

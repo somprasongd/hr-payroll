@@ -11,9 +11,9 @@ export default function NewEmployeePage() {
 
   const handleSubmit = async (data: CreateEmployeeRequest | UpdateEmployeeRequest) => {
     try {
-      await employeeService.createEmployee(data as CreateEmployeeRequest);
+      const response = await employeeService.createEmployee(data as CreateEmployeeRequest);
       // Ideally show success message here
-      router.push('/employees');
+      router.push(`/employees/${response.id}?tab=accumulation`);
     } catch (error) {
       console.error('Failed to create employee', error);
       throw error;
