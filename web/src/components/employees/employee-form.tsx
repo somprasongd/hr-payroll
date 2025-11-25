@@ -169,20 +169,50 @@ interface EmployeeFormProps {
   const lastName = form.watch('lastName');
   const employeeNumber = form.watch('employeeNumber');
 
+  // Fetch Payroll Config for default hourly rate
+  const [payrollConfig, setPayrollConfig] = useState<any>(null); // Using any to avoid import cycle if type not exported, or just import it.
+  // Better to import PayrollConfig. Let's add import first.
+
   useEffect(() => {
-    if (ssoContribute && masterData?.employeeTypes) {
+    const fetchConfig = async () => {
+      try {
+        const config = await import('@/services/payroll-config.service').then(m => m.payrollConfigService.getEffective());
+        setPayrollConfig(config);
+      } catch (error) {
+        console.error('Failed to fetch payroll config', error);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  useEffect(() => {
+    if (masterData?.employeeTypes && employeeTypeId) {
       const selectedType = masterData.employeeTypes.find(t => t.id === employeeTypeId);
       const isPartTime = selectedType?.name?.toLowerCase().includes('part') || 
                          selectedType?.Name?.toLowerCase().includes('part') ||
                          selectedType?.code?.toLowerCase().includes('part') ||
                          selectedType?.Code?.toLowerCase().includes('part');
 
-      if (!isPartTime) {
+      // Auto-fill SSO Declared Wage
+      if (ssoContribute && !isPartTime) {
         const wage = Math.min(basePayAmount || 0, 15000);
         form.setValue('ssoDeclaredWage', wage);
       }
+
+      // Auto-fill Hourly Wage for Part-Time
+      if (isPartTime && payrollConfig?.hourlyRate) {
+        // Only set if it's 0 (new or unset) or if we want to enforce it on type change.
+        // Let's set it if it's 0 to be safe, or maybe we should be more aggressive?
+        // User asked: "If select part time, pull hourly rate from config as default".
+        // So if they switch to PT, we should probably suggest it.
+        // But we don't want to overwrite if they manually set it to something else.
+        // A safe bet is: if value is 0, set it.
+        if (!basePayAmount || basePayAmount === 0) {
+             form.setValue('basePayAmount', payrollConfig.hourlyRate);
+        }
+      }
     }
-  }, [ssoContribute, basePayAmount, employeeTypeId, masterData, form]);
+  }, [ssoContribute, basePayAmount, employeeTypeId, masterData, form, payrollConfig]);
 
   const handleNext = async (e?: React.MouseEvent) => {
     e?.preventDefault();

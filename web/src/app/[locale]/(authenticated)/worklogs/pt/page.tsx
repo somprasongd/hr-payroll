@@ -235,9 +235,15 @@ export default function PTWorklogsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground">{t('description')}</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
+        </div>
+        <Button onClick={handleCreate}>
+          <Plus className="w-4 h-4 mr-2" />
+          {t('createButton')}
+        </Button>
       </div>
 
       {/* Filters */}
@@ -271,8 +277,7 @@ export default function PTWorklogsPage() {
                 <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
                 <SelectItem value="pending">{t('statuses.pending')}</SelectItem>
                 <SelectItem value="approved">{t('statuses.approved')}</SelectItem>
-                <SelectItem value="to_pay">{t('statuses.to_pay')}</SelectItem>
-                <SelectItem value="paid">{t('statuses.paid')}</SelectItem>
+
               </SelectContent>
             </Select>
           </div>
@@ -287,14 +292,10 @@ export default function PTWorklogsPage() {
             <DateInput value={endDateFilter} onValueChange={setEndDateFilter} />
           </div>
 
-          <div className="flex items-end gap-2 lg:col-span-2">
-            <Button variant="outline" onClick={handleClearFilters} className="flex-1">
+          <div className="flex items-end gap-2">
+            <Button variant="outline" onClick={handleClearFilters} className="w-full">
               <X className="w-4 h-4 mr-2" />
               {tCommon('clearFilters')}
-            </Button>
-            <Button onClick={handleCreate} className="flex-1">
-              <Plus className="w-4 h-4 mr-2" />
-              {t('createButton')}
             </Button>
           </div>
         </div>

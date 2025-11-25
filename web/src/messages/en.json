@@ -36,6 +36,7 @@
     "attendance": "Attendance",
     "worklogFT": "Full-Time",
     "worklogPT": "Part-Time",
+    "payoutPT": "Payout (PT)",
     "leaveManagement": "Leave Management",
     "payrollExpenses": "Payroll & Expenses",
     "reports": "Reports",
@@ -470,5 +471,63 @@
     "delete": "Delete",
     "loading": "Loading...",
     "clearFilters": "Clear Filters"
+  },
+  "Payouts": {
+    "PT": {
+      "title": "Part-Time Payouts",
+      "description": "Manage payouts for part-time employees",
+      "createButton": "Create Payout",
+      "createTitle": "Create New Payout",
+      "detailTitle": "Payout Details",
+      "listTitle": "Payout History",
+      "noData": "No payouts found",
+      "fields": {
+        "employee": "Employee",
+        "status": "Status",
+        "totalHours": "Total Hours",
+        "amountTotal": "Total Amount",
+        "itemCount": "Items",
+        "createdAt": "Created At",
+        "paidAt": "Paid At",
+        "paidBy": "Paid By",
+        "workDate": "Work Date"
+      },
+      "statuses": {
+        "to_pay": "To Pay",
+        "paid": "Paid"
+      },
+      "actions": {
+        "view": "View Details",
+        "markAsPaid": "Approve Payment"
+      },
+      "filters": {
+        "allStatuses": "All Statuses",
+        "allEmployees": "All Employees",
+        "selectEmployee": "Select Employee"
+      },
+      "create": {
+        "createTitle": "Create Payout",
+        "step1": "Select Employee",
+        "step2": "Select Worklogs",
+        "step3": "Confirm",
+        "selectEmployeePlaceholder": "Select an employee to proceed",
+        "noPendingWorklogs": "No pending worklogs found for this employee",
+        "selectedWorklogs": "Selected Worklogs: {count}",
+        "totalHours": "Total Hours: {hours}",
+        "estimatedAmount": "Estimated Amount: {amount}"
+      },
+      "success": {
+        "created": "Payout created successfully",
+        "paid": "Payout marked as paid"
+      },
+      "errors": {
+        "createFailed": "Failed to create payout",
+        "payFailed": "Failed to mark as paid"
+      },
+      "confirmPay": {
+        "title": "Confirm Payment",
+        "description": "Are you sure you want to mark this payout as paid? This action cannot be undone."
+      }
+    }
   }
 }

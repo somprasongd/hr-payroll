@@ -90,7 +90,7 @@ func Register(router fiber.Router, repo repository.PTRepository, tx transactor.T
 	handler := func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
-		status := c.Query("status", "pending")
+		status := c.Query("status", "all")
 		var empID *uuid.UUID
 		if v := c.Query("employeeId"); v != "" {
 			if id, err := uuid.Parse(v); err == nil {

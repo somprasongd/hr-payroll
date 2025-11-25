@@ -21,24 +21,24 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 }
 
 type Payout struct {
-	ID         uuid.UUID  `db:"id"`
-	EmployeeID uuid.UUID  `db:"employee_id"`
-	Status     string     `db:"status"`
-	TotalHours float64    `db:"total_hours"`
-	Amount     float64    `db:"amount_total"`
-	ItemCount  int        `db:"item_count"`
-	HourlyRate float64    `db:"hourly_rate_used"`
-	CreatedAt  time.Time  `db:"created_at"`
-	UpdatedAt  time.Time  `db:"updated_at"`
-	PaidAt     *time.Time `db:"paid_at"`
-	PaidBy     *uuid.UUID `db:"paid_by"`
+	ID         uuid.UUID  `db:"id" json:"id"`
+	EmployeeID uuid.UUID  `db:"employee_id" json:"employeeId"`
+	Status     string     `db:"status" json:"status"`
+	TotalHours float64    `db:"total_hours" json:"totalHours"`
+	Amount     float64    `db:"amount_total" json:"amount"`
+	ItemCount  int        `db:"item_count" json:"itemCount"`
+	HourlyRate float64    `db:"hourly_rate_used" json:"hourlyRate"`
+	CreatedAt  time.Time  `db:"created_at" json:"createdAt"`
+	UpdatedAt  time.Time  `db:"updated_at" json:"updatedAt"`
+	PaidAt     *time.Time `db:"paid_at" json:"paidAt"`
+	PaidBy     *uuid.UUID `db:"paid_by" json:"paidBy"`
 }
 
 type PayoutItem struct {
-	ID         uuid.UUID `db:"id"`
-	WorklogID  uuid.UUID `db:"worklog_id"`
-	WorkDate   time.Time `db:"work_date"`
-	TotalHours float64   `db:"total_hours"`
+	ID         uuid.UUID `db:"id" json:"id"`
+	WorklogID  uuid.UUID `db:"worklog_id" json:"worklogId"`
+	WorkDate   time.Time `db:"work_date" json:"workDate"`
+	TotalHours float64   `db:"total_hours" json:"totalHours"`
 }
 
 type ListResult struct {
@@ -100,25 +100,24 @@ func (r Repository) List(ctx context.Context, page, limit int, employeeID *uuid.
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	where := "p.deleted_at IS NULL"
-	args := []interface{}{limit, offset}
-	argIdx := 3
+	var args []interface{}
 	if employeeID != nil {
-		where += fmt.Sprintf(" AND p.employee_id=$%d", argIdx)
+		where += fmt.Sprintf(" AND p.employee_id=$%d", len(args)+1)
 		args = append(args, *employeeID)
-		argIdx++
 	}
 	if status != "" && status != "all" {
-		where += fmt.Sprintf(" AND p.status=$%d", argIdx)
+		where += fmt.Sprintf(" AND p.status=$%d", len(args)+1)
 		args = append(args, status)
-		argIdx++
 	}
+	// pagination args appended at the end
+	args = append(args, limit, offset)
 	q := fmt.Sprintf(`SELECT p.id, p.employee_id, p.status, p.total_hours, p.amount_total, p.hourly_rate_used,
        p.created_at, p.updated_at, p.paid_at, p.paid_by,
        COALESCE((SELECT COUNT(1) FROM payout_pt_item i WHERE i.payout_id = p.id AND i.deleted_at IS NULL),0) AS item_count
 FROM payout_pt p
 WHERE %s
 ORDER BY p.created_at DESC
-LIMIT $1 OFFSET $2`, where)
+LIMIT $%d OFFSET $%d`, where, len(args)-1, len(args))
 	rows, err := db.QueryxContext(ctx, q, args...)
 	if err != nil {
 		return ListResult{}, err
@@ -132,11 +131,14 @@ LIMIT $1 OFFSET $2`, where)
 		}
 		list = append(list, p)
 	}
-	countArgs := args[2:]
-	countQ := "SELECT COUNT(1) FROM payout_pt p WHERE " + where
+	countArgs := args[:len(args)-2]
+	countQ := fmt.Sprintf("SELECT COUNT(1) FROM payout_pt p WHERE %s", where)
 	var total int
 	if err := db.GetContext(ctx, &total, countQ, countArgs...); err != nil {
 		return ListResult{}, err
+	}
+	if list == nil {
+		list = make([]Payout, 0)
 	}
 	return ListResult{Rows: list, Total: total}, nil
 }

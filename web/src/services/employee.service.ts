@@ -34,6 +34,12 @@ export interface Employee {
   employeeTypeName?: string;
   fullNameTh?: string;
   status?: 'active' | 'terminated';
+
+  // Compatibility for PascalCase API responses
+  ID?: string;
+  EmployeeNumber?: string;
+  FirstName?: string;
+  LastName?: string;
 }
 
 export interface CreateEmployeeRequest {
@@ -107,13 +113,14 @@ export interface EmployeeType {
 }
 
 export const employeeService = {
-  getEmployees: async (params?: { page?: number; limit?: number; search?: string; status?: string; employeeTypeId?: string }) => {
+  getEmployees: async (params?: { page?: number; limit?: number; search?: string; status?: string; employeeTypeId?: string; employeeTypeCode?: string }) => {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.limit) query.append('limit', params.limit.toString());
     if (params?.search) query.append('search', params.search);
     if (params?.status) query.append('status', params.status);
     if (params?.employeeTypeId && params.employeeTypeId !== 'all') query.append('employeeTypeId', params.employeeTypeId);
+    if (params?.employeeTypeCode) query.append('employeeTypeCode', params.employeeTypeCode);
     
     return apiClient.get<EmployeeListResponse>(`/employees?${query.toString()}`);
   },

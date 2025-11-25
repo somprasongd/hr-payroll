@@ -64,6 +64,7 @@ function Sidebar({
     { id: 'attendance', icon: Clock, label: tMenu('attendance'), path: '/attendance', disabled: true },
     { id: 'worklog-ft', icon: User, label: tMenu('worklogFT'), path: '/worklogs/ft', indent: true },
     { id: 'worklog-pt', icon: Clock, label: tMenu('worklogPT'), path: '/worklogs/pt', indent: true },
+    { id: 'payout-pt', icon: DollarSign, label: tMenu('payoutPT'), path: '/payouts/pt', indent: true },
     { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement'), path: '/leave' },
     { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
     { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
@@ -185,6 +186,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/employees')) return 'employees';
     if (pathname.startsWith('/worklogs/ft')) return 'worklog-ft';
     if (pathname.startsWith('/worklogs/pt')) return 'worklog-pt';
+    if (pathname.startsWith('/payouts/pt')) return 'payout-pt';
     if (pathname.startsWith('/attendance')) return 'attendance';
     if (pathname.startsWith('/leave')) return 'leave';
     if (pathname.startsWith('/payroll')) return 'payroll';

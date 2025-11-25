@@ -36,6 +36,7 @@
     "attendance": "บันทึกเวลาทำงาน",
     "worklogFT": "พนักงานประจำ",
     "worklogPT": "พาร์ทไทม์",
+    "payoutPT": "ทำจ่าย (PT)",
     "leaveManagement": "การลันเดียว",
     "payrollExpenses": "ยอดเงินเดือน & ค่าใช้",
     "reports": "รายงาน",
@@ -470,6 +471,64 @@
     "delete": "ลบ",
     "loading": "กำลังโหลด...",
     "clearFilters": "ล้างตัวกรอง"
+  },
+  "Payouts": {
+    "PT": {
+      "title": "การจ่ายเงินพาร์ทไทม์",
+      "description": "จัดการการจ่ายเงินสำหรับพนักงานพาร์ทไทม์",
+      "createButton": "สร้างรายการจ่าย",
+      "createTitle": "สร้างรายการจ่ายใหม่",
+      "detailTitle": "รายละเอียดการจ่าย",
+      "listTitle": "ประวัติการจ่าย",
+      "noData": "ไม่พบรายการจ่าย",
+      "fields": {
+        "employee": "พนักงาน",
+        "status": "สถานะ",
+        "totalHours": "ชั่วโมงรวม",
+        "amountTotal": "ยอดเงินรวม",
+        "itemCount": "จำนวนรายการ",
+        "createdAt": "วันที่สร้าง",
+        "paidAt": "วันที่จ่าย",
+        "paidBy": "ผู้จ่าย",
+        "workDate": "วันที่ทำงาน"
+      },
+      "statuses": {
+        "to_pay": "รอจ่าย",
+        "paid": "จ่ายแล้ว"
+      },
+      "actions": {
+        "view": "ดูรายละเอียด",
+        "markAsPaid": "อนุมัติการจ่ายเงิน"
+      },
+      "filters": {
+        "allStatuses": "ทุกสถานะ",
+        "allEmployees": "พนักงานทั้งหมด",
+        "selectEmployee": "เลือกพนักงาน"
+      },
+      "create": {
+        "createTitle": "สร้างรายการจ่ายเงิน",
+        "step1": "เลือกพนักงาน",
+        "step2": "เลือกรายการลงเวลา",
+        "step3": "ยืนยัน",
+        "selectEmployeePlaceholder": "เลือกพนักงานเพื่อดำเนินการต่อ",
+        "noPendingWorklogs": "ไม่พบรายการลงเวลาที่ค้างอยู่สำหรับพนักงานคนนี้",
+        "selectedWorklogs": "รายการที่เลือก: {count}",
+        "totalHours": "ชั่วโมงรวม: {hours}",
+        "estimatedAmount": "ยอดเงินโดยประมาณ: {amount}"
+      },
+      "success": {
+        "created": "สร้างรายการจ่ายสำเร็จ",
+        "paid": "บันทึกการจ่ายเงินสำเร็จ"
+      },
+      "errors": {
+        "createFailed": "ไม่สามารถสร้างรายการจ่ายได้",
+        "payFailed": "ไม่สามารถบันทึกการจ่ายเงินได้"
+      },
+      "confirmPay": {
+        "title": "ยืนยันการจ่ายเงิน",
+        "description": "คุณแน่ใจหรือไม่ว่าต้องการบันทึกว่ารายการนี้จ่ายเงินแล้ว? การกระทำนี้ไม่สามารถย้อนกลับได้"
+      }
+    }
   }
 }
 

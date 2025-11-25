@@ -54,6 +54,9 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if totalPages == 0 {
 		totalPages = 1
 	}
+	if res.Rows == nil {
+		res.Rows = make([]repository.Payout, 0)
+	}
 	return &Response{
 		Data: res.Rows,
 		Meta: Meta{

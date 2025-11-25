@@ -6,7 +6,7 @@
  */
 
 import { axiosInstance } from './axios';
-import { AxiosError } from 'axios';
+import { AxiosError, AxiosRequestConfig } from 'axios';
 
 export interface ApiError {
   message: string;
@@ -15,9 +15,9 @@ export interface ApiError {
 }
 
 class ApiClient {
-  async get<T>(endpoint: string): Promise<T> {
+  async get<T>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await axiosInstance.get<T>(endpoint);
+      const response = await axiosInstance.get<T>(endpoint, config);
       return response.data;
     } catch (error) {
       throw this.handleError(error);

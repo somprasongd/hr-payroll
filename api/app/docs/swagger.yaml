@@ -1921,7 +1921,7 @@ definitions:
         type: number
       createdAt:
         type: string
-      employeeID:
+      employeeId:
         type: string
       hourlyRate:
         type: number
@@ -1948,7 +1948,7 @@ definitions:
         type: number
       workDate:
         type: string
-      worklogID:
+      worklogId:
         type: string
     type: object
   resetpassword.RequestBody:
@@ -2551,6 +2551,10 @@ paths:
       - description: รหัสประเภทพนักงาน
         in: query
         name: employeeTypeId
+        type: string
+      - description: รหัสประเภทพนักงานแบบย่อ (ft/pt/full_time/part_time)
+        in: query
+        name: employeeTypeCode
         type: string
       produces:
       - application/json

@@ -159,7 +159,23 @@ LIMIT $%d OFFSET $%d
 		return ListResult{}, err
 	}
 
+	if list == nil {
+		list = make([]ListRecord, 0)
+	}
 	return ListResult{Rows: list, Total: total}, nil
+}
+
+func (r Repository) FindEmployeeTypeIDByCode(ctx context.Context, code string) (*uuid.UUID, error) {
+	db := r.dbCtx(ctx)
+	var id uuid.UUID
+	const q = `SELECT id FROM employee_type WHERE code=$1 LIMIT 1`
+	if err := db.GetContext(ctx, &id, q, code); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &id, nil
 }
 
 func (r Repository) Get(ctx context.Context, id uuid.UUID) (*DetailRecord, error) {
