@@ -40,6 +40,7 @@
     "humanResources": "Human Resources",
     "systemManagement": "System Management",
     "settings": "Settings",
+    "users": "User Management",
     "collapse": "Collapse"
   },
   "Settings": {
@@ -146,6 +147,12 @@
       "terminated": "Terminated",
       "all": "All"
     },
+    "employeeTypes": {
+      "full_time": "Full-time",
+      "part_time": "Part-time",
+      "ft": "Full-time",
+      "pt": "Part-time"
+    },
     "messages": {
       "createSuccess": "Employee created successfully",
       "updateSuccess": "Employee updated successfully",
@@ -154,6 +161,14 @@
       "confirmDelete": "Are you sure you want to delete this employee?",
       "noEmployeesFound": "No employees found"
     },
+    "actions": {
+      "title": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "openMenu": "Open menu"
+    },
+    "loading": "Loading...",
+    "search": "Search",
     "placeholders": {
       "selectTitle": "Select title",
       "selectType": "Select type"
@@ -209,6 +224,68 @@
       "minLength": "Password must be at least 6 characters",
       "required": "Required"
     }
+  },
+  "Users": {
+    "title": "User Management",
+    "description": "Manage user accounts and access roles",
+    "createUser": "Create User",
+    "createUserDescription": "Create a new user account for system access",
+    "loading": "Loading...",
+    "fields": {
+      "username": "Username",
+      "password": "Password",
+      "role": "Role",
+      "createdAt": "Created At",
+      "lastLoginAt": "Last Login",
+      "newPassword": "New Password"
+    },
+    "roles": {
+      "admin": "Admin",
+      "hr": "HR"
+    },
+    "actions": {
+      "title": "Actions",
+      "openMenu": "Open menu",
+      "editRole": "Edit Role",
+      "resetPassword": "Reset Password",
+      "delete": "Delete User",
+      "create": "Create",
+      "creating": "Creating...",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "placeholders": {
+      "selectRole": "Select a role"
+    },
+    "validation": {
+      "usernameMin": "Username must be at least 3 characters",
+      "passwordMin": "Password must be at least 8 characters",
+      "roleRequired": "Please select a role"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch users",
+      "fetchFailedDescription": "Please try again later",
+      "createFailed": "Failed to create user",
+      "createFailedDescription": "Please try again later",
+      "usernameExists": "Username already exists",
+      "resetFailed": "Failed to reset password",
+      "resetFailedDescription": "Please try again later",
+      "updateFailed": "Failed to update user",
+      "updateFailedDescription": "Please try again later",
+      "deleteFailed": "Failed to delete user",
+      "deleteFailedDescription": "Please try again later"
+    },
+    "success": {
+      "userCreated": "User created successfully",
+      "passwordReset": "Password reset successfully",
+      "roleUpdated": "Role updated successfully",
+      "userDeleted": "User deleted successfully"
+    },
+    "resetPasswordDescription": "Set a new password for user {username}",
+    "editRoleDescription": "Update role for user {username}",
+    "deleteConfirmTitle": "Are you sure?",
+    "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user {username}."
   }
 }
 

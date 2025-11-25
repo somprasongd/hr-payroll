@@ -52,8 +52,9 @@ function Sidebar({
   setCollapsed, 
   isMobile = false, 
   setMobileMenuOpen,
-  activeMenu 
-}: SidebarProps) {
+  activeMenu,
+  user
+}: SidebarProps & { user: any }) {
   const tMenu = useTranslations('Menu');
   
   const menuItems = [
@@ -109,21 +110,40 @@ function Sidebar({
 
       {/* Settings & Collapse */}
       <div className="border-t border-gray-200 p-3 space-y-1">
-        <Link
-          href="/settings"
-          onClick={() => {
-            if (isMobile) setMobileMenuOpen(false);
-          }}
-          className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-            activeMenu === 'settings'
-              ? "bg-blue-50 text-blue-600 font-medium"
-              : "text-gray-700 hover:bg-gray-100"
-          )}
-        >
-          <Settings className="w-5 h-5 flex-shrink-0" />
-          {(!collapsed || isMobile) && <span>{tMenu('settings')}</span>}
-        </Link>
+        {user?.role === 'admin' && (
+          <Link
+            href="/admin/users"
+            onClick={() => {
+              if (isMobile) setMobileMenuOpen(false);
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+              activeMenu === 'users'
+                ? "bg-blue-50 text-blue-600 font-medium"
+                : "text-gray-700 hover:bg-gray-100"
+            )}
+          >
+            <Users className="w-5 h-5 flex-shrink-0" />
+            {(!collapsed || isMobile) && <span>{tMenu('users')}</span>}
+          </Link>
+        )}
+        {user?.role === 'admin' && (
+          <Link
+            href="/settings"
+            onClick={() => {
+              if (isMobile) setMobileMenuOpen(false);
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+              activeMenu === 'settings'
+                ? "bg-blue-50 text-blue-600 font-medium"
+                : "text-gray-700 hover:bg-gray-100"
+            )}
+          >
+            <Settings className="w-5 h-5 flex-shrink-0" />
+            {(!collapsed || isMobile) && <span>{tMenu('settings')}</span>}
+          </Link>
+        )}
         
         {!isMobile && (
           <button
@@ -163,6 +183,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/payroll')) return 'payroll';
     if (pathname.startsWith('/reports')) return 'reports';
     if (pathname.startsWith('/hr')) return 'hr';
+    if (pathname.startsWith('/admin/users')) return 'users';
     return 'dashboard';
   };
 
@@ -191,6 +212,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           setCollapsed={setCollapsed} 
           setMobileMenuOpen={setMobileMenuOpen}
           activeMenu={activeMenu}
+          user={user}
         />
       </aside>
 
@@ -204,6 +226,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               isMobile={true}
               setMobileMenuOpen={setMobileMenuOpen}
               activeMenu={activeMenu}
+              user={user}
             />
           </div>
         </SheetContent>

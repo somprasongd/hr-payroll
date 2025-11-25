@@ -100,15 +100,26 @@ export interface EmployeeListResponse {
   };
 }
 
+export interface EmployeeType {
+  id: string;
+  code: string;
+  name: string;
+}
+
 export const employeeService = {
-  getEmployees: async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
+  getEmployees: async (params?: { page?: number; limit?: number; search?: string; status?: string; employeeTypeId?: string }) => {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.limit) query.append('limit', params.limit.toString());
     if (params?.search) query.append('search', params.search);
     if (params?.status) query.append('status', params.status);
+    if (params?.employeeTypeId && params.employeeTypeId !== 'all') query.append('employeeTypeId', params.employeeTypeId);
     
     return apiClient.get<EmployeeListResponse>(`/employees?${query.toString()}`);
+  },
+
+  getEmployeeTypes: async () => {
+    return apiClient.get<EmployeeType[]>('/master/employee-types');
   },
 
   getEmployee: async (id: string) => {

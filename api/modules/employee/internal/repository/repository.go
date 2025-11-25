@@ -83,7 +83,7 @@ type AccumRecord struct {
 	UpdatedBy uuid.UUID `db:"updated_by" json:"updatedBy"`
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, search, status string) (ListResult, error) {
+func (r Repository) List(ctx context.Context, page, limit int, search, status, employeeTypeID string) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -103,6 +103,11 @@ func (r Repository) List(ctx context.Context, page, limit int, search, status st
 		// no extra filter
 	default: // active
 		where = append(where, "e.employment_end_date IS NULL")
+	}
+
+	if id := strings.TrimSpace(employeeTypeID); id != "" {
+		args = append(args, id)
+		where = append(where, fmt.Sprintf("e.employee_type_id = $%d", len(args)))
 	}
 
 	if s := strings.TrimSpace(search); s != "" {
@@ -128,7 +133,7 @@ FROM employees e
 JOIN person_title pt ON pt.id = e.title_id
 JOIN employee_type et ON et.id = e.employee_type_id
 WHERE %s
-ORDER BY e.created_at DESC
+ORDER BY e.employee_number ASC
 LIMIT $%d OFFSET $%d
 `, whereClause, len(args)-1, len(args))
 

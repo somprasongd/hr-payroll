@@ -14,10 +14,11 @@ import (
 )
 
 type Query struct {
-	Page   int
-	Limit  int
-	Search string
-	Status string
+	Page           int
+	Limit          int
+	Search         string
+	Status         string
+	EmployeeTypeID string
 }
 
 type Response struct {
@@ -46,8 +47,9 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Status == "" {
 		q.Status = "active"
 	}
+	q.EmployeeTypeID = strings.TrimSpace(q.EmployeeTypeID)
 
-	res, err := h.repo.List(ctx, q.Page, q.Limit, q.Search, q.Status)
+	res, err := h.repo.List(ctx, q.Page, q.Limit, q.Search, q.Status, q.EmployeeTypeID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list employees", zap.Error(err))
 		return nil, errs.Internal("failed to list employees")

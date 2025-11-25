@@ -1,12 +1,5 @@
 basePath: /api/v1
 definitions:
-  accum.ListResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/repository.AccumRecord'
-        type: array
-    type: object
   changepassword.RequestBody:
     properties:
       currentPassword:
@@ -599,6 +592,13 @@ definitions:
         type: integer
       totalPages:
         type: integer
+    type: object
+  hrms_modules_employee_internal_feature_accum_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/repository.AccumRecord'
+        type: array
     type: object
   hrms_modules_employee_internal_feature_create.RequestBody:
     properties:
@@ -1973,6 +1973,21 @@ definitions:
       role:
         type: string
     type: object
+  upsert.Response:
+    properties:
+      accumType:
+        type: string
+      accumYear:
+        type: integer
+      amount:
+        type: number
+      id:
+        type: string
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+    type: object
 info:
   contact: {}
   description: HR Payroll REST API
@@ -2533,6 +2548,10 @@ paths:
         in: query
         name: status
         type: string
+      - description: รหัสประเภทพนักงาน
+        in: query
+        name: employeeTypeId
+        type: string
       produces:
       - application/json
       responses:
@@ -2683,10 +2702,47 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/accum.ListResponse'
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_accum_list.Response'
       security:
       - BearerAuth: []
       summary: List accumulations
+      tags:
+      - Employees
+    post:
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/upsert.Response'
+      security:
+      - BearerAuth: []
+      summary: Upsert accumulation
+      tags:
+      - Employees
+  /employees/accumulations/{accumId}:
+    delete:
+      parameters:
+      - description: accumulation id
+        in: path
+        name: accumId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete accumulation
       tags:
       - Employees
   /master/all:

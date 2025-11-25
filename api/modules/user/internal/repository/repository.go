@@ -50,7 +50,7 @@ func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter s
 	whereClause := strings.Join(where, " AND ")
 	args = append(args, limit, offset)
 
-	query := fmt.Sprintf(`
+query := fmt.Sprintf(`
 SELECT u.id, u.username, u.password_hash, u.user_role, u.created_at, u.updated_at,
   COALESCE((
     SELECT l.login_at FROM user_access_logs l
@@ -59,7 +59,7 @@ SELECT u.id, u.username, u.password_hash, u.user_role, u.created_at, u.updated_a
   ), NULL) AS last_login_at
 FROM users u
 WHERE %s
-ORDER BY u.created_at DESC
+ORDER BY u.username ASC
 LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 
 	rows, err := db.QueryxContext(ctx, query, args...)

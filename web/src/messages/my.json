@@ -40,6 +40,7 @@
     "humanResources": "လူ့စွမ်းအား",
     "systemManagement": "စနစ်စီမံခန့်ခွဲမှု",
     "settings": "ဆက်တင်များ",
+    "users": "အသုံးပြုသူ စီမံခန့်ခွဲမှု",
     "collapse": "ခေါက်သိမ်းရန်"
   },
   "Settings": {
@@ -146,6 +147,12 @@
       "terminated": "ရပ်စဲ",
       "all": "အားလုံး"
     },
+    "employeeTypes": {
+      "full_time": "အချိန်ပြည့်",
+      "part_time": "အချိန်ပိုင်း",
+      "ft": "အချိန်ပြည့်",
+      "pt": "အချိန်ပိုင်း"
+    },
     "messages": {
       "createSuccess": "ဝန်ထမ်း အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ",
       "updateSuccess": "ဝန်ထမ်း အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ",
@@ -154,6 +161,14 @@
       "confirmDelete": "ဤဝန်ထမ်းကို ဖျက်ရန် သေချာပါသလား?",
       "noEmployeesFound": "ဝန်ထမ်းအချက်အလက် မတွေ့ရှိပါ"
     },
+    "actions": {
+      "title": "လုပ်ဆောင်ချက်များ",
+      "edit": "ပြင်ဆင်ရန်",
+      "delete": "ဖျက်ရန်",
+      "openMenu": "မီနူးဖွင့်ပါ"
+    },
+    "loading": "လုပ်ဆောင်နေသည်...",
+    "search": "ရှာဖွေပါ",
     "placeholders": {
       "selectTitle": "ခေါင်းစဉ် ရွေးပါ",
       "selectType": "အမျိုးအစား ရွေးပါ"
@@ -183,6 +198,94 @@
     "lifetime": "တစ်သက်တာ",
     "cancel": "မလုပ်တော့ပါ",
     "save": "သိမ်းဆည်းရန်"
+  },
+  "Profile": {
+    "title": "My Profile",
+    "description": "Manage your personal information and password",
+    "personalInfo": "User Information",
+    "personalInfoDescription": "Your account details",
+    "username": "Username",
+    "role": "Role",
+    "lastLogin": "Last Login",
+    "loading": "Loading...",
+    "errorLoadingProfile": "Failed to load profile",
+    "password": {
+      "title": "Change Password",
+      "description": "Update your password for security",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "submit": "Change Password",
+      "successTitle": "Success",
+      "success": "Password changed successfully",
+      "errorTitle": "Error",
+      "error": "Failed to change password. Please check your current password.",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "minLength": "Password must be at least 6 characters",
+      "required": "Required"
+    }
+  },
+  "Users": {
+    "title": "အသုံးပြုသူ စီမံခန့်ခွဲမှု",
+    "description": "အသုံးပြုသူအကောင့်များနှင့် ဝင်ရောက်ခွင့် အခန်းကဏ္ဍများကို စီမံခန့်ခွဲပါ",
+    "createUser": "အသုံးပြုသူ ဖန်တီးပါ",
+    "createUserDescription": "စနစ်ဝင်ရောက်ရန် အသုံးပြုသူအကောင့်သစ် ဖန်တီးပါ",
+    "loading": "လုပ်ဆောင်နေသည်...",
+    "fields": {
+      "username": "အသုံးပြုသူအမည်",
+      "password": "စကားဝှက်",
+      "role": "အခန်းကဏ္ဍ",
+      "createdAt": "ဖန်တီးသည့်ရက်",
+      "lastLoginAt": "နောက်ဆုံးဝင်ရောက်မှု",
+      "newPassword": "စကားဝှက်အသစ်"
+    },
+    "roles": {
+      "admin": "Admin",
+      "hr": "HR"
+    },
+    "actions": {
+      "title": "လုပ်ဆောင်ချက်များ",
+      "openMenu": "မီနူးဖွင့်ပါ",
+      "editRole": "အခန်းကဏ္ဍ ပြင်ဆင်ရန်",
+      "resetPassword": "စကားဝှက် ပြန်လည်သတ်မှတ်ရန်",
+      "delete": "အသုံးပြုသူ ဖျက်ရန်",
+      "create": "ဖန်တီးပါ",
+      "creating": "ဖန်တီးနေသည်...",
+      "save": "သိမ်းဆည်းရန်",
+      "saving": "သိမ်းဆည်းနေသည်...",
+      "cancel": "မလုပ်တော့ပါ"
+    },
+    "placeholders": {
+      "selectRole": "အခန်းကဏ္ဍ ရွေးပါ"
+    },
+    "validation": {
+      "usernameMin": "အသုံးပြုသူအမည်သည် အနည်းဆုံး ၃ လုံး ရှိရမည်",
+      "passwordMin": "စကားဝှက်သည် အနည်းဆုံး ၈ လုံး ရှိရမည်",
+      "roleRequired": "ကျေးဇူးပြု၍ အခန်းကဏ္ဍ ရွေးချယ်ပါ"
+    },
+    "errors": {
+      "fetchFailed": "အသုံးပြုသူများ ရယူရန် မအောင်မြင်ပါ",
+      "fetchFailedDescription": "ကျေးဇူးပြု၍ နောက်မှ ထပ်ကြိုးစားပါ",
+      "createFailed": "အသုံးပြုသူ ဖန်တီးရန် မအောင်မြင်ပါ",
+      "createFailedDescription": "ကျေးဇူးပြု၍ နောက်မှ ထပ်ကြိုးစားပါ",
+      "usernameExists": "အသုံးပြုသူအမည် ရှိပြီးသားဖြစ်သည်",
+      "resetFailed": "စကားဝှက် ပြန်လည်သတ်မှတ်ရန် မအောင်မြင်ပါ",
+      "resetFailedDescription": "ကျေးဇူးပြု၍ နောက်မှ ထပ်ကြိုးစားပါ",
+      "updateFailed": "အသုံးပြုသူ ပြင်ဆင်ရန် မအောင်မြင်ပါ",
+      "updateFailedDescription": "ကျေးဇူးပြု၍ နောက်မှ ထပ်ကြိုးစားပါ",
+      "deleteFailed": "အသုံးပြုသူ ဖျက်ရန် မအောင်မြင်ပါ",
+      "deleteFailedDescription": "ကျေးဇူးပြု၍ နောက်မှ ထပ်ကြိုးစားပါ"
+    },
+    "success": {
+      "userCreated": "အသုံးပြုသူ အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ",
+      "passwordReset": "စကားဝှက် အောင်မြင်စွာ ပြန်လည်သတ်မှတ်ပြီးပါပြီ",
+      "roleUpdated": "အခန်းကဏ္ဍ အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ",
+      "userDeleted": "အသုံးပြုသူ အောင်မြင်စွာ ဖျက်ပြီးပါပြီ"
+    },
+    "resetPasswordDescription": "{username} အတွက် စကားဝှက်အသစ် သတ်မှတ်ပါ",
+    "editRoleDescription": "{username} အတွက် အခန်းကဏ္ဍ မွမ်းမံပါ",
+    "deleteConfirmTitle": "သေချာပါသလား?",
+    "deleteConfirmDescription": "ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။ ဤအရာသည် {username} ကို အပြီးတိုင် ဖျက်ဆီးပါမည်။"
   }
 }
 

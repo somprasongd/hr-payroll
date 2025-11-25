@@ -40,6 +40,7 @@
     "humanResources": "โมนีส",
     "systemManagement": "ธุรกรรมการจัน",
     "settings": "การตั้งค่า",
+    "users": "จัดการผู้ใช้งาน",
     "collapse": "ย่อ"
   },
   "Settings": {
@@ -146,6 +147,12 @@
       "terminated": "พ้นสภาพ",
       "all": "ทั้งหมด"
     },
+    "employeeTypes": {
+      "full_time": "พนักงานประจำ",
+      "part_time": "พนักงานชั่วคราว",
+      "ft": "พนักงานประจำ",
+      "pt": "พนักงานชั่วคราว"
+    },
     "messages": {
       "createSuccess": "เพิ่มพนักงานสำเร็จ",
       "updateSuccess": "บันทึกข้อมูลสำเร็จ",
@@ -154,6 +161,14 @@
       "confirmDelete": "คุณแน่ใจหรือไม่ว่าต้องการลบพนักงานคนนี้?",
       "noEmployeesFound": "ไม่พบข้อมูลพนักงาน"
     },
+    "actions": {
+      "title": "การจัดการ",
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "openMenu": "เปิดเมนู"
+    },
+    "loading": "กำลังโหลด...",
+    "search": "ค้นหา",
     "placeholders": {
       "selectTitle": "เลือกคำนำหน้า",
       "selectType": "เลือกประเภท"
@@ -209,6 +224,68 @@
       "minLength": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร",
       "required": "กรุณากรอกข้อมูล"
     }
+  },
+  "Users": {
+    "title": "จัดการผู้ใช้งาน",
+    "description": "จัดการบัญชีผู้ใช้งานและสิทธิ์การเข้าถึง",
+    "createUser": "สร้างผู้ใช้งาน",
+    "createUserDescription": "สร้างบัญชีผู้ใช้งานใหม่สำหรับเข้าสู่ระบบ",
+    "loading": "กำลังโหลด...",
+    "fields": {
+      "username": "ชื่อผู้ใช้งาน",
+      "password": "รหัสผ่าน",
+      "role": "สิทธิ์การใช้งาน",
+      "createdAt": "วันที่สร้าง",
+      "lastLoginAt": "เข้าสู่ระบบล่าสุด",
+      "newPassword": "รหัสผ่านใหม่"
+    },
+    "roles": {
+      "admin": "ผู้ดูแลระบบ",
+      "hr": "ฝ่ายบุคคล"
+    },
+    "actions": {
+      "title": "การจัดการ",
+      "openMenu": "เปิดเมนู",
+      "editRole": "แก้ไขสิทธิ์",
+      "resetPassword": "รีเซ็ตรหัสผ่าน",
+      "delete": "ลบผู้ใช้งาน",
+      "create": "สร้าง",
+      "creating": "กำลังสร้าง...",
+      "save": "บันทึก",
+      "saving": "กำลังบันทึก...",
+      "cancel": "ยกเลิก"
+    },
+    "placeholders": {
+      "selectRole": "เลือกสิทธิ์การใช้งาน"
+    },
+    "validation": {
+      "usernameMin": "ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 3 ตัวอักษร",
+      "passwordMin": "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร",
+      "roleRequired": "กรุณาเลือกสิทธิ์การใช้งาน"
+    },
+    "errors": {
+      "fetchFailed": "ไม่สามารถดึงข้อมูลผู้ใช้งานได้",
+      "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "createFailed": "ไม่สามารถสร้างผู้ใช้งานได้",
+      "createFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "usernameExists": "ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว",
+      "resetFailed": "ไม่สามารถรีเซ็ตรหัสผ่านได้",
+      "resetFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "updateFailed": "ไม่สามารถแก้ไขข้อมูลได้",
+      "updateFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "deleteFailed": "ไม่สามารถลบผู้ใช้งานได้",
+      "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง"
+    },
+    "success": {
+      "userCreated": "สร้างผู้ใช้งานสำเร็จ",
+      "passwordReset": "รีเซ็ตรหัสผ่านสำเร็จ",
+      "roleUpdated": "แก้ไขสิทธิ์สำเร็จ",
+      "userDeleted": "ลบผู้ใช้งานสำเร็จ"
+    },
+    "resetPasswordDescription": "ตั้งรหัสผ่านใหม่สำหรับผู้ใช้งาน {username}",
+    "editRoleDescription": "แก้ไขสิทธิ์การใช้งานสำหรับ {username}",
+    "deleteConfirmTitle": "ยืนยันการลบผู้ใช้งาน",
+    "deleteConfirmDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งาน {username}? การกระทำนี้ไม่สามารถย้อนกลับได้"
   }
 }
 

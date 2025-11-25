@@ -18,6 +18,7 @@ import (
 // @Param limit query int false "limit"
 // @Param search query string false "ค้นหาจากชื่อ/รหัส"
 // @Param status query string false "active|terminated|all"
+// @Param employeeTypeId query string false "รหัสประเภทพนักงาน"
 // @Security BearerAuth
 // @Success 200 {object} Response
 // @Failure 401
@@ -29,12 +30,14 @@ func NewEndpoint(router fiber.Router) {
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
 		search := c.Query("search")
 		status := c.Query("status", "active")
+		employeeTypeID := c.Query("employeeTypeId")
 
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
-			Page:   page,
-			Limit:  limit,
-			Search: search,
-			Status: status,
+			Page:           page,
+			Limit:          limit,
+			Search:         search,
+			Status:         status,
+			EmployeeTypeID: employeeTypeID,
 		})
 		if err != nil {
 			return err

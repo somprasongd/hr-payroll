@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -43,7 +44,6 @@ type ListResult struct {
 }
 
 func (r Repository) List(ctx context.Context, page, limit int, empID *uuid.UUID, txnType, status string, startDate, endDate *time.Time) (ListResult, error) {
-	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
