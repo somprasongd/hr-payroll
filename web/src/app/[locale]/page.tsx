@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuthStore } from "@/store/auth-store"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslations } from 'next-intl';
 import { User, Lock, Eye, EyeOff, Users, AlertCircle } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -52,6 +52,14 @@ export default function LoginPage() {
     },
   })
 
+  useEffect(() => {
+    const rememberedUsername = localStorage.getItem('rememberedUsername')
+    if (rememberedUsername) {
+      form.setValue('username', rememberedUsername)
+      form.setValue('rememberMe', true)
+    }
+  }, [form])
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true)
     setError('')
@@ -76,6 +84,13 @@ export default function LoginPage() {
       
       // Store authentication data (using accessToken as token)
       login(response.user, response.accessToken, response.refreshToken)
+
+      // Handle Remember Me
+      if (values.rememberMe) {
+        localStorage.setItem('rememberedUsername', values.username)
+      } else {
+        localStorage.removeItem('rememberedUsername')
+      }
       
       // Debug: Verify localStorage
       console.log('[After Login]', {
