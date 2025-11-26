@@ -58,20 +58,21 @@ function Sidebar({
   user
 }: SidebarProps & { user: any }) {
   const tMenu = useTranslations('Menu');
-  
-  const menuItems = [
+  const menuItems: { 
+    id: string; 
+    icon: any; 
+    label: string; 
+    path: string; 
+    indent?: boolean;
+    disabled?: boolean;
+  }[] = [
     { id: 'dashboard', icon: LayoutDashboard, label: tMenu('dashboard'), path: '/dashboard' },
     { id: 'employees', icon: Users, label: tMenu('employeeManagement'), path: '/employees' },
-    { id: 'attendance', icon: Clock, label: tMenu('attendance'), path: '/attendance', disabled: true },
     { id: 'worklog-ft', icon: User, label: tMenu('worklogFT'), path: '/worklogs/ft', indent: true },
     { id: 'worklog-pt', icon: Clock, label: tMenu('worklogPT'), path: '/worklogs/pt', indent: true },
     { id: 'payout-pt', icon: DollarSign, label: tMenu('payoutPT'), path: '/payouts/pt', indent: true },
-    { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement'), path: '/leave' },
-    { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
-    { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
     { id: 'salary-raise', icon: TrendingUp, label: tMenu('salaryRaise'), path: '/salary-raise' },
     { id: 'bonus', icon: DollarSign, label: tMenu('bonus'), path: '/bonuses' },
-    { id: 'hr', icon: Briefcase, label: tMenu('humanResources'), path: '/hr' },
   ];
 
   return (

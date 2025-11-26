@@ -124,9 +124,9 @@ export function CreateCycleDialog({ onSuccess, latestCycleEndDate }: CreateCycle
           <DialogTitle>{t('create.title')}</DialogTitle>
           <DialogDescription>
             {t('create.description')}
-            <div className="mt-2 text-sm text-muted-foreground">
+            <span className="mt-2 block text-sm text-muted-foreground">
               {t('create.note')}
-            </div>
+            </span>
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

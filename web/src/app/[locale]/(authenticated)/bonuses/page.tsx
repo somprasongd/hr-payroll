@@ -106,14 +106,14 @@ export default function BonusListPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return <Badge variant="default" className="bg-green-500">{t('status.approved')}</Badge>;
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return <Badge variant="destructive">{t('status.rejected')}</Badge>;
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return <Badge variant="secondary">{t('status.pending')}</Badge>;
     }
   };
 
@@ -204,9 +204,7 @@ export default function BonusListPage() {
                   <TableCell>{cycle.totalEmployees}</TableCell>
                   <TableCell>{cycle.totalBonusAmount?.toLocaleString()}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={getStatusColor(cycle.status)}>
-                      {t(`status.${cycle.status}`)}
-                    </Badge>
+                    {getStatusBadge(cycle.status)}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
