@@ -1615,6 +1615,7 @@ Logic พิเศษ:
 - หากส่ง `status: "approved"` ระบบ (Database Trigger) จะทำการ **อัปเดตฐานเงินเดือน (`basePayAmount`)** ของพนักงานทุกคนในรอบนั้นที่ตาราง `employees` ทันที
 - **HR:** ห้ามส่ง field `status` (หรือส่งได้แค่ `pending`)
 - **Admin:** สามารถส่ง `approved` หรือ `rejected` ได้
+- การ `rejected` ไม่ได้ลบรอบออกไป (ยังอยู่ในระบบจนกว่าจะลบด้วย API Delete)
 
 **Request Body:**
 
@@ -1647,7 +1648,8 @@ Logic พิเศษ:
 ลบรอบการประเมิน (Soft Delete)
 
 - **Endpoint:** `DELETE /salary-raise-cycles/{id}`
-- **Access:** **Admin Only** (เพื่อความปลอดภัย)
+- **Access:** Admin, HR
+- ไม่เปลี่ยนสถานะรอบ เพียงตั้งค่า `deleted_at/deleted_by` (Soft Delete)
 
 **Success Response:** `204 No Content`
 
@@ -1670,17 +1672,24 @@ Logic พิเศษ:
   "data": [
     {
       "id": "019dd999-...",
+      "cycleId": "019cc123-...",
       "employeeId": "019aa095-...",
       "employeeName": "สมชาย ศรีสุข",
+      "tenureDays": 365,
       "currentSalary": 30000.00,
+      "currentSsoWage": 15000.00,
       "raisePercent": 5.00,
       "raiseAmount": 1500.00,
       "newSalary": 31500.00, // Calculated (current + raiseAmount)
+      "newSsoWage": 15000.00,
       "stats": {
         "lateMinutes": 45,
         "leaveDays": 2.5,
+        "leaveDoubleDays": 0.0,
+        "leaveHours": 4.0,
         "otHours": 12.0
-      }
+      },
+      "updatedAt": "2026-01-05T10:00:00Z"
     }
   ]
 }

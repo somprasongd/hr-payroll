@@ -1,12 +1,13 @@
 package salaryraise
 
 import (
-	"hrms/modules/salaryraise/internal/feature/approve"
 	"hrms/modules/salaryraise/internal/feature/create"
 	"hrms/modules/salaryraise/internal/feature/delete"
 	"hrms/modules/salaryraise/internal/feature/get"
-	"hrms/modules/salaryraise/internal/feature/items"
+	itemslist "hrms/modules/salaryraise/internal/feature/items/list"
+	itemsupdate "hrms/modules/salaryraise/internal/feature/items/update"
 	"hrms/modules/salaryraise/internal/feature/list"
+	"hrms/modules/salaryraise/internal/feature/update"
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/jwt"
@@ -38,9 +39,9 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler())
 	mediator.Register[*get.Query, *get.Response](get.NewHandler())
 	mediator.Register[*create.Command, *create.Response](create.NewHandler())
-	mediator.Register[*approve.Command, *approve.Response](approve.NewHandler())
-	mediator.Register[*items.ListQuery, *items.ListResponse](items.NewListHandler())
-	mediator.Register[*items.UpdateCommand, *items.UpdateResponse](items.NewUpdateHandler())
+	mediator.Register[*update.Command, *update.Response](update.NewHandler())
+	mediator.Register[*itemslist.Query, *itemslist.Response](itemslist.NewHandler())
+	mediator.Register[*itemsupdate.Command, *itemsupdate.Response](itemsupdate.NewHandler())
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler())
 	return nil
 }
@@ -50,13 +51,10 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	list.NewEndpoint(group, m.repo)
 	get.NewEndpoint(group, m.repo)
 	create.NewEndpoint(group, m.repo, m.ctx.Transactor)
-	items.RegisterList(group, m.repo)
+	update.NewEndpoint(group, m.repo)
+	itemslist.NewEndpoint(group, m.repo)
 	// items update (hr/admin)
 	itemGroup := r.Group("/salary-raise-items", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
-	items.RegisterUpdate(itemGroup, m.repo)
-
-	// admin only actions
-	admin := group.Group("", middleware.RequireRoles("admin"))
-	approve.NewEndpoint(admin, m.repo, m.ctx.Transactor)
-	delete.NewEndpoint(admin, m.repo)
+	itemsupdate.NewEndpoint(itemGroup, m.repo)
+	delete.NewEndpoint(group, m.repo)
 }

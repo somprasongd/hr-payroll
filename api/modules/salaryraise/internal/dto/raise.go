@@ -25,6 +25,7 @@ type Cycle struct {
 type Item struct {
 	ID             uuid.UUID `json:"id"`
 	EmployeeID     uuid.UUID `json:"employeeId"`
+	EmployeeName   string    `json:"employeeName,omitempty"`
 	TenureDays     int       `json:"tenureDays"`
 	CurrentSalary  float64   `json:"currentSalary"`
 	CurrentSSOWage *float64  `json:"currentSsoWage,omitempty"`
@@ -33,6 +34,15 @@ type Item struct {
 	NewSalary      float64   `json:"newSalary"`
 	NewSSOWage     float64   `json:"newSsoWage"`
 	UpdatedAt      time.Time `json:"updatedAt"`
+	Stats          Stats     `json:"stats"`
+}
+
+type Stats struct {
+	LateMinutes     int     `json:"lateMinutes"`
+	LeaveDays       float64 `json:"leaveDays"`
+	LeaveDoubleDays float64 `json:"leaveDoubleDays"`
+	LeaveHours      float64 `json:"leaveHours"`
+	OtHours         float64 `json:"otHours"`
 }
 
 type Meta struct {
@@ -58,6 +68,7 @@ func FromItem(r repository.Item) Item {
 	return Item{
 		ID:             r.ID,
 		EmployeeID:     r.EmployeeID,
+		EmployeeName:   r.EmployeeName,
 		TenureDays:     r.TenureDays,
 		CurrentSalary:  r.CurrentSalary,
 		CurrentSSOWage: r.CurrentSSOWage,
@@ -66,5 +77,12 @@ func FromItem(r repository.Item) Item {
 		NewSalary:      r.NewSalary,
 		NewSSOWage:     r.NewSSOWage,
 		UpdatedAt:      r.UpdatedAt,
+		Stats: Stats{
+			LateMinutes:     r.Stats.LateMinutes,
+			LeaveDays:       r.Stats.LeaveDays,
+			LeaveDoubleDays: r.Stats.LeaveDoubleDays,
+			LeaveHours:      r.Stats.LeaveHours,
+			OtHours:         r.Stats.OtHours,
+		},
 	}
 }

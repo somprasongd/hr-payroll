@@ -1,5 +1,37 @@
 basePath: /api/v1
 definitions:
+  approve.Request:
+    properties:
+      status:
+        type: string
+    type: object
+  approve.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_bonus_internal_dto.Item'
+        type: array
+      message:
+        type: string
+      payrollMonthDate:
+        type: string
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalBonusAmount:
+        type: number
+      totalEmployees:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
   changepassword.RequestBody:
     properties:
       currentPassword:
@@ -167,6 +199,19 @@ definitions:
       totalIncome:
         type: number
       totalNetPay:
+        type: number
+    type: object
+  dto.Stats:
+    properties:
+      lateMinutes:
+        type: integer
+      leaveDays:
+        type: number
+      leaveDoubleDays:
+        type: number
+      leaveHours:
+        type: number
+      otHours:
         type: number
     type: object
   dto.User:
@@ -394,38 +439,6 @@ definitions:
         type: integer
       totalPages:
         type: integer
-    type: object
-  hrms_modules_bonus_internal_feature_approve.Request:
-    properties:
-      status:
-        type: string
-    type: object
-  hrms_modules_bonus_internal_feature_approve.Response:
-    properties:
-      createdAt:
-        type: string
-      id:
-        type: string
-      items:
-        items:
-          $ref: '#/definitions/hrms_modules_bonus_internal_dto.Item'
-        type: array
-      message:
-        type: string
-      payrollMonthDate:
-        type: string
-      periodEndDate:
-        type: string
-      periodStartDate:
-        type: string
-      status:
-        type: string
-      totalBonusAmount:
-        type: number
-      totalEmployees:
-        type: integer
-      updatedAt:
-        type: string
     type: object
   hrms_modules_bonus_internal_feature_create.Command:
     properties:
@@ -1339,6 +1352,8 @@ definitions:
         type: number
       employeeId:
         type: string
+      employeeName:
+        type: string
       id:
         type: string
       newSalary:
@@ -1349,6 +1364,8 @@ definitions:
         type: number
       raisePercent:
         type: number
+      stats:
+        $ref: '#/definitions/dto.Stats'
       tenureDays:
         type: integer
       updatedAt:
@@ -1362,37 +1379,6 @@ definitions:
         type: integer
       totalPages:
         type: integer
-    type: object
-  hrms_modules_salaryraise_internal_feature_approve.Request:
-    properties:
-      status:
-        description: approved|rejected
-        type: string
-    type: object
-  hrms_modules_salaryraise_internal_feature_approve.Response:
-    properties:
-      createdAt:
-        type: string
-      id:
-        type: string
-      items:
-        items:
-          $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Item'
-        type: array
-      message:
-        type: string
-      periodEndDate:
-        type: string
-      periodStartDate:
-        type: string
-      status:
-        type: string
-      totalEmployees:
-        type: integer
-      totalRaiseAmount:
-        type: number
-      updatedAt:
-        type: string
     type: object
   hrms_modules_salaryraise_internal_feature_create.Command:
     properties:
@@ -1452,55 +1438,6 @@ definitions:
       updatedAt:
         type: string
     type: object
-  hrms_modules_salaryraise_internal_feature_items.ListResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Item'
-        type: array
-    type: object
-  hrms_modules_salaryraise_internal_feature_items.UpdateCommand:
-    properties:
-      actorID:
-        type: string
-      id:
-        type: string
-      newSsoWage:
-        type: number
-      raiseAmount:
-        type: number
-      raisePercent:
-        type: number
-      repo:
-        $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Repository'
-    type: object
-  hrms_modules_salaryraise_internal_feature_items.UpdateResponse:
-    properties:
-      currentSSOWage:
-        type: number
-      currentSalary:
-        type: number
-      cycleID:
-        type: string
-      employeeID:
-        type: string
-      employeeName:
-        type: string
-      id:
-        type: string
-      newSSOWage:
-        type: number
-      newSalary:
-        type: number
-      raiseAmount:
-        type: number
-      raisePercent:
-        type: number
-      tenureDays:
-        type: integer
-      updatedAt:
-        type: string
-    type: object
   hrms_modules_salaryraise_internal_feature_list.Response:
     properties:
       data:
@@ -1510,28 +1447,62 @@ definitions:
       meta:
         $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Meta'
     type: object
+  hrms_modules_salaryraise_internal_feature_update.RequestBody:
+    properties:
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+    type: object
+  hrms_modules_salaryraise_internal_feature_update.Response:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_dto.Item'
+        type: array
+      periodEndDate:
+        type: string
+      periodStartDate:
+        type: string
+      status:
+        type: string
+      totalEmployees:
+        type: integer
+      totalRaiseAmount:
+        type: number
+      updatedAt:
+        type: string
+    type: object
   hrms_modules_salaryraise_internal_repository.Item:
     properties:
-      currentSSOWage:
-        type: number
       currentSalary:
         type: number
-      cycleID:
+      currentSsoWage:
+        type: number
+      cycleId:
         type: string
-      employeeID:
+      employeeId:
         type: string
       employeeName:
         type: string
       id:
         type: string
-      newSSOWage:
-        type: number
       newSalary:
+        type: number
+      newSsoWage:
         type: number
       raiseAmount:
         type: number
       raisePercent:
         type: number
+      stats:
+        $ref: '#/definitions/repository.Stats'
       tenureDays:
         type: integer
       updatedAt:
@@ -1690,6 +1661,57 @@ definitions:
         type: number
       taxMonthAmount:
         type: number
+    type: object
+  itemslist.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Item'
+        type: array
+    type: object
+  itemsupdate.Command:
+    properties:
+      actorID:
+        type: string
+      id:
+        type: string
+      newSsoWage:
+        type: number
+      raiseAmount:
+        type: number
+      raisePercent:
+        type: number
+      repo:
+        $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Repository'
+    type: object
+  itemsupdate.Response:
+    properties:
+      currentSalary:
+        type: number
+      currentSsoWage:
+        type: number
+      cycleId:
+        type: string
+      employeeId:
+        type: string
+      employeeName:
+        type: string
+      id:
+        type: string
+      newSalary:
+        type: number
+      newSsoWage:
+        type: number
+      raiseAmount:
+        type: number
+      raisePercent:
+        type: number
+      stats:
+        $ref: '#/definitions/repository.Stats'
+      tenureDays:
+        type: integer
+      updatedAt:
+        type: string
     type: object
   list.Meta:
     properties:
@@ -1950,6 +1972,19 @@ definitions:
         type: string
       worklogId:
         type: string
+    type: object
+  repository.Stats:
+    properties:
+      lateMinutes:
+        type: integer
+      leaveDays:
+        type: number
+      leaveDoubleDays:
+        type: number
+      leaveHours:
+        type: number
+      otHours:
+        type: number
     type: object
   resetpassword.RequestBody:
     properties:
@@ -2479,14 +2514,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_bonus_internal_feature_approve.Request'
+          $ref: '#/definitions/approve.Request'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_bonus_internal_feature_approve.Response'
+            $ref: '#/definitions/approve.Response'
         "400":
           description: Bad Request
         "401":
@@ -3371,6 +3406,14 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: pending|approved|rejected|all
+        in: query
+        name: status
+        type: string
+      - description: filter by periodStartDate year
+        in: query
+        name: year
+        type: integer
       produces:
       - application/json
       responses:
@@ -3423,9 +3466,15 @@ paths:
       responses:
         "204":
           description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
       security:
       - BearerAuth: []
-      summary: Delete salary raise cycle
+      summary: Delete salary raise cycle (soft delete)
       tags:
       - Salary Raise
     get:
@@ -3456,6 +3505,42 @@ paths:
       summary: Get salary raise cycle detail
       tags:
       - Salary Raise
+    patch:
+      consumes:
+      - application/json
+      description: แก้ไขช่วงเวลา หรือเปลี่ยนสถานะ (Approve/Reject)
+      parameters:
+      - description: cycle id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_update.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_update.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update salary raise cycle
+      tags:
+      - Salary Raise
   /salary-raise-cycles/{id}/items:
     get:
       parameters:
@@ -3474,47 +3559,10 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items.ListResponse'
+            $ref: '#/definitions/itemslist.Response'
       security:
       - BearerAuth: []
       summary: List salary raise items
-      tags:
-      - Salary Raise
-  /salary-raise-cycles/{id}/status:
-    post:
-      consumes:
-      - application/json
-      description: อนุมัติ/ปฏิเสธรอบปรับเงินเดือน
-      parameters:
-      - description: cycle id
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: status payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_approve.Request'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_approve.Response'
-        "400":
-          description: Bad Request
-        "401":
-          description: Unauthorized
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-      security:
-      - BearerAuth: []
-      summary: Update status salary raise cycle
       tags:
       - Salary Raise
   /salary-raise-items/{id}:
@@ -3532,14 +3580,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items.UpdateCommand'
+          $ref: '#/definitions/itemsupdate.Command'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items.UpdateResponse'
+            $ref: '#/definitions/itemsupdate.Response'
         "400":
           description: Bad Request
         "401":

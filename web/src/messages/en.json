@@ -44,6 +44,7 @@
     "systemManagement": "System Management",
     "settings": "Settings",
     "users": "User Management",
+    "salaryRaise": "Salary Raise",
     "collapse": "Collapse"
   },
   "Settings": {
@@ -528,6 +529,90 @@
         "title": "Confirm Payment",
         "description": "Are you sure you want to mark this payout as paid? This action cannot be undone."
       }
+    }
+  },
+  "SalaryRaise": {
+    "title": "Salary Raise Management",
+    "description": "Manage annual salary adjustments and raise cycles",
+    "listTitle": "Salary Raise Cycles",
+    "createTitle": "Create New Cycle",
+    "detailTitle": "Cycle Details",
+    "createButton": "Create Cycle",
+    "fields": {
+      "year": "Year",
+      "period": "Evaluation Period",
+      "status": "Status",
+      "totalEmployees": "Total Employees",
+      "totalRaiseAmount": "Total Raise Amount",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "note": "Note",
+      "employee": "Employee",
+      "currentSalary": "Current Salary",
+      "tenure": "Tenure (Days)",
+      "raisePercent": "Raise %",
+      "raiseAmount": "Raise Amount",
+      "newSalary": "New Salary",
+      "stats": "Stats (Late/Leave/OT)",
+      "newSsoWage": "New SSO Wage"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "all": "All"
+    },
+    "actions": {
+      "view": "View Details",
+      "edit": "Edit",
+      "delete": "Delete",
+      "approve": "Approve Cycle",
+      "reject": "Reject Cycle",
+      "editItem": "Edit Raise"
+    },
+    "delete": {
+      "title": "Delete Salary Raise Cycle",
+      "description": "Are you sure you want to delete this salary raise cycle? This action cannot be undone.",
+      "success": "Salary raise cycle deleted successfully",
+      "error": "Failed to delete salary raise cycle"
+    },
+    "create": {
+      "title": "Create Salary Raise Cycle",
+      "description": "Select the evaluation period for this cycle. The system will automatically calculate statistics for all full-time employees.",
+      "startDate": "Period Start Date",
+      "endDate": "Period End Date",
+      "success": "Cycle created successfully",
+      "error": {
+        "overlapOrPending": "Cannot create cycle (Pending cycle exists or date overlap)"
+      },
+      "note": "Note: Only one pending cycle can be created at a time."
+    },
+    "editItem": {
+      "title": "Edit Raise: {name}",
+      "description": "Adjust raise amount or percentage",
+      "currentSalary": "Current Salary: {amount}",
+      "newSalary": "New Salary: {amount}",
+      "saveSuccess": "Raise updated successfully"
+    },
+    "approve": {
+      "title": "Approve Cycle",
+      "description": "Are you sure you want to approve this cycle? This will update the base salary for all employees in this cycle immediately.",
+      "success": "Cycle approved successfully"
+    },
+    "reject": {
+      "title": "Reject Cycle",
+      "description": "Are you sure you want to reject this cycle?",
+      "success": "Cycle rejected successfully"
+    },
+    "stats": {
+      "late": "Late: {minutes}m",
+      "leave": "Leave: {days}d",
+      "leaveDouble": "Leave (x2): {days}d",
+      "leaveHours": "Leave (Hr): {hours}h",
+      "ot": "OT: {hours}h"
+    },
+    "units": {
+      "days": "d"
     }
   }
 }

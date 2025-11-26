@@ -17,7 +17,8 @@ import {
   ChevronRight,
   Menu,
   LogOut,
-  User
+  User,
+  TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -68,6 +69,7 @@ function Sidebar({
     { id: 'leave', icon: CalendarDays, label: tMenu('leaveManagement'), path: '/leave' },
     { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
     { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
+    { id: 'salary-raise', icon: TrendingUp, label: tMenu('salaryRaise'), path: '/salary-raise' },
     { id: 'hr', icon: Briefcase, label: tMenu('humanResources'), path: '/hr' },
   ];
 
@@ -193,6 +195,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/reports')) return 'reports';
     if (pathname.startsWith('/hr')) return 'hr';
     if (pathname.startsWith('/admin/users')) return 'users';
+    if (pathname.startsWith('/salary-raise')) return 'salary-raise';
     return 'dashboard';
   };
 

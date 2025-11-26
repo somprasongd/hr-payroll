@@ -32,19 +32,43 @@ type Cycle struct {
 	TotalRaise     float64    `db:"total_raise_amount"`
 }
 
+type Stats struct {
+	LateMinutes     int     `json:"lateMinutes"`
+	LeaveDays       float64 `json:"leaveDays"`
+	LeaveDoubleDays float64 `json:"leaveDoubleDays"`
+	LeaveHours      float64 `json:"leaveHours"`
+	OtHours         float64 `json:"otHours"`
+}
+
 type Item struct {
-	ID             uuid.UUID `db:"id"`
-	CycleID        uuid.UUID `db:"cycle_id"`
-	EmployeeID     uuid.UUID `db:"employee_id"`
-	EmployeeName   string    `db:"employee_name"`
-	TenureDays     int       `db:"tenure_days"`
-	CurrentSalary  float64   `db:"current_salary"`
-	CurrentSSOWage *float64  `db:"current_sso_wage"`
-	RaisePercent   float64   `db:"raise_percent"`
-	RaiseAmount    float64   `db:"raise_amount"`
-	NewSalary      float64   `db:"new_salary"`
-	NewSSOWage     float64   `db:"new_sso_wage"`
-	UpdatedAt      time.Time `db:"updated_at"`
+	ID             uuid.UUID `db:"id" json:"id"`
+	CycleID        uuid.UUID `db:"cycle_id" json:"cycleId"`
+	EmployeeID     uuid.UUID `db:"employee_id" json:"employeeId"`
+	EmployeeName   string    `db:"employee_name" json:"employeeName"`
+	TenureDays     int       `db:"tenure_days" json:"tenureDays"`
+	CurrentSalary  float64   `db:"current_salary" json:"currentSalary"`
+	CurrentSSOWage *float64  `db:"current_sso_wage" json:"currentSsoWage,omitempty"`
+	RaisePercent   float64   `db:"raise_percent" json:"raisePercent"`
+	RaiseAmount    float64   `db:"raise_amount" json:"raiseAmount"`
+	NewSalary      float64   `db:"new_salary" json:"newSalary"`
+	NewSSOWage     float64   `db:"new_sso_wage" json:"newSsoWage,omitempty"`
+	UpdatedAt      time.Time `db:"updated_at" json:"updatedAt"`
+	LateMinutes    int       `db:"late_minutes" json:"-"`
+	LeaveDays      float64   `db:"leave_days" json:"-"`
+	LeaveDouble    float64   `db:"leave_double_days" json:"-"`
+	LeaveHours     float64   `db:"leave_hours" json:"-"`
+	OtHours        float64   `db:"ot_hours" json:"-"`
+	Stats          Stats     `db:"-" json:"stats"`
+}
+
+func (i *Item) hydrateStats() {
+	i.Stats = Stats{
+		LateMinutes:     i.LateMinutes,
+		LeaveDays:       i.LeaveDays,
+		LeaveDoubleDays: i.LeaveDouble,
+		LeaveHours:      i.LeaveHours,
+		OtHours:         i.OtHours,
+	}
 }
 
 type ListResult struct {
@@ -55,19 +79,19 @@ type ListResult struct {
 func (r Repository) List(ctx context.Context, page, limit int, status string, year *int) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
-	where := "deleted_at IS NULL"
-	args := []interface{}{limit, offset}
-	argIdx := 3
+	conds := []string{"deleted_at IS NULL"}
+	args := []interface{}{}
 	if status != "" && status != "all" {
-		where += fmt.Sprintf(" AND status = $%d", argIdx)
+		conds = append(conds, fmt.Sprintf("status = $%d", len(args)+1))
 		args = append(args, status)
-		argIdx++
 	}
 	if year != nil {
-		where += fmt.Sprintf(" AND EXTRACT(YEAR FROM period_start_date) = $%d", argIdx)
+		conds = append(conds, fmt.Sprintf("EXTRACT(YEAR FROM period_start_date) = $%d", len(args)+1))
 		args = append(args, *year)
-		argIdx++
 	}
+	where := strings.Join(conds, " AND ")
+	limitPlaceholder := len(args) + 1
+	offsetPlaceholder := len(args) + 2
 	q := fmt.Sprintf(`
 SELECT id, period_start_date, period_end_date, status, created_at, updated_at, deleted_at,
   COALESCE((SELECT COUNT(1) FROM salary_raise_item sri WHERE sri.cycle_id = src.id),0) AS total_employees,
@@ -75,8 +99,9 @@ SELECT id, period_start_date, period_end_date, status, created_at, updated_at, d
 FROM salary_raise_cycle src
 WHERE %s
 ORDER BY created_at DESC
-LIMIT $1 OFFSET $2`, where)
-	rows, err := db.QueryxContext(ctx, q, args...)
+LIMIT $%d OFFSET $%d`, where, limitPlaceholder, offsetPlaceholder)
+	listArgs := append(args, limit, offset)
+	rows, err := db.QueryxContext(ctx, q, listArgs...)
 	if err != nil {
 		return ListResult{}, err
 	}
@@ -92,7 +117,7 @@ LIMIT $1 OFFSET $2`, where)
 	}
 	var total int
 	countQ := "SELECT COUNT(1) FROM salary_raise_cycle WHERE " + where
-	if err := db.GetContext(ctx, &total, countQ, args[2:]...); err != nil {
+	if err := db.GetContext(ctx, &total, countQ, args...); err != nil {
 		return ListResult{}, err
 	}
 	return ListResult{Rows: items, Total: total}, nil
@@ -139,12 +164,49 @@ RETURNING id, period_start_date, period_end_date, status, created_at, updated_at
 	return &c, nil
 }
 
+func (r Repository) UpdateCycle(ctx context.Context, id uuid.UUID, start, end *time.Time, status *string, actor uuid.UUID) (*Cycle, error) {
+	db := r.dbCtx(ctx)
+	sets := []string{"updated_by=$1"}
+	args := []interface{}{actor}
+	argIdx := 2
+	if start != nil {
+		sets = append(sets, fmt.Sprintf("period_start_date=$%d", argIdx))
+		args = append(args, *start)
+		argIdx++
+	}
+	if end != nil {
+		sets = append(sets, fmt.Sprintf("period_end_date=$%d", argIdx))
+		args = append(args, *end)
+		argIdx++
+	}
+	if status != nil {
+		sets = append(sets, fmt.Sprintf("status=$%d", argIdx))
+		args = append(args, *status)
+		argIdx++
+	}
+	if len(sets) == 1 {
+		return nil, fmt.Errorf("no fields to update")
+	}
+	args = append(args, id)
+	q := fmt.Sprintf(`
+UPDATE salary_raise_cycle
+SET %s
+WHERE id=$%d AND deleted_at IS NULL
+RETURNING id, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`, strings.Join(sets, ","), argIdx)
+	var c Cycle
+	if err := db.GetContext(ctx, &c, q, args...); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, error) {
 	db := r.dbCtx(ctx)
 	const qi = `SELECT sri.id, sri.cycle_id, sri.employee_id,
        (e.first_name || ' ' || e.last_name) AS employee_name,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
+       sri.late_minutes, sri.leave_days, sri.leave_double_days, sri.leave_hours, sri.ot_hours,
        sri.updated_at
 FROM salary_raise_item sri
 JOIN employees e ON e.id = sri.employee_id
@@ -153,6 +215,7 @@ WHERE sri.id=$1 LIMIT 1`
 	if err := db.GetContext(ctx, &it, qi, id); err != nil {
 		return nil, nil, err
 	}
+	it.hydrateStats()
 	cycle, _, err := r.Get(ctx, it.CycleID)
 	if err != nil {
 		return nil, nil, err
@@ -184,6 +247,7 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
        (e.first_name || ' ' || e.last_name) AS employee_name,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
+       sri.late_minutes, sri.leave_days, sri.leave_double_days, sri.leave_hours, sri.ot_hours,
        sri.updated_at
 FROM salary_raise_item sri
 JOIN employees e ON e.id = sri.employee_id
@@ -192,6 +256,9 @@ ORDER BY employee_name`, where)
 	var out []Item
 	if err := db.SelectContext(ctx, &out, q, args...); err != nil {
 		return nil, err
+	}
+	for idx := range out {
+		out[idx].hydrateStats()
 	}
 	return out, nil
 }
@@ -224,10 +291,13 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, percent, amoun
 	q := fmt.Sprintf(`UPDATE salary_raise_item SET %s WHERE id=$%d RETURNING id, cycle_id, employee_id,
        (SELECT (first_name || ' ' || last_name) FROM employees e WHERE e.id = salary_raise_item.employee_id) AS employee_name,
        tenure_days, current_salary, current_sso_wage,
-       raise_percent, raise_amount, new_salary, new_sso_wage, updated_at`, setClause, argIdx)
+       raise_percent, raise_amount, new_salary, new_sso_wage,
+       late_minutes, leave_days, leave_double_days, leave_hours, ot_hours,
+       updated_at`, setClause, argIdx)
 	var out Item
 	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err
 	}
+	out.hydrateStats()
 	return &out, nil
 }

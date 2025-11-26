@@ -1,42 +1,16 @@
-package items
+package itemslist
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
-
-type ListQuery struct {
-	CycleID uuid.UUID
-	Search  string
-	Repo    repository.Repository
-}
-
-type ListResponse struct {
-	Data []repository.Item `json:"data"`
-}
-
-type listHandler struct{}
-
-func NewListHandler() *listHandler { return &listHandler{} }
-
-func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, error) {
-	items, err := q.Repo.ListItems(ctx, q.CycleID, q.Search)
-	if err != nil {
-		logger.FromContext(ctx).Error("failed to list salary raise items", zap.Error(err))
-		return nil, errs.Internal("failed to list salary raise items")
-	}
-	return &ListResponse{Data: items}, nil
-}
 
 // @Summary List salary raise items
 // @Tags Salary Raise
@@ -44,9 +18,9 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 // @Security BearerAuth
 // @Param id path string true "cycle id"
 // @Param search query string false "search employee name"
-// @Success 200 {object} ListResponse
+// @Success 200 {object} Response
 // @Router /salary-raise-cycles/{id}/items [get]
-func RegisterList(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Get("/:id/items", func(c fiber.Ctx) error {
 		cycleID, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -56,7 +30,7 @@ func RegisterList(router fiber.Router, repo repository.Repository) {
 		// accept departmentId param but ignore (not implemented)
 		_ = c.Query("departmentId")
 
-		resp, err := mediator.Send[*ListQuery, *ListResponse](c.Context(), &ListQuery{
+		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
 			CycleID: cycleID,
 			Search:  search,
 			Repo:    repo,
