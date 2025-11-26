@@ -45,6 +45,7 @@
     "settings": "Settings",
     "users": "User Management",
     "salaryRaise": "Salary Raise",
+    "bonus": "Bonus Management",
     "collapse": "Collapse"
   },
   "Settings": {
@@ -466,12 +467,27 @@
     }
   },
   "Common": {
-    "cancel": "Cancel",
     "save": "Save",
-    "saving": "Saving...",
+    "cancel": "Cancel",
     "delete": "Delete",
-    "loading": "Loading...",
-    "clearFilters": "Clear Filters"
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "error": "Error",
+    "success": "Success",
+    "loading": "Loading..."
   },
   "Payouts": {
     "PT": {
@@ -537,7 +553,7 @@
     "listTitle": "Salary Raise Cycles",
     "createTitle": "Create New Cycle",
     "detailTitle": "Cycle Details",
-    "createButton": "Create Cycle",
+    "createButton": "Create",
     "fields": {
       "year": "Year",
       "period": "Evaluation Period",
@@ -557,7 +573,7 @@
       "newSsoWage": "New SSO Wage"
     },
     "status": {
-      "pending": "Pending",
+      "pending": "Awaiting Approval",
       "approved": "Approved",
       "rejected": "Rejected",
       "all": "All"
@@ -566,8 +582,8 @@
       "view": "View Details",
       "edit": "Edit",
       "delete": "Delete",
-      "approve": "Approve Cycle",
-      "reject": "Reject Cycle",
+      "approve": "Approve",
+      "reject": "Reject",
       "editItem": "Edit Raise"
     },
     "delete": {
@@ -605,14 +621,106 @@
       "success": "Cycle rejected successfully"
     },
     "stats": {
-      "late": "Late: {minutes}m",
-      "leave": "Leave: {days}d",
-      "leaveDouble": "Leave (x2): {days}d",
-      "leaveHours": "Leave (Hr): {hours}h",
-      "ot": "OT: {hours}h"
+      "late": "Late: {minutes} min",
+      "leave": "Leave: {days} days",
+      "leaveDouble": "Double Leave: {days} days",
+      "leaveHours": "Leave (Hr): {hours} hrs",
+      "ot": "OT: {hours} hrs"
     },
     "units": {
+      "years": "years",
+      "months": "months",
       "days": "d"
+    }
+  },
+  "Bonus": {
+    "title": "Bonus Management",
+    "description": "Manage bonus cycles and adjust employee bonus amounts",
+    "listTitle": "Bonus History",
+    "createTitle": "Create Bonus Cycle",
+    "detailTitle": "Bonus Cycle Details",
+    "noData": "No data",
+    "cycleNotFound": "Cycle not found",
+    "createButton": "Create",
+    "fields": {
+      "payrollMonth": "Payroll Month",
+      "period": "Evaluation Period",
+      "periodStart": "Start Date",
+      "periodEnd": "End Date",
+      "status": "Status",
+      "totalEmployees": "Total Employees",
+      "totalAmount": "Total Amount",
+      "createdAt": "Created At",
+      "employee": "Employee",
+      "currentSalary": "Current Salary",
+      "tenure": "Tenure",
+      "bonusMonths": "Bonus Months",
+      "bonusAmount": "Bonus Amount",
+      "stats": "Statistics"
+    },
+    "filters": {
+      "status": "Status",
+      "year": "Year"
+    },
+    "units": {
+      "years": "years",
+      "months": "months",
+      "days": "days",
+      "minutes": "min",
+      "hours": "hrs"
+    },
+    "stats": {
+      "late": "Late",
+      "leave": "Leave",
+      "leaveDouble": "Double Leave",
+      "leaveHours": "Leave (hrs)",
+      "ot": "OT"
+    },
+    "status": {
+      "pending": "Awaiting Approval",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "view": "View Details",
+      "delete": "Delete",
+      "approve": "Approve",
+      "reject": "Reject",
+      "editItem": "Edit Amount"
+    },
+    "approve": {
+      "title": "Confirm Approval",
+      "description": "Are you sure you want to approve this bonus cycle? This action cannot be undone."
+    },
+    "reject": {
+      "title": "Confirm Rejection",
+      "description": "Are you sure you want to reject this bonus cycle? This action cannot be undone."
+    },
+    "rejectConfirmMessage": "Are you sure you want to reject this bonus cycle?",
+    "confirmReject": "Confirm Rejection",
+    "create": {
+      "title": "Create New Cycle",
+      "description": "Define the payroll period and evaluation period. The system will automatically calculate employee work statistics.",
+      "note": "Note: Only one pending cycle can be created at a time",
+      "payrollMonth": "Payroll Month",
+      "payrollYear": "Year",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "success": "Bonus cycle created successfully",
+      "error": "An error occurred. Please try again."
+    },
+    "editItem": {
+      "title": "Edit Bonus: {name}",
+      "description": "Specify the bonus multiplier or amount to pay.",
+      "bonusMonths": "Multiplier (months)",
+      "bonusAmount": "Bonus Amount (baht)",
+      "saveSuccess": "Saved successfully",
+      "saveError": "Failed to save changes. Please try again."
+    },
+    "delete": {
+      "title": "Delete Bonus Cycle",
+      "description": "Are you sure you want to delete this bonus cycle? This action cannot be undone.",
+      "success": "Deleted successfully"
     }
   }
 }

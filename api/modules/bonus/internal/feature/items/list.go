@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
@@ -21,7 +22,7 @@ type ListQuery struct {
 }
 
 type ListResponse struct {
-	Data []repository.Item `json:"data"`
+	Data []dto.Item `json:"data"`
 }
 
 type listHandler struct{}
@@ -34,7 +35,11 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 		logger.FromContext(ctx).Error("failed to list bonus items", zap.Error(err))
 		return nil, errs.Internal("failed to list bonus items")
 	}
-	return &ListResponse{Data: items}, nil
+	var out []dto.Item
+	for _, it := range items {
+		out = append(out, dto.FromItem(it))
+	}
+	return &ListResponse{Data: out}, nil
 }
 
 // @Summary List bonus items

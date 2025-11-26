@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,27 +24,26 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { bonusService, BonusItem } from '@/services/bonus-service';
 import { useToast } from '@/hooks/use-toast';
-import { salaryRaiseService, SalaryRaiseItem } from '@/services/salary-raise.service';
 import { formatTenure } from '@/lib/format-tenure';
 
 const editItemSchema = z.object({
-  raisePercent: z.coerce.number().min(0),
-  raiseAmount: z.coerce.number(),
-  newSsoWage: z.coerce.number().min(0).optional(),
+  bonusMonths: z.coerce.number().min(0),
+  bonusAmount: z.coerce.number().min(0),
 });
 
 type EditItemFormValues = z.infer<typeof editItemSchema>;
 
-interface EditRaiseItemDialogProps {
-  item: SalaryRaiseItem | null;
+interface EditBonusItemDialogProps {
+  item: BonusItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: EditRaiseItemDialogProps) {
-  const t = useTranslations('SalaryRaise');
+export function EditBonusItemDialog({ item, open, onOpenChange, onSuccess }: EditBonusItemDialogProps) {
+  const t = useTranslations('Bonus');
   const tCommon = useTranslations('Common');
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,83 +51,67 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
   const form = useForm<EditItemFormValues>({
     resolver: zodResolver(editItemSchema) as any,
     defaultValues: {
-      raisePercent: 0,
-      raiseAmount: 0,
-      newSsoWage: 0,
+      bonusMonths: 0,
+      bonusAmount: 0,
     },
   });
 
   useEffect(() => {
     if (item) {
       form.reset({
-        raisePercent: item.raisePercent || 0,
-        raiseAmount: item.raiseAmount || 0,
-        newSsoWage: item.newSsoWage || item.currentSsoWage || 0,
+        bonusMonths: item.bonusMonths || 0,
+        bonusAmount: item.bonusAmount || 0,
       });
     }
   }, [item, form]);
 
   const currentSalary = item?.currentSalary || 0;
-  const raisePercent = form.watch('raisePercent');
-  const raiseAmount = form.watch('raiseAmount');
 
-  // Calculate new salary for preview
-  // Note: This is just a preview. The actual logic might be slightly different depending on which field was edited last.
-  // For simplicity, we'll assume if user edits percent, we update amount, and vice versa.
-  // But react-hook-form doesn't easily support circular dependencies without careful handling.
-  // Let's just show the calculation based on base + amount.
-  // And maybe add a handler to update amount when percent changes.
-
-  const handlePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const percent = parseFloat(e.target.value) || 0;
-    const amount = (currentSalary * percent) / 100;
-    form.setValue('raisePercent', percent);
-    form.setValue('raiseAmount', parseFloat(amount.toFixed(2)));
+  const handleMonthsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const months = parseFloat(e.target.value) || 0;
+    const amount = currentSalary * months;
+    form.setValue('bonusMonths', months);
+    form.setValue('bonusAmount', parseFloat(amount.toFixed(2)));
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const amount = parseFloat(e.target.value) || 0;
-    const percent = currentSalary > 0 ? (amount / currentSalary) * 100 : 0;
-    form.setValue('raiseAmount', amount);
-    form.setValue('raisePercent', parseFloat(percent.toFixed(2)));
+    const months = currentSalary > 0 ? amount / currentSalary : 0;
+    form.setValue('bonusAmount', amount);
+    form.setValue('bonusMonths', parseFloat(months.toFixed(2)));
   };
 
-  const newSalary = currentSalary + (form.watch('raiseAmount') || 0);
-
-  async function onSubmit(data: EditItemFormValues) {
+  const onSubmit = async (data: EditItemFormValues) => {
     if (!item) return;
-
     try {
       setIsSubmitting(true);
-      await salaryRaiseService.updateCycleItem(item.id, data);
-      
+      await bonusService.updateBonusItem(item.id, data);
       toast({
         title: t('editItem.saveSuccess'),
         variant: 'default',
       });
-      
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      console.error('Failed to update item:', error);
+      console.error('Failed to update bonus item:', error);
       toast({
         title: tCommon('error'),
-        description: 'Failed to update raise. Please try again.',
+        description: t('editItem.saveError'),
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
+
+  if (!item) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t('editItem.title', { name: item?.employeeName || '' })}</DialogTitle>
-          <DialogDescription>
-            {t('editItem.description')}
-          </DialogDescription>
+          <DialogTitle>{t('editItem.title', { name: item.employeeName })}</DialogTitle>
+          <DialogDescription>{t('editItem.description')}</DialogDescription>
         </DialogHeader>
         
         <div className="bg-muted p-4 rounded-md mb-4">
@@ -138,24 +120,24 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
             <span className="text-sm">{currentSalary.toLocaleString()}</span>
           </div>
           <div className="flex justify-between font-bold text-lg">
-            <span>{t('fields.newSalary')}</span>
-            <span className="text-primary">{newSalary.toLocaleString()}</span>
+            <span>{t('fields.bonusAmount')}</span>
+            <span className="text-primary">{(form.watch('bonusAmount') || 0).toLocaleString()}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
           <div>
             <span className="text-muted-foreground">{t('fields.tenure')}:</span>
-            <span className="ml-2 font-medium">{formatTenure(item?.tenureDays || 0, t)}</span>
+            <span className="ml-2 font-medium">{formatTenure(item.tenureDays, t)}</span>
           </div>
           <div className="space-y-1">
             <div className="font-medium text-muted-foreground">{t('fields.stats')}</div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <div>{t('stats.late', { minutes: item?.stats?.lateMinutes || 0 })}</div>
-              <div>{t('stats.leave', { days: item?.stats?.leaveDays || 0 })}</div>
-              <div>{t('stats.leaveDouble', { days: item?.stats?.leaveDoubleDays || 0 })}</div>
-              <div>{t('stats.leaveHours', { hours: item?.stats?.leaveHours || 0 })}</div>
-              <div>{t('stats.ot', { hours: item?.stats?.otHours || 0 })}</div>
+              <div>{t('stats.late')}: {item.stats?.lateMinutes || 0} {t('units.minutes')}</div>
+              <div>{t('stats.leave')}: {item.stats?.leaveDays || 0} {t('units.days')}</div>
+              <div>{t('stats.leaveDouble')}: {item.stats?.leaveDoubleDays || 0} {t('units.days')}</div>
+              <div>{t('stats.leaveHours')}: {item.stats?.leaveHours || 0} {t('units.hours')}</div>
+              <div>{t('stats.ot')}: {item.stats?.otHours || 0} {t('units.hours')}</div>
             </div>
           </div>
         </div>
@@ -165,16 +147,16 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="raisePercent"
+                name="bonusMonths"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('fields.raisePercent')}</FormLabel>
+                    <FormLabel>{t('editItem.bonusMonths')}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         step="0.01" 
                         {...field} 
-                        onChange={handlePercentChange}
+                        onChange={handleMonthsChange}
                       />
                     </FormControl>
                     <FormMessage />
@@ -183,10 +165,10 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
               />
               <FormField
                 control={form.control}
-                name="raiseAmount"
+                name="bonusAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('fields.raiseAmount')}</FormLabel>
+                    <FormLabel>{t('editItem.bonusAmount')}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -200,28 +182,8 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="newSsoWage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fields.newSsoWage')}</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 {tCommon('cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>

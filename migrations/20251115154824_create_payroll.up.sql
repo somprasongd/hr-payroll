@@ -842,27 +842,32 @@ DECLARE
   r_run RECORD;
   v_emp_id UUID;
   v_target_month DATE;
-  v_txn_type TEXT;
+  v_txn_type TEXT; -- ใช้เฉพาะ debt_txn
 BEGIN
   IF TG_OP = 'DELETE' THEN
     v_emp_id := OLD.employee_id;
-    v_txn_type := OLD.txn_type;
   ELSE
     v_emp_id := NEW.employee_id;
-    v_txn_type := NEW.txn_type;
   END IF;
   
   -- กำหนด Target Month ตามตาราง
   IF TG_TABLE_NAME = 'bonus_item' THEN
     -- ต้อง join ไปหา cycle เพื่อดูเดือน
-    SELECT payroll_month_date INTO v_target_month 
-    FROM bonus_cycle WHERE id = CASE WHEN TG_OP = 'DELETE' THEN OLD.cycle_id ELSE NEW.cycle_id END;
+    SELECT payroll_month_date
+      INTO v_target_month 
+    FROM bonus_cycle 
+    WHERE id = CASE WHEN TG_OP = 'DELETE' THEN OLD.cycle_id ELSE NEW.cycle_id END;
+
+  ELSIF TG_TABLE_NAME = 'debt_txn' THEN
+    v_txn_type := CASE WHEN TG_OP = 'DELETE' THEN OLD.txn_type ELSE NEW.txn_type END;
+    v_target_month := CASE WHEN TG_OP = 'DELETE' THEN OLD.payroll_month_date ELSE NEW.payroll_month_date END;
+
   ELSE
-    -- สำหรับ Advance และ Debt (Installment) มี payroll_month_date อยู่แล้ว
+    -- salary_advance (และตารางอื่นในอนาคต) มี payroll_month_date แต่ไม่มี txn_type
     v_target_month := CASE WHEN TG_OP = 'DELETE' THEN OLD.payroll_month_date ELSE NEW.payroll_month_date END;
   END IF;
 
-  -- ถ้าไม่ใช่ installment (เฉพาะ debt_txn) ก็ไม่ต้องคำนวน
+  -- ถ้าเป็น debt_txn แต่ไม่ใช่ installment ให้ข้าม
   IF TG_TABLE_NAME = 'debt_txn' AND v_txn_type <> 'installment' THEN
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;

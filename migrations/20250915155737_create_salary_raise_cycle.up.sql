@@ -99,7 +99,7 @@ BEGIN
     END IF;
   END IF;
 
-  RETURN NEW;
+  RETURN COALESCE(NEW, OLD);
 END$$;
 
 DROP TRIGGER IF EXISTS tg_salary_raise_cycle_guard_update ON salary_raise_cycle;
@@ -400,30 +400,70 @@ BEGIN
   LIMIT 1;
 
   IF v_cycle_id IS NULL THEN
+    RAISE NOTICE '[salary_raise] worklog sync skipped (no pending cycle)';
     RETURN NEW; -- ไม่มีรอบ pending ก็ไม่ต้องทำอะไร
   END IF;
 
-  v_emp := COALESCE(NEW.employee_id, OLD.employee_id);
-  v_new_date := COALESCE(NEW.work_date, NULL);
-  v_old_date := COALESCE(OLD.work_date, NULL);
+  IF TG_OP = 'DELETE' THEN
+    v_emp := OLD.employee_id;
+    v_old_date := OLD.work_date;
+  ELSIF TG_OP = 'INSERT' THEN
+    v_emp := NEW.employee_id;
+    v_new_date := NEW.work_date;
+  ELSE
+    v_emp := COALESCE(NEW.employee_id, OLD.employee_id);
+    v_new_date := NEW.work_date;
+    v_old_date := OLD.work_date;
+  END IF;
+
+  RAISE NOTICE '[salary_raise] worklog sync op=% emp=% new_date=% old_date=% cycle=%',
+    TG_OP, v_emp, v_new_date, v_old_date, v_cycle_id;
 
   IF TG_OP = 'INSERT' THEN
     IF v_new_date BETWEEN v_start AND v_end THEN
+      RAISE NOTICE '[salary_raise] recompute (insert) emp=% cycle=% date=%', v_emp, v_cycle_id, v_new_date;
       PERFORM salary_raise_item_recompute_snapshot(v_cycle_id, v_emp);
+    ELSE
+      RAISE NOTICE '[salary_raise] skip recompute (insert date out of range) emp=% date=% range=%..%', v_emp, v_new_date, v_start, v_end;
     END IF;
 
   ELSIF TG_OP = 'UPDATE' THEN
+    IF NEW.employee_id IS DISTINCT FROM OLD.employee_id THEN
+      IF v_old_date BETWEEN v_start AND v_end THEN
+        RAISE NOTICE '[salary_raise] recompute (update old emp) emp=% cycle=% date=%', OLD.employee_id, v_cycle_id, v_old_date;
+        PERFORM salary_raise_item_recompute_snapshot(v_cycle_id, OLD.employee_id);
+      ELSE
+        RAISE NOTICE '[salary_raise] skip recompute (update old emp date out of range) emp=% date=% range=%..%', OLD.employee_id, v_old_date, v_start, v_end;
+      END IF;
+      IF v_new_date BETWEEN v_start AND v_end THEN
+        RAISE NOTICE '[salary_raise] recompute (update new emp) emp=% cycle=% date=%', NEW.employee_id, v_cycle_id, v_new_date;
+        PERFORM salary_raise_item_recompute_snapshot(v_cycle_id, NEW.employee_id);
+      ELSE
+        RAISE NOTICE '[salary_raise] skip recompute (update new emp date out of range) emp=% date=% range=%..%', NEW.employee_id, v_new_date, v_start, v_end;
+      END IF;
+      RETURN COALESCE(NEW, OLD);
+    END IF;
     -- ถ้ามีการเปลี่ยนวันที่/จำนวน/ประเภท/สถานะ/ลบแบบ soft ให้คำนวณใหม่เมื่อวันที่เกี่ยวข้องกับช่วงรอบ
     IF (v_new_date BETWEEN v_start AND v_end)
-      OR (v_old_date BETWEEN v_start AND v_end) THEN
+      OR (v_old_date BETWEEN v_start AND v_end)
+      OR (NEW.deleted_at IS DISTINCT FROM OLD.deleted_at)
+      OR (NEW.status     IS DISTINCT FROM OLD.status)
+      OR (NEW.entry_type IS DISTINCT FROM OLD.entry_type)
+      OR (NEW.quantity   IS DISTINCT FROM OLD.quantity)
+    THEN
+      RAISE NOTICE '[salary_raise] recompute (update same emp) emp=% cycle=% new_date=% old_date=%', v_emp, v_cycle_id, v_new_date, v_old_date;
       PERFORM salary_raise_item_recompute_snapshot(v_cycle_id, v_emp);
+    ELSE
+      RAISE NOTICE '[salary_raise] skip recompute (update same emp, no relevant change) emp=%', v_emp;
     END IF;
 
-  -- (ถ้าใช้ hard delete ด้วย ให้เปิดส่วนนี้)
-  -- ELSIF TG_OP = 'DELETE' THEN
-  --   IF v_old_date BETWEEN v_start AND v_end THEN
-  --     PERFORM salary_raise_item_recompute_snapshot(v_cycle_id, v_emp);
-  --   END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF v_old_date BETWEEN v_start AND v_end THEN
+      RAISE NOTICE '[salary_raise] recompute (delete) emp=% cycle=% date=%', v_emp, v_cycle_id, v_old_date;
+      PERFORM salary_raise_item_recompute_snapshot(v_cycle_id, v_emp);
+    ELSE
+      RAISE NOTICE '[salary_raise] skip recompute (delete date out of range) emp=% date=% range=%..%', v_emp, v_old_date, v_start, v_end;
+    END IF;
   END IF;
 
   RETURN NEW;
@@ -431,6 +471,52 @@ END$$;
 
 DROP TRIGGER IF EXISTS tg_worklog_ft_sync_raise ON worklog_ft;
 CREATE TRIGGER tg_worklog_ft_sync_raise
-AFTER INSERT OR UPDATE ON worklog_ft
+AFTER INSERT OR UPDATE OR DELETE ON worklog_ft
 FOR EACH ROW
 EXECUTE FUNCTION worklog_ft_sync_salary_raise_item();
+
+-- เมื่อเงินเดือน/SSO ของพนักงานเปลี่ยน → อัปเดต snapshot ในรอบที่ pending
+CREATE OR REPLACE FUNCTION salary_raise_sync_item_on_employee_pay()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  v_cycle_id UUID;
+  v_cycle_created DATE;
+  v_tenure INT;
+BEGIN
+  SELECT id, DATE(created_at)
+    INTO v_cycle_id, v_cycle_created
+  FROM salary_raise_cycle
+  WHERE status = 'pending' AND deleted_at IS NULL
+  LIMIT 1;
+
+  IF v_cycle_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  v_tenure := (v_cycle_created - NEW.employment_start_date);
+
+  RAISE NOTICE '[salary_raise] pay sync emp=% cycle=% tenure=% current=% sso=%',
+    NEW.id, v_cycle_id, v_tenure, NEW.base_pay_amount, NEW.sso_declared_wage;
+
+  UPDATE salary_raise_item
+    SET current_salary   = NEW.base_pay_amount,
+        current_sso_wage = NEW.sso_declared_wage,
+        raise_amount     = CASE
+                             WHEN raise_percent IS NOT NULL AND raise_percent <> 0
+                               THEN ROUND(NEW.base_pay_amount * raise_percent / 100, 2)
+                             ELSE raise_amount
+                           END,
+        tenure_days      = v_tenure,
+        updated_at       = now()
+  WHERE cycle_id = v_cycle_id
+    AND employee_id = NEW.id;
+
+  RETURN NEW;
+END$$;
+
+DROP TRIGGER IF EXISTS tg_salary_raise_sync_employee_pay ON employees;
+CREATE TRIGGER tg_salary_raise_sync_employee_pay
+AFTER UPDATE OF base_pay_amount, sso_declared_wage ON employees
+FOR EACH ROW
+WHEN (NEW.deleted_at IS NULL)
+EXECUTE FUNCTION salary_raise_sync_item_on_employee_pay();

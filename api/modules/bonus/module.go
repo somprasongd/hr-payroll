@@ -57,5 +57,5 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 
 	admin := group.Group("", middleware.RequireRoles("admin"))
 	approve.NewEndpoint(admin, m.repo, m.ctx.Transactor)
-	delete.NewEndpoint(admin, m.repo)
+	delete.NewEndpoint(group, m.repo)
 }

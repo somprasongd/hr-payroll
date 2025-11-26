@@ -10,6 +10,7 @@ DROP TRIGGER IF EXISTS tg_salary_raise_item_set_updated     ON salary_raise_item
 DROP TRIGGER IF EXISTS tg_salary_raise_item_guard_edit_bi   ON salary_raise_item;
 DROP TRIGGER IF EXISTS tg_salary_raise_item_validate_type   ON salary_raise_item;
 DROP TRIGGER IF EXISTS tg_worklog_ft_sync_raise             ON worklog_ft;
+DROP TRIGGER IF EXISTS tg_salary_raise_sync_employee_pay    ON employees;
 
 -- 2  Drop the helper/guard functions created in this script
 DROP FUNCTION IF EXISTS salary_raise_cycle_guard_update();
@@ -19,6 +20,7 @@ DROP FUNCTION IF EXISTS salary_raise_item_guard_edit();
 DROP FUNCTION IF EXISTS salary_raise_item_validate_employee_type();
 DROP FUNCTION IF EXISTS salary_raise_item_recompute_snapshot(UUID, UUID);
 DROP FUNCTION IF EXISTS worklog_ft_sync_salary_raise_item();
+DROP FUNCTION IF EXISTS salary_raise_sync_item_on_employee_pay();
 
 -- 3  Drop the tables (indexes are removed automatically with CASCADE)
 DROP TABLE IF EXISTS salary_raise_item   CASCADE;

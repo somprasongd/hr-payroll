@@ -18,11 +18,12 @@ import (
 )
 
 type Command struct {
-	ID     uuid.UUID
-	Status string
-	Actor  uuid.UUID
-	Repo   repository.Repository
-	Tx     transactor.Transactor
+	ID        uuid.UUID
+	Status    string
+	Actor     uuid.UUID
+	ActorRole string
+	Repo      repository.Repository
+	Tx        transactor.Transactor
 }
 
 type Response struct {
@@ -40,6 +41,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	cmd.Status = strings.TrimSpace(cmd.Status)
 	if cmd.Status != "approved" && cmd.Status != "rejected" {
 		return nil, errs.BadRequest("status must be approved or rejected")
+	}
+	if cmd.ActorRole == "hr" {
+		return nil, errs.Forbidden("HR is not allowed to change status")
 	}
 
 	updated, err := cmd.Repo.UpdateStatus(ctx, cmd.ID, cmd.Status, cmd.Actor)

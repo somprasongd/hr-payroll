@@ -29,14 +29,18 @@ type Item struct {
 	EmployeeName  string    `json:"employeeName,omitempty"`
 	TenureDays    int       `json:"tenureDays"`
 	CurrentSalary float64   `json:"currentSalary"`
-	LateMinutes   int       `json:"lateMinutes"`
-	LeaveDays     float64   `json:"leaveDays"`
-	LeaveDouble   float64   `json:"leaveDoubleDays"`
-	LeaveHours    float64   `json:"leaveHours"`
-	OtHours       float64   `json:"otHours"`
 	BonusMonths   float64   `json:"bonusMonths"`
 	BonusAmount   float64   `json:"bonusAmount"`
 	UpdatedAt     time.Time `json:"updatedAt"`
+	Stats         Stats     `json:"stats"`
+}
+
+type Stats struct {
+	LateMinutes     int     `json:"lateMinutes"`
+	LeaveDays       float64 `json:"leaveDays"`
+	LeaveDoubleDays float64 `json:"leaveDoubleDays"`
+	LeaveHours      float64 `json:"leaveHours"`
+	OtHours         float64 `json:"otHours"`
 }
 
 type Meta struct {
@@ -66,13 +70,15 @@ func FromItem(r repository.Item) Item {
 		EmployeeName:  r.EmployeeName,
 		TenureDays:    r.TenureDays,
 		CurrentSalary: r.CurrentSalary,
-		LateMinutes:   r.LateMinutes,
-		LeaveDays:     r.LeaveDays,
-		LeaveDouble:   r.LeaveDouble,
-		LeaveHours:    r.LeaveHours,
-		OtHours:       r.OtHours,
 		BonusMonths:   r.BonusMonths,
 		BonusAmount:   r.BonusAmount,
 		UpdatedAt:     r.UpdatedAt,
+		Stats: Stats{
+			LateMinutes:     r.LateMinutes,
+			LeaveDays:       r.LeaveDays,
+			LeaveDoubleDays: r.LeaveDouble,
+			LeaveHours:      r.LeaveHours,
+			OtHours:         r.OtHours,
+		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
@@ -26,7 +27,7 @@ type UpdateCommand struct {
 }
 
 type UpdateResponse struct {
-	repository.Item
+	dto.Item
 }
 
 type updateHandler struct{}
@@ -53,7 +54,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		logger.FromContext(ctx).Error("failed to update bonus item", zap.Error(err))
 		return nil, errs.Internal("failed to update bonus item")
 	}
-	return &UpdateResponse{Item: *updated}, nil
+	return &UpdateResponse{Item: dto.FromItem(*updated)}, nil
 }
 
 // @Summary Update bonus item

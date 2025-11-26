@@ -70,6 +70,7 @@ function Sidebar({
     { id: 'payroll', icon: DollarSign, label: tMenu('payrollExpenses'), path: '/payroll' },
     { id: 'reports', icon: FileText, label: tMenu('reports'), path: '/reports' },
     { id: 'salary-raise', icon: TrendingUp, label: tMenu('salaryRaise'), path: '/salary-raise' },
+    { id: 'bonus', icon: DollarSign, label: tMenu('bonus'), path: '/bonuses' },
     { id: 'hr', icon: Briefcase, label: tMenu('humanResources'), path: '/hr' },
   ];
 

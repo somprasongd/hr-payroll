@@ -98,7 +98,7 @@ BEGIN
       RAISE EXCEPTION 'Rejected bonus cycle cannot be modified (only soft delete allowed)';
     END IF;
   END IF;
-  RETURN NEW;
+  RETURN COALESCE(NEW, OLD);
 END$$;
 
 DROP TRIGGER IF EXISTS tg_bonus_cycle_guard_update ON bonus_cycle;
@@ -328,9 +328,17 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  v_emp := COALESCE(NEW.employee_id, OLD.employee_id);
-  v_new_date := COALESCE(NEW.work_date, NULL);
-  v_old_date := COALESCE(OLD.work_date, NULL);
+  IF TG_OP = 'DELETE' THEN
+    v_emp := OLD.employee_id;
+    v_old_date := OLD.work_date;
+  ELSIF TG_OP = 'INSERT' THEN
+    v_emp := NEW.employee_id;
+    v_new_date := NEW.work_date;
+  ELSE
+    v_emp := COALESCE(NEW.employee_id, OLD.employee_id);
+    v_new_date := NEW.work_date;
+    v_old_date := OLD.work_date;
+  END IF;
 
   IF TG_OP = 'INSERT' THEN
     IF v_new_date BETWEEN v_start AND v_end THEN
@@ -338,6 +346,15 @@ BEGIN
     END IF;
 
   ELSIF TG_OP = 'UPDATE' THEN
+    IF NEW.employee_id IS DISTINCT FROM OLD.employee_id THEN
+      IF v_old_date BETWEEN v_start AND v_end THEN
+        PERFORM bonus_item_recompute_snapshot(v_cycle_id, OLD.employee_id);
+      END IF;
+      IF v_new_date BETWEEN v_start AND v_end THEN
+        PERFORM bonus_item_recompute_snapshot(v_cycle_id, NEW.employee_id);
+      END IF;
+      RETURN NEW;
+    END IF;
     IF (v_new_date BETWEEN v_start AND v_end)
       OR (v_old_date BETWEEN v_start AND v_end)
       OR (NEW.deleted_at IS DISTINCT FROM OLD.deleted_at)
@@ -348,11 +365,10 @@ BEGIN
       PERFORM bonus_item_recompute_snapshot(v_cycle_id, v_emp);
     END IF;
 
-  -- ถ้ามี hard delete ให้เปิดส่วนนี้
-  -- ELSIF TG_OP = 'DELETE' THEN
-  --   IF v_old_date BETWEEN v_start AND v_end THEN
-  --     PERFORM bonus_item_recompute_snapshot(v_cycle_id, v_emp);
-  --   END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF v_old_date BETWEEN v_start AND v_end THEN
+      PERFORM bonus_item_recompute_snapshot(v_cycle_id, v_emp);
+    END IF;
   END IF;
 
   RETURN NEW;
@@ -360,6 +376,48 @@ END$$;
 
 DROP TRIGGER IF EXISTS tg_worklog_ft_sync_bonus ON worklog_ft;
 CREATE TRIGGER tg_worklog_ft_sync_bonus
-AFTER INSERT OR UPDATE ON worklog_ft
+AFTER INSERT OR UPDATE OR DELETE ON worklog_ft
 FOR EACH ROW
 EXECUTE FUNCTION worklog_ft_sync_bonus_item();
+
+-- เมื่อเงินเดือนพนักงานเปลี่ยน → อัปเดต current_salary ให้รอบโบนัสที่ pending
+CREATE OR REPLACE FUNCTION bonus_sync_item_on_employee_pay()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  v_cycle_id UUID;
+  v_cycle_created DATE;
+  v_tenure INT;
+BEGIN
+  SELECT id, DATE(created_at)
+    INTO v_cycle_id, v_cycle_created
+  FROM bonus_cycle
+  WHERE status = 'pending' AND deleted_at IS NULL
+  LIMIT 1;
+
+  IF v_cycle_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  v_tenure := (v_cycle_created - NEW.employment_start_date);
+
+  UPDATE bonus_item
+    SET current_salary = NEW.base_pay_amount,
+        bonus_amount   = CASE
+                           WHEN bonus_months IS NOT NULL AND bonus_months <> 0
+                             THEN ROUND(NEW.base_pay_amount * bonus_months, 2)
+                           ELSE bonus_amount
+                         END,
+        tenure_days    = v_tenure,
+        updated_at     = now()
+  WHERE cycle_id = v_cycle_id
+    AND employee_id = NEW.id;
+
+  RETURN NEW;
+END$$;
+
+DROP TRIGGER IF EXISTS tg_bonus_sync_employee_pay ON employees;
+CREATE TRIGGER tg_bonus_sync_employee_pay
+AFTER UPDATE OF base_pay_amount ON employees
+FOR EACH ROW
+WHEN (NEW.deleted_at IS NULL)
+EXECUTE FUNCTION bonus_sync_item_on_employee_pay();

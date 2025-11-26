@@ -29,9 +29,9 @@ type Request struct {
 // @Failure 401
 // @Failure 403
 // @Failure 404
-// @Router /bonus-cycles/{id}/status [post]
+// @Router /bonus-cycles/{id} [patch]
 func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor) {
-	router.Post("/:id/status", func(c fiber.Ctx) error {
+	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")
@@ -46,11 +46,12 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			ID:     id,
-			Status: req.Status,
-			Actor:  user.ID,
-			Repo:   repo,
-			Tx:     tx,
+			ID:        id,
+			Status:    req.Status,
+			Actor:     user.ID,
+			ActorRole: user.Role,
+			Repo:      repo,
+			Tx:        tx,
 		})
 		if err != nil {
 			return err

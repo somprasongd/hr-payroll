@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
-import { format } from 'date-fns';
-import { Loader2, Eye, MoreHorizontal } from 'lucide-react';
-
+import { Link } from '@/i18n/routing';
+import { Loader2, Eye, Trash2, X, MoreHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -14,18 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { CreateCycleDialog } from './create-cycle-dialog';
-import { salaryRaiseService, SalaryRaiseCycle } from '@/services/salary-raise.service';
-
 import {
   Select,
   SelectContent,
@@ -33,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,15 +31,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { CreateCycleDialog } from '@/components/bonus/create-cycle-dialog';
+import { bonusService, BonusCycle } from '@/services/bonus-service';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
-export function SalaryRaiseCycleList() {
-  const t = useTranslations('SalaryRaise');
+export default function BonusListPage() {
+  const t = useTranslations('Bonus');
   const tCommon = useTranslations('Common');
-  const router = useRouter();
   const { toast } = useToast();
-  const [cycles, setCycles] = useState<SalaryRaiseCycle[]>([]);
+  const [cycles, setCycles] = useState<BonusCycle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
 
@@ -69,11 +65,14 @@ export function SalaryRaiseCycleList() {
       if (yearFilter && yearFilter !== 'all') {
         params.year = parseInt(yearFilter);
       }
-      
-      const response = await salaryRaiseService.getCycles(params);
-      setCycles(response.data || []);
+      const data = await bonusService.getCycles(params);
+      setCycles(data || []);
     } catch (error) {
-      console.error('Failed to fetch cycles:', error);
+      console.error(error);
+      toast({
+        title: t('create.error'),
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -88,53 +87,33 @@ export function SalaryRaiseCycleList() {
     setYearFilter('all');
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <Badge variant="default" className="bg-green-500">{t('status.approved')}</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">{t('status.rejected')}</Badge>;
-      default:
-        return <Badge variant="secondary">{t('status.pending')}</Badge>;
-    }
-  };
-
-  const handleCreateSuccess = (newCycleId?: string) => {
-    fetchCycles();
-    if (newCycleId) {
-      router.push(`/salary-raise/${newCycleId}`);
-    }
-  };
-
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [cycleToDelete, setCycleToDelete] = useState<SalaryRaiseCycle | null>(null);
-
-  const handleDeleteClick = (cycle: SalaryRaiseCycle) => {
-    setCycleToDelete(cycle);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!cycleToDelete) return;
-
+  const handleDelete = async () => {
+    if (!deleteId) return;
     try {
-      await salaryRaiseService.deleteCycle(cycleToDelete.id);
+      await bonusService.deleteCycle(deleteId);
       toast({
         title: t('delete.success'),
         variant: 'default',
       });
       fetchCycles();
     } catch (error) {
-      console.error('Failed to delete cycle:', error);
       toast({
-        title: tCommon('error'),
-        description: t('delete.error'), // Assuming generic error or add specific one
+        title: t('create.error'),
         variant: 'destructive',
       });
     } finally {
-      setDeleteDialogOpen(false);
-      setCycleToDelete(null);
+      setDeleteId(null);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
     }
   };
 
@@ -145,23 +124,17 @@ export function SalaryRaiseCycleList() {
           <h1 className="text-2xl font-bold tracking-tight">{t('listTitle')}</h1>
           <p className="text-muted-foreground hidden sm:block">{t('description')}</p>
         </div>
-        <CreateCycleDialog 
-          onSuccess={handleCreateSuccess} 
-          latestCycleEndDate={cycles.length > 0 
-            ? cycles.reduce((max, cycle) => cycle.periodEndDate > max ? cycle.periodEndDate : max, cycles[0].periodEndDate)
-            : undefined
-          }
-        />
+        <CreateCycleDialog onSuccess={fetchCycles} latestCycle={cycles[0] || null} />
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder={t('fields.status')} />
+            <SelectValue placeholder={t('filters.status')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('status.all')}</SelectItem>
+            <SelectItem value="all">{tCommon('all')}</SelectItem>
             <SelectItem value="pending">{t('status.pending')}</SelectItem>
             <SelectItem value="approved">{t('status.approved')}</SelectItem>
             <SelectItem value="rejected">{t('status.rejected')}</SelectItem>
@@ -170,10 +143,10 @@ export function SalaryRaiseCycleList() {
 
         <Select value={yearFilter} onValueChange={setYearFilter}>
           <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder={t('fields.year')} />
+            <SelectValue placeholder={t('filters.year')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('status.all')}</SelectItem>
+            <SelectItem value="all">{tCommon('all')}</SelectItem>
             {years.map((year) => (
               <SelectItem key={year} value={year.toString()}>
                 {year}
@@ -195,66 +168,66 @@ export function SalaryRaiseCycleList() {
         )}
       </div>
 
-      <div className="rounded-md border">
+      <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('fields.payrollMonth')}</TableHead>
               <TableHead>{t('fields.period')}</TableHead>
+              <TableHead>{t('fields.totalEmployees')}</TableHead>
+              <TableHead>{t('fields.totalAmount')}</TableHead>
               <TableHead>{t('fields.status')}</TableHead>
-              <TableHead className="text-right">{t('fields.totalEmployees')}</TableHead>
-              <TableHead className="text-right">{t('fields.totalRaiseAmount')}</TableHead>
-              <TableHead>{t('fields.createdAt')}</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />
-                  {tCommon('loading')}
+                <TableCell colSpan={6} className="text-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                 </TableCell>
               </TableRow>
             ) : (cycles?.length || 0) === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  No cycles found
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  {t('noData')}
                 </TableCell>
               </TableRow>
             ) : (
-              cycles.map((cycle) => (
+              cycles?.map((cycle) => (
                 <TableRow key={cycle.id}>
+                  <TableCell>{format(new Date(cycle.payrollMonthDate), 'MMM yyyy')}</TableCell>
                   <TableCell>
-                    {format(new Date(cycle.periodStartDate), 'dd/MM/yyyy')} - {format(new Date(cycle.periodEndDate), 'dd/MM/yyyy')}
+                    {format(new Date(cycle.periodStartDate), 'dd/MM/yyyy')} -{' '}
+                    {format(new Date(cycle.periodEndDate), 'dd/MM/yyyy')}
                   </TableCell>
-                  <TableCell>{getStatusBadge(cycle.status)}</TableCell>
-                  <TableCell className="text-right">{cycle.totalEmployees || 0}</TableCell>
-                  <TableCell className="text-right">
-                    {cycle.totalRaiseAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                  </TableCell>
+                  <TableCell>{cycle.totalEmployees}</TableCell>
+                  <TableCell>{cycle.totalBonusAmount?.toLocaleString()}</TableCell>
                   <TableCell>
-                    {format(new Date(cycle.createdAt), 'dd/MM/yyyy HH:mm')}
+                    <Badge variant="secondary" className={getStatusColor(cycle.status)}>
+                      {t(`status.${cycle.status}`)}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
+                        <Button variant="ghost" size="icon">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>{t('actions.view')}</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => router.push(`/salary-raise/${cycle.id}`)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          {t('actions.view')}
+                        <DropdownMenuItem asChild>
+                          <Link href={`/bonuses/${cycle.id}`} className="cursor-pointer">
+                            <Eye className="h-4 w-4 mr-2" />
+                            {t('actions.view')}
+                          </Link>
                         </DropdownMenuItem>
-                        {(cycle.status === 'pending' || cycle.status === 'rejected') && (
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteClick(cycle)}
+                        {cycle.status !== 'approved' && (
+                          <DropdownMenuItem
                             className="text-red-600 focus:text-red-600"
+                            onClick={() => setDeleteId(cycle.id)}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 className="h-4 w-4 mr-2" />
                             {t('actions.delete')}
                           </DropdownMenuItem>
                         )}
@@ -268,17 +241,15 @@ export function SalaryRaiseCycleList() {
         </Table>
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('delete.description')}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t('delete.description')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
               {tCommon('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
