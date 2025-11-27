@@ -180,7 +180,7 @@ export default function BonusDetailPage() {
               {getStatusBadge(cycle.status)}
             </div>
             <p className="text-muted-foreground">
-              {format(new Date(cycle.payrollMonthDate), 'MMMM yyyy')}
+              {format(new Date(cycle.payrollMonthDate), 'MM/yyyy')}
             </p>
           </div>
         </div>

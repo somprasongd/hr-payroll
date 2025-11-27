@@ -35,10 +35,10 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { bonusService } from '@/services/bonus-service';
 import { useToast } from '@/hooks/use-toast';
+import { MonthPicker } from "@/components/ui/month-picker";
 
 const createCycleSchema = z.object({
-  payrollMonth: z.string().min(1, 'Required'),
-  payrollYear: z.string().min(1, 'Required'),
+  payrollMonthDate: z.string().min(1, 'Required'),
   periodStartDate: z.string().min(1, 'Required'),
   periodEndDate: z.string().min(1, 'Required'),
 });
@@ -64,8 +64,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
   const form = useForm<CreateCycleFormValues>({
     resolver: zodResolver(createCycleSchema),
     defaultValues: {
-      payrollMonth: currentMonth,
-      payrollYear: currentYear,
+      payrollMonthDate: `${currentYear}-${currentMonth.padStart(2, '0')}-01`,
       periodStartDate: `${currentYear}-01-01`,
       periodEndDate: `${currentYear}-12-31`,
     },
@@ -83,8 +82,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
           const cycles = response.data;
           const latestApproved = cycles && cycles.length > 0 ? cycles[0] : null;
 
-          let defaultPayrollMonth = currentMonth;
-          let defaultPayrollYear = currentYear;
+          let defaultPayrollMonthDate = `${currentYear}-${currentMonth.padStart(2, '0')}-01`;
           let defaultStartDate = `${currentYear}-01-01`;
           let defaultEndDate = `${currentYear}-12-31`;
 
@@ -102,8 +100,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
               year += 1;
             }
             
-            defaultPayrollMonth = month.toString();
-            defaultPayrollYear = year.toString();
+            defaultPayrollMonthDate = `${year}-${month.toString().padStart(2, '0')}-01`;
 
             // Default period start = Latest Approved End Date + 1 day
             const latestEndDate = new Date(latestApproved.periodEndDate);
@@ -116,8 +113,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
           }
 
           form.reset({
-            payrollMonth: defaultPayrollMonth,
-            payrollYear: defaultPayrollYear,
+            payrollMonthDate: defaultPayrollMonthDate,
             periodStartDate: defaultStartDate,
             periodEndDate: defaultEndDate,
           });
@@ -150,7 +146,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       setErrorMessage(null);
       
       // Convert month/year to payrollMonthDate (first day of the month)
-      const payrollMonthDate = `${data.payrollYear}-${data.payrollMonth.padStart(2, '0')}-01`;
+      const payrollMonthDate = data.payrollMonthDate;
       
       await bonusService.createCycle({
         payrollMonthDate,
@@ -164,8 +160,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       });
       setOpen(false);
       form.reset({
-        payrollMonth: currentMonth,
-        payrollYear: currentYear,
+        payrollMonthDate: `${currentYear}-${currentMonth.padStart(2, '0')}-01`,
         periodStartDate: `${currentYear}-01-01`, // Reset to current year's start
         periodEndDate: `${currentYear}-12-31`,   // Reset to current year's end
       });
@@ -185,26 +180,6 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       }
     }
   };
-
-  const months = [
-    { value: '1', label: 'มกราคม' },
-    { value: '2', label: 'กุมภาพันธ์' },
-    { value: '3', label: 'มีนาคม' },
-    { value: '4', label: 'เมษายน' },
-    { value: '5', label: 'พฤษภาคม' },
-    { value: '6', label: 'มิถุนายน' },
-    { value: '7', label: 'กรกฎาคม' },
-    { value: '8', label: 'สิงหาคม' },
-    { value: '9', label: 'กันยายน' },
-    { value: '10', label: 'ตุลาคม' },
-    { value: '11', label: 'พฤศจิกายน' },
-    { value: '12', label: 'ธันวาคม' },
-  ];
-
-  const years = Array.from({ length: 10 }, (_, i) => {
-    const year = currentDate.getFullYear() - 2 + i;
-    return year.toString();
-  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -228,51 +203,20 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
               </Alert>
             )}
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
-                name="payrollMonth"
+                name="payrollMonthDate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('payrollMonth')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month.value} value={month.value}>
-                            {month.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="payrollYear"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('payrollYear')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {years.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                    <MonthPicker
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder={t('payrollMonth')}
+                    />
+                  </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

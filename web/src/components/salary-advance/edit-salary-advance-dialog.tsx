@@ -34,12 +34,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MonthPicker } from "@/components/ui/month-picker";
 
 const formSchema = z.object({
   amount: z.coerce.number().min(1, { message: "Amount must be greater than 0" }),
   advanceDate: z.string().min(1, { message: "Required" }),
-  payrollMonth: z.string().min(1, { message: "Required" }),
-  payrollYear: z.string().min(1, { message: "Required" }),
+  payrollMonthDate: z.string().min(1, { message: "Required" }),
 });
 
 interface EditSalaryAdvanceDialogProps {
@@ -81,19 +81,15 @@ export function EditSalaryAdvanceDialog({
       const dateValue = item.advanceDate ? new Date(item.advanceDate).toISOString().split('T')[0] : '';
       
       // Extract month and year from payrollMonthDate
-      let month = currentMonth;
-      let year = currentYear;
+      let monthDate = `${currentYear}-${currentMonth.padStart(2, '0')}-01`;
       if (item.payrollMonthDate) {
-        const payrollDate = new Date(item.payrollMonthDate);
-        month = (payrollDate.getMonth() + 1).toString();
-        year = payrollDate.getFullYear().toString();
+        monthDate = item.payrollMonthDate;
       }
       
       form.reset({
         amount: item.amount,
         advanceDate: dateValue,
-        payrollMonth: month,
-        payrollYear: year,
+        payrollMonthDate: monthDate,
       });
     }
   }, [open, item]);
@@ -104,8 +100,7 @@ export function EditSalaryAdvanceDialog({
       setIsValidating(true);
 
       // Validate payroll month - only block if cycle exists and is already approved
-      const monthDate = `${values.payrollYear}-${values.payrollMonth.padStart(2, '0')}-01`;
-      const validation = await payrollService.validatePayrollMonth(monthDate);
+      const validation = await payrollService.validatePayrollMonth(values.payrollMonthDate);
 
       if (validation.exists && validation.approved) {
         setError(t('errors.invalidPayrollMonth') || 'งวดเงินเดือนที่เลือกได้รับการอนุมัติแล้ว ไม่สามารถเลือกงวดนี้ได้');
@@ -117,7 +112,7 @@ export function EditSalaryAdvanceDialog({
       const payload = {
         amount: values.amount,
         advanceDate: values.advanceDate,
-        payrollMonthDate: monthDate,
+        payrollMonthDate: values.payrollMonthDate,
       };
 
       await salaryAdvanceService.update(item.id, payload);
@@ -190,80 +185,23 @@ export function EditSalaryAdvanceDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="payrollMonth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('payrollMonth') || 'งวดที่หัก'}</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        const selectedYear = parseInt(form.getValues('payrollYear'));
-                        const selectedMonth = parseInt(value);
-                        const now = new Date();
-                        const currentYear = now.getFullYear();
-                        const currentMonth = now.getMonth() + 1;
-                        
-                        // Prevent selecting past months
-                        if (selectedYear === currentYear && selectedMonth < currentMonth) {
-                          return;
-                        }
-                        field.onChange(value);
-                      }} 
+            <FormField
+              control={form.control}
+              name="payrollMonthDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('payrollMonth') || 'งวดที่หัก'}</FormLabel>
+                  <FormControl>
+                    <MonthPicker
                       value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="เลือกเดือน" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => {
-                          const month = (i + 1).toString();
-                          const selectedYear = parseInt(form.getValues('payrollYear'));
-                          const now = new Date();
-                          const currentYear = now.getFullYear();
-                          const currentMonth = now.getMonth() + 1;
-                          const isDisabled = selectedYear === currentYear && (i + 1) < currentMonth;
-                          
-                          return (
-                            <SelectItem key={month} value={month} disabled={isDisabled}>
-                              {new Date(2000, i).toLocaleString('th-TH', { month: 'long' })}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="payrollYear"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('payrollYear') || 'ปี'}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="เลือกปี" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {yearOptions.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {parseInt(year) + 543}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      onValueChange={field.onChange}
+                      placeholder={t('payrollMonth') || 'งวดที่หัก'}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 {tCommon('cancel')}

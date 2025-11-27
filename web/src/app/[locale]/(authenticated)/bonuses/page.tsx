@@ -236,7 +236,7 @@ export default function BonusListPage() {
             ) : (
               cycles?.map((cycle) => (
                 <TableRow key={cycle.id}>
-                  <TableCell>{format(new Date(cycle.payrollMonthDate), 'MMM yyyy')}</TableCell>
+                  <TableCell>{format(new Date(cycle.payrollMonthDate), 'MM/yyyy')}</TableCell>
                   <TableCell>
                     {format(new Date(cycle.periodStartDate), 'dd/MM/yyyy')} -{' '}
                     {format(new Date(cycle.periodEndDate), 'dd/MM/yyyy')}

@@ -33,6 +33,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
 import { Combobox } from "@/components/ui/combobox";
+import { MonthPicker } from "@/components/ui/month-picker";
 import { debtService } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { accumulationService } from '@/services/accumulation.service';
@@ -375,9 +376,10 @@ export function CreateDebtPlanForm() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">{t('create.startMonth')}</label>
-                      <DateInput 
+                      <MonthPicker 
                         value={genStartMonth} 
                         onValueChange={setGenStartMonth}
+                        placeholder={t('create.startMonth')}
                       />
                     </div>
                     <div className="space-y-2">
@@ -406,19 +408,10 @@ export function CreateDebtPlanForm() {
                         render={({ field }) => (
                           <FormItem className="flex-1">
                             <FormControl>
-                              <Input 
-                                type="month" 
-                                {...field}
-                                onChange={(e) => {
-                                  // Convert YYYY-MM to YYYY-MM-01
-                                  const value = e.target.value;
-                                  if (value) {
-                                    field.onChange(`${value}-01`);
-                                  } else {
-                                    field.onChange('');
-                                  }
-                                }}
-                                value={field.value ? field.value.slice(0, 7) : ''}
+                              <MonthPicker
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={t('fields.month') || "Select Month"}
                               />
                             </FormControl>
                             <FormMessage />
