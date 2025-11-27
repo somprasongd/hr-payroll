@@ -48,6 +48,8 @@
     "salaryAdvance": "Salary Advance",
     "bonus": "Bonus Management",
     "debt": "Debt Management",
+    "worklog": "Work Logs",
+    "compensation": "Compensation",
     "collapse": "Collapse"
   },
   "Settings": {
