@@ -78,7 +78,8 @@ export function CreateCycleDialog({ onSuccess }: CreateCycleDialogProps) {
         setIsLoadingDefaults(true);
         try {
           // Fetch latest approved cycle to determine defaults
-          const cycles = await bonusService.getCycles({ limit: 1, status: 'approved' });
+          const response = await bonusService.getCycles({ limit: 1, status: 'approved' });
+          const cycles = response.data;
           const latestApproved = cycles && cycles.length > 0 ? cycles[0] : null;
 
           let defaultPayrollMonth = currentMonth;

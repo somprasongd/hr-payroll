@@ -41,6 +41,7 @@ import { CreateCycleDialog } from '@/components/bonus/create-cycle-dialog';
 import { bonusService, BonusCycle } from '@/services/bonus-service';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Pagination } from '@/components/ui/pagination';
 
 export default function BonusListPage() {
   const t = useTranslations('Bonus');
@@ -51,6 +52,8 @@ export default function BonusListPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 13 }, (_, i) => currentYear - 10 + i);
@@ -58,15 +61,19 @@ export default function BonusListPage() {
   const fetchCycles = async () => {
     try {
       setLoading(true);
-      const params: any = { limit: 100 };
+      const params: any = { 
+        limit: 20,
+        page: currentPage
+      };
       if (statusFilter && statusFilter !== 'all') {
         params.status = statusFilter;
       }
       if (yearFilter && yearFilter !== 'all') {
         params.year = parseInt(yearFilter);
       }
-      const data = await bonusService.getCycles(params);
-      setCycles(data || []);
+      const response = await bonusService.getCycles(params);
+      setCycles(response.data || []);
+      setTotalPages(response.meta?.totalPages || 1);
     } catch (error) {
       console.error(error);
       toast({
@@ -80,11 +87,16 @@ export default function BonusListPage() {
 
   useEffect(() => {
     fetchCycles();
-  }, [statusFilter, yearFilter]);
+  }, [statusFilter, yearFilter, currentPage]);
 
   const clearFilters = () => {
     setStatusFilter('all');
     setYearFilter('all');
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const handleDelete = async () => {
@@ -238,6 +250,12 @@ export default function BonusListPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>

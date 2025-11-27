@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Pagination } from '@/components/ui/pagination';
 
 export function SalaryRaiseCycleList() {
   const t = useTranslations('SalaryRaise');
@@ -55,6 +56,8 @@ export function SalaryRaiseCycleList() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 13 }, (_, i) => currentYear - 10 + i);
@@ -62,7 +65,10 @@ export function SalaryRaiseCycleList() {
   const fetchCycles = async () => {
     try {
       setLoading(true);
-      const params: any = { limit: 100 };
+      const params: any = { 
+        limit: 20,
+        page: currentPage
+      };
       if (statusFilter && statusFilter !== 'all') {
         params.status = statusFilter;
       }
@@ -72,6 +78,7 @@ export function SalaryRaiseCycleList() {
       
       const response = await salaryRaiseService.getCycles(params);
       setCycles(response.data || []);
+      setTotalPages(response.meta?.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch cycles:', error);
     } finally {
@@ -81,11 +88,16 @@ export function SalaryRaiseCycleList() {
 
   useEffect(() => {
     fetchCycles();
-  }, [statusFilter, yearFilter]);
+  }, [statusFilter, yearFilter, currentPage]);
 
   const clearFilters = () => {
     setStatusFilter('all');
     setYearFilter('all');
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const getStatusBadge = (status: string) => {
@@ -267,6 +279,12 @@ export function SalaryRaiseCycleList() {
           </TableBody>
         </Table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

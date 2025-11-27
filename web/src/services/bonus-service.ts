@@ -50,7 +50,7 @@ export interface UpdateBonusItemRequest {
 export const bonusService = {
   getCycles: async (params?: { page?: number; limit?: number; status?: string; year?: number }) => {
     const response = await apiClient.get<{ data: BonusCycle[]; meta: any }>("/bonus-cycles", { params });
-    return response.data;
+    return response;
   },
 
   createCycle: async (data: CreateBonusCycleRequest) => {

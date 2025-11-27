@@ -61,8 +61,12 @@ export const payrollConfigService = {
    * Get all payroll configurations (history)
    * Returns paginated response
    */
-  async getAll(): Promise<PaginatedResponse<PayrollConfig>> {
-    return apiClient.get<PaginatedResponse<PayrollConfig>>('/admin/payroll-configs');
+  async getAll(params?: { page?: number; limit?: number }): Promise<PaginatedResponse<PayrollConfig>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    
+    return apiClient.get<PaginatedResponse<PayrollConfig>>(`/admin/payroll-configs?${query.toString()}`);
   },
 
   /**

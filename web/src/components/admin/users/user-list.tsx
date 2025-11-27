@@ -35,6 +35,7 @@ import { RoleEditDialog } from './role-edit-dialog';
 
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
+import { Pagination } from '@/components/ui/pagination';
 
 export function UserList() {
   const t = useTranslations('Users');
@@ -46,12 +47,18 @@ export function UserList() {
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const [isRoleEditOpen, setIsRoleEditOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await userService.getUsers();
+      const response = await userService.getUsers({
+        page: currentPage,
+        limit: 20
+      });
       setUsers(response.data);
+      setTotalPages(response.meta?.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       toast({
@@ -66,7 +73,7 @@ export function UserList() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage]);
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
@@ -87,6 +94,10 @@ export function UserList() {
       setIsDeleteAlertOpen(false);
       setSelectedUser(null);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   if (isLoading) {
@@ -170,6 +181,12 @@ export function UserList() {
           </TableBody>
         </Table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       {selectedUser && (
         <>

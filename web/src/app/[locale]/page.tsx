@@ -40,7 +40,7 @@ export default function LoginPage() {
     password: z.string().min(6, {
       message: t('validation.passwordLength'),
     }),
-    rememberMe: z.boolean().default(false),
+    rememberMe: z.boolean(),
   })
 
   const form = useForm<z.infer<typeof formSchema>>({

@@ -40,6 +40,8 @@ import { employeeService, Employee, EmployeeType } from '@/services/employee.ser
 import { Plus, Search, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
+import { Pagination } from '@/components/ui/pagination';
+
 export default function EmployeesPage() {
   const t = useTranslations('Employees');
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -48,6 +50,8 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('active');
   const [employeeTypeFilter, setEmployeeTypeFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
@@ -58,7 +62,7 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     fetchEmployees();
-  }, [statusFilter, employeeTypeFilter]);
+  }, [statusFilter, employeeTypeFilter, currentPage]);
 
   const fetchEmployeeTypes = async () => {
     try {
@@ -76,9 +80,12 @@ export default function EmployeesPage() {
       const response = await employeeService.getEmployees({ 
         search,
         status: statusFilter,
-        employeeTypeId: employeeTypeFilter
+        employeeTypeId: employeeTypeFilter,
+        page: currentPage,
+        limit: 20
       });
       setEmployees(response.data || []);
+      setTotalPages(response.meta?.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch employees', error);
     } finally {
@@ -88,7 +95,12 @@ export default function EmployeesPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentPage(1); // Reset to first page on search
     fetchEmployees();
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const handleDelete = (employee: Employee) => {
@@ -259,6 +271,12 @@ export default function EmployeesPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>

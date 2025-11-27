@@ -27,6 +27,7 @@ import { payoutPtService, PayoutPt } from '@/services/payout-pt.service';
 import { employeeService } from '@/services/employee.service';
 import { Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
+import { Pagination } from '@/components/ui/pagination';
 
 
 export default function PayoutPtListPage() {
@@ -35,6 +36,8 @@ export default function PayoutPtListPage() {
   const [payouts, setPayouts] = useState<PayoutPt[]>([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   
   // Filters
   const [status, setStatus] = useState<string>('all');
@@ -50,7 +53,7 @@ export default function PayoutPtListPage() {
     } else {
       setPayouts([]);
     }
-  }, [status, employeeId]);
+  }, [status, employeeId, currentPage]);
 
   const fetchEmployees = async () => {
     try {
@@ -65,12 +68,16 @@ export default function PayoutPtListPage() {
     if (!employeeId) return;
     setLoading(true);
     try {
-      const params: any = {};
+      const params: any = {
+        limit: 20,
+        page: currentPage
+      };
       if (status !== 'all') params.status = status;
       params.employeeId = employeeId;
 
       const data = await payoutPtService.getPayouts(params);
       setPayouts(data.data || []);
+      setTotalPages(data.meta?.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch payouts', error);
     } finally {
@@ -92,6 +99,11 @@ export default function PayoutPtListPage() {
   const clearFilters = () => {
     setStatus('all');
     setEmployeeId('');
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -210,6 +222,12 @@ export default function PayoutPtListPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

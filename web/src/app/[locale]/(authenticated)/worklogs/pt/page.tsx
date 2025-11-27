@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { Pagination } from '@/components/ui/pagination';
 
 // Get default date range (current month)
 const getDefaultStartDate = () => format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -233,6 +234,10 @@ export default function PTWorklogsPage() {
     return time.substring(0, 5); // HH:mm
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -378,31 +383,11 @@ export default function PTWorklogsPage() {
             </Table>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t">
-                <div className="text-sm text-muted-foreground">
-                  {t('pagination.page')} {currentPage} {t('pagination.of')} {totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    {t('pagination.previous')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    {t('pagination.next')}
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </>
         )}
       </div>
