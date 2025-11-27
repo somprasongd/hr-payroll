@@ -67,6 +67,11 @@ CREATE INDEX IF NOT EXISTS bonus_cycle_created_idx ON bonus_cycle (created_at);
 CREATE INDEX IF NOT EXISTS bonus_cycle_status_idx  ON bonus_cycle (status);
 CREATE INDEX IF NOT EXISTS bonus_cycle_month_idx   ON bonus_cycle (payroll_month_date);
 
+-- บล็อกงวดเงินเดือนซ้ำเมื่อมีรอบอนุมัติแล้ว (ปล่อยให้สร้างใหม่ได้ถ้าไม่อนุมัติ)
+CREATE UNIQUE INDEX IF NOT EXISTS bonus_cycle_month_approved_uk
+  ON bonus_cycle (payroll_month_date)
+  WHERE status = 'approved' AND deleted_at IS NULL;
+
 -- อนุญาตมี pending ได้เพียง 1 แถว (ที่ยังไม่ถูกลบ)
 CREATE UNIQUE INDEX IF NOT EXISTS bonus_cycle_pending_one_uk
   ON bonus_cycle ((1))

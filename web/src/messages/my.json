@@ -36,6 +36,7 @@
     "attendance": "တက်ရောက်မှု",
     "worklogFT": "အချိန်ပြည့်",
     "worklogPT": "အချိန်ပိုင်း",
+    "payoutPT": "ငွေပေးချေမှု (အချိန်ပိုင်း)",
     "leaveManagement": "ခွင့်စီမံခန့်ခွဲမှု",
     "payrollExpenses": "လစာနှင့် ကုန်ကျစရိတ်",
     "reports": "အစီရင်ခံစာများ",
@@ -43,6 +44,7 @@
     "systemManagement": "စနစ်စီမံခန့်ခွဲမှု",
     "settings": "ဆက်တင်များ",
     "users": "အသုံးပြုသူ စီမံခန့်ခွဲမှု",
+    "salaryRaise": "လစာတိုးမြှင့်ခြင်း",
     "bonus": "ဆုကြေးငွေ စီမံခန့်ခွဲမှု",
     "collapse": "ခေါက်သိမ်းရန်"
   },
@@ -485,7 +487,9 @@
     "no": "မဟုတ်ပါ",
     "error": "အမှား",
     "success": "အောင်မြင်ပါသည်",
-    "loading": "တင်နေသည်..."
+    "loading": "တင်နေသည်...",
+    "all": "အားလုံး",
+    "clearFilter": "စစ်ထုတ်မှု ရှင်းမည်"
   },
   "Payouts": {
     "PT": {
@@ -643,7 +647,11 @@
       "startDate": "စတင်ရက်စွဲ",
       "endDate": "ပြီးဆုံးရက်စွဲ",
       "success": "ဆုကြေးငွေစက်ဝန်းကို အောင်မြင်စွာဖန်တီးပြီး",
-      "error": "အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်။ ထပ်မံကြိုးစားပါ။"
+      "error": "အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်။ ထပ်မံကြိုးစားပါ။",
+      "errors": {
+        "conflictPending": "A pending bonus cycle already exists (only 1 allowed).",
+        "conflictApproved": "An approved bonus cycle already exists for this month."
+      }
     },
     "editItem": {
       "title": "ဆုကြေး ပြင်ဆင်ရန်: {name}",

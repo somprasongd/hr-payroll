@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -58,19 +60,23 @@ type ListResult struct {
 func (r Repository) List(ctx context.Context, page, limit int, status string, year *int) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
+	if offset < 0 {
+		offset = 0
+	}
+
 	where := "deleted_at IS NULL"
-	args := []interface{}{limit, offset}
-	argIdx := 3
+	var args []interface{}
 	if status != "" && status != "all" {
-		where += fmt.Sprintf(" AND status = $%d", argIdx)
 		args = append(args, status)
-		argIdx++
+		where += fmt.Sprintf(" AND status = $%d", len(args))
 	}
 	if year != nil {
-		where += fmt.Sprintf(" AND EXTRACT(YEAR FROM payroll_month_date) = $%d", argIdx)
 		args = append(args, *year)
-		argIdx++
+		where += fmt.Sprintf(" AND EXTRACT(YEAR FROM payroll_month_date) = $%d", len(args))
 	}
+
+	// list query uses filter args + limit/offset at the end
+	argsWithPage := append(append([]interface{}{}, args...), limit, offset)
 	q := fmt.Sprintf(`
 SELECT id, payroll_month_date, period_start_date, period_end_date, status, created_at, updated_at, deleted_at,
   COALESCE((SELECT COUNT(1) FROM bonus_item bi WHERE bi.cycle_id = bc.id),0) AS total_employees,
@@ -78,8 +84,8 @@ SELECT id, payroll_month_date, period_start_date, period_end_date, status, creat
 FROM bonus_cycle bc
 WHERE %s
 ORDER BY created_at DESC
-LIMIT $1 OFFSET $2`, where)
-	rows, err := db.QueryxContext(ctx, q, args...)
+LIMIT $%d OFFSET $%d`, where, len(args)+1, len(args)+2)
+	rows, err := db.QueryxContext(ctx, q, argsWithPage...)
 	if err != nil {
 		return ListResult{}, err
 	}
@@ -95,7 +101,7 @@ LIMIT $1 OFFSET $2`, where)
 	}
 	var total int
 	countQ := "SELECT COUNT(1) FROM bonus_cycle WHERE " + where
-	if err := db.GetContext(ctx, &total, countQ, args[2:]...); err != nil {
+	if err := db.GetContext(ctx, &total, countQ, args...); err != nil {
 		return ListResult{}, err
 	}
 	return ListResult{Rows: cycles, Total: total}, nil
@@ -226,4 +232,16 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, months *float6
 		return nil, err
 	}
 	return &out, nil
+}
+
+// IsUniqueViolation reports whether the error is a Postgres unique_violation (optional constraint name match).
+func IsUniqueViolation(err error, constraint string) bool {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+		if constraint == "" {
+			return true
+		}
+		return pqErr.Constraint == constraint
+	}
+	return false
 }

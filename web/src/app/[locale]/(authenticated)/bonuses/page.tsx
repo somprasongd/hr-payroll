@@ -124,7 +124,7 @@ export default function BonusListPage() {
           <h1 className="text-2xl font-bold tracking-tight">{t('listTitle')}</h1>
           <p className="text-muted-foreground hidden sm:block">{t('description')}</p>
         </div>
-        <CreateCycleDialog onSuccess={fetchCycles} latestCycle={cycles[0] || null} />
+        <CreateCycleDialog onSuccess={fetchCycles} />
       </div>
 
       {/* Filters */}

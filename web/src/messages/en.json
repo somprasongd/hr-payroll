@@ -487,7 +487,9 @@
     "no": "No",
     "error": "Error",
     "success": "Success",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "all": "All",
+    "clearFilter": "Clear Filter"
   },
   "Payouts": {
     "PT": {
@@ -707,7 +709,11 @@
       "startDate": "Start Date",
       "endDate": "End Date",
       "success": "Bonus cycle created successfully",
-      "error": "An error occurred. Please try again."
+      "error": "An error occurred. Please try again.",
+      "errors": {
+        "conflictPending": "A pending bonus cycle already exists (only 1 allowed).",
+        "conflictApproved": "An approved bonus cycle already exists for this month."
+      }
     },
     "editItem": {
       "title": "Edit Bonus: {name}",

@@ -12,7 +12,7 @@ import (
 )
 
 // @Summary Create bonus cycle
-// @Description สร้างรอบโบนัส (pending)
+// @Description สร้างรอบโบนัส (pending) — มีได้ครั้งละ 1 pending และไม่อนุญาตงวดเงินเดือนที่มีรอบอนุมัติแล้ว
 // @Tags Bonus
 // @Accept json
 // @Produce json
@@ -22,6 +22,7 @@ import (
 // @Failure 400
 // @Failure 401
 // @Failure 403
+// @Failure 409 {object} response.Problem "เมื่อมี pending หรือ approved เดือนเดียวกันอยู่แล้ว"
 // @Router /bonus-cycles [post]
 func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor) {
 	router.Post("/", func(c fiber.Ctx) error {

@@ -47,10 +47,9 @@ type CreateCycleFormValues = z.infer<typeof createCycleSchema>;
 
 interface CreateCycleDialogProps {
   onSuccess: () => void;
-  latestCycle?: { periodEndDate: string } | null;
 }
 
-export function CreateCycleDialog({ onSuccess, latestCycle }: CreateCycleDialogProps) {
+export function CreateCycleDialog({ onSuccess }: CreateCycleDialogProps) {
   const t = useTranslations('Bonus.create');
   const tCommon = useTranslations('Common');
   const [open, setOpen] = useState(false);
@@ -61,40 +60,75 @@ export function CreateCycleDialog({ onSuccess, latestCycle }: CreateCycleDialogP
   const currentMonth = (currentDate.getMonth() + 1).toString();
   const currentYear = currentDate.getFullYear().toString();
 
-  // Calculate default dates
-  const getDefaultDates = () => {
-    let startDate: string;
-    let endDate: string;
-
-    if (latestCycle?.periodEndDate) {
-      // If there's a previous cycle, start date = latest end date + 1 day
-      const latestEnd = new Date(latestCycle.periodEndDate);
-      latestEnd.setDate(latestEnd.getDate() + 1);
-      startDate = latestEnd.toISOString().split('T')[0];
-      
-      // End date = Dec 31 of the same year as start date
-      const startYear = latestEnd.getFullYear();
-      endDate = `${startYear}-12-31`;
-    } else {
-      // If no previous cycle, start = Jan 1 current year
-      startDate = `${currentYear}-01-01`;
-      endDate = `${currentYear}-12-31`;
-    }
-
-    return { startDate, endDate };
-  };
-
-  const defaultDates = getDefaultDates();
-
   const form = useForm<CreateCycleFormValues>({
     resolver: zodResolver(createCycleSchema),
     defaultValues: {
       payrollMonth: currentMonth,
       payrollYear: currentYear,
-      periodStartDate: defaultDates.startDate,
-      periodEndDate: defaultDates.endDate,
+      periodStartDate: `${currentYear}-01-01`,
+      periodEndDate: `${currentYear}-12-31`,
     },
   });
+
+  const [isLoadingDefaults, setIsLoadingDefaults] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      const fetchDefaults = async () => {
+        setIsLoadingDefaults(true);
+        try {
+          // Fetch latest approved cycle to determine defaults
+          const cycles = await bonusService.getCycles({ limit: 1, status: 'approved' });
+          const latestApproved = cycles && cycles.length > 0 ? cycles[0] : null;
+
+          let defaultPayrollMonth = currentMonth;
+          let defaultPayrollYear = currentYear;
+          let defaultStartDate = `${currentYear}-01-01`;
+          let defaultEndDate = `${currentYear}-12-31`;
+
+          if (latestApproved) {
+            // Default payroll month = Latest Approved Month + 1
+            // Parse manually to avoid timezone issues with "YYYY-MM-DD"
+            const [yearStr, monthStr] = latestApproved.payrollMonthDate.split('-');
+            let year = parseInt(yearStr);
+            let month = parseInt(monthStr);
+
+            // Add 1 month
+            month += 1;
+            if (month > 12) {
+              month = 1;
+              year += 1;
+            }
+            
+            defaultPayrollMonth = month.toString();
+            defaultPayrollYear = year.toString();
+
+            // Default period start = Latest Approved End Date + 1 day
+            const latestEndDate = new Date(latestApproved.periodEndDate);
+            latestEndDate.setDate(latestEndDate.getDate() + 1);
+            defaultStartDate = latestEndDate.toISOString().split('T')[0];
+            
+            // Default period end = Dec 31 of the start date's year
+            const startYear = latestEndDate.getFullYear();
+            defaultEndDate = `${startYear}-12-31`;
+          }
+
+          form.reset({
+            payrollMonth: defaultPayrollMonth,
+            payrollYear: defaultPayrollYear,
+            periodStartDate: defaultStartDate,
+            periodEndDate: defaultEndDate,
+          });
+        } catch (error) {
+          console.error('Failed to fetch latest cycle:', error);
+        } finally {
+          setIsLoadingDefaults(false);
+        }
+      };
+
+      fetchDefaults();
+    }
+  }, [open, form, currentMonth, currentYear]);
 
   // Update end date when start date changes
   useEffect(() => {
@@ -130,12 +164,23 @@ export function CreateCycleDialog({ onSuccess, latestCycle }: CreateCycleDialogP
       form.reset({
         payrollMonth: currentMonth,
         payrollYear: currentYear,
-        periodStartDate: defaultDates.startDate,
-        periodEndDate: defaultDates.endDate,
+        periodStartDate: `${currentYear}-01-01`, // Reset to current year's start
+        periodEndDate: `${currentYear}-12-31`,   // Reset to current year's end
       });
       onSuccess();
     } catch (error: any) {
-      setErrorMessage(t('error'));
+      if (error.response?.status === 409) {
+        const detail = error.response?.data?.detail || error.response?.data?.title || '';
+        if (detail.includes('pending bonus cycle')) {
+          setErrorMessage(t('errors.conflictPending'));
+        } else if (detail.includes('approved bonus cycle')) {
+          setErrorMessage(t('errors.conflictApproved'));
+        } else {
+          setErrorMessage(t('error'));
+        }
+      } else {
+        setErrorMessage(t('error'));
+      }
     }
   };
 
