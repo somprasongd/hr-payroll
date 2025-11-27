@@ -48,9 +48,10 @@ type CreateCycleFormValues = z.infer<typeof createCycleSchema>;
 interface CreateCycleDialogProps {
   onSuccess: (id?: string) => void;
   latestCycleEndDate?: string;
+  trigger?: React.ReactNode;
 }
 
-export function CreateCycleDialog({ onSuccess, latestCycleEndDate }: CreateCycleDialogProps) {
+export function CreateCycleDialog({ onSuccess, latestCycleEndDate, trigger }: CreateCycleDialogProps) {
   const t = useTranslations('SalaryRaise');
   const tCommon = useTranslations('Common');
   const { toast } = useToast();
@@ -117,7 +118,7 @@ export function CreateCycleDialog({ onSuccess, latestCycleEndDate }: CreateCycle
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>{t('createButton')}</Button>
+        {trigger || <Button>{t('createButton')}</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

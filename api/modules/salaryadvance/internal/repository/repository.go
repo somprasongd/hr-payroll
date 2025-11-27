@@ -30,9 +30,12 @@ type Record struct {
 	Amount       float64    `db:"amount"`
 	Status       string     `db:"status"`
 	CreatedAt    time.Time  `db:"created_at"`
+	CreatedBy    uuid.UUID  `db:"created_by"`
 	UpdatedAt    time.Time  `db:"updated_at"`
+	UpdatedBy    uuid.UUID  `db:"updated_by"`
 	EmployeeName string     `db:"employee_name"`
 	DeletedAt    *time.Time `db:"deleted_at"`
+	DeletedBy    *uuid.UUID `db:"deleted_by"`
 }
 
 type ListResult struct {

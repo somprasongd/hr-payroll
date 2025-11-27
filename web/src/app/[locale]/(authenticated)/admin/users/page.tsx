@@ -37,8 +37,8 @@ export default function UsersPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('createUser')}
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t('createUser')}</span>
             </Button>
           </DialogTrigger>
           <DialogContent>

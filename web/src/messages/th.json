@@ -45,6 +45,7 @@
     "settings": "การตั้งค่า",
     "users": "การจัดการผู้ใช้งาน",
     "salaryRaise": "ปรับเงินเดือน",
+    "salaryAdvance": "เบิกเงินล่วงหน้า",
     "bonus": "การจัดการโบนัส",
     "collapse": "ย่อเมนู"
   },
@@ -150,13 +151,15 @@
     "status": {
       "active": "ทำงานอยู่",
       "terminated": "พ้นสภาพ",
-      "all": "ทั้งหมด"
+      "all": "ทั้งหมด",
+      "allStatuses": "ทุกสถานะ"
     },
     "employeeTypes": {
       "full_time": "พนักงานประจำ",
       "part_time": "พนักงานชั่วคราว",
       "ft": "พนักงานประจำ",
-      "pt": "พนักงานชั่วคราว"
+      "pt": "พนักงานชั่วคราว",
+      "allTypes": "ทุกประเภท"
     },
     "messages": {
       "createSuccess": "เพิ่มพนักงานสำเร็จ",
@@ -174,6 +177,7 @@
     },
     "loading": "กำลังโหลด...",
     "search": "ค้นหา",
+    "clearFilters": "ล้างตัวกรอง",
     "placeholders": {
       "selectTitle": "เลือกคำนำหน้า",
       "selectType": "เลือกประเภท"
@@ -335,7 +339,10 @@
         "endDate": "วันที่สิ้นสุด",
         "allEmployees": "ทุกคน",
         "allTypes": "ทุกประเภท",
-        "allStatuses": "ทุกสถานะ"
+        "allStatuses": "ทุกสถานะ",
+        "searchEmployee": "ค้นหาพนักงาน...",
+        "searchPlaceholder": "ค้นหา...",
+        "noEmployeeFound": "ไม่พบพนักงาน"
       },
       "table": {
         "employee": "พนักงาน",
@@ -473,12 +480,14 @@
     "clearFilter": "ล้างตัวกรอง",
     "all": "ทั้งหมด",
     "create": "สร้าง",
+    "edit": "แก้ไข",
     "save": "บันทึก",
     "saving": "กำลังบันทึก...",
     "delete": "ลบ",
     "loading": "กำลังโหลด...",
     "error": "เกิดข้อผิดพลาด",
-    "success": "สำเร็จ"
+    "success": "สำเร็จ",
+    "noData": "ไม่มีข้อมูล"
   },
   "Payouts": {
     "PT": {
@@ -567,7 +576,9 @@
       "pending": "รออนุมัติ",
       "approved": "อนุมัติแล้ว",
       "rejected": "ไม่อนุมัติ",
-      "all": "ทั้งหมด"
+      "all": "ทั้งหมด",
+      "allStatuses": "ทุกสถานะ",
+      "allYears": "ทุกปี"
     },
     "actions": {
       "view": "ดูรายละเอียด",
@@ -626,6 +637,42 @@
       "hours": "ชั่วโมง"
     }
   },
+  "SalaryAdvance": {
+    "title": "เบิกเงินล่วงหน้า",
+    "description": "จัดการรายการเบิกเงินล่วงหน้าของพนักงาน (Salary Advance)",
+    "searchPlaceholder": "ค้นหา...",
+    "listTitle": "รายการเบิกเงินล่วงหน้า",
+    "filterStatus": "สถานะ",
+
+    "allStatuses": "ทุกสถานะ",
+    "statusPending": "รอหักคืน",
+    "statusProcessed": "หักคืนแล้ว",
+    "create": "สร้างรายการ",
+    "employee": "พนักงาน",
+    "amount": "จำนวนเงิน",
+    "advanceDate": "วันที่เบิก",
+    "payrollMonth": "งวดที่หักคืน",
+    "payrollYear": "ปี",
+    "status": "สถานะ",
+    "validating": "กำลังตรวจสอบ...",
+    "createTitle": "สร้างรายการเบิกเงินล่วงหน้า",
+    "editTitle": "แก้ไขรายการเบิกเงินล่วงหน้า",
+    "selectEmployee": "เลือกพนักงาน",
+    "createSuccess": "สร้างรายการสำเร็จ",
+    "createError": "เกิดข้อผิดพลาดในการสร้างรายการ",
+    "updateSuccess": "แก้ไขรายการสำเร็จ",
+    "updateError": "เกิดข้อผิดพลาดในการแก้ไขรายการ",
+    "deleteTitle": "ยืนยันการลบ",
+    "deleteConfirm": "คุณแน่ใจหรือไม่ที่จะลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+    "deleteSuccess": "ลบรายการสำเร็จ",
+    "deleteError": "เกิดข้อผิดพลาดในการลบรายการ",
+    "searchEmployee": "ค้นหาพนักงาน...",
+    "noEmployeeFound": "ไม่พบพนักงาน",
+    "selectEmployeeToView": "กรุณาเลือกพนักงานเพื่อดูข้อมูล",
+    "errors": {
+      "invalidPayrollMonth": "งวดเงินเดือนที่เลือกได้รับการอนุมัติแล้ว ไม่สามารถเลือกงวดนี้ได้"
+    }
+  },
   "Bonus": {
     "title": "การจัดการโบนัส",
     "description": "จัดการรอบการจ่ายโบนัสและปรับแต่งจำนวนโบนัสพนักงาน",
@@ -672,7 +719,9 @@
     "status": {
       "pending": "รออนุมัติ",
       "approved": "อนุมัติแล้ว",
-      "rejected": "ไม่อนุมัติ"
+      "rejected": "ไม่อนุมัติ",
+      "allStatuses": "ทุกสถานะ",
+      "allYears": "ทุกปี"
     },
     "actions": {
       "view": "ดูรายละเอียด",

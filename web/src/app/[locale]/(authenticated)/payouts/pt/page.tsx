@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, X } from 'lucide-react';
+import { Plus, Search, Filter, X, RotateCcw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -38,6 +38,7 @@ export default function PayoutPtListPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
   
   // Filters
   const [status, setStatus] = useState<string>('all');
@@ -108,37 +109,41 @@ export default function PayoutPtListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-row justify-between items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-gray-500">{t('description')}</p>
+          <p className="text-gray-500 hidden sm:block">{t('description')}</p>
         </div>
-        <Link href="/payouts/pt/create">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            {t('createButton')}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
           </Button>
-        </Link>
+          <Link href="/payouts/pt/create">
+            <Button>
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t('createButton')}</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">{t('fields.status')}</label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('filters.allStatuses')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('filters.allStatuses') || 'All Statuses'}</SelectItem>
-                <SelectItem value="to_pay">{t('statuses.to_pay')}</SelectItem>
-                <SelectItem value="paid">{t('statuses.paid')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 relative ${!showFilters ? 'hidden md:block' : ''}`}>
+        <button
+          onClick={clearFilters}
+          className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          title={tCommon('clearFilter')}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </button>
 
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="col-span-1 md:col-span-6 lg:col-span-4">
             <label className="text-sm font-medium mb-1 block">{t('fields.employee')}</label>
             <Combobox
               options={employees.map(emp => ({
@@ -153,12 +158,19 @@ export default function PayoutPtListPage() {
               emptyText="No employee found"
             />
           </div>
-          
-          <div className="flex items-end">
-            <Button variant="outline" onClick={clearFilters} className="w-full">
-              <X className="w-4 h-4 mr-2" />
-              {tCommon('clearFilters')}
-            </Button>
+
+          <div className="col-span-1 md:col-span-6 lg:col-span-2">
+            <label className="text-sm font-medium mb-1 block">{t('fields.status')}</label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('filters.allStatuses')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filters.allStatuses') || 'All Statuses'}</SelectItem>
+                <SelectItem value="to_pay">{t('statuses.to_pay')}</SelectItem>
+                <SelectItem value="paid">{t('statuses.paid')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

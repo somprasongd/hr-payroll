@@ -45,7 +45,25 @@ type RunListResult struct {
 	Total int
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, status string, year *int) (RunListResult, error) {
+const netPayExpr = `
+COALESCE(income_total,0)
+  - COALESCE(late_minutes_deduction,0)
+  - COALESCE(leave_days_deduction,0)
+  - COALESCE(leave_double_deduction,0)
+  - COALESCE(leave_hours_deduction,0)
+  - COALESCE(sso_month_amount,0)
+  - COALESCE(tax_month_amount,0)
+  - COALESCE(pf_month_amount,0)
+  - COALESCE(water_amount,0)
+  - COALESCE(electric_amount,0)
+  - COALESCE(internet_amount,0)
+  - COALESCE(advance_repay_amount,0)
+  - COALESCE(jsonb_sum_value(loan_repayments),0)
+`
+
+const deductionExpr = `(COALESCE(income_total,0) - (` + netPayExpr + `))`
+
+func (r Repository) List(ctx context.Context, page, limit int, status string, year *int, month *time.Time) (RunListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
@@ -59,6 +77,11 @@ func (r Repository) List(ctx context.Context, page, limit int, status string, ye
 		args = append(args, *year)
 		where = append(where, fmt.Sprintf("EXTRACT(YEAR FROM payroll_month_date) = $%d", len(args)))
 	}
+	if month != nil {
+		monthStart := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC)
+		args = append(args, monthStart)
+		where = append(where, fmt.Sprintf("payroll_month_date = $%d", len(args)))
+	}
 	whereClause := strings.Join(where, " AND ")
 	args = append(args, limit, offset)
 	q := fmt.Sprintf(`
@@ -66,13 +89,13 @@ SELECT id, payroll_month_date, period_start_date, pay_date, status,
        created_at, updated_at, deleted_at, approved_at, approved_by,
        social_security_rate_employee, social_security_rate_employer,
        COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
-       COALESCE((SELECT SUM(net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
+       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
        COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-       COALESCE((SELECT SUM(income_total - net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction
+       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction
 FROM payroll_run
 WHERE %s
 ORDER BY payroll_month_date DESC
-LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
+LIMIT $%d OFFSET $%d`, netPayExpr, deductionExpr, whereClause, len(args)-1, len(args))
 	rows, err := db.QueryxContext(ctx, q, args...)
 	if err != nil {
 		return RunListResult{}, err
@@ -97,17 +120,17 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 
 func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := fmt.Sprintf(`
 SELECT id, payroll_month_date, period_start_date, pay_date, status,
        created_at, updated_at, deleted_at, approved_at, approved_by,
        social_security_rate_employee, social_security_rate_employer,
        COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
-       COALESCE((SELECT SUM(net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
+       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
        COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-       COALESCE((SELECT SUM(income_total - net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction
+       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction
 FROM payroll_run
 WHERE id=$1 AND deleted_at IS NULL
-LIMIT 1`
+LIMIT 1`, netPayExpr, deductionExpr)
 	var run Run
 	if err := db.GetContext(ctx, &run, q, id); err != nil {
 		return nil, err
@@ -154,10 +177,10 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
           COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
-          COALESCE((SELECT SUM(net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
+          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
           COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-          COALESCE((SELECT SUM(income_total - net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction`
-	q := fmt.Sprintf(base, setPayDate)
+          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction`
+	q := fmt.Sprintf(base, setPayDate, netPayExpr, deductionExpr)
 
 	var run Run
 	if err := db.GetContext(ctx, &run, q, args...); err != nil {
@@ -168,7 +191,7 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
 
 func (r Repository) Approve(ctx context.Context, id uuid.UUID, actor uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := fmt.Sprintf(`
 UPDATE payroll_run
 SET status='approved', approved_by=$1, approved_at=COALESCE(approved_at, now()), updated_by=$1
 WHERE id=$2 AND deleted_at IS NULL AND status <> 'approved'
@@ -176,9 +199,9 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
           COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
-          COALESCE((SELECT SUM(net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
+          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
           COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-          COALESCE((SELECT SUM(income_total - net_pay) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction`
+          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction`, netPayExpr, deductionExpr)
 	var run Run
 	if err := db.GetContext(ctx, &run, q, actor, id); err != nil {
 		return nil, err
@@ -242,13 +265,13 @@ func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit 
 SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
        pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
-       pri.sso_month_amount, pri.tax_month_amount, pri.net_pay, 'pending' as status,
-       (pri.income_total - pri.net_pay) AS deduction_total
+       pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
+       (%s) AS deduction_total
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 WHERE %s
 ORDER BY e.full_name ASC
-LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
+LIMIT $%d OFFSET $%d`, netPayExpr, deductionExpr, whereClause, len(args)-1, len(args))
 	rows, err := db.QueryxContext(ctx, q, args...)
 	if err != nil {
 		return ItemListResult{}, err
@@ -290,8 +313,8 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
        (SELECT full_name FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        salary_amount, ot_hours, ot_amount, bonus_amount,
        income_total, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
-       sso_month_amount, tax_month_amount, net_pay, 'pending' as status,
-       (income_total - net_pay) AS deduction_total`, setClause, i)
+       sso_month_amount, tax_month_amount, (%s) AS net_pay, 'pending' as status,
+       (%s) AS deduction_total`, setClause, i, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
@@ -301,14 +324,14 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
        pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
-       pri.sso_month_amount, pri.tax_month_amount, pri.net_pay, 'pending' as status,
-       (pri.income_total - pri.net_pay) AS deduction_total
+       pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
+       (%s) AS deduction_total
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
-WHERE pri.id=$1 LIMIT 1`
+WHERE pri.id=$1 LIMIT 1`, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, id); err != nil {
 		return nil, err
@@ -349,11 +372,11 @@ type ItemDetail struct {
 
 func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetail, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
        pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
-       pri.sso_month_amount, pri.tax_month_amount, pri.net_pay, 'pending' AS status,
-       (pri.income_total - pri.net_pay) AS deduction_total,
+       pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' AS status,
+       (%s) AS deduction_total,
        pri.employee_type_id,
        pri.housing_allowance, pri.attendance_bonus_nolate, pri.attendance_bonus_noleave,
        pri.leave_double_qty, pri.leave_double_deduction, pri.leave_hours_qty, pri.leave_hours_deduction,
@@ -367,7 +390,7 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN users u ON u.id = e.user_id
-WHERE pri.id = $1`
+WHERE pri.id = $1`, netPayExpr, deductionExpr)
 	var it ItemDetail
 	if err := db.GetContext(ctx, &it, q, id); err != nil {
 		return nil, err

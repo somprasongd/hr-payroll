@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
-import { Loader2, Eye, Trash2, X, MoreHorizontal } from 'lucide-react';
+import { Link, useRouter } from '@/i18n/routing';
+import { Loader2, Eye, Trash2, X, MoreHorizontal, Filter, Plus, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -35,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CreateCycleDialog } from '@/components/bonus/create-cycle-dialog';
@@ -46,6 +47,7 @@ import { Pagination } from '@/components/ui/pagination';
 export default function BonusListPage() {
   const t = useTranslations('Bonus');
   const tCommon = useTranslations('Common');
+  const router = useRouter();
   const { toast } = useToast();
   const [cycles, setCycles] = useState<BonusCycle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +56,7 @@ export default function BonusListPage() {
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 13 }, (_, i) => currentYear - 10 + i);
@@ -129,55 +132,80 @@ export default function BonusListPage() {
     }
   };
 
+  const handleCreateSuccess = () => {
+    fetchCycles();
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('listTitle')}</h1>
-          <p className="text-muted-foreground hidden sm:block">{t('description')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-gray-500 hidden sm:block">{t('description')}</p>
         </div>
-        <CreateCycleDialog onSuccess={fetchCycles} />
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder={t('filters.status')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{tCommon('all')}</SelectItem>
-            <SelectItem value="pending">{t('status.pending')}</SelectItem>
-            <SelectItem value="approved">{t('status.approved')}</SelectItem>
-            <SelectItem value="rejected">{t('status.rejected')}</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={yearFilter} onValueChange={setYearFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder={t('filters.year')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{tCommon('all')}</SelectItem>
-            {years.map((year) => (
-              <SelectItem key={year} value={year.toString()}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {(statusFilter !== 'all' || yearFilter !== 'all') && (
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
-            onClick={clearFilters}
-            className="h-10 px-4 w-full sm:w-auto"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setShowFilters(!showFilters)}
           >
-            <X className="h-4 w-4 mr-2" />
-            {tCommon('clearFilter')}
+            <Filter className="h-4 w-4" />
           </Button>
+          <CreateCycleDialog 
+            onSuccess={handleCreateSuccess} 
+            trigger={
+              <Button>
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('createButton')}</span>
+              </Button>
+            }
+          />
+        </div>
+      </div>
+
+      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 relative ${!showFilters ? 'hidden md:block' : ''}`}>
+        {(statusFilter !== 'all' || yearFilter !== 'all') && (
+          <button
+            onClick={clearFilters}
+            className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            title={tCommon('clearFilter')}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
         )}
+
+        <div className="flex flex-col md:flex-row gap-4 md:w-auto lg:w-fit">
+          <div className="w-full md:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('filters.status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('status.allStatuses')}</SelectItem>
+                <SelectItem value="pending">{t('status.pending')}</SelectItem>
+                <SelectItem value="approved">{t('status.approved')}</SelectItem>
+                <SelectItem value="rejected">{t('status.rejected')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full md:w-48">
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('filters.year')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('status.allYears')}</SelectItem>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       <div className="border rounded-lg">

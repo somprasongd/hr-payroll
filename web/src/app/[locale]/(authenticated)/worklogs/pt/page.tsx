@@ -11,7 +11,7 @@ import { DateInput } from '@/components/ui/date-input';
 import { PTWorklogForm } from '@/components/pt-worklog-form';
 import { ptWorklogService, PTWorklog, CreatePTWorklogRequest, UpdatePTWorklogRequest } from '@/services/pt-worklog.service';
 import { employeeService, Employee } from '@/services/employee.service';
-import { Plus, Search, Edit, Trash2, X, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, X, MoreHorizontal, Filter, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -49,6 +49,7 @@ export default function PTWorklogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [mounted, setMounted] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Filters
   const [employeeFilter, setEmployeeFilter] = useState('');
@@ -87,7 +88,7 @@ export default function PTWorklogsPage() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await employeeService.getEmployees({ limit: 1000, status: 'active' });
+      const response = await employeeService.getEmployees({ limit: 1000, status: 'active', employeeTypeCode: 'pt' });
       setEmployees(response.data);
     } catch (error) {
       console.error('Failed to fetch employees:', error);
@@ -240,21 +241,38 @@ export default function PTWorklogsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-gray-500 hidden sm:block">{t('description')}</p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t('createButton')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t('createButton')}</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="lg:col-span-2">
+      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 relative ${!showFilters ? 'hidden md:block' : ''}`}>
+        <button
+          onClick={handleClearFilters}
+          className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          title={tCommon('clearFilter')}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </button>
+
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="col-span-1 md:col-span-6 lg:col-span-4">
             <label className="text-sm font-medium mb-2 block">{t('filters.employee')}</label>
             <Combobox
               options={employees
@@ -272,7 +290,7 @@ export default function PTWorklogsPage() {
             />
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="col-span-1 md:col-span-6 lg:col-span-2">
             <label className="text-sm font-medium mb-2 block">{t('filters.status')}</label>
             <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
               <SelectTrigger>
@@ -282,26 +300,20 @@ export default function PTWorklogsPage() {
                 <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
                 <SelectItem value="pending">{t('statuses.pending')}</SelectItem>
                 <SelectItem value="approved">{t('statuses.approved')}</SelectItem>
-
+                <SelectItem value="to_pay">{t('statuses.to_pay')}</SelectItem>
+                <SelectItem value="paid">{t('statuses.paid')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div>
+          <div className="col-span-1 md:col-span-3 lg:col-span-3">
             <label className="text-sm font-medium mb-2 block">{t('filters.startDate')}</label>
             <DateInput value={startDateFilter} onValueChange={setStartDateFilter} />
           </div>
 
-          <div>
+          <div className="col-span-1 md:col-span-3 lg:col-span-3">
             <label className="text-sm font-medium mb-2 block">{t('filters.endDate')}</label>
             <DateInput value={endDateFilter} onValueChange={setEndDateFilter} />
-          </div>
-
-          <div className="flex items-end gap-2">
-            <Button variant="outline" onClick={handleClearFilters} className="w-full">
-              <X className="w-4 h-4 mr-2" />
-              {tCommon('clearFilters')}
-            </Button>
           </div>
         </div>
       </div>

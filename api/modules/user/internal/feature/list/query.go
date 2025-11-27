@@ -5,12 +5,13 @@ import (
 	"math"
 	"strings"
 
-	"go.uber.org/zap"
 	"hrms/modules/user/internal/dto"
 	"hrms/modules/user/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+
+	"go.uber.org/zap"
 )
 
 type Query struct {
@@ -38,8 +39,8 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Page < 1 {
 		q.Page = 1
 	}
-	if q.Limit <= 0 || q.Limit > 100 {
-		q.Limit = 20
+	if q.Limit <= 0 || q.Limit > 1000 {
+		q.Limit = 1000
 	}
 	q.Role = strings.TrimSpace(q.Role)
 

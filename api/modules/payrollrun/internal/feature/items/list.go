@@ -39,8 +39,8 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 	if q.Page < 1 {
 		q.Page = 1
 	}
-	if q.Limit <= 0 || q.Limit > 100 {
-		q.Limit = 20
+	if q.Limit <= 0 || q.Limit > 1000 {
+		q.Limit = 1000
 	}
 	res, err := q.Repo.ListItems(ctx, q.RunID, q.Page, q.Limit, q.Search)
 	if err != nil {

@@ -44,8 +44,8 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Page < 1 {
 		q.Page = 1
 	}
-	if q.Limit <= 0 || q.Limit > 100 {
-		q.Limit = 20
+	if q.Limit <= 0 || q.Limit > 1000 {
+		q.Limit = 1000
 	}
 
 	res, err := h.repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.Type, q.Status, q.StartDate, q.EndDate)

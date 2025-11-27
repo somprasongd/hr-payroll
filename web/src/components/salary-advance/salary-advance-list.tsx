@@ -1,0 +1,308 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Eye, MoreHorizontal, Filter, Plus, X, Trash2, Pencil, Search, RotateCcw } from "lucide-react";
+import { salaryAdvanceService, SalaryAdvance } from '@/services/salary-advance-service';
+import { employeeService, Employee } from '@/services/employee.service';
+import { format } from 'date-fns';
+import { CreateSalaryAdvanceDialog } from './create-salary-advance-dialog';
+import { EditSalaryAdvanceDialog } from './edit-salary-advance-dialog';
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Combobox } from "@/components/ui/combobox";
+import { useAuthStore } from '@/store/auth-store';
+
+export function SalaryAdvanceList() {
+  const t = useTranslations('SalaryAdvance');
+  const tCommon = useTranslations('Common');
+  const { toast } = useToast();
+  const user = useAuthStore((state) => state.user);
+  
+  const [data, setData] = useState<SalaryAdvance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [employeeFilter, setEmployeeFilter] = useState<string>('all');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editItem, setEditItem] = useState<SalaryAdvance | null>(null);
+  const [deleteItem, setDeleteItem] = useState<SalaryAdvance | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await employeeService.getEmployees({ limit: 100, status: 'active' });
+      setEmployees(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch employees', error);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await salaryAdvanceService.getAll({
+        page,
+        limit: 10,
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        employeeId: employeeFilter === 'all' ? undefined : employeeFilter,
+      });
+      setData(response.data || []);
+      setTotalPages(response.meta.totalPages);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: tCommon('error'),
+        description: tCommon('errorLoadingData'),
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [page, statusFilter, employeeFilter]);
+
+  const handleDelete = async () => {
+    if (!deleteItem) return;
+    try {
+      await salaryAdvanceService.delete(deleteItem.id);
+      toast({
+        title: tCommon('success'),
+        description: t('deleteSuccess'),
+      });
+      fetchData();
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: tCommon('error'),
+        description: t('deleteError'),
+      });
+    } finally {
+      setDeleteItem(null);
+    }
+  };
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setEmployeeFilter('all');
+    setPage(1);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-row justify-between items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t('listTitle')}</h1>
+          <p className="text-gray-500 hidden sm:block">{t('description')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t('create')}</span>
+          </Button>
+        </div>
+      </div>
+
+      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 ${!showFilters ? 'hidden md:block' : ''} ${employeeFilter !== 'all' ? 'lg:relative' : ''}`}>
+        <div className="grid grid-cols-6 gap-4">
+          <div className="col-span-6 lg:col-span-2">
+             <Combobox
+              options={employees.map(emp => ({
+                value: emp.id,
+                label: `${emp.employeeNumber} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`,
+                searchText: `${emp.employeeNumber} ${emp.fullNameTh} ${emp.firstName} ${emp.lastName}`
+              }))}
+              value={employeeFilter === 'all' ? '' : employeeFilter}
+              onValueChange={(value) => setEmployeeFilter(value || 'all')}
+              placeholder={t('selectEmployee') || 'Select Employee'}
+              searchPlaceholder={t('searchEmployee') || 'Search employee...'}
+              emptyText={t('noEmployeeFound') || 'No employee found'}
+            />
+          </div>
+
+          <div className="col-span-6 lg:col-span-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('filterStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                <SelectItem value="pending">{t('statusPending')}</SelectItem>
+                <SelectItem value="processed">{t('statusProcessed')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(statusFilter !== 'all' || employeeFilter !== 'all') && (
+            <div className="col-span-6 lg:absolute lg:top-4 lg:right-4 flex items-center justify-end">
+              <button
+                onClick={clearFilters}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                title={tCommon('clearFilter')}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('advanceDate')}</TableHead>
+              <TableHead>{t('amount')}</TableHead>
+              <TableHead>{t('payrollMonth')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {employeeFilter === 'all' ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  {t('selectEmployeeToView') || 'กรุณาเลือกพนักงานเพื่อดูข้อมูล'}
+                </TableCell>
+              </TableRow>
+            ) : loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  {tCommon('loading')}
+                </TableCell>
+              </TableRow>
+            ) : !data || data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  {tCommon('noData')}
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{format(new Date(item.advanceDate), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell>{item.amount.toLocaleString()}</TableCell>
+                  <TableCell>{format(new Date(item.payrollMonthDate), 'MM/yyyy')}</TableCell>
+                  <TableCell>
+                    <Badge variant={item.status === 'processed' ? 'default' : 'secondary'}>
+                      {t(`status${item.status.charAt(0).toUpperCase() + item.status.slice(1)}`)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {item.status === 'pending' && user?.role === 'admin' && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditItem(item)}>
+                            <Pencil className="w-4 h-4 mr-2" />
+                            {tCommon('edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => setDeleteItem(item)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {tCommon('delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <CreateSalaryAdvanceDialog 
+        open={createOpen} 
+        onOpenChange={setCreateOpen}
+        onSuccess={fetchData}
+        defaultEmployeeId={employeeFilter !== 'all' ? employeeFilter : undefined}
+      />
+
+      {editItem && (
+        <EditSalaryAdvanceDialog
+          open={!!editItem}
+          onOpenChange={(open: boolean) => !open && setEditItem(null)}
+          item={editItem}
+          onSuccess={fetchData}
+        />
+      )}
+
+      <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteConfirm')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              {tCommon('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

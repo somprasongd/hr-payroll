@@ -73,6 +73,7 @@ function Sidebar({
     { id: 'worklog-pt', icon: Clock, label: tMenu('worklogPT'), path: '/worklogs/pt', indent: true },
     { id: 'payout-pt', icon: DollarSign, label: tMenu('payoutPT'), path: '/payouts/pt', indent: true },
     { id: 'salary-raise', icon: TrendingUp, label: tMenu('salaryRaise'), path: '/salary-raise' },
+    { id: 'salary-advance', icon: DollarSign, label: tMenu('salaryAdvance'), path: '/salary-advance' },
     { id: 'bonus', icon: DollarSign, label: tMenu('bonus'), path: '/bonuses' },
   ];
 
@@ -205,6 +206,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/hr')) return 'hr';
     if (pathname.startsWith('/admin/users')) return 'users';
     if (pathname.startsWith('/salary-raise')) return 'salary-raise';
+    if (pathname.startsWith('/salary-advance')) return 'salary-advance';
     return 'dashboard';
   };
 

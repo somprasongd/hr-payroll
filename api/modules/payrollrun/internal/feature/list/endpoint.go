@@ -2,10 +2,13 @@ package list
 
 import (
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 
 	"hrms/modules/payrollrun/internal/repository"
+	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -18,6 +21,7 @@ import (
 // @Param limit query int false "limit"
 // @Param status query string false "processing|pending|approved|all"
 // @Param year query int false "filter by year of payrollMonthDate"
+// @Param monthDate query string false "YYYY-MM-DD (will use month & year from this date to filter payroll_month_date)"
 // @Security BearerAuth
 // @Success 200 {object} Response
 // @Router /payroll-runs [get]
@@ -32,12 +36,22 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 				year = &n
 			}
 		}
+		var month *time.Time
+		if v := strings.TrimSpace(c.Query("monthDate")); v != "" {
+			md, err := time.Parse("2006-01-02", v)
+			if err != nil {
+				return errs.BadRequest("monthDate must be YYYY-MM-DD")
+			}
+			start := time.Date(md.Year(), md.Month(), 1, 0, 0, 0, 0, time.UTC)
+			month = &start
+		}
 
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
 			Page:   page,
 			Limit:  limit,
 			Status: status,
 			Year:   year,
+			Month:  month,
 			Repo:   repo,
 		})
 		if err != nil {

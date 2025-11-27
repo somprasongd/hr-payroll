@@ -47,9 +47,10 @@ type CreateCycleFormValues = z.infer<typeof createCycleSchema>;
 
 interface CreateCycleDialogProps {
   onSuccess: () => void;
+  trigger?: React.ReactNode;
 }
 
-export function CreateCycleDialog({ onSuccess }: CreateCycleDialogProps) {
+export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps) {
   const t = useTranslations('Bonus.create');
   const tCommon = useTranslations('Common');
   const [open, setOpen] = useState(false);
@@ -208,7 +209,7 @@ export function CreateCycleDialog({ onSuccess }: CreateCycleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>{tCommon('create')}</Button>
+        {trigger || <Button>{tCommon('create')}</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>

@@ -2,6 +2,7 @@ package create
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,20 +40,21 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
 }
 
 type Request struct {
-	EmployeeID  uuid.UUID `json:"employeeId"`
-	Amount      float64   `json:"amount"`
-	AdvanceDate time.Time `json:"advanceDate"`
+	EmployeeID      uuid.UUID `json:"employeeId"`
+	Amount          float64   `json:"amount"`
+	AdvanceDate     string    `json:"advanceDate"`      // expect YYYY-MM-DD
+	PayrollMonthRaw string    `json:"payrollMonthDate"` // expect YYYY-MM-DD (1st of month)
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if err := validate(cmd.Payload); err != nil {
+	advDate, payrollMonth, err := validate(cmd.Payload)
+	if err != nil {
 		return nil, err
 	}
-	payrollMonth := time.Date(cmd.Payload.AdvanceDate.Year(), cmd.Payload.AdvanceDate.Month(), 1, 0, 0, 0, 0, time.UTC)
 
 	rec := repository.Record{
 		EmployeeID:   cmd.Payload.EmployeeID,
-		AdvanceDate:  cmd.Payload.AdvanceDate,
+		AdvanceDate:  advDate,
 		PayrollMonth: payrollMonth,
 		Amount:       cmd.Payload.Amount,
 		Status:       "pending",
@@ -71,15 +73,31 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	return &Response{Item: dto.FromRecord(*created)}, nil
 }
 
-func validate(r Request) error {
+func validate(r Request) (time.Time, time.Time, error) {
 	if r.EmployeeID == uuid.Nil {
-		return errs.BadRequest("employeeId is required")
-	}
-	if r.AdvanceDate.IsZero() {
-		return errs.BadRequest("advanceDate is required")
+		return time.Time{}, time.Time{}, errs.BadRequest("employeeId is required")
 	}
 	if r.Amount <= 0 {
-		return errs.BadRequest("amount must be > 0")
+		return time.Time{}, time.Time{}, errs.BadRequest("amount must be > 0")
 	}
-	return nil
+	advDateStr := strings.TrimSpace(r.AdvanceDate)
+	if advDateStr == "" {
+		return time.Time{}, time.Time{}, errs.BadRequest("advanceDate is required")
+	}
+	advDate, err := time.Parse("2006-01-02", advDateStr)
+	if err != nil {
+		return time.Time{}, time.Time{}, errs.BadRequest("advanceDate must be YYYY-MM-DD")
+	}
+	payrollMonthStr := strings.TrimSpace(r.PayrollMonthRaw)
+	if payrollMonthStr == "" {
+		return time.Time{}, time.Time{}, errs.BadRequest("payrollMonthDate is required")
+	}
+	payrollMonth, err := time.Parse("2006-01-02", payrollMonthStr)
+	if err != nil {
+		return time.Time{}, time.Time{}, errs.BadRequest("payrollMonthDate must be YYYY-MM-DD")
+	}
+	if payrollMonth.Day() != 1 {
+		return time.Time{}, time.Time{}, errs.BadRequest("payrollMonthDate must be first day of month (YYYY-MM-01)")
+	}
+	return advDate, payrollMonth, nil
 }

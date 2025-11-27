@@ -3,13 +3,15 @@ package list
 import (
 	"context"
 	"math"
+	"time"
 
-	"go.uber.org/zap"
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+
+	"go.uber.org/zap"
 )
 
 type Query struct {
@@ -17,6 +19,7 @@ type Query struct {
 	Limit  int
 	Status string
 	Year   *int
+	Month  *time.Time
 	Repo   repository.Repository
 }
 
@@ -35,11 +38,11 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Page < 1 {
 		q.Page = 1
 	}
-	if q.Limit <= 0 || q.Limit > 100 {
-		q.Limit = 20
+	if q.Limit <= 0 || q.Limit > 1000 {
+		q.Limit = 1000
 	}
 
-	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.Status, q.Year)
+	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.Status, q.Year, q.Month)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list payroll runs", zap.Error(err))
 		return nil, errs.Internal("failed to list payroll runs")

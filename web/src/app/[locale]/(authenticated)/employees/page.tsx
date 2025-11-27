@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { employeeService, Employee, EmployeeType } from '@/services/employee.service';
-import { Plus, Search, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, MoreHorizontal, Filter, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 import { Pagination } from '@/components/ui/pagination';
@@ -54,6 +54,7 @@ export default function EmployeesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchEmployeeTypes();
@@ -123,60 +124,89 @@ export default function EmployeesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-gray-500 hidden sm:block">{t('description')}</p>
         </div>
-        <Button asChild>
-          <Link href="/employees/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('createButton')}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+          <Button asChild>
+            <Link href="/employees/new">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t('createButton')}</span>
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 flex items-center space-x-2">
-          <form onSubmit={handleSearch} className="flex-1 flex items-center space-x-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('searchPlaceholder')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Button type="submit" variant="secondary">{t('search')}</Button>
-          </form>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Select value={employeeTypeFilter} onValueChange={setEmployeeTypeFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={t('fields.employeeType')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('status.all')}</SelectItem>
-              {employeeTypes.map((type) => (
-                <SelectItem key={type.id} value={type.id}>
-                  {t(`employeeTypes.${type.code}`) || type.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 ${!showFilters ? 'hidden md:block' : ''}`}>
+        <div className="grid grid-cols-6 gap-4">
+          <div className="col-span-5 lg:col-span-3">
+            <form onSubmit={handleSearch} className="flex items-center space-x-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Button type="submit" variant="secondary">{t('search')}</Button>
+            </form>
+          </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={t('fields.status')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('status.all')}</SelectItem>
-              <SelectItem value="active">{t('status.active')}</SelectItem>
-              <SelectItem value="terminated">{t('status.terminated')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="col-span-1 lg:order-last flex items-center justify-end">
+            <button
+              onClick={() => {
+                setSearch('');
+                setEmployeeTypeFilter('all');
+                setStatusFilter('all');
+                fetchEmployees();
+              }}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              title={t('clearFilters')}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="col-span-6 md:col-span-3 lg:col-span-1">
+            <Select value={employeeTypeFilter} onValueChange={setEmployeeTypeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('fields.employeeType')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('employeeTypes.allTypes')}</SelectItem>
+                {employeeTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {t(`employeeTypes.${type.code}`) || type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="col-span-6 md:col-span-3 lg:col-span-1">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('fields.status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('status.allStatuses')}</SelectItem>
+                <SelectItem value="active">{t('status.active')}</SelectItem>
+                <SelectItem value="terminated">{t('status.terminated')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

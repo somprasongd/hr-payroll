@@ -4,12 +4,13 @@ import (
 	"context"
 	"math"
 
-	"go.uber.org/zap"
 	"hrms/modules/payrollconfig/internal/dto"
 	"hrms/modules/payrollconfig/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+
+	"go.uber.org/zap"
 )
 
 type Query struct {
@@ -36,8 +37,8 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Page < 1 {
 		q.Page = 1
 	}
-	if q.Limit <= 0 || q.Limit > 100 {
-		q.Limit = 20
+	if q.Limit <= 0 || q.Limit > 1000 {
+		q.Limit = 1000
 	}
 
 	res, err := h.repo.List(ctx, q.Page, q.Limit)
