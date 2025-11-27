@@ -37,12 +37,16 @@ import { bonusService, BonusCycle, BonusItem } from '@/services/bonus-service';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
+import { useAuthStore } from '@/store/auth-store';
+
 export default function BonusDetailPage() {
   const t = useTranslations('Bonus');
   const tCommon = useTranslations('Common');
   const { id } = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuthStore();
+  const isHr = user?.role === 'hr';
 
   const [cycle, setCycle] = useState<BonusCycle | null>(null);
   const [items, setItems] = useState<BonusItem[]>([]);
@@ -192,14 +196,18 @@ export default function BonusDetailPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setShowApproveDialog(true)}>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      {t('actions.approve')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setShowRejectDialog(true)}>
-                      <X className="mr-2 h-4 w-4" />
-                      {t('actions.reject')}
-                    </DropdownMenuItem>
+                    {!isHr && (
+                      <>
+                        <DropdownMenuItem onClick={() => setShowApproveDialog(true)}>
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          {t('actions.approve')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setShowRejectDialog(true)}>
+                          <X className="mr-2 h-4 w-4" />
+                          {t('actions.reject')}
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-red-600">
                       <Trash2 className="mr-2 h-4 w-4" />
                       {t('actions.delete')}
@@ -210,24 +218,28 @@ export default function BonusDetailPage() {
 
               {/* Desktop: Separate buttons */}
               <div className="hidden md:flex md:gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowApproveDialog(true)}
-                  className="text-green-600 border-green-600 hover:bg-green-50"
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  {t('actions.approve')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowRejectDialog(true)}
-                  className="text-red-600 border-red-600 hover:bg-red-50"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  {t('actions.reject')}
-                </Button>
+                {!isHr && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowApproveDialog(true)}
+                      className="text-green-600 border-green-600 hover:bg-green-50"
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      {t('actions.approve')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowRejectDialog(true)}
+                      className="text-red-600 border-red-600 hover:bg-red-50"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      {t('actions.reject')}
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="destructive"
                   size="icon"
