@@ -11,7 +11,6 @@ import {
   CalendarDays, 
   DollarSign, 
   FileText, 
-  Briefcase, 
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -22,6 +21,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +33,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -79,8 +80,14 @@ function Sidebar({
     <>
       {/* Logo */}
       <div className="h-16 flex items-center justify-center border-b border-gray-200 px-4">
-        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-          <Briefcase className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-center">
+          <Image 
+            src="/icon-192x192.png" 
+            alt="Logo" 
+            width={40} 
+            height={40} 
+            className="rounded-lg"
+          />
         </div>
         {(!collapsed || isMobile) && (
           <div className="ml-3">
@@ -129,8 +136,8 @@ function Sidebar({
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
               activeMenu === 'users'
-                ? "bg-blue-50 text-blue-600 font-medium"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-50 text-blue-600 font-medium"
+              : "text-gray-700 hover:bg-gray-100"
             )}
           >
             <Users className="w-5 h-5 flex-shrink-0" />
@@ -146,8 +153,8 @@ function Sidebar({
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
               activeMenu === 'settings'
-                ? "bg-blue-50 text-blue-600 font-medium"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-50 text-blue-600 font-medium"
+              : "text-gray-700 hover:bg-gray-100"
             )}
           >
             <Settings className="w-5 h-5 flex-shrink-0" />
@@ -233,6 +240,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Menu Sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-64 p-0">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <div className="flex flex-col h-full bg-white">
             <Sidebar 
               collapsed={false} 
@@ -263,8 +271,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Logo/Brand for mobile */}
             <div className="md:hidden flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-white" />
+              <div className="flex items-center justify-center">
+                <Image 
+                  src="/icon-192x192.png" 
+                  alt="Logo" 
+                  width={32} 
+                  height={32} 
+                  className="rounded-lg"
+                />
               </div>
               <div>
                 <div className="font-bold text-xs">HR & Payroll</div>

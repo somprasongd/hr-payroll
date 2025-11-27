@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "HR Payroll Web App",
   description: "HR Payroll Application",
   manifest: "/manifest.json",
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
