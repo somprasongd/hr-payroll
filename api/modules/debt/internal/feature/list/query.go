@@ -54,10 +54,16 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		return nil, errs.Internal("failed to list debt transactions")
 	}
 
-	var data []dto.Item
+	data := make([]dto.Item, 0, len(res.Rows))
 	for _, r := range res.Rows {
-		// skip installments in list unless explicitly requested? spec default excludes installments; handled by filter Type default all (includes). For simplicity keep all types.
-		data = append(data, dto.FromRecord(r))
+		item := dto.FromRecord(r)
+		if len(r.Installments) > 0 {
+			item.Installments = make([]dto.Item, 0, len(r.Installments))
+			for _, inst := range r.Installments {
+				item.Installments = append(item.Installments, dto.FromRecord(inst))
+			}
+		}
+		data = append(data, item)
 	}
 	totalPages := int(math.Ceil(float64(res.Total) / float64(q.Limit)))
 	if totalPages == 0 {

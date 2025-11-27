@@ -2,6 +2,7 @@ package repayment
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,7 +18,7 @@ import (
 
 type Command struct {
 	EmployeeID uuid.UUID `json:"employeeId"`
-	TxnDate    time.Time `json:"txnDate"`
+	TxnDateRaw string    `json:"txnDate"` // expect YYYY-MM-DD
 	Amount     float64   `json:"amount"`
 	Reason     *string   `json:"reason,omitempty"`
 	ActorID    uuid.UUID
@@ -42,12 +43,22 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if cmd.EmployeeID == uuid.Nil || cmd.TxnDate.IsZero() || cmd.Amount <= 0 {
-		return nil, errs.BadRequest("employeeId, txnDate, amount are required")
+	if cmd.EmployeeID == uuid.Nil {
+		return nil, errs.BadRequest("employeeId is required")
+	}
+	if strings.TrimSpace(cmd.TxnDateRaw) == "" {
+		return nil, errs.BadRequest("txnDate is required")
+	}
+	txnDate, err := time.Parse("2006-01-02", cmd.TxnDateRaw)
+	if err != nil {
+		return nil, errs.BadRequest("txnDate must be YYYY-MM-DD")
+	}
+	if cmd.Amount <= 0 {
+		return nil, errs.BadRequest("amount must be > 0")
 	}
 	rec := repository.Record{
 		EmployeeID: cmd.EmployeeID,
-		TxnDate:    cmd.TxnDate,
+		TxnDate:    txnDate,
 		Amount:     cmd.Amount,
 		Reason:     cmd.Reason,
 		TxnType:    "repayment",

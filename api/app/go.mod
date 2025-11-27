@@ -20,6 +20,8 @@ replace hrms/modules/user v0.0.0 => ../modules/user
 
 replace hrms/modules/bonus v0.0.0 => ../modules/bonus
 
+replace hrms/modules/debt v0.0.0 => ../modules/debt
+
 replace hrms/modules/payrollrun v0.0.0 => ../modules/payrollrun
 
 replace hrms/modules/masterdata v0.0.0 => ../modules/masterdata
@@ -33,6 +35,7 @@ require (
 	github.com/swaggo/swag/v2 v2.0.0-rc4
 	hrms/modules/auth v0.0.0
 	hrms/modules/bonus v0.0.0
+	hrms/modules/debt v0.0.0
 	hrms/modules/employee v0.0.0
 	hrms/modules/masterdata v0.0.0
 	hrms/modules/payoutpt v0.0.0

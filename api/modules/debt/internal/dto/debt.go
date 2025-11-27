@@ -19,6 +19,7 @@ type Item struct {
 	PayrollMonth *time.Time `json:"payrollMonthDate,omitempty"`
 	Status       string     `json:"status"`
 	ParentID     *uuid.UUID `json:"parentId,omitempty"`
+	EmployeeName string     `json:"employeeName,omitempty"`
 	CreatedAt    time.Time  `json:"createdAt"`
 	UpdatedAt    time.Time  `json:"updatedAt"`
 	Installments []Item     `json:"installments,omitempty"`
@@ -42,6 +43,7 @@ func FromRecord(r repository.Record) Item {
 		PayrollMonth: r.PayrollMonth,
 		Status:       r.Status,
 		ParentID:     r.ParentID,
+		EmployeeName: r.EmployeeName,
 		CreatedAt:    r.CreatedAt,
 		UpdatedAt:    r.UpdatedAt,
 	}

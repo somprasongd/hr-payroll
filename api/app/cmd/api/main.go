@@ -10,6 +10,7 @@ import (
 	"hrms/config"
 	"hrms/modules/auth"
 	"hrms/modules/bonus"
+	"hrms/modules/debt"
 	"hrms/modules/employee"
 	"hrms/modules/masterdata"
 	"hrms/modules/payoutpt"
@@ -72,6 +73,7 @@ func main() {
 		salaryadvance.NewModule(mCtx, tokenSvc),
 		salaryraise.NewModule(mCtx, tokenSvc),
 		bonus.NewModule(mCtx, tokenSvc),
+		debt.NewModule(mCtx, tokenSvc),
 		payoutpt.NewModule(mCtx, tokenSvc),
 		masterdata.NewModule(mCtx, tokenSvc),
 		payrollrun.NewModule(mCtx, tokenSvc),

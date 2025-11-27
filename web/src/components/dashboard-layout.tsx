@@ -75,6 +75,7 @@ function Sidebar({
     { id: 'salary-raise', icon: TrendingUp, label: tMenu('salaryRaise'), path: '/salary-raise' },
     { id: 'salary-advance', icon: DollarSign, label: tMenu('salaryAdvance'), path: '/salary-advance' },
     { id: 'bonus', icon: DollarSign, label: tMenu('bonus'), path: '/bonuses' },
+    { id: 'debt', icon: DollarSign, label: tMenu('debt'), path: '/debt' },
   ];
 
   return (
@@ -207,6 +208,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/admin/users')) return 'users';
     if (pathname.startsWith('/salary-raise')) return 'salary-raise';
     if (pathname.startsWith('/salary-advance')) return 'salary-advance';
+    if (pathname.startsWith('/bonuses')) return 'bonus';
+    if (pathname.startsWith('/debt')) return 'debt';
     return 'dashboard';
   };
 

@@ -215,6 +215,8 @@ RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   v_parent_status debt_status;
   changing_meaningful BOOLEAN := FALSE;
+  changing_other BOOLEAN := FALSE;
+  allow_status_promote BOOLEAN := FALSE;
 BEGIN
   -- ห้ามแก้/ลบ เมื่อเดิมเป็น approved
   IF OLD.status = 'approved' THEN
@@ -235,7 +237,7 @@ BEGIN
     END IF;
 
     -- ตรวจ "แก้ไขค่า" (ยอมให้เปลี่ยนแค่ updated_by; updated_at ถูกตั้งอัตโนมัติ)
-    changing_meaningful :=
+    changing_other :=
       (NEW.employee_id        IS DISTINCT FROM OLD.employee_id) OR
       (NEW.txn_date           IS DISTINCT FROM OLD.txn_date) OR
       (NEW.txn_type           IS DISTINCT FROM OLD.txn_type) OR
@@ -243,13 +245,25 @@ BEGIN
       (NEW.amount             IS DISTINCT FROM OLD.amount) OR
       (NEW.reason             IS DISTINCT FROM OLD.reason) OR
       (NEW.payroll_month_date IS DISTINCT FROM OLD.payroll_month_date) OR
-      (NEW.status             IS DISTINCT FROM OLD.status) OR
       (NEW.parent_id          IS DISTINCT FROM OLD.parent_id) OR
       (NEW.deleted_at         IS DISTINCT FROM OLD.deleted_at) OR
       (NEW.deleted_by         IS DISTINCT FROM OLD.deleted_by);
 
+    changing_meaningful :=
+      changing_other OR
+      (NEW.status             IS DISTINCT FROM OLD.status);
+
+    -- อนุญาตให้เปลี่ยนสถานะจาก pending -> approved แม้ parent จะไม่ pending แล้ว
+    allow_status_promote :=
+      (OLD.status = 'pending'
+        AND NEW.status = 'approved'
+        AND v_parent_status = 'approved'
+        AND NOT changing_other);
+
     IF changing_meaningful AND v_parent_status <> 'pending' THEN
-      RAISE EXCEPTION 'installment can be modified only when parent is pending (current: %)', v_parent_status;
+      IF NOT allow_status_promote THEN
+        RAISE EXCEPTION 'installment can be modified only when parent is pending (current: %)', v_parent_status;
+      END IF;
     END IF;
   END IF;
 
@@ -310,9 +324,16 @@ EXECUTE FUNCTION debt_txn_cascade_soft_delete_children();
 CREATE OR REPLACE FUNCTION public.sync_loan_balance_to_accumulation() RETURNS trigger AS $$
 DECLARE
   v_diff NUMERIC(14,2) := 0;
+  v_approved_now BOOLEAN := FALSE;
 BEGIN
-  -- ทำงานเฉพาะเมื่อสถานะเปลี่ยนเป็น 'approved' (คือมีผลจริงทางบัญชีแล้ว)
-  IF NEW.status = 'approved' AND (OLD.status IS DISTINCT FROM 'approved') THEN
+  -- ทำงานเฉพาะเมื่อสถานะเป็น 'approved' (ตอน INSERT) หรือเพิ่งเปลี่ยนเป็น 'approved' (ตอน UPDATE)
+  IF TG_OP = 'INSERT' THEN
+    v_approved_now := (NEW.status = 'approved');
+  ELSE
+    v_approved_now := (NEW.status = 'approved' AND (OLD.status IS DISTINCT FROM 'approved'));
+  END IF;
+
+  IF v_approved_now THEN
     
     -- กรณี: อนุมัติเงินกู้/ตั้งหนี้ (ยอดหนี้เพิ่ม +)
     IF NEW.txn_type IN ('loan', 'other') THEN
@@ -353,6 +374,6 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS tg_sync_loan_balance ON public.debt_txn;
 
 CREATE TRIGGER tg_sync_loan_balance
-AFTER UPDATE ON public.debt_txn
+AFTER INSERT OR UPDATE ON public.debt_txn
 FOR EACH ROW
 EXECUTE FUNCTION public.sync_loan_balance_to_accumulation();

@@ -29,8 +29,7 @@ export interface PayrollRunsQueryParams {
 
 export const payrollService = {
   async getPayrollRuns(params?: PayrollRunsQueryParams): Promise<PayrollRunsResponse> {
-    const response = await apiClient.get<PayrollRunsResponse>('/payroll-runs', { params });
-    return response.data;
+    return apiClient.get<PayrollRunsResponse>('/payroll-runs', { params });
   },
 
   async getPendingPayrollRun(): Promise<PayrollRun | null> {

@@ -6,6 +6,7 @@ import (
 	"hrms/modules/debt/internal/feature/delete"
 	"hrms/modules/debt/internal/feature/get"
 	"hrms/modules/debt/internal/feature/list"
+	"hrms/modules/debt/internal/feature/outstanding"
 	"hrms/modules/debt/internal/feature/repayment"
 	"hrms/modules/debt/internal/repository"
 	"hrms/shared/common/eventbus"
@@ -41,6 +42,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	mediator.Register[*approve.Command, *approve.Response](approve.NewHandler(m.repo, m.ctx.Transactor))
 	mediator.Register[*repayment.Command, *repayment.Response](repayment.NewHandler(m.repo, m.ctx.Transactor))
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo))
+	mediator.Register[*outstanding.Query, *outstanding.Response](outstanding.NewHandler(m.repo))
 	return nil
 }
 
@@ -52,6 +54,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	get.NewEndpoint(group)
 	repayment.NewEndpoint(group)
 	delete.NewEndpoint(group)
+	outstanding.NewEndpoint(group)
 
 	// admin only
 	admin := group.Group("", middleware.RequireRoles("admin"))

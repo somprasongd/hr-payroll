@@ -59,10 +59,10 @@ Content-Type: application/json
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `username` | ชื่อผู้ใช้งานสำหรับเข้าสู่ระบบ | String | **Yes** | `"admin"` |
-| `password` | รหัสผ่าน | String | **Yes** | `"SecretPassword123!"` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**     | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ------------------------------ | ----------------- | ------------ | ---------------------- |
+| `username`      | ชื่อผู้ใช้งานสำหรับเข้าสู่ระบบ | String            | **Yes**      | `"admin"`              |
+| `password`      | รหัสผ่าน                       | String            | **Yes**      | `"SecretPassword123!"` |
 
 **Success Response Example (200 OK):**
 
@@ -82,23 +82,23 @@ Content-Type: application/json
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `accessToken` | JWT Token สำหรับใช้เรียก API อื่นๆ | String | **Yes** | `"eyJhbGci..."` |
-| `refreshToken` | Token สำหรับขอ Access Token ใหม่ | String | **Yes** | `"d9b9d..."` |
-| `tokenType` | ประเภทของ Token (ปกติคือ Bearer) | String | **Yes** | `"Bearer"` |
-| `expiresIn` | อายุของ Access Token (วินาที) | Integer | **Yes** | `900` |
-| `user` | ข้อมูลย่อของผู้ใช้งาน | Object | **Yes** | `{...}` |
-| `user.id` | รหัสประจำตัวผู้ใช้งาน (UUIDv7) | UUID | **Yes** | `"019347e8-..."` |
-| `user.username` | ชื่อผู้ใช้งาน | String | **Yes** | `"admin"` |
-| `user.role` | สิทธิ์การใช้งาน (`admin`, `hr`) | Enum | **Yes** | `"admin"` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**         | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ---------------------------------- | ----------------- | ------------ | ---------------------- |
+| `accessToken`   | JWT Token สำหรับใช้เรียก API อื่นๆ | String            | **Yes**      | `"eyJhbGci..."`        |
+| `refreshToken`  | Token สำหรับขอ Access Token ใหม่   | String            | **Yes**      | `"d9b9d..."`           |
+| `tokenType`     | ประเภทของ Token (ปกติคือ Bearer)   | String            | **Yes**      | `"Bearer"`             |
+| `expiresIn`     | อายุของ Access Token (วินาที)      | Integer           | **Yes**      | `900`                  |
+| `user`          | ข้อมูลย่อของผู้ใช้งาน              | Object            | **Yes**      | `{...}`                |
+| `user.id`       | รหัสประจำตัวผู้ใช้งาน (UUIDv7)     | UUID              | **Yes**      | `"019347e8-..."`       |
+| `user.username` | ชื่อผู้ใช้งาน                      | String            | **Yes**      | `"admin"`              |
+| `user.role`     | สิทธิ์การใช้งาน (`admin`, `hr`)    | Enum              | **Yes**      | `"admin"`              |
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | ข้อมูลใน Request Body ไม่ครบถ้วน หรือ JSON ผิด format |
-| **401** | Unauthorized | Username หรือ Password ไม่ถูกต้อง (Invalid credentials) |
+| **HTTP Status** | **Title**    | **Description/Reason**                                  |
+| --------------- | ------------ | ------------------------------------------------------- |
+| **400**         | Bad Request  | ข้อมูลใน Request Body ไม่ครบถ้วน หรือ JSON ผิด format   |
+| **401**         | Unauthorized | Username หรือ Password ไม่ถูกต้อง (Invalid credentials) |
 
 ---
 
@@ -119,9 +119,9 @@ Content-Type: application/json
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `refreshToken` | Refresh Token ที่ได้รับจากการ Login ครั้งล่าสุด | String | **Yes** | `"d9b9d..."` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                      | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ----------------------------------------------- | ----------------- | ------------ | ---------------------- |
+| `refreshToken`  | Refresh Token ที่ได้รับจากการ Login ครั้งล่าสุด | String            | **Yes**      | `"d9b9d..."`           |
 
 **Success Response Example (200 OK):**
 
@@ -135,18 +135,18 @@ Content-Type: application/json
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `accessToken` | Access Token ชุดใหม่ | String | **Yes** | `"eyJhbGci..."` |
-| `refreshToken` | Refresh Token ชุดใหม่ (Rotation) | String | **Yes** | `"new_refresh..."` |
-| `expiresIn` | อายุของ Token (วินาที) | Integer | **Yes** | `900` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**       | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | -------------------------------- | ----------------- | ------------ | ---------------------- |
+| `accessToken`   | Access Token ชุดใหม่             | String            | **Yes**      | `"eyJhbGci..."`        |
+| `refreshToken`  | Refresh Token ชุดใหม่ (Rotation) | String            | **Yes**      | `"new_refresh..."`     |
+| `expiresIn`     | อายุของ Token (วินาที)           | Integer           | **Yes**      | `900`                  |
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | ไม่ได้ส่ง `refreshToken` มาใน Body |
-| **401** | Unauthorized | Token ไม่ถูกต้อง, หมดอายุ, หรือถูก Revoke ไปแล้ว |
+| **HTTP Status** | **Title**    | **Description/Reason**                           |
+| --------------- | ------------ | ------------------------------------------------ |
+| **400**         | Bad Request  | ไม่ได้ส่ง `refreshToken` มาใน Body               |
+| **401**         | Unauthorized | Token ไม่ถูกต้อง, หมดอายุ, หรือถูก Revoke ไปแล้ว |
 
 ---
 
@@ -167,9 +167,9 @@ Content-Type: application/json
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `refreshToken` | Token ที่ต้องการยกเลิก (Revoke) | String | **Yes** | `"d9b9d..."` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**      | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ------------------------------- | ----------------- | ------------ | ---------------------- |
+| `refreshToken`  | Token ที่ต้องการยกเลิก (Revoke) | String            | **Yes**      | `"d9b9d..."`           |
 
 **Success Response:**
 
@@ -178,10 +178,10 @@ Content-Type: application/json
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | ไม่ระบุ `refreshToken` |
-| **401** | Unauthorized | Access Token สำหรับเรียก API นี้ไม่ถูกต้อง |
+| **HTTP Status** | **Title**    | **Description/Reason**                     |
+| --------------- | ------------ | ------------------------------------------ |
+| **400**         | Bad Request  | ไม่ระบุ `refreshToken`                     |
+| **401**         | Unauthorized | Access Token สำหรับเรียก API นี้ไม่ถูกต้อง |
 
 ---
 
@@ -218,25 +218,25 @@ Content-Type: application/json
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `data` | Array ของข้อมูลผู้ใช้งาน | Array | **Yes** | `[...]` |
-| `data[].id` | รหัสผู้ใช้งาน (UUIDv7) | UUID | **Yes** | `"019347e8..."` |
-| `data[].username` | ชื่อผู้ใช้งาน | String | **Yes** | `"hr01"` |
-| `data[].role` | สิทธิ์ (`hr`, `admin`) | Enum | **Yes** | `"hr"` |
-| `data[].createdAt` | เวลาที่สร้างบัญชี (ISO 8601) | String | **Yes** | `"2025-11-20..."` |
-| `data[].lastLoginAt` | เวลาเข้าสู่ระบบล่าสุด (Null ถ้าไม่เคยเข้า) | String | No | `"2025-11-20..."` |
-| `meta` | ข้อมูลสำหรับการแบ่งหน้า (Pagination) | Object | **Yes** | `{...}` |
-| `meta.currentPage` | หน้าปัจจุบัน | Integer | **Yes** | `1` |
-| `meta.totalPages` | จำนวนหน้าทั้งหมด | Integer | **Yes** | `5` |
-| `meta.totalItems` | จำนวนรายการทั้งหมด | Integer | **Yes** | `100` |
+| **ชื่อ (Name)**      | **คำอธิบาย (Description)**                 | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| -------------------- | ------------------------------------------ | ----------------- | ------------ | ---------------------- |
+| `data`               | Array ของข้อมูลผู้ใช้งาน                   | Array             | **Yes**      | `[...]`                |
+| `data[].id`          | รหัสผู้ใช้งาน (UUIDv7)                     | UUID              | **Yes**      | `"019347e8..."`        |
+| `data[].username`    | ชื่อผู้ใช้งาน                              | String            | **Yes**      | `"hr01"`               |
+| `data[].role`        | สิทธิ์ (`hr`, `admin`)                     | Enum              | **Yes**      | `"hr"`                 |
+| `data[].createdAt`   | เวลาที่สร้างบัญชี (ISO 8601)               | String            | **Yes**      | `"2025-11-20..."`      |
+| `data[].lastLoginAt` | เวลาเข้าสู่ระบบล่าสุด (Null ถ้าไม่เคยเข้า) | String            | No           | `"2025-11-20..."`      |
+| `meta`               | ข้อมูลสำหรับการแบ่งหน้า (Pagination)       | Object            | **Yes**      | `{...}`                |
+| `meta.currentPage`   | หน้าปัจจุบัน                               | Integer           | **Yes**      | `1`                    |
+| `meta.totalPages`    | จำนวนหน้าทั้งหมด                           | Integer           | **Yes**      | `5`                    |
+| `meta.totalItems`    | จำนวนรายการทั้งหมด                         | Integer           | **Yes**      | `100`                  |
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **401** | Unauthorized | ไม่ได้แนบ Token หรือ Token หมดอายุ |
-| **403** | Forbidden | ผู้เรียกไม่ใช่ Role `admin` |
+| **HTTP Status** | **Title**    | **Description/Reason**             |
+| --------------- | ------------ | ---------------------------------- |
+| **401**         | Unauthorized | ไม่ได้แนบ Token หรือ Token หมดอายุ |
+| **403**         | Forbidden    | ผู้เรียกไม่ใช่ Role `admin`        |
 
 ---
 
@@ -259,11 +259,11 @@ Content-Type: application/json
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `username` | ชื่อผู้ใช้งาน (ต้องไม่ซ้ำ) | String | **Yes** | `"new_hr"` |
-| `password` | รหัสผ่านเริ่มต้น (ควรมีความยาวตาม Policy) | String | **Yes** | `"InitialPassword123"` |
-| `role` | สิทธิ์การใช้งาน (`hr`, `admin`) | Enum | **Yes** | `"hr"` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ----------------------------------------- | ----------------- | ------------ | ---------------------- |
+| `username`      | ชื่อผู้ใช้งาน (ต้องไม่ซ้ำ)                | String            | **Yes**      | `"new_hr"`             |
+| `password`      | รหัสผ่านเริ่มต้น (ควรมีความยาวตาม Policy) | String            | **Yes**      | `"InitialPassword123"` |
+| `role`          | สิทธิ์การใช้งาน (`hr`, `admin`)           | Enum              | **Yes**      | `"hr"`                 |
 
 **Success Response Example (201 Created):**
 
@@ -278,20 +278,20 @@ Content-Type: application/json
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `id` | รหัสผู้ใช้งานที่สร้างใหม่ (UUIDv7) | UUID | **Yes** | `"019347f1..."` |
-| `username` | ชื่อผู้ใช้งาน | String | **Yes** | `"new_hr"` |
-| `role` | สิทธิ์ที่กำหนดให้ | Enum | **Yes** | `"hr"` |
-| `createdAt` | เวลาที่สร้างสำเร็จ | String | **Yes** | `"2025-11-20..."` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**         | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ---------------------------------- | ----------------- | ------------ | ---------------------- |
+| `id`            | รหัสผู้ใช้งานที่สร้างใหม่ (UUIDv7) | UUID              | **Yes**      | `"019347f1..."`        |
+| `username`      | ชื่อผู้ใช้งาน                      | String            | **Yes**      | `"new_hr"`             |
+| `role`          | สิทธิ์ที่กำหนดให้                  | Enum              | **Yes**      | `"hr"`                 |
+| `createdAt`     | เวลาที่สร้างสำเร็จ                 | String            | **Yes**      | `"2025-11-20..."`      |
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | Password ไม่ผ่านเงื่อนไขความปลอดภัย หรือส่งข้อมูลไม่ครบ |
-| **403** | Forbidden | ผู้เรียกไม่ใช่ Role `admin` |
-| **409** | Conflict | `username` นี้มีอยู่ในระบบแล้ว |
+| **HTTP Status** | **Title**   | **Description/Reason**                                  |
+| --------------- | ----------- | ------------------------------------------------------- |
+| **400**         | Bad Request | Password ไม่ผ่านเงื่อนไขความปลอดภัย หรือส่งข้อมูลไม่ครบ |
+| **403**         | Forbidden   | ผู้เรียกไม่ใช่ Role `admin`                             |
+| **409**         | Conflict    | `username` นี้มีอยู่ในระบบแล้ว                          |
 
 ---
 
@@ -318,11 +318,11 @@ Content-Type: application/json
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | `id` ไม่ใช่รูปแบบ UUID ที่ถูกต้อง |
-| **403** | Forbidden | ผู้เรียกไม่ใช่ Role `admin` |
-| **404** | Not Found | ไม่พบข้อมูล User จาก ID ที่ระบุ |
+| **HTTP Status** | **Title**   | **Description/Reason**            |
+| --------------- | ----------- | --------------------------------- |
+| **400**         | Bad Request | `id` ไม่ใช่รูปแบบ UUID ที่ถูกต้อง |
+| **403**         | Forbidden   | ผู้เรียกไม่ใช่ Role `admin`       |
+| **404**         | Not Found   | ไม่พบข้อมูล User จาก ID ที่ระบุ   |
 
 ---
 
@@ -344,9 +344,9 @@ Content-Type: application/json
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `role` | สิทธิ์ใหม่ที่ต้องการตั้งค่า (`hr`, `admin`) | Enum | **Yes** | `"admin"` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                  | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ------------------------------------------- | ----------------- | ------------ | ---------------------- |
+| `role`          | สิทธิ์ใหม่ที่ต้องการตั้งค่า (`hr`, `admin`) | Enum              | **Yes**      | `"admin"`              |
 
 **Success Response Example (200 OK):**
 
@@ -354,10 +354,10 @@ Content-Type: application/json
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | ค่า `role` ไม่ถูกต้องตาม Enum |
-| **404** | Not Found | ไม่พบข้อมูล User |
+| **HTTP Status** | **Title**   | **Description/Reason**        |
+| --------------- | ----------- | ----------------------------- |
+| **400**         | Bad Request | ค่า `role` ไม่ถูกต้องตาม Enum |
+| **404**         | Not Found   | ไม่พบข้อมูล User              |
 
 ---
 
@@ -379,9 +379,9 @@ Admin ทำการตั้งรหัสผ่านใหม่ให้ U
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `newPassword` | รหัสผ่านใหม่ที่ Admin กำหนดให้ | String | **Yes** | `"NewStrong..."` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**     | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ------------------------------ | ----------------- | ------------ | ---------------------- |
+| `newPassword`   | รหัสผ่านใหม่ที่ Admin กำหนดให้ | String            | **Yes**      | `"NewStrong..."`       |
 
 **Success Response Example (200 OK):**
 
@@ -394,15 +394,15 @@ Admin ทำการตั้งรหัสผ่านใหม่ให้ U
 **Response Fields:**
 
 | **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `message` | ข้อความยืนยันผลการทำงาน | String | **Yes** | `"Password has..."` |
+| --------------- | -------------------------- | ----------------- | ------------ | ---------------------- |
+| `message`       | ข้อความยืนยันผลการทำงาน    | String            | **Yes**      | `"Password has..."`    |
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **404** | Not Found | ไม่พบข้อมูล User |
-| **422** | Unprocessable Entity | Password ใหม่ไม่ผ่านเงื่อนไขความปลอดภัย (Weak password) |
+| **HTTP Status** | **Title**            | **Description/Reason**                                  |
+| --------------- | -------------------- | ------------------------------------------------------- |
+| **404**         | Not Found            | ไม่พบข้อมูล User                                        |
+| **422**         | Unprocessable Entity | Password ใหม่ไม่ผ่านเงื่อนไขความปลอดภัย (Weak password) |
 
 ---
 
@@ -421,11 +421,11 @@ Admin ทำการตั้งรหัสผ่านใหม่ให้ U
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | `id` ไม่ใช่รูปแบบ UUID ที่ถูกต้อง |
-| **403** | Forbidden | ผู้เรียกไม่ใช่ Role `admin` |
-| **404** | Not Found | ไม่พบข้อมูล User (หรือ User ถูกลบไปแล้ว) |
+| **HTTP Status** | **Title**   | **Description/Reason**                   |
+| --------------- | ----------- | ---------------------------------------- |
+| **400**         | Bad Request | `id` ไม่ใช่รูปแบบ UUID ที่ถูกต้อง        |
+| **403**         | Forbidden   | ผู้เรียกไม่ใช่ Role `admin`              |
+| **404**         | Not Found   | ไม่พบข้อมูล User (หรือ User ถูกลบไปแล้ว) |
 
 ---
 
@@ -449,10 +449,10 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `currentPassword` | รหัสผ่านเดิม (เพื่อยืนยันตัวตน) | String | **Yes** | `"OldPassword123"` |
-| `newPassword` | รหัสผ่านใหม่ที่ต้องการตั้ง | String | **Yes** | `"NewSecure..."` |
+| **ชื่อ (Name)**   | **คำอธิบาย (Description)**      | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| ----------------- | ------------------------------- | ----------------- | ------------ | ---------------------- |
+| `currentPassword` | รหัสผ่านเดิม (เพื่อยืนยันตัวตน) | String            | **Yes**      | `"OldPassword123"`     |
+| `newPassword`     | รหัสผ่านใหม่ที่ต้องการตั้ง      | String            | **Yes**      | `"NewSecure..."`       |
 
 **Success Response Example (200 OK):**
 
@@ -466,10 +466,10 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | `currentPassword` ไม่ถูกต้อง |
-| **422** | Unprocessable Entity | `newPassword` เหมือนเดิม หรือไม่ปลอดภัยพอ |
+| **HTTP Status** | **Title**            | **Description/Reason**                    |
+| --------------- | -------------------- | ----------------------------------------- |
+| **400**         | Bad Request          | `currentPassword` ไม่ถูกต้อง              |
+| **422**         | Unprocessable Entity | `newPassword` เหมือนเดิม หรือไม่ปลอดภัยพอ |
 
 ---
 
@@ -493,19 +493,19 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `id` | รหัสประจำตัวผู้ใช้งาน (UUIDv7) | UUID | **Yes** | `"019347e8..."` |
-| `username` | ชื่อผู้ใช้งาน | String | **Yes** | `"myself"` |
-| `role` | สิทธิ์การใช้งาน | Enum | **Yes** | `"hr"` |
-| `lastLoginAt` | เวลาเข้าสู่ระบบล่าสุด | String | No | `"2025-11-20..."` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**     | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ------------------------------ | ----------------- | ------------ | ---------------------- |
+| `id`            | รหัสประจำตัวผู้ใช้งาน (UUIDv7) | UUID              | **Yes**      | `"019347e8..."`        |
+| `username`      | ชื่อผู้ใช้งาน                  | String            | **Yes**      | `"myself"`             |
+| `role`          | สิทธิ์การใช้งาน                | Enum              | **Yes**      | `"hr"`                 |
+| `lastLoginAt`   | เวลาเข้าสู่ระบบล่าสุด          | String            | No           | `"2025-11-20..."`      |
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **401** | Unauthorized | Token หมดอายุ หรือไม่ถูกต้อง |
-| **500** | Server Error | ไม่พบข้อมูล User ในฐานข้อมูล (กรณี Data Inconsistency) |
+| **HTTP Status** | **Title**    | **Description/Reason**                                 |
+| --------------- | ------------ | ------------------------------------------------------ |
+| **401**         | Unauthorized | Token หมดอายุ หรือไม่ถูกต้อง                           |
+| **500**         | Server Error | ไม่พบข้อมูล User ในฐานข้อมูล (กรณี Data Inconsistency) |
 
 ---
 
@@ -532,14 +532,14 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
       "startDate": "2026-01-01",
       "endDate": null,
       "status": "active",
-      "hourlyRate": 400.00,
-      "otHourlyRate": 600.00,
-      "attendanceBonusNoLate": 500.00,
-      "attendanceBonusNoLeave": 1000.00,
-      "housingAllowance": 1000.00,
-      "waterRatePerUnit": 10.00,
-      "electricityRatePerUnit": 7.00,
-      "internetFeeMonthly": 100.00,
+      "hourlyRate": 400.0,
+      "otHourlyRate": 600.0,
+      "attendanceBonusNoLate": 500.0,
+      "attendanceBonusNoLeave": 1000.0,
+      "housingAllowance": 1000.0,
+      "waterRatePerUnit": 10.0,
+      "electricityRatePerUnit": 7.0,
+      "internetFeeMonthly": 100.0,
       "socialSecurityRateEmployee": 0.05,
       "socialSecurityRateEmployer": 0.05,
       "note": "ปรับขึ้นค่าแรงและสวัสดิการประจำปี 2026",
@@ -552,14 +552,14 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
       "startDate": "2025-01-01",
       "endDate": "2026-01-01",
       "status": "retired",
-      "hourlyRate": 350.00,
-      "otHourlyRate": 525.00,
-      "attendanceBonusNoLate": 500.00,
-      "attendanceBonusNoLeave": 1000.00,
-      "housingAllowance": 1000.00,
-      "waterRatePerUnit": 8.00,
-      "electricityRatePerUnit": 6.00,
-      "internetFeeMonthly": 80.00,
+      "hourlyRate": 350.0,
+      "otHourlyRate": 525.0,
+      "attendanceBonusNoLate": 500.0,
+      "attendanceBonusNoLeave": 1000.0,
+      "housingAllowance": 1000.0,
+      "waterRatePerUnit": 8.0,
+      "electricityRatePerUnit": 6.0,
+      "internetFeeMonthly": 80.0,
       "socialSecurityRateEmployee": 0.05,
       "socialSecurityRateEmployer": 0.05,
       "note": "Initial Config",
@@ -577,26 +577,26 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 **Response Fields (Full):**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `data[].id` | รหัส Config (UUIDv7) | UUID | **Yes** | `"019347f5..."` |
-| `data[].versionNo` | เลขเวอร์ชัน (Running Number) | Integer | **Yes** | `2` |
-| `data[].startDate` | วันที่มีผลบังคับใช้ (จาก effective_daterange) | String (YYYY-MM-DD) | **Yes** | `"2026-01-01"` |
-| `data[].endDate` | วันที่สิ้นสุด (Null = infinity) | String (YYYY-MM-DD) | No | `null` |
-| `data[].status` | สถานะ (`active`, `retired`) | Enum | **Yes** | `"active"` |
-| `data[].hourlyRate` | ค่าแรงรายชั่วโมง (Part-time) | Number | **Yes** | `400.00` |
-| `data[].otHourlyRate` | ค่า OT ต่อชั่วโมง | Number | **Yes** | `600.00` |
-| `data[].attendanceBonusNoLate` | เบี้ยขยัน (ไม่สาย) | Number | **Yes** | `500.00` |
-| `data[].attendanceBonusNoLeave` | เบี้ยขยัน (ไม่ลา) | Number | **Yes** | `1000.00` |
-| `data[].housingAllowance` | ค่าเช่าบ้าน | Number | **Yes** | `1000.00` |
-| `data[].waterRatePerUnit` | ค่าน้ำ (บาท/หน่วย) | Number | **Yes** | `10.00` |
-| `data[].electricityRatePerUnit` | ค่าไฟ (บาท/หน่วย) | Number | **Yes** | `7.00` |
-| `data[].internetFeeMonthly` | ค่าอินเทอร์เน็ต (รายเดือน) | Number | **Yes** | `100.00` |
-| `data[].socialSecurityRateEmployee` | อัตราหักประกันสังคมลูกจ้าง (ทศนิยม) | Number | **Yes** | `0.05` |
-| `data[].socialSecurityRateEmployer` | อัตราสมทบประกันสังคมนายจ้าง (ทศนิยม) | Number | **Yes** | `0.05` |
-| `data[].note` | หมายเหตุ | String | No | `"..."` |
-| `data[].createdAt` | เวลาที่สร้าง | String | **Yes** | `"2025..."` |
-| `data[].updatedAt` | เวลาแก้ไขล่าสุด | String | **Yes** | `"2025..."` |
+| **ชื่อ (Name)**                     | **คำอธิบาย (Description)**                    | **ประเภท (Type)**   | **Required** | **ตัวอย่าง (Example)** |
+| ----------------------------------- | --------------------------------------------- | ------------------- | ------------ | ---------------------- |
+| `data[].id`                         | รหัส Config (UUIDv7)                          | UUID                | **Yes**      | `"019347f5..."`        |
+| `data[].versionNo`                  | เลขเวอร์ชัน (Running Number)                  | Integer             | **Yes**      | `2`                    |
+| `data[].startDate`                  | วันที่มีผลบังคับใช้ (จาก effective_daterange) | String (YYYY-MM-DD) | **Yes**      | `"2026-01-01"`         |
+| `data[].endDate`                    | วันที่สิ้นสุด (Null = infinity)               | String (YYYY-MM-DD) | No           | `null`                 |
+| `data[].status`                     | สถานะ (`active`, `retired`)                   | Enum                | **Yes**      | `"active"`             |
+| `data[].hourlyRate`                 | ค่าแรงรายชั่วโมง (Part-time)                  | Number              | **Yes**      | `400.00`               |
+| `data[].otHourlyRate`               | ค่า OT ต่อชั่วโมง                             | Number              | **Yes**      | `600.00`               |
+| `data[].attendanceBonusNoLate`      | เบี้ยขยัน (ไม่สาย)                            | Number              | **Yes**      | `500.00`               |
+| `data[].attendanceBonusNoLeave`     | เบี้ยขยัน (ไม่ลา)                             | Number              | **Yes**      | `1000.00`              |
+| `data[].housingAllowance`           | ค่าเช่าบ้าน                                   | Number              | **Yes**      | `1000.00`              |
+| `data[].waterRatePerUnit`           | ค่าน้ำ (บาท/หน่วย)                            | Number              | **Yes**      | `10.00`                |
+| `data[].electricityRatePerUnit`     | ค่าไฟ (บาท/หน่วย)                             | Number              | **Yes**      | `7.00`                 |
+| `data[].internetFeeMonthly`         | ค่าอินเทอร์เน็ต (รายเดือน)                    | Number              | **Yes**      | `100.00`               |
+| `data[].socialSecurityRateEmployee` | อัตราหักประกันสังคมลูกจ้าง (ทศนิยม)           | Number              | **Yes**      | `0.05`                 |
+| `data[].socialSecurityRateEmployer` | อัตราสมทบประกันสังคมนายจ้าง (ทศนิยม)          | Number              | **Yes**      | `0.05`                 |
+| `data[].note`                       | หมายเหตุ                                      | String              | No           | `"..."`                |
+| `data[].createdAt`                  | เวลาที่สร้าง                                  | String              | **Yes**      | `"2025..."`            |
+| `data[].updatedAt`                  | เวลาแก้ไขล่าสุด                               | String              | **Yes**      | `"2025..."`            |
 
 หมายเหตุ:
 
@@ -604,9 +604,9 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **403** | Forbidden | ผู้ใช้งานไม่ใช่ Role `admin` |
+| **HTTP Status** | **Title** | **Description/Reason**       |
+| --------------- | --------- | ---------------------------- |
+| **403**         | Forbidden | ผู้ใช้งานไม่ใช่ Role `admin` |
 
 ---
 
@@ -626,14 +626,14 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
   "versionNo": 2,
   "startDate": "2026-01-01",
   "status": "active",
-  "hourlyRate": 400.00,
-  "otHourlyRate": 600.00,
-  "attendanceBonusNoLate": 500.00,
-  "attendanceBonusNoLeave": 1000.00,
-  "housingAllowance": 1000.00,
-  "waterRatePerUnit": 10.00,
-  "electricityRatePerUnit": 6.00,
-  "internetFeeMonthly": 80.00,
+  "hourlyRate": 400.0,
+  "otHourlyRate": 600.0,
+  "attendanceBonusNoLate": 500.0,
+  "attendanceBonusNoLeave": 1000.0,
+  "housingAllowance": 1000.0,
+  "waterRatePerUnit": 10.0,
+  "electricityRatePerUnit": 6.0,
+  "internetFeeMonthly": 80.0,
   "socialSecurityRateEmployee": 0.05,
   "socialSecurityRateEmployer": 0.05,
   "note": "ปรับขึ้นค่าแรงประจำปี 2026"
@@ -642,9 +642,9 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **404** | Not Found | ไม่พบ Config สำหรับวันที่ระบุ |
+| **HTTP Status** | **Title** | **Description/Reason**        |
+| --------------- | --------- | ----------------------------- |
+| **404**         | Not Found | ไม่พบ Config สำหรับวันที่ระบุ |
 
 ---
 
@@ -662,22 +662,22 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 2. User แก้ไขค่าใน Form (เช่น แก้ตัวเลขที่ผิด หรือแก้ Note)
 3. กดบันทึก -> Frontend ส่งเป็น `POST` สร้างรายการใหม่
 4. **Database Trigger:** จะตรวจสอบวันที่ `startDate`
-    - ถ้าเป็นวันที่ในอนาคต: ข้อมูลเก่าจะถูกตัดจบเมื่อถึงวันนั้น
-    - ถ้าเป็นวันที่ *เดิม* (แก้ข้อมูลวันเดิม): ข้อมูลเก่าจะถูก Retire ทันที และข้อมูลใหม่จะขึ้นมาแทนที่ (เสมือนการแก้ไข แต่จริงๆ คือสร้างเวอร์ชันใหม่ทับ)
+   - ถ้าเป็นวันที่ในอนาคต: ข้อมูลเก่าจะถูกตัดจบเมื่อถึงวันนั้น
+   - ถ้าเป็นวันที่ _เดิม_ (แก้ข้อมูลวันเดิม): ข้อมูลเก่าจะถูก Retire ทันที และข้อมูลใหม่จะขึ้นมาแทนที่ (เสมือนการแก้ไข แต่จริงๆ คือสร้างเวอร์ชันใหม่ทับ)
 
 **Request Body Example:**
 
 ```json
 {
   "startDate": "2026-01-01",
-  "hourlyRate": 420.00,
-  "otHourlyRate": 630.00,
-  "attendanceBonusNoLate": 500.00,
-  "attendanceBonusNoLeave": 1000.00,
-  "housingAllowance": 1000.00,
-  "waterRatePerUnit": 10.00,
-  "electricityRatePerUnit": 7.00,
-  "internetFeeMonthly": 100.00,
+  "hourlyRate": 420.0,
+  "otHourlyRate": 630.0,
+  "attendanceBonusNoLate": 500.0,
+  "attendanceBonusNoLeave": 1000.0,
+  "housingAllowance": 1000.0,
+  "waterRatePerUnit": 10.0,
+  "electricityRatePerUnit": 7.0,
+  "internetFeeMonthly": 100.0,
   "socialSecurityRateEmployee": 0.05,
   "socialSecurityRateEmployer": 0.05,
   "note": "ปรับค่าไฟและเน็ตตามจริง"
@@ -686,20 +686,20 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `startDate` | วันที่เริ่มมีผลบังคับใช้ | String (YYYY-MM-DD) | **Yes** | `"2026-01-01"` |
-| `hourlyRate` | ค่าจ้างรายชั่วโมง (Part-time) | Number | **Yes** | `420.00` |
-| `otHourlyRate` | ค่าโอทีต่อชั่วโมง | Number | **Yes** | `630.00` |
-| `attendanceBonusNoLate` | เบี้ยขยัน (ไม่สาย) | Number | **Yes** | `500.00` |
-| `attendanceBonusNoLeave` | เบี้ยขยัน (ไม่ลา) | Number | **Yes** | `1000.00` |
-| `housingAllowance` | ค่าเช่าบ้าน | Number | **Yes** | `1000.00` |
-| `waterRatePerUnit` | ค่าน้ำ (บาท/หน่วย) | Number | **Yes** | `10.00` |
-| `electricityRatePerUnit` | ค่าไฟ (บาท/หน่วย) | Number | **Yes** | `7.00` |
-| `internetFeeMonthly` | ค่าเน็ต (รายเดือน) | Number | **Yes** | `100.00` |
-| `socialSecurityRateEmployee` | ประกันสังคมลูกจ้าง (0-1) | Number | **Yes** | `0.05` |
-| `socialSecurityRateEmployer` | ประกันสังคมนายจ้าง (0-1) | Number | **Yes** | `0.05` |
-| `note` | หมายเหตุการปรับปรุง | String | No | `"..."` |
+| **ชื่อ (Name)**              | **คำอธิบาย (Description)**    | **ประเภท (Type)**   | **Required** | **ตัวอย่าง (Example)** |
+| ---------------------------- | ----------------------------- | ------------------- | ------------ | ---------------------- |
+| `startDate`                  | วันที่เริ่มมีผลบังคับใช้      | String (YYYY-MM-DD) | **Yes**      | `"2026-01-01"`         |
+| `hourlyRate`                 | ค่าจ้างรายชั่วโมง (Part-time) | Number              | **Yes**      | `420.00`               |
+| `otHourlyRate`               | ค่าโอทีต่อชั่วโมง             | Number              | **Yes**      | `630.00`               |
+| `attendanceBonusNoLate`      | เบี้ยขยัน (ไม่สาย)            | Number              | **Yes**      | `500.00`               |
+| `attendanceBonusNoLeave`     | เบี้ยขยัน (ไม่ลา)             | Number              | **Yes**      | `1000.00`              |
+| `housingAllowance`           | ค่าเช่าบ้าน                   | Number              | **Yes**      | `1000.00`              |
+| `waterRatePerUnit`           | ค่าน้ำ (บาท/หน่วย)            | Number              | **Yes**      | `10.00`                |
+| `electricityRatePerUnit`     | ค่าไฟ (บาท/หน่วย)             | Number              | **Yes**      | `7.00`                 |
+| `internetFeeMonthly`         | ค่าเน็ต (รายเดือน)            | Number              | **Yes**      | `100.00`               |
+| `socialSecurityRateEmployee` | ประกันสังคมลูกจ้าง (0-1)      | Number              | **Yes**      | `0.05`                 |
+| `socialSecurityRateEmployer` | ประกันสังคมนายจ้าง (0-1)      | Number              | **Yes**      | `0.05`                 |
+| `note`                       | หมายเหตุการปรับปรุง           | String              | No           | `"..."`                |
 
 **Success Response Example (201 Created):**
 
@@ -715,18 +715,18 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --- | --- | --- | --- | --- |
-| `id` | รหัสรายการใหม่ | UUID | **Yes** | `"019348a1..."` |
-| `versionNo` | เลขเวอร์ชันที่รันต่อจากเดิม | Integer | **Yes** | `3` |
-| `status` | สถานะ (จะเป็น active เสมอ) | Enum | **Yes** | `"active"` |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**  | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | --------------------------- | ----------------- | ------------ | ---------------------- |
+| `id`            | รหัสรายการใหม่              | UUID              | **Yes**      | `"019348a1..."`        |
+| `versionNo`     | เลขเวอร์ชันที่รันต่อจากเดิม | Integer           | **Yes**      | `3`                    |
+| `status`        | สถานะ (จะเป็น active เสมอ)  | Enum              | **Yes**      | `"active"`             |
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description/Reason** |
-| --- | --- | --- |
-| **400** | Bad Request | วันที่ `startDate` ย้อนหลังเกินไป หรือข้อมูลตัวเลขไม่ถูกต้อง |
-| **409** | Conflict | มี Config Active ในช่วงเวลาเดียวกันอยู่แล้ว (Database Exclusion) |
+| **HTTP Status** | **Title**   | **Description/Reason**                                           |
+| --------------- | ----------- | ---------------------------------------------------------------- |
+| **400**         | Bad Request | วันที่ `startDate` ย้อนหลังเกินไป หรือข้อมูลตัวเลขไม่ถูกต้อง     |
+| **409**         | Conflict    | มี Config Active ในช่วงเวลาเดียวกันอยู่แล้ว (Database Exclusion) |
 
 ---
 
@@ -749,7 +749,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   - `page`: (int) หน้าที่ต้องการ (default: 1)
   - `limit`: (int) จำนวนต่อหน้า (default: 20, max: 1000)
   - `search`: (string) ค้นหาจาก ชื่อ, นามสกุล, รหัสพนักงาน
-  - `status`: (string) `active` (ทำงานอยู่), `terminated` (ออกแล้ว), `all` (ทั้งหมด) - *Default: active*
+  - `status`: (string) `active` (ทำงานอยู่), `terminated` (ออกแล้ว), `all` (ทั้งหมด) - _Default: active_
   - `employeeTypeId`: (UUID) รหัสประเภทพนักงาน (เช่น ประจำ/พาร์ทไทม์) ถ้าส่งมาจะกรองให้เฉพาะประเภทนั้น
 
 **Success Response Example (200 OK):**
@@ -800,13 +800,13 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "phone": "0812345678",
   "email": "somchai@example.com",
   "employeeTypeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
-  "basePayAmount": 30500.00,
+  "basePayAmount": 30500.0,
   "employmentStartDate": "2024-06-01",
   "employmentEndDate": null,
   "bankName": "KBank",
   "bankAccountNo": "123-4-56789-0",
   "ssoContribute": true,
-  "ssoDeclaredWage": 15000.00,
+  "ssoDeclaredWage": 15000.0,
   "providentFundContribute": true,
   "providentFundRateEmployee": 0.03,
   "providentFundRateEmployer": 0.03,
@@ -823,36 +823,36 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Response Body Fields Description**
 
-| **ชื่อฟิลด์ (Field Name)** | **ประเภท (Type)** | **ตัวอย่าง (Example)** | **คำอธิบาย (Description)** |
-| --- | --- | --- | --- |
-| `id` | UUID | `"019aa095-..."` | รหัสอ้างอิงพนักงาน (Primary Key แบบ UUIDv7) |
-| `employeeNumber` | String | `"EMP-001"` | รหัสพนักงาน (ที่ HR กำหนด) |
-| `titleId` | UUID | `"019aa..."` | รหัสคำนำหน้าชื่อ (FK เชื่อมตาราง `person_title`) |
-| `firstName` | String | `"สมชาย"` | ชื่อจริง (ภาษาไทย/อังกฤษ ตามที่เก็บ) |
-| `lastName` | String | `"ศรีสุข"` | นามสกุล |
-| `idDocumentTypeId` | UUID | `"019aa..."` | รหัสประเภทบัตรยืนยันตัวตน (FK เชื่อม `id_document_type`) |
-| `idDocumentNumber` | String | `"1103701234567"` | เลขที่บัตรประชาชน หรือเลขที่พาสปอร์ต |
-| `phone` | String | `"0812345678"` | เบอร์โทรศัพท์ติดต่อ (อาจเป็น null) |
-| `email` | String | `"somchai@example.com"` | อีเมล (อาจเป็น null) |
-| `employeeTypeId` | UUID | `"019aa..."` | รหัสประเภทพนักงาน (FK เชื่อม `employee_type` เช่น ประจำ/พาร์ทไทม์) |
-| `basePayAmount` | Number | `30500.00` | ฐานเงินเดือน (พนักงานประจำ) หรือค่าแรงต่อชั่วโมง (พาร์ทไทม์) |
-| `employmentStartDate` | String (Date) | `"2024-06-01"` | วันที่เริ่มงาน (Format: YYYY-MM-DD) |
-| `employmentEndDate` | String (Date) | `null` | วันที่สิ้นสุดงาน/ลาออก (เป็น `null` ถ้ายังทำงานอยู่) |
-| `bankName` | String | `"KBank"` | ชื่อธนาคารเจ้าของบัญชี (อาจเป็น null) |
-| `bankAccountNo` | String | `"123-4-56789-0"` | เลขที่บัญชีธนาคาร (อาจเป็น null) |
-| `ssoContribute` | Boolean | `true` | สถานะการหักเงินสมทบประกันสังคม (`true` = หัก) |
-| `ssoDeclaredWage` | Number | `15000.00` | ฐานเงินเดือนสำหรับคำนวณประกันสังคม (สูงสุด 15,000) |
-| `providentFundContribute` | Boolean | `true` | สถานะการหักกองทุนสำรองเลี้ยงชีพ (PVD) |
-| `providentFundRateEmployee` | Number | `0.03` | อัตราสะสมส่วนของลูกจ้าง (ทศนิยม: 0.03 = 3%) |
-| `providentFundRateEmployer` | Number | `0.03` | อัตราสมทบส่วนของนายจ้าง (ทศนิยม: 0.03 = 3%) |
-| `withholdTax` | Boolean | `true` | สถานะการหักภาษี ณ ที่จ่าย (`true` = คำนวณภาษี) |
-| `allowHousing` | Boolean | `true` | สิทธิ์ได้รับค่าเช่าบ้าน |
-| `allowWater` | Boolean | `false` | สิทธิ์ได้รับค่าน้ำ |
-| `allowElectric` | Boolean | `false` | สิทธิ์ได้รับค่าไฟ |
-| `allowInternet` | Boolean | `true` | สิทธิ์ได้รับค่าอินเทอร์เน็ต |
-| `allowDoctorFee` | Boolean | `true` | สิทธิ์ได้รับค่าเวร/ค่าใบประกอบวิชาชีพ (มาจาก `allow_df` ใน DB) |
-| `createdAt` | String (ISO) | `"2025-11-20T..."` | วันเวลาที่สร้างข้อมูล |
-| `updatedAt` | String (ISO) | `"2025-11-21T..."` | วันเวลาที่แก้ไขข้อมูลล่าสุด |
+| **ชื่อฟิลด์ (Field Name)**  | **ประเภท (Type)** | **ตัวอย่าง (Example)**  | **คำอธิบาย (Description)**                                         |
+| --------------------------- | ----------------- | ----------------------- | ------------------------------------------------------------------ |
+| `id`                        | UUID              | `"019aa095-..."`        | รหัสอ้างอิงพนักงาน (Primary Key แบบ UUIDv7)                        |
+| `employeeNumber`            | String            | `"EMP-001"`             | รหัสพนักงาน (ที่ HR กำหนด)                                         |
+| `titleId`                   | UUID              | `"019aa..."`            | รหัสคำนำหน้าชื่อ (FK เชื่อมตาราง `person_title`)                   |
+| `firstName`                 | String            | `"สมชาย"`               | ชื่อจริง (ภาษาไทย/อังกฤษ ตามที่เก็บ)                               |
+| `lastName`                  | String            | `"ศรีสุข"`              | นามสกุล                                                            |
+| `idDocumentTypeId`          | UUID              | `"019aa..."`            | รหัสประเภทบัตรยืนยันตัวตน (FK เชื่อม `id_document_type`)           |
+| `idDocumentNumber`          | String            | `"1103701234567"`       | เลขที่บัตรประชาชน หรือเลขที่พาสปอร์ต                               |
+| `phone`                     | String            | `"0812345678"`          | เบอร์โทรศัพท์ติดต่อ (อาจเป็น null)                                 |
+| `email`                     | String            | `"somchai@example.com"` | อีเมล (อาจเป็น null)                                               |
+| `employeeTypeId`            | UUID              | `"019aa..."`            | รหัสประเภทพนักงาน (FK เชื่อม `employee_type` เช่น ประจำ/พาร์ทไทม์) |
+| `basePayAmount`             | Number            | `30500.00`              | ฐานเงินเดือน (พนักงานประจำ) หรือค่าแรงต่อชั่วโมง (พาร์ทไทม์)       |
+| `employmentStartDate`       | String (Date)     | `"2024-06-01"`          | วันที่เริ่มงาน (Format: YYYY-MM-DD)                                |
+| `employmentEndDate`         | String (Date)     | `null`                  | วันที่สิ้นสุดงาน/ลาออก (เป็น `null` ถ้ายังทำงานอยู่)               |
+| `bankName`                  | String            | `"KBank"`               | ชื่อธนาคารเจ้าของบัญชี (อาจเป็น null)                              |
+| `bankAccountNo`             | String            | `"123-4-56789-0"`       | เลขที่บัญชีธนาคาร (อาจเป็น null)                                   |
+| `ssoContribute`             | Boolean           | `true`                  | สถานะการหักเงินสมทบประกันสังคม (`true` = หัก)                      |
+| `ssoDeclaredWage`           | Number            | `15000.00`              | ฐานเงินเดือนสำหรับคำนวณประกันสังคม (สูงสุด 15,000)                 |
+| `providentFundContribute`   | Boolean           | `true`                  | สถานะการหักกองทุนสำรองเลี้ยงชีพ (PVD)                              |
+| `providentFundRateEmployee` | Number            | `0.03`                  | อัตราสะสมส่วนของลูกจ้าง (ทศนิยม: 0.03 = 3%)                        |
+| `providentFundRateEmployer` | Number            | `0.03`                  | อัตราสมทบส่วนของนายจ้าง (ทศนิยม: 0.03 = 3%)                        |
+| `withholdTax`               | Boolean           | `true`                  | สถานะการหักภาษี ณ ที่จ่าย (`true` = คำนวณภาษี)                     |
+| `allowHousing`              | Boolean           | `true`                  | สิทธิ์ได้รับค่าเช่าบ้าน                                            |
+| `allowWater`                | Boolean           | `false`                 | สิทธิ์ได้รับค่าน้ำ                                                 |
+| `allowElectric`             | Boolean           | `false`                 | สิทธิ์ได้รับค่าไฟ                                                  |
+| `allowInternet`             | Boolean           | `true`                  | สิทธิ์ได้รับค่าอินเทอร์เน็ต                                        |
+| `allowDoctorFee`            | Boolean           | `true`                  | สิทธิ์ได้รับค่าเวร/ค่าใบประกอบวิชาชีพ (มาจาก `allow_df` ใน DB)     |
+| `createdAt`                 | String (ISO)      | `"2025-11-20T..."`      | วันเวลาที่สร้างข้อมูล                                              |
+| `updatedAt`                 | String (ISO)      | `"2025-11-21T..."`      | วันเวลาที่แก้ไขข้อมูลล่าสุด                                        |
 
 **หมายเหตุสำหรับ Developer:**
 
@@ -862,9 +862,9 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **404** | Not Found | ไม่พบข้อมูลพนักงาน |
+| **HTTP Status** | **Title** | **Description**    |
+| --------------- | --------- | ------------------ |
+| **404**         | Not Found | ไม่พบข้อมูลพนักงาน |
 
 ---
 
@@ -888,12 +888,12 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "phone": "0899998888",
   "email": "wichai@email.com",
   "employeeTypeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
-  "basePayAmount": 25000.00,
+  "basePayAmount": 25000.0,
   "employmentStartDate": "2025-12-01",
   "bankName": "SCB",
   "bankAccountNo": "987-6-54321-0",
   "ssoContribute": true,
-  "ssoDeclaredWage": 15000.00,
+  "ssoDeclaredWage": 15000.0,
   "providentFundContribute": false,
   "withholdTax": true,
   "allowHousing": false,
@@ -903,25 +903,25 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Request Fields (Validation):**
 
-| **ชื่อ (Name)** | **คำอธิบาย** | **ประเภท** | **Required** | **Constraint / Note** |
-| --- | --- | --- | --- | --- |
-| `employeeNumber` | รหัสพนักงาน | String | **Yes** | ห้ามซ้ำ (Unique) |
-| `titleId` | ID คำนำหน้า | UUID | **Yes** | ต้องมีอยู่ในระบบ |
-| `firstName` | ชื่อจริง | String | **Yes** |  |
-| `lastName` | นามสกุล | String | **Yes** |  |
-| `idDocumentTypeId` | ID ประเภทบัตร | UUID | **Yes** |  |
-| `idDocumentNumber` | เลขที่บัตร | String | **Yes** |  |
-| `employeeTypeId` | ID ประเภทพนักงาน | UUID | **Yes** |  |
-| `basePayAmount` | เงินเดือน/ค่าแรง | Number | **Yes** | ต้อง > 0 |
-| `employmentStartDate` | วันเริ่มงาน | Date | **Yes** | YYYY-MM-DD |
-| `bankName` | ชื่อธนาคาร | String | No | ต้องมาคู่กับ AccountNo |
-| `bankAccountNo` | เลขบัญชี | String | No | ต้องมาคู่กับ BankName |
-| `ssoContribute` | ส่งประกันสังคม | Boolean | **Yes** | Default: false |
-| `ssoDeclaredWage` | ฐานเงินเดือน SSO | Number | Cond | ต้องใส่ถ้า Contribute=true |
-| `providentFundContribute` | ส่งกองทุนฯ (PVD) | Boolean | **Yes** | Default: false |
-| `providentFundRateEmployee` | % สะสมลูกจ้าง | Number | Cond | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true) |
-| `providentFundRateEmployer` | % สมทบนายจ้าง | Number | Cond | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true) |
-| `allowDoctorFee` | ค่าเวร/แพทย์ | Boolean | **Yes** | (`allow_df` ใน DB) |
+| **ชื่อ (Name)**             | **คำอธิบาย**     | **ประเภท** | **Required** | **Constraint / Note**             |
+| --------------------------- | ---------------- | ---------- | ------------ | --------------------------------- |
+| `employeeNumber`            | รหัสพนักงาน      | String     | **Yes**      | ห้ามซ้ำ (Unique)                  |
+| `titleId`                   | ID คำนำหน้า      | UUID       | **Yes**      | ต้องมีอยู่ในระบบ                  |
+| `firstName`                 | ชื่อจริง         | String     | **Yes**      |                                   |
+| `lastName`                  | นามสกุล          | String     | **Yes**      |                                   |
+| `idDocumentTypeId`          | ID ประเภทบัตร    | UUID       | **Yes**      |                                   |
+| `idDocumentNumber`          | เลขที่บัตร       | String     | **Yes**      |                                   |
+| `employeeTypeId`            | ID ประเภทพนักงาน | UUID       | **Yes**      |                                   |
+| `basePayAmount`             | เงินเดือน/ค่าแรง | Number     | **Yes**      | ต้อง > 0                          |
+| `employmentStartDate`       | วันเริ่มงาน      | Date       | **Yes**      | YYYY-MM-DD                        |
+| `bankName`                  | ชื่อธนาคาร       | String     | No           | ต้องมาคู่กับ AccountNo            |
+| `bankAccountNo`             | เลขบัญชี         | String     | No           | ต้องมาคู่กับ BankName             |
+| `ssoContribute`             | ส่งประกันสังคม   | Boolean    | **Yes**      | Default: false                    |
+| `ssoDeclaredWage`           | ฐานเงินเดือน SSO | Number     | Cond         | ต้องใส่ถ้า Contribute=true        |
+| `providentFundContribute`   | ส่งกองทุนฯ (PVD) | Boolean    | **Yes**      | Default: false                    |
+| `providentFundRateEmployee` | % สะสมลูกจ้าง    | Number     | Cond         | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true) |
+| `providentFundRateEmployer` | % สมทบนายจ้าง    | Number     | Cond         | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true) |
+| `allowDoctorFee`            | ค่าเวร/แพทย์     | Boolean    | **Yes**      | (`allow_df` ใน DB)                |
 
 **Success Response (201 Created):**
 
@@ -935,10 +935,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | ข้อมูลไม่ครบ, ขัดแย้งกัน (เช่น เปิด SSO แต่ไม่ใส่ยอด) |
-| **409** | Conflict | รหัสพนักงานซ้ำ |
+| **HTTP Status** | **Title**   | **Description**                                       |
+| --------------- | ----------- | ----------------------------------------------------- |
+| **400**         | Bad Request | ข้อมูลไม่ครบ, ขัดแย้งกัน (เช่น เปิด SSO แต่ไม่ใส่ยอด) |
+| **409**         | Conflict    | รหัสพนักงานซ้ำ                                        |
 
 ---
 
@@ -954,7 +954,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 ```json
 {
-  "basePayAmount": 28000.00,
+  "basePayAmount": 28000.0,
   "allowDoctorFee": true,
   "providentFundContribute": true,
   "providentFundRateEmployee": 0.05,
@@ -976,13 +976,13 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "phone": "0812345678",
   "email": "somchai@example.com",
   "employeeTypeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
-  "basePayAmount": 28000.00,  // <--- ค่าที่ถูกแก้
+  "basePayAmount": 28000.0, // <--- ค่าที่ถูกแก้
   "employmentStartDate": "2024-06-01",
   "employmentEndDate": null,
   "bankName": "KBank",
   "bankAccountNo": "123-4-56789-0",
   "ssoContribute": true,
-  "ssoDeclaredWage": 15000.00, // <--- อาจถูกคำนวณใหม่โดย Trigger
+  "ssoDeclaredWage": 15000.0, // <--- อาจถูกคำนวณใหม่โดย Trigger
   "providentFundContribute": true,
   "providentFundRateEmployee": 0.05,
   "providentFundRateEmployer": 0.05,
@@ -999,10 +999,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | ข้อมูลไม่ถูกต้อง (เช่น วันลาออก < วันเริ่มงาน) |
-| **404** | Not Found | ไม่พบพนักงาน |
+| **HTTP Status** | **Title**   | **Description**                                |
+| --------------- | ----------- | ---------------------------------------------- |
+| **400**         | Bad Request | ข้อมูลไม่ถูกต้อง (เช่น วันลาออก < วันเริ่มงาน) |
+| **404**         | Not Found   | ไม่พบพนักงาน                                   |
 
 ---
 
@@ -1020,10 +1020,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **403** | Forbidden | ผู้ใช้งานเป็น HR (ไม่มีสิทธิ์ลบ) |
-| **404** | Not Found | ไม่พบพนักงาน |
+| **HTTP Status** | **Title** | **Description**                  |
+| --------------- | --------- | -------------------------------- |
+| **403**         | Forbidden | ผู้ใช้งานเป็น HR (ไม่มีสิทธิ์ลบ) |
+| **404**         | Not Found | ไม่พบพนักงาน                     |
 
 ---
 
@@ -1053,9 +1053,9 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "employeeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
   "year": 2025,
   "totals": {
-    "sso": 4500.00,
-    "tax": 2500.00,
-    "providentFund": 150000.00
+    "sso": 4500.0,
+    "tax": 2500.0,
+    "providentFund": 150000.0
   },
   "updatedAt": "2025-11-21T10:30:00Z"
 }
@@ -1063,21 +1063,21 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท** | **ตัวอย่าง** |
-| --- | --- | --- | --- |
-| `employeeId` | รหัสพนักงาน | UUID | `"019aa..."` |
-| `year` | ปีของข้อมูลที่เรียกดู | Integer | `2025` |
-| `totals` | วัตถุเก็บยอดรวม | Object | `{...}` |
-| `totals.sso` | ยอดประกันสังคมสะสม **รายปี** | Number | `4500.00` |
-| `totals.tax` | ยอดภาษีหัก ณ ที่จ่ายสะสม **รายปี** | Number | `2500.00` |
-| `totals.providentFund` | ยอดกองทุนสำรองเลี้ยงชีพสะสม **ทั้งหมด (Lifetime)** | Number | `150000.00` |
-| `updatedAt` | เวลาที่มีการแก้ไขยอดล่าสุด | String | `"2025..."` |
+| **ชื่อ (Name)**        | **คำอธิบาย (Description)**                         | **ประเภท** | **ตัวอย่าง** |
+| ---------------------- | -------------------------------------------------- | ---------- | ------------ |
+| `employeeId`           | รหัสพนักงาน                                        | UUID       | `"019aa..."` |
+| `year`                 | ปีของข้อมูลที่เรียกดู                              | Integer    | `2025`       |
+| `totals`               | วัตถุเก็บยอดรวม                                    | Object     | `{...}`      |
+| `totals.sso`           | ยอดประกันสังคมสะสม **รายปี**                       | Number     | `4500.00`    |
+| `totals.tax`           | ยอดภาษีหัก ณ ที่จ่ายสะสม **รายปี**                 | Number     | `2500.00`    |
+| `totals.providentFund` | ยอดกองทุนสำรองเลี้ยงชีพสะสม **ทั้งหมด (Lifetime)** | Number     | `150000.00`  |
+| `updatedAt`            | เวลาที่มีการแก้ไขยอดล่าสุด                         | String     | `"2025..."`  |
 
 **Error Responses:**
 
 | **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **404** | Not Found | ไม่พบพนักงาน |
+| --------------- | --------- | --------------- |
+| **404**         | Not Found | ไม่พบพนักงาน    |
 
 ---
 
@@ -1094,7 +1094,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 ```json
 {
   "type": "sso",
-  "amount": 5400.00,
+  "amount": 5400.0,
   "year": 2025,
   "note": "ยอดยกมาจากระบบเก่า (Jan-Jun)"
 }
@@ -1102,12 +1102,12 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย** | **ประเภท** | **Required** | **Constraint** |
-| --- | --- | --- | --- | --- |
-| `type` | ประเภทเงินสะสม | Enum | **Yes** | `sso`, `tax`, `pf` |
-| `amount` | ยอดเงินสะสมรวมใหม่ (Net Total) | Number | **Yes** | >= 0 |
-| `year` | ปีปฏิทิน | Integer | Cond | จำเป็นสำหรับ `sso`, `tax` (ห้ามใส่สำหรับ `pf`) |
-| `note` | บันทึกช่วยจำ | String | No |  |
+| **ชื่อ (Name)** | **คำอธิบาย**                   | **ประเภท** | **Required** | **Constraint**                                 |
+| --------------- | ------------------------------ | ---------- | ------------ | ---------------------------------------------- |
+| `type`          | ประเภทเงินสะสม                 | Enum       | **Yes**      | `sso`, `tax`, `pf`                             |
+| `amount`        | ยอดเงินสะสมรวมใหม่ (Net Total) | Number     | **Yes**      | >= 0                                           |
+| `year`          | ปีปฏิทิน                       | Integer    | Cond         | จำเป็นสำหรับ `sso`, `tax` (ห้ามใส่สำหรับ `pf`) |
+| `note`          | บันทึกช่วยจำ                   | String     | No           |                                                |
 
 **Success Response Example (200 OK):**
 
@@ -1117,18 +1117,18 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "employeeId": "019aa095-...",
   "type": "sso",
   "year": 2025,
-  "amount": 5400.00,
+  "amount": 5400.0,
   "message": "Accumulation updated successfully."
 }
 ```
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | `amount` ติดลบ หรือใส่ `year` ผิดเงื่อนไข |
-| **403** | Forbidden | ผู้ใช้งานเป็น HR (ไม่มีสิทธิ์แก้ไข) |
-| **404** | Not Found | ไม่พบพนักงาน |
+| **HTTP Status** | **Title**   | **Description**                           |
+| --------------- | ----------- | ----------------------------------------- |
+| **400**         | Bad Request | `amount` ติดลบ หรือใส่ `year` ผิดเงื่อนไข |
+| **403**         | Forbidden   | ผู้ใช้งานเป็น HR (ไม่มีสิทธิ์แก้ไข)       |
+| **404**         | Not Found   | ไม่พบพนักงาน                              |
 
 ---
 
@@ -1149,11 +1149,11 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | ไม่ระบุ `type` |
-| **403** | Forbidden | ผู้ใช้งานเป็น HR (ไม่มีสิทธิ์ลบ) |
-| **404** | Not Found | ไม่พบรายการที่ต้องการลบ |
+| **HTTP Status** | **Title**   | **Description**                  |
+| --------------- | ----------- | -------------------------------- |
+| **400**         | Bad Request | ไม่ระบุ `type`                   |
+| **403**         | Forbidden   | ผู้ใช้งานเป็น HR (ไม่มีสิทธิ์ลบ) |
+| **404**         | Not Found   | ไม่พบรายการที่ต้องการลบ          |
 
 ---
 
@@ -1212,7 +1212,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "employeeName": "สมชาย ศรีสุข",
   "workDate": "2025-11-20",
   "entryType": "late",
-  "quantity": 15.00,
+  "quantity": 15.0,
   "status": "pending",
   "createdAt": "2025-11-20T08:30:00Z",
   "updatedAt": "2025-11-20T08:30:00Z"
@@ -1221,15 +1221,15 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย** | **ประเภท** | **ตัวอย่าง** |
-| --- | --- | --- | --- |
-| `id` | รหัสรายการ | UUID | `"019aa..."` |
-| `employeeId` | รหัสพนักงาน | UUID | `"019aa..."` |
-| `employeeName` | ชื่อ-สกุล (Join มาเพื่อแสดงผล) | String | `"สมชาย..."` |
-| `workDate` | วันที่เกิดรายการ | Date | `"2025-11-20"` |
-| `entryType` | ประเภท (`late`, `ot`, `leave_...`) | Enum | `"late"` |
-| `quantity` | จำนวน (นาที/ชั่วโมง/วัน) | Number | `15.00` |
-| `status` | สถานะ (`pending`, `approved`) | Enum | `"pending"` |
+| **ชื่อ (Name)** | **คำอธิบาย**                       | **ประเภท** | **ตัวอย่าง**   |
+| --------------- | ---------------------------------- | ---------- | -------------- |
+| `id`            | รหัสรายการ                         | UUID       | `"019aa..."`   |
+| `employeeId`    | รหัสพนักงาน                        | UUID       | `"019aa..."`   |
+| `employeeName`  | ชื่อ-สกุล (Join มาเพื่อแสดงผล)     | String     | `"สมชาย..."`   |
+| `workDate`      | วันที่เกิดรายการ                   | Date       | `"2025-11-20"` |
+| `entryType`     | ประเภท (`late`, `ot`, `leave_...`) | Enum       | `"late"`       |
+| `quantity`      | จำนวน (นาที/ชั่วโมง/วัน)           | Number     | `15.00`        |
+| `status`        | สถานะ (`pending`, `approved`)      | Enum       | `"pending"`    |
 
 **Error Responses:**
 
@@ -1318,7 +1318,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
       "morningOut": "12:00:00",
       "eveningIn": "13:00:00",
       "eveningOut": "17:00:00",
-      "totalHours": 8.00, // คำนวณจาก DB
+      "totalHours": 8.0, // คำนวณจาก DB
       "status": "pending"
     }
   ]
@@ -1348,7 +1348,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "eveningOut": "17:00:00",
   "eveningMinutes": 240,
   "totalMinutes": 480,
-  "totalHours": 8.00,
+  "totalHours": 8.0,
   "status": "pending",
   "createdAt": "2025-11-20T17:05:00Z",
   "updatedAt": "2025-11-20T17:05:00Z"
@@ -1357,16 +1357,16 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย** | **ประเภท** | **ตัวอย่าง** |
-| --- | --- | --- | --- |
-| `id` | รหัสรายการ | UUID | `"019bb..."` |
-| `workDate` | วันที่ทำงาน | Date | `"2025-11-20"` |
-| `morningIn` | เวลาเข้าช่วงเช้า | Time | `"08:00:00"` |
-| `morningOut` | เวลาออกช่วงเช้า | Time | `"12:00:00"` |
-| `eveningIn` | เวลาเข้าช่วงบ่าย | Time | `"13:00:00"` |
-| `eveningOut` | เวลาออกช่วงบ่าย | Time | `"17:00:00"` |
-| `totalHours` | ชั่วโมงทำงานรวม (คำนวณจาก DB) | Number | `8.00` |
-| `status` | สถานะ (`pending`, `approved`, `to_pay`, `paid`) | Enum | `"pending"` |
+| **ชื่อ (Name)** | **คำอธิบาย**                                    | **ประเภท** | **ตัวอย่าง**   |
+| --------------- | ----------------------------------------------- | ---------- | -------------- |
+| `id`            | รหัสรายการ                                      | UUID       | `"019bb..."`   |
+| `workDate`      | วันที่ทำงาน                                     | Date       | `"2025-11-20"` |
+| `morningIn`     | เวลาเข้าช่วงเช้า                                | Time       | `"08:00:00"`   |
+| `morningOut`    | เวลาออกช่วงเช้า                                 | Time       | `"12:00:00"`   |
+| `eveningIn`     | เวลาเข้าช่วงบ่าย                                | Time       | `"13:00:00"`   |
+| `eveningOut`    | เวลาออกช่วงบ่าย                                 | Time       | `"17:00:00"`   |
+| `totalHours`    | ชั่วโมงทำงานรวม (คำนวณจาก DB)                   | Number     | `8.00`         |
+| `status`        | สถานะ (`pending`, `approved`, `to_pay`, `paid`) | Enum       | `"pending"`    |
 
 **Error Responses:**
 
@@ -1440,18 +1440,14 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 3. สร้าง Record ใน `payout_pt`
 4. สร้าง Record ใน `payout_pt_item`
 5. อัปเดตสถานะ Worklog เหล่านั้นเป็น `to_pay` (ล็อกห้ามแก้ไข)
-6. คำนวณยอดเงินรวม (`totalHours` * `hourlyRate`)
+6. คำนวณยอดเงินรวม (`totalHours` \* `hourlyRate`)
 
 **Request Body:**
 
 ```json
 {
   "employeeId": "019aa095-...",
-  "worklogIds": [
-    "019bb123-...",
-    "019bb124-...",
-    "019bb125-..."
-  ]
+  "worklogIds": ["019bb123-...", "019bb124-...", "019bb125-..."]
 }
 ```
 
@@ -1462,8 +1458,8 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "id": "019cc999-...",
   "employeeId": "019aa095-...",
   "status": "to_pay",
-  "totalHours": 24.50,
-  "amountTotal": 2450.00, // สมมติชั่วโมงละ 100
+  "totalHours": 24.5,
+  "amountTotal": 2450.0, // สมมติชั่วโมงละ 100
   "itemCount": 3
 }
 ```
@@ -1591,7 +1587,7 @@ Logic พิเศษ:
 ```json
 {
   "periodStartDate": "2025-01-01", // วันเริ่มนับสถิติ (Performance)
-  "periodEndDate": "2025-12-31"    // วันสิ้นสุดนับสถิติ
+  "periodEndDate": "2025-12-31" // วันสิ้นสุดนับสถิติ
 }
 ```
 
@@ -1630,7 +1626,7 @@ Logic พิเศษ:
 ```json
 {
   "periodEndDate": "2025-12-30", // แก้ไขวันที่ (ระบบจะคำนวณสถิติใหม่ให้)
-  "status": "approved"           // Admin Only
+  "status": "approved" // Admin Only
 }
 ```
 
@@ -1684,12 +1680,12 @@ Logic พิเศษ:
       "employeeId": "019aa095-...",
       "employeeName": "สมชาย ศรีสุข",
       "tenureDays": 365,
-      "currentSalary": 30000.00,
-      "currentSsoWage": 15000.00,
-      "raisePercent": 5.00,
-      "raiseAmount": 1500.00,
-      "newSalary": 31500.00, // Calculated (current + raiseAmount)
-      "newSsoWage": 15000.00,
+      "currentSalary": 30000.0,
+      "currentSsoWage": 15000.0,
+      "raisePercent": 5.0,
+      "raiseAmount": 1500.0,
+      "newSalary": 31500.0, // Calculated (current + raiseAmount)
+      "newSsoWage": 15000.0,
       "stats": {
         "lateMinutes": 45,
         "leaveDays": 2.5,
@@ -1722,9 +1718,9 @@ Logic พิเศษ:
 
 ```json
 {
-  "raisePercent": 10.00,
-  "raiseAmount": 3000.00,
-  "newSsoWage": 15000.00 // ถ้าต้องการปรับฐาน SSO ใหม่ (Optional)
+  "raisePercent": 10.0,
+  "raiseAmount": 3000.0,
+  "newSsoWage": 15000.0 // ถ้าต้องการปรับฐาน SSO ใหม่ (Optional)
 }
 ```
 
@@ -1733,7 +1729,7 @@ Logic พิเศษ:
 ```json
 {
   "id": "019dd999-...",
-  "newSalary": 33000.00, // ยืนยันยอดใหม่
+  "newSalary": 33000.0, // ยืนยันยอดใหม่
   "updatedAt": "..."
 }
 ```
@@ -1807,8 +1803,8 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 ```json
 {
   "payrollMonthDate": "2025-12-01", // ระบุว่าจะให้โบนัสก้อนนี้ไปโผล่ในสลิปเดือนไหน
-  "periodStartDate": "2025-01-01",  // เริ่มนับสถิติ (สาย/ลา) เมื่อไหร่
-  "periodEndDate": "2025-12-31"     // สิ้นสุดนับสถิติเมื่อไหร่
+  "periodStartDate": "2025-01-01", // เริ่มนับสถิติ (สาย/ลา) เมื่อไหร่
+  "periodEndDate": "2025-12-31" // สิ้นสุดนับสถิติเมื่อไหร่
 }
 ```
 
@@ -1848,7 +1844,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 ```json
 {
   "periodEndDate": "2025-11-30", // แก้ไขวัน (ระบบจะ Recalculate สถิติคนในรอบให้ใหม่)
-  "status": "approved"           // Admin Only
+  "status": "approved" // Admin Only
 }
 ```
 
@@ -1893,7 +1889,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
       "id": "019ff999-...",
       "employeeId": "019aa095-...",
       "employeeName": "สมชาย ศรีสุข",
-      "currentSalary": 30000.00,
+      "currentSalary": 30000.0,
       "tenureDays": 365,
       "stats": {
         "lateMinutes": 120,
@@ -1902,8 +1898,8 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
         "leaveHours": 4.0,
         "otHours": 12.5
       },
-      "bonusMonths": 1.5,      // จำนวนเท่า (HR กรอก)
-      "bonusAmount": 45000.00  // ยอดเงิน (HR กรอก หรือคำนวณมา)
+      "bonusMonths": 1.5, // จำนวนเท่า (HR กรอก)
+      "bonusAmount": 45000.0 // ยอดเงิน (HR กรอก หรือคำนวณมา)
     }
   ]
 }
@@ -1911,17 +1907,17 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **ตารางสรุปฟิลด์สำหรับ JSON**
 
-| **ชื่อฟิลด์** | **ประเภท** | **คำอธิบาย** |
-| --- | --- | --- |
-| `currentSalary` | Number | เงินเดือน ณ วันสร้างรอบ (ใช้เป็นฐานคำนวณ) |
-| `tenureDays` | Integer | อายุงาน (วัน) นับจากวันเริ่มงานถึงวันสร้างรอบ |
-| `stats.lateMinutes` | Integer | นาทีสายสะสม (ในช่วง period) |
-| `stats.leaveDays` | Number | วันลาสะสม (ในช่วง period) |
-| `stats.leaveDoubleDays` | Number | วันลาซ้อนที่นับสองเท่า (ในช่วง period) |
-| `stats.leaveHours` | Number | ชั่วโมงลาสะสม (ในช่วง period) |
-| `stats.otHours` | Number | ชั่วโมง OT สะสม (ในช่วง period) |
-| `bonusMonths` | Number | โบนัสกี่เท่าของเงินเดือน (เก็บไว้เป็น Reference) |
-| `bonusAmount` | Number | **ยอดเงินโบนัสสุทธิที่จะจ่ายจริง** |
+| **ชื่อฟิลด์**           | **ประเภท** | **คำอธิบาย**                                     |
+| ----------------------- | ---------- | ------------------------------------------------ |
+| `currentSalary`         | Number     | เงินเดือน ณ วันสร้างรอบ (ใช้เป็นฐานคำนวณ)        |
+| `tenureDays`            | Integer    | อายุงาน (วัน) นับจากวันเริ่มงานถึงวันสร้างรอบ    |
+| `stats.lateMinutes`     | Integer    | นาทีสายสะสม (ในช่วง period)                      |
+| `stats.leaveDays`       | Number     | วันลาสะสม (ในช่วง period)                        |
+| `stats.leaveDoubleDays` | Number     | วันลาซ้อนที่นับสองเท่า (ในช่วง period)           |
+| `stats.leaveHours`      | Number     | ชั่วโมงลาสะสม (ในช่วง period)                    |
+| `stats.otHours`         | Number     | ชั่วโมง OT สะสม (ในช่วง period)                  |
+| `bonusMonths`           | Number     | โบนัสกี่เท่าของเงินเดือน (เก็บไว้เป็น Reference) |
+| `bonusAmount`           | Number     | **ยอดเงินโบนัสสุทธิที่จะจ่ายจริง**               |
 
 ---
 
@@ -1943,7 +1939,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 ```json
 {
   "bonusMonths": 2.0,
-  "bonusAmount": 60000.00
+  "bonusAmount": 60000.0
 }
 ```
 
@@ -1952,7 +1948,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 ```json
 {
   "id": "019ff999-...",
-  "bonusAmount": 60000.00,
+  "bonusAmount": 60000.0,
   "updatedAt": "2025-11-21T15:00:00Z"
 }
 ```
@@ -2025,7 +2021,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 ```json
 {
   "employeeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
-  "amount": 5000.00,
+  "amount": 5000.0,
   "advanceDate": "2025-09-15",
   "payrollMonthDate": "2025-09-01"
 }
@@ -2033,12 +2029,12 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย** | **ประเภท** | **Required** | **ตัวอย่าง** |
-| --- | --- | --- | --- | --- |
-| `employeeId` | รหัสพนักงาน | UUID | **Yes** | `"019aa..."` |
-| `amount` | ยอดเงินที่ต้องการเบิก | Number | **Yes** | `5000.00` (> 0) |
-| `advanceDate` | วันที่รับเงิน/โอนเงิน | Date | **Yes** | `"2025-09-15"` |
-| `payrollMonthDate` | งวดเงินเดือน (วันแรกของเดือนที่จะหักคืน) | Date | **Yes** | `"2025-09-01"` |
+| **ชื่อ (Name)**    | **คำอธิบาย**                             | **ประเภท** | **Required** | **ตัวอย่าง**    |
+| ------------------ | ---------------------------------------- | ---------- | ------------ | --------------- |
+| `employeeId`       | รหัสพนักงาน                              | UUID       | **Yes**      | `"019aa..."`    |
+| `amount`           | ยอดเงินที่ต้องการเบิก                    | Number     | **Yes**      | `5000.00` (> 0) |
+| `advanceDate`      | วันที่รับเงิน/โอนเงิน                    | Date       | **Yes**      | `"2025-09-15"`  |
+| `payrollMonthDate` | งวดเงินเดือน (วันแรกของเดือนที่จะหักคืน) | Date       | **Yes**      | `"2025-09-01"`  |
 
 **Success Response (201 Created):**
 
@@ -2053,10 +2049,10 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | ยอดเงิน <= 0 หรือข้อมูลไม่ครบ |
-| **404** | Not Found | ไม่พบพนักงาน |
+| **HTTP Status** | **Title**   | **Description**               |
+| --------------- | ----------- | ----------------------------- |
+| **400**         | Bad Request | ยอดเงิน <= 0 หรือข้อมูลไม่ครบ |
+| **404**         | Not Found   | ไม่พบพนักงาน                  |
 
 ---
 
@@ -2076,7 +2072,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 ```json
 {
-  "amount": 4500.00,
+  "amount": 4500.0,
   "advanceDate": "2025-09-16",
   "payrollMonthDate": "2025-09-01"
 }
@@ -2088,10 +2084,10 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | รายการนี้ถูกประมวลผลไปแล้ว (Processed) แก้ไขไม่ได้ |
-| **404** | Not Found | ไม่พบรายการ |
+| **HTTP Status** | **Title**   | **Description**                                    |
+| --------------- | ----------- | -------------------------------------------------- |
+| **400**         | Bad Request | รายการนี้ถูกประมวลผลไปแล้ว (Processed) แก้ไขไม่ได้ |
+| **404**         | Not Found   | ไม่พบรายการ                                        |
 
 ---
 
@@ -2108,10 +2104,10 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | รายการนี้ถูกประมวลผลไปแล้ว (Processed) ลบไม่ได้ |
-| **404** | Not Found | ไม่พบรายการ |
+| **HTTP Status** | **Title**   | **Description**                                 |
+| --------------- | ----------- | ----------------------------------------------- |
+| **400**         | Bad Request | รายการนี้ถูกประมวลผลไปแล้ว (Processed) ลบไม่ได้ |
+| **404**         | Not Found   | ไม่พบรายการ                                     |
 
 ---
 
@@ -2129,7 +2125,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
   "id": "019cc111-2222-7d69-9f3a-1c3d4e5f6789",
   "employeeId": "019aa095-...",
   "employeeName": "สมชาย ศรีสุข",
-  "amount": 5000.00,
+  "amount": 5000.0,
   "advanceDate": "2025-09-15",
   "payrollMonthDate": "2025-09-01",
   "status": "pending",
@@ -2143,8 +2139,8 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 ในขั้นตอนการทำจ่ายเงินเดือน (**Payroll Run**):
 
 1. ระบบ Backend จะต้อง Query ตาราง `salary_advance` โดยหาเงื่อนไข:
-    - `status = 'pending'`
-    - `payroll_month_date = <งวดที่กำลังจ่าย>`
+   - `status = 'pending'`
+   - `payroll_month_date = <งวดที่กำลังจ่าย>`
 2. นำยอด `amount` ไปรวมเป็นยอดหัก (Deduction) ในสลิปเงินเดือน
 3. เมื่อ Payroll Run ถูก **Approve** -> ระบบต้อง Update `salary_advance` เหล่านั้นให้ `status = 'processed'` (ผ่าน Trigger หรือ Code) เพื่อล็อกไม่ให้แก้ไขย้อนหลังครับ
 
@@ -2173,21 +2169,21 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 ```json
 {
   "employeeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
-  "txnType": "loan",          // <--- ระบุประเภท
+  "txnType": "loan", // <--- ระบุประเภท
   "txnDate": "2025-11-21",
-  "amount": 12000.00,
+  "amount": 12000.0,
   "reason": "กู้ซ่อมแซมบ้าน",
   "installments": [
     {
-      "amount": 4000.00,
+      "amount": 4000.0,
       "payrollMonthDate": "2025-12-01"
     },
     {
-      "amount": 4000.00,
+      "amount": 4000.0,
       "payrollMonthDate": "2026-01-01"
     },
     {
-      "amount": 4000.00,
+      "amount": 4000.0,
       "payrollMonthDate": "2026-02-01"
     }
   ]
@@ -2209,23 +2205,25 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย** | **ประเภท** | **Required** | **ตัวอย่าง** |
-| --- | --- | --- | --- | --- |
-| `employeeId` | รหัสพนักงาน | UUID | **Yes** | `"019aa..."` |
-| `txnType` | ประเภท "เงินกู้" กับ "หนี้สินอื่นๆ” | String | **Yes** | `"loan"` หรือ `"other"` |
-| `otherDesc` | คำอธิบาย | String | **Yes if other** | `"ค่าปรับทำอุปกรณ์เสียหาย"` |
-| `txnDate` | วันที่ทำรายการกู้ | Date | **Yes** | `"2025-11-21"` |
-| `amount` | ยอดเงินกู้รวม (Principal) | Number | **Yes** | `12000.00` |
-| `reason` | เหตุผลการกู้ | String | No | `"ซ่อมบ้าน"` |
-| `installments` | ตารางผ่อนชำระ | Array | **Yes** | `[...]` |
-| `installments[].amount` | ยอดที่จะหักในงวดนั้น | Number | **Yes** | `4000.00` |
-| `installments[].payrollMonthDate` | งวดเดือนที่จะหักเงิน | Date | **Yes** | `"2025-12-01"` (ต้องเป็นวันแรกของเดือน) |
+| **ชื่อ (Name)**                   | **คำอธิบาย**                                  | **ประเภท** | **Required**            | **ตัวอย่าง**                            |
+| --------------------------------- | --------------------------------------------- | ---------- | ----------------------- | --------------------------------------- |
+| `employeeId`                      | รหัสพนักงาน                                   | UUID       | **Yes**                 | `"019aa..."`                            |
+| `txnType`                         | ประเภท "เงินกู้" กับ "หนี้สินอื่นๆ”           | String     | **Yes**                 | `"loan"` หรือ `"other"`                 |
+| `otherDesc`                       | คำอธิบาย                                      | String     | **Yes if other**        | `"ค่าปรับทำอุปกรณ์เสียหาย"`             |
+| `txnDate`                         | วันที่ทำรายการกู้                             | Date       | **Yes**                 | `"2025-11-21"`                          |
+| `amount`                          | ยอดเงินกู้รวม (Principal)                     | Number     | **Yes**                 | `12000.00`                              |
+| `reason`                          | เหตุผลการกู้                                  | String     | No                      | `"ซ่อมบ้าน"`                            |
+| `installments`                    | ตารางผ่อนชำระ (สามารถส่ง `[]` ถ้ายังไม่กำหนด) | Array      | **Yes**                 | `[...]`                                 |
+| `installments[].amount`           | ยอดที่จะหักในงวดนั้น                          | Number     | **Yes if installments** | `4000.00`                               |
+| `installments[].payrollMonthDate` | งวดเดือนที่จะหักเงิน                          | Date       | **Yes if installments** | `"2025-12-01"` (ต้องเป็นวันแรกของเดือน) |
 
 **Logic (Backend):**
 
-1. ตรวจสอบว่า `amount` (ยอดกู้) เท่ากับ ผลรวมของ `installments[].amount` หรือไม่ (ควรเท่ากัน หรือยอมให้ต่างได้ถ้ามีดอกเบี้ย/เศษสตางค์ - *แนะนำให้บังคับเท่ากันในเฟสแรก*)
-2. สร้าง Transaction (`txn_type = 'loan'`) สถานะ `pending`
-3. สร้างรายการลูก (`txn_type = 'installment'`) ผูกกับ Parent ID สถานะ `pending`
+1. อนุญาตให้ `installments` เป็น Array ว่าง `[]` ได้ (กรณียังไม่ตั้งงวดผ่อน)
+2. ถ้ามีการส่ง `installments` (จำนวนงวด > 0) ให้บังคับว่า `amount` (ยอดกู้) ต้องเท่ากับผลรวม `installments[].amount`
+3. ตรวจสอบว่า `installments[].payrollMonthDate` (ถ้ามี) ต้องเป็น **วันแรกของเดือน** เสมอ
+4. สร้าง Transaction หลัก (`txn_type` ตามที่ส่ง `loan/other`) สถานะ `pending`
+5. ถ้ามีงวดผ่อนที่ส่งมา ให้สร้างรายการลูก (`txn_type = 'installment'`) ตามจำนวนงวด สถานะ `pending` โดยผูก `parent_id` กับรายการหลัก
 
 **Success Response (201 Created):**
 
@@ -2240,10 +2238,10 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | ยอดรวมผ่อนชำระไม่เท่ากับยอดกู้ หรือข้อมูลไม่ครบ |
-| **404** | Not Found | ไม่พบพนักงาน |
+| **HTTP Status** | **Title**   | **Description**                                 |
+| --------------- | ----------- | ----------------------------------------------- |
+| **400**         | Bad Request | ยอดรวมผ่อนชำระไม่เท่ากับยอดกู้ หรือข้อมูลไม่ครบ |
+| **404**         | Not Found   | ไม่พบพนักงาน                                    |
 
 ---
 
@@ -2255,7 +2253,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 - **Access:** Admin, HR
 - **Query Parameters:**
   - `employeeId`: (UUID) กรองรายคน
-  - `type`: (string) `loan`, `repayment`, `all` (ไม่รวม installment เพื่อไม่ให้รก) - *Default: all*
+  - `type`: (string) `loan`, `repayment`, `all` (**default: all; ตัด `installment` ออกอัตโนมัติ**)
   - `status`: (string) `pending`, `approved`
   - `startDate`, `endDate`: (date) กรองตาม `txnDate`
 
@@ -2267,17 +2265,37 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
     {
       "id": "019dd222-3333-...",
       "employeeId": "019aa095-...",
+      "employeeName": "นางสาวสมหญิง ใจดี",
       "txnDate": "2025-11-21",
       "txnType": "loan",
       "amount": 12000.00,
       "status": "pending",
       "reason": "กู้ซ่อมแซมบ้าน",
-      "outstandingBalance": 12000.00 // (Optional: คำนวณยอดคงเหลือให้ถ้าทำได้)
+      "installments": [
+        {
+          "id": "019dd222-aaaa-...",
+          "payrollMonthDate": "2025-12-01",
+          "amount": 4000.00,
+          "status": "pending"
+        },
+        {
+          "id": "019dd222-bbbb-...",
+          "payrollMonthDate": "2026-01-01",
+          "amount": 4000.00,
+          "status": "pending"
+        }
+      ]
     }
   ],
   "meta": { ... }
 }
 ```
+
+**หมายเหตุสำคัญ:**
+
+- รายการที่มี `txnType = "installment"` จะถูกกรองออกจากรายการหลักอัตโนมัติในโหมด `type=all` (ยังสามารถกรองเฉพาะ installment ได้หากจำเป็นในภายหลัง)
+- สำหรับ `loan` หรือ `other` ที่มีแผนผ่อนชำระ จะมี `installments` array แสดงรายละเอียดงวดผ่อน
+- UI ควรแสดงเป็น "เงินกู้ (การผ่อนชำระ)" เมื่อมี installments
 
 ---
 
@@ -2295,22 +2313,23 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 {
   "id": "019dd222-3333-...",
   "employeeId": "019aa095-...",
+  "employeeName": "นางสาวสมหญิง ใจดี",
   "txnDate": "2025-11-21",
   "txnType": "loan",
-  "amount": 12000.00,
+  "amount": 12000.0,
   "reason": "กู้ซ่อมแซมบ้าน",
   "status": "pending",
   "installments": [
     {
       "id": "019dd222-aaaa-...",
       "payrollMonthDate": "2025-12-01",
-      "amount": 4000.00,
+      "amount": 4000.0,
       "status": "pending" // pending=รอหัก, approved=หักแล้ว
     },
     {
       "id": "019dd222-bbbb-...",
       "payrollMonthDate": "2026-01-01",
-      "amount": 4000.00,
+      "amount": 4000.0,
       "status": "pending"
     }
   ]
@@ -2319,13 +2338,57 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **404** | Not Found | ไม่พบรายการเงินกู้ |
+| **HTTP Status** | **Title** | **Description**    |
+| --------------- | --------- | ------------------ |
+| **404**         | Not Found | ไม่พบรายการเงินกู้ |
 
 ---
 
-### 14.4 Approve Loan (Admin Only)
+### 14.4 Get Outstanding Installments (Pending)
+
+ดึงยอดผ่อนชำระที่ยังคงค้าง (สถานะ `pending`) ของพนักงาน พร้อมรายละเอียดงวด
+
+- **Endpoint:** `GET /debt-txns/{employeeId}/outstanding-installments`
+- **Access:** Admin, HR
+- **Params:** `employeeId` (UUIDv7)
+
+**Success Response Example (200 OK):**
+
+```json
+{
+  "employeeId": "019aa095-...",
+  "employeeName": "นางสาวสมหญิง ใจดี",
+  "outstandingAmount": 8000.0,
+  "installments": [
+    {
+      "id": "019dd222-aaaa-...",
+      "payrollMonthDate": "2025-12-01",
+      "amount": 4000.0,
+      "status": "pending"
+    },
+    {
+      "id": "019dd222-bbbb-...",
+      "payrollMonthDate": "2026-01-01",
+      "amount": 4000.0,
+      "status": "pending"
+    }
+  ],
+  "meta": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 2
+  }
+}
+```
+
+**Notes:**
+
+- คืนเฉพาะรายการ `txn_type = installment` ที่ `status = pending`
+- ยอด `outstandingAmount` คือผลรวมของ `amount` ทุกงวดในลิสต์
+
+---
+
+### 14.5 Approve Loan (Admin Only)
 
 อนุมัติเงินกู้ (เมื่ออนุมัติแล้ว งวดผ่อนชำระจะเริ่มมีผลบังคับใช้ใน Payroll)
 
@@ -2335,8 +2398,9 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Logic:**
 
-1. เปลี่ยนสถานะ Parent (`loan`) เป็น `approved`
-2. (Optional) ระบบอาจจะล็อกไม่ให้แก้ไขรายการลูก (`installments`) ผ่าน API ปกติ ยกเว้นจะใช้ API ปรับปรุงหนี้โดยเฉพาะ
+1. เปลี่ยนสถานะ Parent (`loan` หรือ `other`) เป็น `approved`
+2. **ไม่อนุมัติรายการผ่อน (`installments`) ให้อัตโนมัติ** งวดผ่อนจะถูกอนุมัติทีละงวดตามกระบวนการ Payroll (เมื่อถึง payrollMonthDate ของงวดนั้น)
+3. (Optional) ระบบอาจจะล็อกไม่ให้แก้ไขรายการลูก (`installments`) ผ่าน API ปกติ ยกเว้นจะใช้ API ปรับปรุงหนี้โดยเฉพาะ
 
 **Success Response (200 OK):**
 
@@ -2351,10 +2415,10 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | รายการนี้ถูกอนุมัติไปแล้ว หรือไม่ใช่รายการประเภท Loan |
-| **403** | Forbidden | ผู้ใช้งานเป็น HR |
+| **HTTP Status** | **Title**   | **Description**                                       |
+| --------------- | ----------- | ----------------------------------------------------- |
+| **400**         | Bad Request | รายการนี้ถูกอนุมัติไปแล้ว หรือไม่ใช่รายการประเภท Loan |
+| **403**         | Forbidden   | ผู้ใช้งานเป็น HR                                      |
 
 ---
 
@@ -2371,19 +2435,19 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 {
   "employeeId": "019aa095-...",
   "txnDate": "2025-12-15",
-  "amount": 2000.00,
+  "amount": 2000.0,
   "reason": "พนักงานนำเงินสดมาคืนบางส่วน"
 }
 ```
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย** | **ประเภท** | **Required** | **ตัวอย่าง** |
-| --- | --- | --- | --- | --- |
-| `employeeId` | รหัสพนักงาน | UUID | **Yes** | `"019aa..."` |
-| `txnDate` | วันที่รับเงิน | Date | **Yes** | `"2025-12-15"` |
-| `amount` | ยอดเงินที่คืน | Number | **Yes** | `2000.00` |
-| `reason` | หมายเหตุ | String | No | `"คืนเงินสด"` |
+| **ชื่อ (Name)** | **คำอธิบาย**  | **ประเภท** | **Required** | **ตัวอย่าง**   |
+| --------------- | ------------- | ---------- | ------------ | -------------- |
+| `employeeId`    | รหัสพนักงาน   | UUID       | **Yes**      | `"019aa..."`   |
+| `txnDate`       | วันที่รับเงิน | Date       | **Yes**      | `"2025-12-15"` |
+| `amount`        | ยอดเงินที่คืน | Number     | **Yes**      | `2000.00`      |
+| `reason`        | หมายเหตุ      | String     | No           | `"คืนเงินสด"`  |
 
 **Success Response (201 Created):**
 
@@ -2392,7 +2456,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
   "id": "019ee555-...",
   "txnType": "repayment",
   "status": "approved", // ปกติคืนเงินสดถือว่าสำเร็จเลย หรือจะ Pending รอ Admin กดรับก็ได้
-  "amount": 2000.00
+  "amount": 2000.0
 }
 ```
 
@@ -2417,22 +2481,22 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Error Responses:**
 
-| **HTTP Status** | **Title** | **Description** |
-| --- | --- | --- |
-| **400** | Bad Request | รายการอนุมัติไปแล้ว ลบไม่ได้ |
-| **404** | Not Found | ไม่พบรายการ |
+| **HTTP Status** | **Title**   | **Description**              |
+| --------------- | ----------- | ---------------------------- |
+| **400**         | Bad Request | รายการอนุมัติไปแล้ว ลบไม่ได้ |
+| **404**         | Not Found   | ไม่พบรายการ                  |
 
 ---
 
 ### ตารางสรุป JSON Response Fields (สำหรับ List & Detail)
 
-| **ชื่อฟิลด์** | **ประเภท** | **คำอธิบาย** |
-| --- | --- | --- |
-| `txnType` | Enum | `loan`, `installment`, `repayment` |
-| `amount` | Number | ยอดเงิน (ถ้าเป็น Installment คือยอดหักต่องวด) |
-| `payrollMonthDate` | Date | (เฉพาะ Installment) เดือนที่จะหักเงินเดือน |
-| `status` | Enum | `pending`, `approved` |
-| `parent_id` | UUID | (เฉพาะ Installment) อ้างอิงถึงเงินกู้ก้อนไหน |
+| **ชื่อฟิลด์**      | **ประเภท** | **คำอธิบาย**                                  |
+| ------------------ | ---------- | --------------------------------------------- |
+| `txnType`          | Enum       | `loan`, `installment`, `repayment`            |
+| `amount`           | Number     | ยอดเงิน (ถ้าเป็น Installment คือยอดหักต่องวด) |
+| `payrollMonthDate` | Date       | (เฉพาะ Installment) เดือนที่จะหักเงินเดือน    |
+| `status`           | Enum       | `pending`, `approved`                         |
+| `parent_id`        | UUID       | (เฉพาะ Installment) อ้างอิงถึงเงินกู้ก้อนไหน  |
 
 ---
 
@@ -2470,14 +2534,14 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **ประเภท (Type)** | **คำอธิบาย (Description)** |
-| --- | --- | --- |
-| `personTitles[]` | Array | คำนำหน้า (นาย/นาง/นางสาว) |
-| `employeeTypes[]` | Array | ประเภทพนักงาน (ประจำ/ชั่วคราว) |
-| `idDocumentTypes[]` | Array | ประเภทเอกสารยืนยันตัวตน |
-| `*.id` | UUID | ไอดีของ master record |
-| `*.code` | String | รหัสย่อของรายการ |
-| `*.name` | String | ชื่อภาษาไทย |
+| **ชื่อ (Name)**     | **ประเภท (Type)** | **คำอธิบาย (Description)**     |
+| ------------------- | ----------------- | ------------------------------ |
+| `personTitles[]`    | Array             | คำนำหน้า (นาย/นาง/นางสาว)      |
+| `employeeTypes[]`   | Array             | ประเภทพนักงาน (ประจำ/ชั่วคราว) |
+| `idDocumentTypes[]` | Array             | ประเภทเอกสารยืนยันตัวตน        |
+| `*.id`              | UUID              | ไอดีของ master record          |
+| `*.code`            | String            | รหัสย่อของรายการ               |
+| `*.name`            | String            | ชื่อภาษาไทย                    |
 
 ---
 
@@ -2594,8 +2658,8 @@ Logic (Database Trigger):
 ```json
 {
   "payrollMonthDate": "2025-11-01", // งวดบัญชี (ต้องเป็นวันที่ 1)
-  "periodStartDate": "2025-10-01",  // วันเริ่มนับเวลาทำงาน
-  "payDate": "2025-11-30",          // วันที่จ่ายจริง
+  "periodStartDate": "2025-10-01", // วันเริ่มนับเวลาทำงาน
+  "payDate": "2025-11-30", // วันที่จ่ายจริง
   "socialSecurityRateEmployee": 0.05, // เรทประกันสังคมที่ใช้ในงวดนี้ (Snapshot)
   "socialSecurityRateEmployer": 0.05
 }
@@ -2633,9 +2697,9 @@ Logic (Database Trigger):
   "status": "pending",
   "approvedAt": null,
   "totals": {
-    "totalIncome": 5000000.00,
-    "totalDeduction": 500000.00,
-    "totalNetPay": 4500000.00
+    "totalIncome": 5000000.0,
+    "totalDeduction": 500000.0,
+    "totalNetPay": 4500000.0
   }
 }
 ```
@@ -2653,10 +2717,10 @@ Logic (Database Trigger):
 
 1. Trigger `payroll_run_guard_update` ตรวจสอบสิทธิ์
 2. Trigger `payroll_run_on_approve_actions` (ที่เราเพิ่งเขียน) ทำงาน:
-    - เปลี่ยนสถานะ `worklog` -> `approved`
-    - ตัดยอด `salary_advance` -> `processed`
-    - ตัดยอด `debt_txn` -> `approved`
-    - อัปเดตยอดสะสม `payroll_accumulation`
+   - เปลี่ยนสถานะ `worklog` -> `approved`
+   - ตัดยอด `salary_advance` -> `processed`
+   - ตัดยอด `debt_txn` -> `approved`
+   - อัปเดตยอดสะสม `payroll_accumulation`
 3. ข้อมูลทั้งหมดใน `payroll_run_item` ถูกล็อก
 
 **Request Body Example:**
@@ -2700,10 +2764,10 @@ Logic (Database Trigger):
       "id": "019ff111-...",
       "employeeId": "019aa095-...",
       "employeeName": "สมชาย ศรีสุข",
-      "salaryAmount": 30000.00,
-      "incomeTotal": 35000.00,
-      "deductionTotal": 1500.00,
-      "netPay": 33500.00 // (Income - Deduction) - Calculated in DB
+      "salaryAmount": 30000.0,
+      "incomeTotal": 35000.0,
+      "deductionTotal": 1500.0,
+      "netPay": 33500.0 // (Income - Deduction) - Calculated in DB
     }
   ]
 }
@@ -2726,25 +2790,26 @@ Logic (Database Trigger):
   "id": "019ff111-...",
   "employee": { "id": "...", "name": "สมชาย", "bankAccount": "..." },
   "earnings": {
-    "salary": 30000.00,
-    "ot": 2500.00,
-    "bonus": 0.00,
-    "housingAllowance": 1000.00,
-    "attendanceBonus": 500.00,
-    "others": [ // JSONB others_income
-      { "description": "ค่าคอมมิชชั่น", "amount": 1000.00 }
+    "salary": 30000.0,
+    "ot": 2500.0,
+    "bonus": 0.0,
+    "housingAllowance": 1000.0,
+    "attendanceBonus": 500.0,
+    "others": [
+      // JSONB others_income
+      { "description": "ค่าคอมมิชชั่น", "amount": 1000.0 }
     ],
-    "total": 35000.00
+    "total": 35000.0
   },
   "deductions": {
-    "tax": 500.00,
-    "sso": 750.00,
-    "providentFund": 900.00,
-    "absence": 0.00, // late + leave deduction
-    "loan": 2000.00, // advance + loan repayment
-    "total": 4150.00
+    "tax": 500.0,
+    "sso": 750.0,
+    "providentFund": 900.0,
+    "absence": 0.0, // late + leave deduction
+    "loan": 2000.0, // advance + loan repayment
+    "total": 4150.0
   },
-  "netPay": 30850.00
+  "netPay": 30850.0
 }
 ```
 
@@ -2766,11 +2831,12 @@ Logic (Database Trigger):
 
 ```json
 {
-  "salaryAmount": 30000.00, // แก้ฐานเงินเดือนเฉพาะเดือนนี้
-  "othersIncome": [         // เพิ่มรายได้อื่นๆ
-    { "description": "ค่าคอมมิชชั่น", "value": 5000.00 }
+  "salaryAmount": 30000.0, // แก้ฐานเงินเดือนเฉพาะเดือนนี้
+  "othersIncome": [
+    // เพิ่มรายได้อื่นๆ
+    { "description": "ค่าคอมมิชชั่น", "value": 5000.0 }
   ],
-  "taxMonthAmount": 800.00  // Override ภาษี (ถ้าคำนวณมือมา)
+  "taxMonthAmount": 800.0 // Override ภาษี (ถ้าคำนวณมือมา)
 }
 ```
 
@@ -2802,19 +2868,19 @@ Logic (Database Trigger):
 
 ### ตารางสรุป JSON Response Fields (16.6 Payslip Detail)
 
-| **Group** | **Field (JSON)** | **Mapped DB Column** |
-| --- | --- | --- |
-| **Income** | `salary` | `salary_amount` |
-|  | `ot` | `ot_amount` |
-|  | `bonus` | `bonus_amount` |
-|  | `housingAllowance` | `housing_allowance` |
-|  | `attendanceBonus` | `attendance_bonus_nolate` + `_noleave` |
-|  | `others` | `others_income` (JSONB) |
-| **Deduction** | `tax` | `tax_month_amount` |
-|  | `sso` | `sso_month_amount` |
-|  | `providentFund` | `pf_month_amount` |
-|  | `late` | `late_minutes_deduction` |
-|  | `leave` | `leave_..._deduction` |
-|  | `loan` | `loan_repayments` (Sum from JSON) |
-|  | `advance` | `advance_repay_amount` |
-|  | `utilities` | `water_` + `electric_` + `internet_amount` |
+| **Group**     | **Field (JSON)**   | **Mapped DB Column**                       |
+| ------------- | ------------------ | ------------------------------------------ |
+| **Income**    | `salary`           | `salary_amount`                            |
+|               | `ot`               | `ot_amount`                                |
+|               | `bonus`            | `bonus_amount`                             |
+|               | `housingAllowance` | `housing_allowance`                        |
+|               | `attendanceBonus`  | `attendance_bonus_nolate` + `_noleave`     |
+|               | `others`           | `others_income` (JSONB)                    |
+| **Deduction** | `tax`              | `tax_month_amount`                         |
+|               | `sso`              | `sso_month_amount`                         |
+|               | `providentFund`    | `pf_month_amount`                          |
+|               | `late`             | `late_minutes_deduction`                   |
+|               | `leave`            | `leave_..._deduction`                      |
+|               | `loan`             | `loan_repayments` (Sum from JSON)          |
+|               | `advance`          | `advance_repay_amount`                     |
+|               | `utilities`        | `water_` + `electric_` + `internet_amount` |

@@ -2,6 +2,7 @@ package createplan
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -17,15 +18,15 @@ import (
 )
 
 type Installment struct {
-	Amount           float64   `json:"amount"`
-	PayrollMonthDate time.Time `json:"payrollMonthDate"`
+	Amount           float64 `json:"amount"`
+	PayrollMonthDate string  `json:"payrollMonthDate"` // expect YYYY-MM-DD (1st of month)
 }
 
 type Command struct {
 	EmployeeID   uuid.UUID     `json:"employeeId"`
 	TxnType      string        `json:"txnType"` // loan|other
 	OtherDesc    *string       `json:"otherDesc,omitempty"`
-	TxnDate      time.Time     `json:"txnDate"`
+	TxnDate      string        `json:"txnDate"` // expect YYYY-MM-DD
 	Amount       float64       `json:"amount"`
 	Reason       *string       `json:"reason,omitempty"`
 	Installments []Installment `json:"installments"`
@@ -52,20 +53,23 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if err := validate(cmd); err != nil {
+	txnDate, parsedInstallments, err := validate(cmd)
+	if err != nil {
 		return nil, err
 	}
-	sum := 0.0
-	for _, ins := range cmd.Installments {
-		sum += ins.Amount
-	}
-	if sum != cmd.Amount {
-		return nil, errs.BadRequest("sum of installments must equal amount")
+	if len(parsedInstallments) > 0 {
+		sum := 0.0
+		for _, ins := range parsedInstallments {
+			sum += ins.Amount
+		}
+		if sum != cmd.Amount {
+			return nil, errs.BadRequest("sum of installments must equal amount")
+		}
 	}
 
 	parentRec := repository.Record{
 		EmployeeID: cmd.EmployeeID,
-		TxnDate:    cmd.TxnDate,
+		TxnDate:    txnDate,
 		TxnType:    cmd.TxnType,
 		OtherDesc:  cmd.OtherDesc,
 		Amount:     cmd.Amount,
@@ -80,8 +84,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if err != nil {
 			return err
 		}
-		installments := make([]repository.Record, 0, len(cmd.Installments))
-		for _, ins := range cmd.Installments {
+		if len(parsedInstallments) == 0 {
+			return nil
+		}
+		installments := make([]repository.Record, 0, len(parsedInstallments))
+		for _, ins := range parsedInstallments {
 			installments = append(installments, repository.Record{
 				TxnDate:      ins.PayrollMonthDate, // use payroll month as txn_date for child (any date ok)
 				Amount:       ins.Amount,
@@ -96,41 +103,65 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	resp := dto.FromRecord(*createdParent)
+	message := "Loan request created."
+	if count := len(parsedInstallments); count > 0 {
+		message = fmt.Sprintf("Loan request created with %d installments.", count)
+	}
 	return &Response{
 		Item:    resp,
-		Message: "Loan request created with installments.",
+		Message: message,
 	}, nil
 }
 
-func validate(cmd *Command) error {
+type parsedInstallment struct {
+	Amount           float64
+	PayrollMonthDate time.Time
+}
+
+func validate(cmd *Command) (time.Time, []parsedInstallment, error) {
 	if cmd.EmployeeID == uuid.Nil {
-		return errs.BadRequest("employeeId is required")
+		return time.Time{}, nil, errs.BadRequest("employeeId is required")
 	}
 	switch cmd.TxnType {
 	case "loan":
 	case "other":
 		if cmd.OtherDesc == nil || strings.TrimSpace(*cmd.OtherDesc) == "" {
-			return errs.BadRequest("otherDesc is required for txnType other")
+			return time.Time{}, nil, errs.BadRequest("otherDesc is required for txnType other")
 		}
 	default:
-		return errs.BadRequest("invalid txnType")
+		return time.Time{}, nil, errs.BadRequest("invalid txnType")
 	}
-	if cmd.TxnDate.IsZero() {
-		return errs.BadRequest("txnDate is required")
+	txnDateStr := strings.TrimSpace(cmd.TxnDate)
+	if txnDateStr == "" {
+		return time.Time{}, nil, errs.BadRequest("txnDate is required")
+	}
+	txnDate, err := time.Parse("2006-01-02", txnDateStr)
+	if err != nil {
+		return time.Time{}, nil, errs.BadRequest("txnDate must be YYYY-MM-DD")
 	}
 	if cmd.Amount <= 0 {
-		return errs.BadRequest("amount must be > 0")
+		return time.Time{}, nil, errs.BadRequest("amount must be > 0")
 	}
-	if len(cmd.Installments) == 0 {
-		return errs.BadRequest("installments required")
-	}
+	parsedInst := make([]parsedInstallment, 0, len(cmd.Installments))
 	for _, ins := range cmd.Installments {
 		if ins.Amount <= 0 {
-			return errs.BadRequest("installment amount must be > 0")
+			return time.Time{}, nil, errs.BadRequest("installment amount must be > 0")
 		}
-		if ins.PayrollMonthDate.IsZero() || ins.PayrollMonthDate.Day() != 1 {
-			return errs.BadRequest("payrollMonthDate must be first day of month")
+		payrollDateStr := strings.TrimSpace(ins.PayrollMonthDate)
+		if payrollDateStr == "" {
+			return time.Time{}, nil, errs.BadRequest("payrollMonthDate is required for installments")
 		}
+		payrollDate, err := time.Parse("2006-01-02", payrollDateStr)
+		if err != nil {
+			return time.Time{}, nil, errs.BadRequest("payrollMonthDate must be YYYY-MM-DD")
+		}
+		if payrollDate.Day() != 1 {
+			return time.Time{}, nil, errs.BadRequest("payrollMonthDate must be first day of month")
+		}
+		parsedInst = append(parsedInst, parsedInstallment{
+			Amount:           ins.Amount,
+			PayrollMonthDate: payrollDate,
+		})
 	}
-	return nil
+	return txnDate, parsedInst, nil
 }

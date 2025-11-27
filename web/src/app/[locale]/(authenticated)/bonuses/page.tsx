@@ -124,7 +124,7 @@ export default function BonusListPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge variant="default" className="bg-green-500">{t('status.approved')}</Badge>;
+        return <Badge variant="default">{t('status.approved')}</Badge>;
       case 'rejected':
         return <Badge variant="destructive">{t('status.rejected')}</Badge>;
       default:

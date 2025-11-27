@@ -66,7 +66,7 @@ export function EditSalaryAdvanceDialog({
   const currentYear = currentDate.getFullYear().toString();
   const yearOptions = Array.from({ length: 4 }, (_, i) => (currentDate.getFullYear() + i).toString());
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: item.amount,
@@ -171,7 +171,7 @@ export function EditSalaryAdvanceDialog({
                 <FormItem>
                   <FormLabel>{t('amount')}</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" {...field} value={field.value as number} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
