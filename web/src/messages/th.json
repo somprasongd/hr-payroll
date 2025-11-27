@@ -493,6 +493,7 @@
     "noData": "ไม่มีข้อมูล",
     "search": "ค้นหา",
     "confirm": "ยืนยัน",
+    "currentMonth": "เดือนปัจจุบัน",
     "errorLoadingData": "เกิดข้อผิดพลาดในการโหลดข้อมูล"
   },
   "Payouts": {

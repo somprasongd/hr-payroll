@@ -4,7 +4,7 @@ import * as React from 'react';
 import { format, addYears, subYears, setMonth, setYear, startOfMonth } from 'date-fns';
 import { th, enUS } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ export function MonthPicker({
   placeholder = "Select month",
   disabled = false,
 }: MonthPickerProps) {
+  const tCommon = useTranslations('Common');
   const locale = useLocale();
   const dateFnsLocale = locales[locale] || enUS;
   const [date, setDate] = React.useState<Date>(
@@ -59,6 +60,15 @@ export function MonthPicker({
     const firstDayOfMonth = startOfMonth(newDate);
     
     setDate(firstDayOfMonth);
+    onValueChange?.(format(firstDayOfMonth, 'yyyy-MM-dd'));
+    setOpen(false);
+  };
+
+  const handleCurrentMonth = () => {
+    const now = new Date();
+    const firstDayOfMonth = startOfMonth(now);
+    setDate(firstDayOfMonth);
+    setViewDate(firstDayOfMonth);
     onValueChange?.(format(firstDayOfMonth, 'yyyy-MM-dd'));
     setOpen(false);
   };
@@ -138,6 +148,15 @@ export function MonthPicker({
               {month}
             </Button>
           ))}
+        </div>
+        <div className="p-2 border-t border-border">
+          <Button
+            variant="ghost"
+            className="w-full h-8 text-xs"
+            onClick={handleCurrentMonth}
+          >
+            {tCommon('currentMonth')}
+          </Button>
         </div>
       </PopoverContent>
     </Popover>
