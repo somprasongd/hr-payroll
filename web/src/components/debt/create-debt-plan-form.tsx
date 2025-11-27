@@ -109,7 +109,9 @@ export function CreateDebtPlanForm() {
       txnDate: format(new Date(), 'yyyy-MM-dd'),
       amount: 0,
       hasInstallment: false,
-      installments: []
+      installments: [],
+      otherDesc: '',
+      reason: ''
     }
   });
 

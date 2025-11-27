@@ -104,13 +104,13 @@ export function DebtDetail({ id }: DebtDetailProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Transaction Info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-[200px_1fr] gap-4 text-sm">
               <div className="text-gray-500">{t('fields.employee')}</div>
               <div className="font-medium">{data.employeeName || data.employeeId}</div>
               
@@ -151,7 +151,7 @@ export function DebtDetail({ id }: DebtDetailProps) {
         </Card>
 
         {data.installments && data.installments.length > 0 && (
-          <Card className="col-span-1 md:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle>{t('fields.installments')}</CardTitle>
             </CardHeader>
@@ -171,7 +171,7 @@ export function DebtDetail({ id }: DebtDetailProps) {
                       <TableCell>{inst.amount.toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant={inst.status === 'approved' ? 'default' : 'secondary'}>
-                          {t(`status.${inst.status}`)}
+                          {t(`installmentStatus.${inst.status}`)}
                         </Badge>
                       </TableCell>
                     </TableRow>

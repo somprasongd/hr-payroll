@@ -811,6 +811,10 @@
       "approved": "Approved",
       "all": "All Statuses"
     },
+    "installmentStatus": {
+      "pending": "Pending Transaction",
+      "approved": "Paid"
+    },
     "actions": {
       "view": "View Details",
       "delete": "Delete",
@@ -836,6 +840,16 @@
     "summary": {
         "outstandingDebt": "Total Outstanding Debt",
         "pendingInstallments": "Pending Installments"
+    },
+    "approve": {
+      "title": "Confirm Approval",
+      "description": "Are you sure you want to approve this request? This action will make the debt effective immediately.",
+      "success": "Approved successfully"
+    },
+    "delete": {
+      "title": "Delete Item",
+      "description": "Are you sure you want to delete this item? This action cannot be undone.",
+      "success": "Deleted successfully"
     }
   }
 }
