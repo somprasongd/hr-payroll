@@ -90,8 +90,8 @@ CREATE TABLE employees (
   CONSTRAINT employees_dates_valid CHECK (employment_end_date IS NULL OR employment_end_date >= employment_start_date),
   CONSTRAINT employees_bank_pair CHECK (bank_account_no IS NULL OR bank_name IS NOT NULL),
   CONSTRAINT employees_sso_pair CHECK (
-    (NOT sso_contribute AND COALESCE(NEW.sso_declared_wage, 0) <= 0) OR
-    (sso_contribute AND COALESCE(NEW.sso_declared_wage, 0) > 0)
+    (NOT sso_contribute AND COALESCE(sso_declared_wage, 0) <= 0) OR
+    (sso_contribute AND COALESCE(sso_declared_wage, 0) > 0)
   )
 );
 

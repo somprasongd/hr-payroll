@@ -698,6 +698,30 @@ interface EmployeeFormProps {
                     />
                     <FormField
                       control={form.control}
+                      name="allowDoctorFee"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">{t('fields.doctorFee')}</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-medium">{t('fields.utilities')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('fields.utilitiesHint')}</p>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    <FormField
+                      control={form.control}
                       name="allowWater"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
@@ -738,21 +762,6 @@ interface EmployeeFormProps {
                             />
                           </FormControl>
                           <FormLabel className="font-normal">{t('fields.internet')}</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="allowDoctorFee"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">{t('fields.doctorFee')}</FormLabel>
                         </FormItem>
                       )}
                     />

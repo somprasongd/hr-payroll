@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${BUILD_VERSION}
+    image: hr-payroll-api:${BUILD_VERSION}
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: /api/v1
+    image: hr-payroll-web:${BUILD_VERSION}

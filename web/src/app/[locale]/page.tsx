@@ -28,23 +28,47 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function LoginPage() {
   const t = useTranslations('Index');
   const locale = useLocale();
-  const { login, returnUrl, setReturnUrl, isAuthenticated, _hasHydrated } = useAuthStore()
+  const { login, returnUrl, setReturnUrl, isAuthenticated, _hasHydrated, refreshToken, updateToken, logout } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string>('')
+  const [isChecking, setIsChecking] = useState(true)
   const router = useRouter();
 
   useEffect(() => {
-    if (_hasHydrated && isAuthenticated) {
-      const preferredLocale = localStorage.getItem('preferredLocale');
-      const targetLocale = (preferredLocale && ['en', 'th', 'my'].includes(preferredLocale)) 
-        ? preferredLocale 
-        : locale;
+    // Wait for hydration to complete
+    if (!_hasHydrated) return;
 
-      const redirectTo = returnUrl || '/dashboard';
-      router.replace(redirectTo, { locale: targetLocale as 'en' | 'th' | 'my' });
-    }
-  }, [_hasHydrated, isAuthenticated, router, returnUrl, locale]);
+    const verifySession = async () => {
+      if (isAuthenticated && refreshToken) {
+        try {
+          // Verify session by refreshing token
+          const response = await authService.refreshToken(refreshToken);
+          
+          // Update access token
+          updateToken(response.accessToken);
+          
+          const preferredLocale = localStorage.getItem('preferredLocale');
+          const targetLocale = (preferredLocale && ['en', 'th', 'my'].includes(preferredLocale)) 
+            ? preferredLocale 
+            : locale;
+
+          const redirectTo = returnUrl || '/dashboard';
+          router.replace(redirectTo, { locale: targetLocale as 'en' | 'th' | 'my' });
+        } catch (error) {
+          console.error('Session verification failed:', error);
+          // If verification fails, logout and show login form
+          logout();
+          setIsChecking(false);
+        }
+      } else {
+        // Not authenticated, show login form
+        setIsChecking(false);
+      }
+    };
+
+    verifySession();
+  }, [_hasHydrated, isAuthenticated, refreshToken, router, returnUrl, locale, updateToken, logout]);
 
   const formSchema = z.object({
     username: z.string().min(3, {
@@ -126,6 +150,14 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   return (

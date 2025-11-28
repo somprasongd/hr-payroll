@@ -1,5 +1,5 @@
 services:
-  pg18:
+  db:
     restart: always
     environment:
       POSTGRES_USER: postgres

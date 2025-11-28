@@ -144,3 +144,28 @@ CREATE OR REPLACE FUNCTION get_effective_payroll_config(
   ORDER BY lower(pc.effective_daterange) DESC, pc.version_no DESC
   LIMIT 1;
 $$;
+
+-- ค่า default
+WITH admin_user AS (
+  SELECT id FROM users WHERE user_role = 'admin' AND deleted_at IS NULL ORDER BY created_at LIMIT 1
+)
+INSERT INTO payroll_config (
+  effective_daterange,
+  hourly_rate, ot_hourly_rate,
+  attendance_bonus_no_late, attendance_bonus_no_leave,
+  housing_allowance, water_rate_per_unit, electricity_rate_per_unit,
+  internet_fee_monthly,
+  social_security_rate_employee, social_security_rate_employer,
+  status, note, created_by, updated_by
+)
+SELECT
+  daterange(current_date, NULL, '[)'),
+  70.00, 70.00,
+  500.00, 1000.00,
+  1000.00, 10.00, 6.00,
+  80.00,
+  0.05, 0.05,          -- SSO 5%
+  'active',
+  'ค่าเริ่มต้นของระบบ',
+  id, id
+FROM admin_user;

@@ -1,0 +1,14 @@
+.git
+.cache
+.tmp
+.DS_Store
+node_modules
+web/node_modules
+web/.next
+api/bin
+api/tmp
+data
+docs
+*.log
+*.example
+*.local

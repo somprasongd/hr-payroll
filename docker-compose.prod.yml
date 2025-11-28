@@ -2,14 +2,13 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: hrms
       POSTGRES_PASSWORD: hrms_password
       POSTGRES_DB: hr_payroll
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hrms -d hr_payroll"]
       interval: 10s
@@ -17,18 +16,34 @@ services:
       retries: 5
       start_period: 5s
 
+  migrate:
+    image: migrate/migrate:v4.19.0
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      # ต้องรันหลังจากที่ db พร้อมทำงานแล้ว
+      db:
+        condition: service_healthy
+    # สั่ง migrate up
+    command: -verbose -path=/migrations/ -database "postgres://hrms:hrms_password@db:5432/hr_payroll?sslmode=disable" up
+
   api:
     image: hr-payroll-api:${BUILD_VERSION:-latest}
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       # Note: You may need to create the 'hr_payroll' database manually or via a script
       DB_DSN: postgres://hrms:hrms_password@db:5432/hr_payroll?sslmode=disable
     depends_on:
       db:
+        # ต้องรันหลังจากที่ db พร้อมทำงานแล้ว
         condition: service_healthy
+      migrate:
+        # ต้องรันหลังจากที่ migrate ทำงานสำเร็จแล้ว
+        condition: service_completed_successfully
     healthcheck:
-      test:
-        ["CMD-SHELL", "wget --spider --quiet http://localhost:8080/ || exit 1"]
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,8 +56,7 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test:
-        ["CMD-SHELL", "wget --spider --quiet http://localhost:3000/ || exit 1"]
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:3000/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -60,3 +74,6 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
+
+volumes:
+  postgres_data:

@@ -51,6 +51,10 @@ image-web:
 .PHONY: image
 image: image-api image-web
 
+.PHONY: build-image
+build-image:
+	docker compose -f docker-compose.build.yml build
+
 .PHONY: devup
 devup:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
@@ -66,6 +70,9 @@ devdownv:
 .PHONY: produp
 produp:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+.PHONY: produp-build
+produp-build: build-image produp
 
 .PHONY: proddown
 proddown:

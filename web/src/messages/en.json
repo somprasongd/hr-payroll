@@ -144,6 +144,8 @@
       "pvdRateEmployer": "PVD Employer Rate (%)",
       "tax": "Withhold Tax",
       "allowances": "Allowances",
+      "utilities": "Utilities (deduct from payroll)",
+      "utilitiesHint": "For deductions such as water, electricity, and internet usage",
       "housing": "Housing",
       "water": "Water",
       "electric": "Electricity",
