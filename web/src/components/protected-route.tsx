@@ -23,11 +23,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {
+      console.log('[ProtectedRoute] Not authenticated, redirecting to login', { pathname });
       // Save current path for return after login (without locale prefix)
       setReturnUrl(pathname);
       
       // Redirect to login
       router.push('/');
+    } else if (_hasHydrated && isAuthenticated) {
+      console.log('[ProtectedRoute] Authenticated, rendering children', { pathname });
     }
   }, [isAuthenticated, pathname, router, setReturnUrl, _hasHydrated]);
 

@@ -16,11 +16,11 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuthStore } from "@/store/auth-store"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useTranslations, useLocale } from 'next-intl';
 import { User, Lock, Eye, EyeOff, Users, AlertCircle } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { useRouter } from "@/i18n/routing";
+import { useRouter, usePathname } from "@/i18n/routing";
 import { authService } from "@/services/auth.service";
 import { ApiError } from "@/lib/api-client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,25 +28,36 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function LoginPage() {
   const t = useTranslations('Index');
   const locale = useLocale();
-  const { login, returnUrl, setReturnUrl, isAuthenticated, _hasHydrated, refreshToken, updateToken, logout } = useAuthStore()
+  const { login, returnUrl, setReturnUrl, isAuthenticated, _hasHydrated, refreshToken, updateToken, updateTokens, logout } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string>('')
   const [isChecking, setIsChecking] = useState(true)
   const router = useRouter();
+  const pathname = usePathname();
+  const hasVerified = useRef(false);
 
   useEffect(() => {
     // Wait for hydration to complete
     if (!_hasHydrated) return;
 
+    // Prevent multiple verifications or loops
+    if (hasVerified.current) return;
+
+    console.log('[LoginPage] Checking session', { isAuthenticated, hasRefreshToken: !!refreshToken });
+
     const verifySession = async () => {
+      hasVerified.current = true;
+
       if (isAuthenticated && refreshToken) {
         try {
+          console.log('[LoginPage] Verifying session with refresh token');
           // Verify session by refreshing token
           const response = await authService.refreshToken(refreshToken);
+          console.log('[LoginPage] Session verified, updating tokens');
           
-          // Update access token
-          updateToken(response.accessToken);
+          // Update access token and refresh token (if rotated)
+          updateTokens(response.accessToken, response.refreshToken || refreshToken);
           
           const preferredLocale = localStorage.getItem('preferredLocale');
           const targetLocale = (preferredLocale && ['en', 'th', 'my'].includes(preferredLocale)) 
@@ -54,14 +65,26 @@ export default function LoginPage() {
             : locale;
 
           const redirectTo = returnUrl || '/dashboard';
+          console.log('[LoginPage] Redirecting to', redirectTo);
           router.replace(redirectTo, { locale: targetLocale as 'en' | 'th' | 'my' });
         } catch (error) {
-          console.error('Session verification failed:', error);
+          console.error('[LoginPage] Session verification failed:', error);
           // If verification fails, logout and show login form
           logout();
           setIsChecking(false);
         }
       } else {
+        console.log('[LoginPage] Not authenticated, checking preferred locale');
+        
+        // Check if we need to redirect to preferred locale
+        const preferredLocale = localStorage.getItem('preferredLocale');
+        if (preferredLocale && ['en', 'th', 'my'].includes(preferredLocale) && preferredLocale !== locale) {
+          console.log('[LoginPage] Redirecting to preferred locale', preferredLocale);
+          router.replace(pathname, { locale: preferredLocale as 'en' | 'th' | 'my' });
+          return;
+        }
+
+        console.log('[LoginPage] Showing login form');
         // Not authenticated, show login form
         setIsChecking(false);
       }

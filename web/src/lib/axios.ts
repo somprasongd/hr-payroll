@@ -68,8 +68,8 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Skip 401 handling for login requests
-    if (originalRequest?.url?.includes('/auth/login')) {
+    // Skip 401 handling for login and refresh requests
+    if (originalRequest?.url?.includes('/auth/login') || originalRequest?.url?.includes('/auth/refresh')) {
       return Promise.reject(error);
     }
 
@@ -143,13 +143,17 @@ axiosInstance.interceptors.response.use(
         refreshToken,
       });
 
-      const { accessToken: newToken } = response.data;
+      const { accessToken: newToken, refreshToken: newRefreshToken } = response.data;
 
       // Update token in store and localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', newToken);
-        const { updateToken } = useAuthStore.getState();
-        updateToken(newToken);
+        if (newRefreshToken) {
+          localStorage.setItem('refreshToken', newRefreshToken);
+        }
+        const { updateTokens } = useAuthStore.getState();
+        // Use new refresh token if available, otherwise keep using the old one (though it might be invalid if rotation is enforced)
+        updateTokens(newToken, newRefreshToken || refreshToken);
       }
 
       // Process queued requests
