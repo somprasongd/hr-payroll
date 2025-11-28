@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuthStore } from "@/store/auth-store"
 import { useState, useEffect } from "react"
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { User, Lock, Eye, EyeOff, Users, AlertCircle } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRouter } from "@/i18n/routing";
@@ -27,11 +27,24 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const t = useTranslations('Index');
-  const { login, returnUrl, setReturnUrl } = useAuthStore()
+  const locale = useLocale();
+  const { login, returnUrl, setReturnUrl, isAuthenticated, _hasHydrated } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string>('')
   const router = useRouter();
+
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      const preferredLocale = localStorage.getItem('preferredLocale');
+      const targetLocale = (preferredLocale && ['en', 'th', 'my'].includes(preferredLocale)) 
+        ? preferredLocale 
+        : locale;
+
+      const redirectTo = returnUrl || '/dashboard';
+      router.replace(redirectTo, { locale: targetLocale as 'en' | 'th' | 'my' });
+    }
+  }, [_hasHydrated, isAuthenticated, router, returnUrl, locale]);
 
   const formSchema = z.object({
     username: z.string().min(3, {
