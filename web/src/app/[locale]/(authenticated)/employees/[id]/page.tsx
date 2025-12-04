@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { EmployeeForm } from '@/components/employees/employee-form';
 import { employeeService, Employee, UpdateEmployeeRequest, CreateEmployeeRequest } from '@/services/employee.service';
+import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 import { useSearchParams } from 'next/navigation';
@@ -55,9 +56,14 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('editTitle')}</h1>
-        <p className="text-muted-foreground">{t('description')}</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('editTitle')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
+        </div>
+        <Button variant="outline" onClick={() => router.push('/employees')}>
+          {t('actions.cancel')}
+        </Button>
       </div>
       <EmployeeForm 
         initialData={employee} 

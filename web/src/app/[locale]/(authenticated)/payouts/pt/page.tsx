@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
+import { EmployeeSelector } from '@/components/common/employee-selector';
+import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
 import {
   Table,
   TableBody,
@@ -145,17 +147,14 @@ export default function PayoutPtListPage() {
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="col-span-1 md:col-span-6 lg:col-span-4">
             <label className="text-sm font-medium mb-1 block">{t('fields.employee')}</label>
-            <Combobox
-              options={employees.map(emp => ({
-                value: emp.id || emp.ID || '',
-                label: `${emp.employeeNumber || emp.EmployeeNumber || ''} - ${emp.fullNameTh || `${emp.firstName || emp.FirstName || ''} ${emp.lastName || emp.LastName || ''}`}`.trim(),
-                searchText: `${emp.employeeNumber || emp.EmployeeNumber || ''} ${emp.fullNameTh || ''} ${emp.firstName || emp.FirstName || ''} ${emp.lastName || emp.LastName || ''}`.toLowerCase(),
-              }))}
-              value={employeeId}
-              onValueChange={setEmployeeId}
+            <EmployeeSelector
+              employees={employees}
+              selectedEmployeeId={employeeId}
+              onSelect={setEmployeeId}
               placeholder={t('filters.selectEmployee') || 'Select Employee'}
               searchPlaceholder="Search employee..."
               emptyText="No employee found"
+              filterType="pt"
             />
           </div>
 
@@ -174,6 +173,15 @@ export default function PayoutPtListPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Employee Display */}
+      {!showFilters && employeeId && (
+        <MobileEmployeeDisplay
+          employees={employees}
+          selectedEmployeeId={employeeId}
+          onSelect={setEmployeeId}
+        />
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">

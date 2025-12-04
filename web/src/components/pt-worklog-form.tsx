@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
+import { EmployeeSelector } from '@/components/common/employee-selector';
 import { DateInput } from '@/components/ui/date-input';
 import { TimeInput } from '@/components/ui/time-input';
 import { Employee } from '@/services/employee.service';
@@ -171,14 +172,14 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
             {mode === 'create' && (
               <div className="grid gap-2">
                 <Label htmlFor="employee">{t('fields.employee')}</Label>
-                <Combobox
-                  options={employeeOptions}
-                  value={employeeId}
-                  onValueChange={setEmployeeId}
+                <EmployeeSelector
+                  employees={employees}
+                  selectedEmployeeId={employeeId}
+                  onSelect={setEmployeeId}
                   placeholder={t('placeholders.selectEmployee')}
                   searchPlaceholder="ค้นหารหัสหรือชื่อพนักงาน..."
                   emptyText="ไม่พบพนักงาน"
-                  className={errors.employeeId ? 'border-red-500' : ''}
+                  filterType="pt"
                 />
                 {errors.employeeId && <p className="text-sm text-red-500">{errors.employeeId}</p>}
               </div>

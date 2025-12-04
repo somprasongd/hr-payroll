@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, MoreHorizontal, Filter, Plus, X, Trash2, Pencil, Search, RotateCcw } from "lucide-react";
+import { Loader2, Eye, MoreHorizontal, Filter, Plus, X, Trash2, Pencil, Search, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { salaryAdvanceService, SalaryAdvance } from '@/services/salary-advance-service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
@@ -45,6 +45,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { useAuthStore } from '@/store/auth-store';
+import { EmployeeSelector } from '@/components/common/employee-selector';
+import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
 
 export function SalaryAdvanceList() {
   const t = useTranslations('SalaryAdvance');
@@ -158,17 +160,13 @@ export function SalaryAdvanceList() {
       <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 ${!showFilters ? 'hidden md:block' : ''} ${employeeFilter !== 'all' ? 'lg:relative' : ''}`}>
         <div className="grid grid-cols-6 gap-4">
           <div className="col-span-6 lg:col-span-2">
-             <Combobox
-              options={employees.map(emp => ({
-                value: emp.id,
-                label: `${emp.employeeNumber} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`,
-                searchText: `${emp.employeeNumber} ${emp.fullNameTh} ${emp.firstName} ${emp.lastName}`
-              }))}
-              value={employeeFilter === 'all' ? '' : employeeFilter}
-              onValueChange={(value) => setEmployeeFilter(value || 'all')}
-              placeholder={t('selectEmployee') || 'Select Employee'}
-              searchPlaceholder={t('searchEmployee') || 'Search employee...'}
-              emptyText={t('noEmployeeFound') || 'No employee found'}
+             <EmployeeSelector
+              employees={employees}
+              selectedEmployeeId={employeeFilter}
+              onSelect={setEmployeeFilter}
+              placeholder={t('selectEmployee')}
+              searchPlaceholder={t('searchEmployee')}
+              emptyText={t('noEmployeeFound')}
             />
           </div>
 
@@ -198,6 +196,14 @@ export function SalaryAdvanceList() {
           )}
         </div>
       </div>
+
+      {!showFilters && employeeFilter !== 'all' && (
+        <MobileEmployeeDisplay
+          employees={employees}
+          selectedEmployeeId={employeeFilter}
+          onSelect={setEmployeeFilter}
+        />
+      )}
 
       <div className="rounded-md border">
         <Table>

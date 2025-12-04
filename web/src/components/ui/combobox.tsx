@@ -20,7 +20,7 @@ import {
 
 export interface ComboboxOption {
   value: string;
-  label: string;
+  label: string | React.ReactNode;
   searchText?: string;
 }
 
@@ -69,7 +69,7 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.searchText || option.label}
+                  value={option.searchText || (typeof option.label === 'string' ? option.label : option.value)}
                   onSelect={() => {
                     onValueChange(option.value);
                     setOpen(false);

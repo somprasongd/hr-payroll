@@ -178,7 +178,8 @@
       "title": "การจัดการ",
       "edit": "แก้ไข",
       "delete": "ลบ",
-      "openMenu": "เปิดเมนู"
+      "openMenu": "เปิดเมนู",
+      "cancel": "ยกเลิก"
     },
     "loading": "กำลังโหลด...",
     "search": "ค้นหา",
@@ -496,7 +497,10 @@
     "search": "ค้นหา",
     "confirm": "ยืนยัน",
     "currentMonth": "เดือนปัจจุบัน",
-    "errorLoadingData": "เกิดข้อผิดพลาดในการโหลดข้อมูล"
+    "errorLoadingData": "เกิดข้อผิดพลาดในการโหลดข้อมูล",
+    "next": "ถัดไป",
+    "previous": "ก่อนหน้า",
+    "filter": "ตัวกรอง"
   },
   "Payouts": {
     "PT": {
@@ -540,6 +544,7 @@
         "noPendingWorklogs": "ไม่พบรายการลงเวลาที่ค้างอยู่สำหรับพนักงานคนนี้",
         "selectedWorklogs": "รายการที่เลือก: {count}",
         "totalHours": "ชั่วโมงรวม: {hours}",
+        "hourlyRate": "ค่าจ้างต่อชั่วโมง: {rate}",
         "estimatedAmount": "ยอดเงินโดยประมาณ: {amount}"
       },
       "success": {

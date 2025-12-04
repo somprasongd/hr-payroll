@@ -33,6 +33,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
 import { Combobox } from "@/components/ui/combobox";
+import { EmployeeSelector } from "@/components/common/employee-selector";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { debtService } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
@@ -235,14 +236,10 @@ export function CreateDebtPlanForm() {
                   <FormItem className="col-span-2 md:col-span-1">
                     <FormLabel>{t('fields.employee')}</FormLabel>
                     <FormControl>
-                      <Combobox
-                        options={employees.map(emp => ({
-                          value: emp.id,
-                          label: `${emp.employeeNumber} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`,
-                          searchText: `${emp.employeeNumber} ${emp.fullNameTh} ${emp.firstName} ${emp.lastName}`
-                        }))}
-                        value={field.value}
-                        onValueChange={handleEmployeeChange}
+                      <EmployeeSelector
+                        employees={employees}
+                        selectedEmployeeId={field.value}
+                        onSelect={handleEmployeeChange}
                         placeholder={t('fields.employee')}
                         searchPlaceholder={tCommon('search')}
                         emptyText={tCommon('noData')}

@@ -3,46 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
-import { Loader2, Eye, Trash2, X, MoreHorizontal, Filter, Plus, RotateCcw } from 'lucide-react';
+import { Eye, Trash2, Filter, Plus, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { CreateCycleDialog } from '@/components/bonus/create-cycle-dialog';
 import { bonusService, BonusCycle } from '@/services/bonus-service';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Pagination } from '@/components/ui/pagination';
+import { GenericDataTable } from '@/components/common/generic-data-table';
+import { FilterBar } from '@/components/common/filter-bar';
+import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 
 export default function BonusListPage() {
   const t = useTranslations('Bonus');
@@ -136,6 +106,60 @@ export default function BonusListPage() {
     fetchCycles();
   };
 
+  const columns = [
+    {
+      id: 'payrollMonth',
+      header: () => t('fields.payrollMonth'),
+      accessorFn: (row: BonusCycle) => format(new Date(row.payrollMonthDate), 'MM/yyyy'),
+      cell: (info: any) => info.getValue(),
+    },
+    {
+      id: 'period',
+      header: () => t('fields.period'),
+      accessorFn: (row: BonusCycle) =>
+        `${format(new Date(row.periodStartDate), 'dd/MM/yyyy')} - ${format(new Date(row.periodEndDate), 'dd/MM/yyyy')}`,
+      cell: (info: any) => info.getValue(),
+    },
+    {
+      id: 'totalEmployees',
+      header: () => t('fields.totalEmployees'),
+      accessorFn: (row: BonusCycle) => row.totalEmployees,
+      cell: (info: any) => info.getValue(),
+    },
+    {
+      id: 'totalAmount',
+      header: () => t('fields.totalAmount'),
+      accessorFn: (row: BonusCycle) => row.totalBonusAmount?.toLocaleString() || '-',
+      cell: (info: any) => info.getValue(),
+    },
+    {
+      id: 'status',
+      header: () => t('fields.status'),
+      accessorFn: (row: BonusCycle) => row.status,
+      cell: (info: any) => {
+        const status = info.getValue();
+        return getStatusBadge(status);
+      },
+    },
+  ];
+
+  const actions = [
+    {
+      label: t('actions.view'),
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (cycle: BonusCycle) => {
+        router.push(`/bonuses/${cycle.id}`);
+      },
+    },
+    {
+      label: t('actions.delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive' as const,
+      onClick: (cycle: BonusCycle) => setDeleteId(cycle.id),
+      condition: (cycle: BonusCycle) => cycle.status !== 'approved'
+    }
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-row justify-between items-center gap-4">
@@ -164,141 +188,65 @@ export default function BonusListPage() {
         </div>
       </div>
 
-      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 relative ${!showFilters ? 'hidden md:block' : ''}`}>
-        {(statusFilter !== 'all' || yearFilter !== 'all') && (
-          <button
-            onClick={clearFilters}
-            className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-            title={tCommon('clearFilter')}
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
-        )}
-
-        <div className="flex flex-col md:flex-row gap-4 md:w-auto lg:w-fit">
-          <div className="w-full md:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('filters.status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('status.allStatuses')}</SelectItem>
-                <SelectItem value="pending">{t('status.pending')}</SelectItem>
-                <SelectItem value="approved">{t('status.approved')}</SelectItem>
-                <SelectItem value="rejected">{t('status.rejected')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-full md:w-48">
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('filters.year')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('status.allYears')}</SelectItem>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('fields.payrollMonth')}</TableHead>
-              <TableHead>{t('fields.period')}</TableHead>
-              <TableHead>{t('fields.totalEmployees')}</TableHead>
-              <TableHead>{t('fields.totalAmount')}</TableHead>
-              <TableHead>{t('fields.status')}</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                </TableCell>
-              </TableRow>
-            ) : (cycles?.length || 0) === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  {t('noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              cycles?.map((cycle) => (
-                <TableRow key={cycle.id}>
-                  <TableCell>{format(new Date(cycle.payrollMonthDate), 'MM/yyyy')}</TableCell>
-                  <TableCell>
-                    {format(new Date(cycle.periodStartDate), 'dd/MM/yyyy')} -{' '}
-                    {format(new Date(cycle.periodEndDate), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell>{cycle.totalEmployees}</TableCell>
-                  <TableCell>{cycle.totalBonusAmount?.toLocaleString()}</TableCell>
-                  <TableCell>
-                    {getStatusBadge(cycle.status)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/bonuses/${cycle.id}`} className="cursor-pointer">
-                            <Eye className="h-4 w-4 mr-2" />
-                            {t('actions.view')}
-                          </Link>
-                        </DropdownMenuItem>
-                        {cycle.status !== 'approved' && (
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => setDeleteId(cycle.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            {t('actions.delete')}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
+      <FilterBar
+        filters={[
+          {
+            id: 'status',
+            label: t('filters.status'),
+            type: 'select' as const,
+            options: [
+              { value: 'all', label: t('status.allStatuses') },
+              { value: 'pending', label: t('status.pending') },
+              { value: 'approved', label: t('status.approved') },
+              { value: 'rejected', label: t('status.rejected') }
+            ]
+          },
+          {
+            id: 'year',
+            label: t('filters.year'),
+            type: 'select' as const,
+            options: [
+              { value: 'all', label: t('status.allYears') },
+              ...years.map(year => ({ value: year.toString(), label: year.toString() }))
+            ]
+          }
+        ]}
+        values={{
+          status: statusFilter,
+          year: yearFilter
+        }}
+        onFilterChange={(filterId, value) => {
+          if (filterId === 'status') setStatusFilter(value);
+          if (filterId === 'year') setYearFilter(value);
+        }}
+        onClearAll={clearFilters}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
       />
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('delete.description')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              {tCommon('delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <GenericDataTable
+        data={cycles}
+        columns={columns}
+        loading={loading}
+        emptyStateText={t('noData')}
+        actions={actions}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
+      />
+
+
+      <ConfirmationDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title={t('delete.title')}
+        description={t('delete.description')}
+        onConfirm={handleDelete}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+      />
     </div>
   );
 }

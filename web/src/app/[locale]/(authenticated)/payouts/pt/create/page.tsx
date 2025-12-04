@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
+import { EmployeeSelector } from '@/components/common/employee-selector';
 import {
   Table,
   TableBody,
@@ -180,17 +181,14 @@ export default function CreatePayoutPtPage() {
               <CardTitle>{t('step1')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Combobox
-                options={employees.map(emp => ({
-                  value: emp.id || emp.ID || '',
-                  label: `${emp.employeeNumber || emp.EmployeeNumber || ''} - ${emp.fullNameTh || `${emp.firstName || emp.FirstName || ''} ${emp.lastName || emp.LastName || ''}`}`.trim(),
-                  searchText: `${emp.employeeNumber || emp.EmployeeNumber || ''} ${emp.fullNameTh || ''} ${emp.firstName || emp.FirstName || ''} ${emp.lastName || emp.LastName || ''}`.toLowerCase(),
-                }))}
-                value={selectedEmployeeId}
-                onValueChange={setSelectedEmployeeId}
+              <EmployeeSelector
+                employees={employees}
+                selectedEmployeeId={selectedEmployeeId}
+                onSelect={setSelectedEmployeeId}
                 placeholder={t('selectEmployeePlaceholder')}
                 searchPlaceholder="Search employee..."
                 emptyText="No employee found"
+                filterType="pt"
               />
             </CardContent>
           </Card>
@@ -263,6 +261,10 @@ export default function CreatePayoutPtPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">{t('totalHours', { hours: totals.totalHours.toFixed(2) })}</span>
                   <span className="font-medium">{totals.totalHours.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">{t('hourlyRate', { rate: (selectedEmployee?.basePayAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 }) })}</span>
+                  <span className="font-medium">{(selectedEmployee?.basePayAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="pt-2 border-t flex justify-between items-center">
                   <span className="font-bold">{t('estimatedAmount', { amount: '' })}</span>

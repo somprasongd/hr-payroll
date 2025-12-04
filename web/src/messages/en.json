@@ -178,7 +178,8 @@
       "title": "Actions",
       "edit": "Edit",
       "delete": "Delete",
-      "openMenu": "Open menu"
+      "openMenu": "Open menu",
+      "cancel": "Cancel"
     },
     "loading": "Loading...",
     "search": "Search",
@@ -367,7 +368,7 @@
         "employeeRequired": "Please select an employee",
         "workDateRequired": "Please select a date",
         "quantityRequired": "Please enter a valid quantity"
-       },
+      },
       "success": {
         "created": "Created Successfully",
         "createdDescription": "Worklog record created",
@@ -504,7 +505,10 @@
     "loading": "Loading...",
     "all": "All",
     "clearFilter": "Clear Filter",
-    "noData": "No data"
+    "noData": "No data",
+    "next": "Next",
+    "previous": "Previous",
+    "filter": "Filter"
   },
   "Payouts": {
     "PT": {
@@ -548,6 +552,7 @@
         "noPendingWorklogs": "No pending worklogs found for this employee",
         "selectedWorklogs": "Selected Worklogs: {count}",
         "totalHours": "Total Hours: {hours}",
+        "hourlyRate": "Hourly Rate: {rate}",
         "estimatedAmount": "Estimated Amount: {amount}"
       },
       "success": {
@@ -828,24 +833,24 @@
       "repay": "Repayment"
     },
     "create": {
-        "title": "Create Debt Plan",
-        "description": "Create a new loan or debt record with optional installment plan.",
-        "hasInstallment": "Has Installment Plan?",
-        "autoGenerate": "Auto Generate Installments",
-        "startMonth": "Start Month",
-        "months": "Number of Months",
-        "generate": "Generate",
-        "totalInstallment": "Total Installment Amount",
-        "diff": "Difference",
-        "mustMatchAmount": "Total installments must equal loan amount",
-        "success": "Debt plan created successfully"
+      "title": "Create Debt Plan",
+      "description": "Create a new loan or debt record with optional installment plan.",
+      "hasInstallment": "Has Installment Plan?",
+      "autoGenerate": "Auto Generate Installments",
+      "startMonth": "Start Month",
+      "months": "Number of Months",
+      "generate": "Generate",
+      "totalInstallment": "Total Installment Amount",
+      "diff": "Difference",
+      "mustMatchAmount": "Total installments must equal loan amount",
+      "success": "Debt plan created successfully"
     },
     "errors": {
-        "sumMismatch": "Total installments must equal the loan amount."
+      "sumMismatch": "Total installments must equal the loan amount."
     },
     "summary": {
-        "outstandingDebt": "Total Outstanding Debt",
-        "pendingInstallments": "Pending Installments"
+      "outstandingDebt": "Total Outstanding Debt",
+      "pendingInstallments": "Pending Installments"
     },
     "approve": {
       "title": "Confirm Approval",

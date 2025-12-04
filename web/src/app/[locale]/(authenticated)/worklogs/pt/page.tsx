@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
+import { EmployeeSelector } from '@/components/common/employee-selector';
+import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DateInput } from '@/components/ui/date-input';
@@ -274,19 +276,14 @@ export default function PTWorklogsPage() {
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="col-span-1 md:col-span-6 lg:col-span-4">
             <label className="text-sm font-medium mb-2 block">{t('filters.employee')}</label>
-            <Combobox
-              options={employees
-                .filter(emp => emp.employeeTypeName?.includes('พาร์ท') || emp.employeeTypeName?.toLowerCase().includes('part'))
-                .map(emp => ({
-                  value: emp.id,
-                  label: `${emp.employeeNumber || ''} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`.trim(),
-                  searchText: `${emp.employeeNumber || ''} ${emp.fullNameTh || ''} ${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase(),
-                }))}
-              value={employeeFilter}
-              onValueChange={setEmployeeFilter}
+            <EmployeeSelector
+              employees={employees}
+              selectedEmployeeId={employeeFilter}
+              onSelect={setEmployeeFilter}
               placeholder={t('placeholders.selectEmployee')}
               searchPlaceholder="ค้นหารหัสหรือชื่อพนักงาน..."
               emptyText="ไม่พบพนักงาน"
+              filterType="pt"
             />
           </div>
 
@@ -317,6 +314,15 @@ export default function PTWorklogsPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Employee Display */}
+      {!showFilters && employeeFilter && (
+        <MobileEmployeeDisplay
+          employees={employees}
+          selectedEmployeeId={employeeFilter}
+          onSelect={setEmployeeFilter}
+        />
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border overflow-x-auto">

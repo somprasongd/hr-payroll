@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-input";
 import { Combobox } from "@/components/ui/combobox";
+import { EmployeeSelector } from "@/components/common/employee-selector";
 import { useToast } from "@/hooks/use-toast";
 import { debtService } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
@@ -151,14 +152,10 @@ export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedE
                 <FormItem>
                   <FormLabel>{t('fields.employee')}</FormLabel>
                   <FormControl>
-                    <Combobox
-                      options={employees.map(emp => ({
-                        value: emp.id,
-                        label: `${emp.employeeNumber} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`,
-                        searchText: `${emp.employeeNumber} ${emp.fullNameTh} ${emp.firstName} ${emp.lastName}`
-                      }))}
-                      value={field.value}
-                      onValueChange={handleEmployeeChange}
+                    <EmployeeSelector
+                      employees={employees}
+                      selectedEmployeeId={field.value}
+                      onSelect={handleEmployeeChange}
                       placeholder={t('fields.employee')}
                       searchPlaceholder={tCommon('search')}
                       emptyText={tCommon('noData')}

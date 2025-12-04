@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
+import { EmployeeSelector } from '@/components/common/employee-selector';
 import { DateInput } from '@/components/ui/date-input';
 import { Employee } from '@/services/employee.service';
 import { CreateFTWorklogRequest, UpdateFTWorklogRequest, FTWorklog } from '@/services/ft-worklog.service';
@@ -136,14 +137,14 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
             {mode === 'create' && (
               <div className="grid gap-2">
                 <Label htmlFor="employee">{t('fields.employee')}</Label>
-                <Combobox
-                  options={employeeOptions}
-                  value={employeeId}
-                  onValueChange={setEmployeeId}
+                <EmployeeSelector
+                  employees={employees}
+                  selectedEmployeeId={employeeId}
+                  onSelect={setEmployeeId}
                   placeholder={t('placeholders.selectEmployee')}
                   searchPlaceholder="ค้นหารหัสหรือชื่อพนักงาน..."
                   emptyText="ไม่พบพนักงาน"
-                  className={errors.employeeId ? 'border-red-500' : ''}
+                  filterType="ft"
                 />
                 {errors.employeeId && <p className="text-sm text-red-500">{errors.employeeId}</p>}
               </div>

@@ -36,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { salaryAdvanceService } from '@/services/salary-advance-service';
 import { employeeService } from '@/services/employee.service';
 import { payrollService } from '@/services/payroll.service';
+import { EmployeeSelector } from '@/components/common/employee-selector';
 
 const formSchema = z.object({
   employeeId: z.string().min(1, { message: "Required" }),
@@ -189,20 +190,14 @@ export function CreateSalaryAdvanceDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('employee')}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('selectEmployee')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {employees.map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.fullNameTh} ({emp.employeeNumber})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <EmployeeSelector
+                    employees={employees}
+                    selectedEmployeeId={field.value}
+                    onSelect={field.onChange}
+                    placeholder={t('selectEmployee')}
+                    searchPlaceholder={tCommon('search')}
+                    emptyText={tCommon('noData')}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

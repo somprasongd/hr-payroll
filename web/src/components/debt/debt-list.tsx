@@ -2,15 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Filter, Plus, Trash2, Eye, RotateCcw, Wallet, Clock } from "lucide-react";
+import { debtService, DebtTxn } from '@/services/debt.service';
+import { employeeService, Employee } from '@/services/employee.service';
+import { format } from 'date-fns';
+import { useToast } from "@/hooks/use-toast";
+import { Combobox } from "@/components/ui/combobox";
+import { useAuthStore } from '@/store/auth-store';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { accumulationService } from '@/services/accumulation.service';
+import { GenericDataTable } from '@/components/common/generic-data-table';
+import { FilterBar } from '@/components/common/filter-bar';
+import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
+import { ActionDropdown } from '@/components/common/action-dropdown';
+import { EmployeeSelector } from '@/components/common/employee-selector';
+import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
+
+import { CreateRepaymentDialog } from './create-repayment-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Select, 
   SelectContent, 
@@ -18,36 +35,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Filter, Plus, Trash2, Eye, RotateCcw, Wallet, Clock } from "lucide-react";
-import { debtService, DebtTxn } from '@/services/debt.service';
-import { employeeService, Employee } from '@/services/employee.service';
-import { format } from 'date-fns';
-import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Combobox } from "@/components/ui/combobox";
-import { useAuthStore } from '@/store/auth-store';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Pagination } from "@/components/ui/pagination";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { accumulationService } from '@/services/accumulation.service';
-
-import { CreateRepaymentDialog } from './create-repayment-dialog';
 
 export function DebtList() {
   const t = useTranslations('Debt');
@@ -182,6 +169,63 @@ export function DebtList() {
     setPage(1);
   };
 
+  const columns = [
+    {
+      id: 'txnDate',
+      header: () => t('fields.txnDate'),
+      accessorFn: (row: DebtTxn) => format(new Date(row.txnDate), 'dd/MM/yyyy'),
+      cell: (info: any) => info.getValue(),
+    },
+    {
+      id: 'txnType',
+      header: () => t('fields.txnType'),
+      accessorFn: (row: DebtTxn) => row,
+      cell: (info: any) => {
+        const item = info.getValue() as DebtTxn;
+        return (
+          <Badge variant="outline">
+            {t(`types.${item.txnType}`)}
+            {item.installments && item.installments.length > 0 && ` (${t('types.installment')})`}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: 'amount',
+      header: () => t('fields.amount'),
+      accessorFn: (row: DebtTxn) => row.amount.toLocaleString(),
+      cell: (info: any) => info.getValue(),
+    },
+    {
+      id: 'status',
+      header: () => t('fields.status'),
+      accessorFn: (row: DebtTxn) => row.status,
+      cell: (info: any) => {
+        const status = info.getValue();
+        return (
+          <Badge variant={status === 'approved' ? 'default' : 'secondary'}>
+            {t(`status.${status}`)}
+          </Badge>
+        );
+      },
+    },
+  ];
+
+  const actions = [
+    {
+      label: t('actions.view'),
+      icon: <Eye className="w-4 h-4" />,
+      onClick: (item: DebtTxn) => router.push(`/${locale}/debt/${item.id}`),
+    },
+    {
+      label: t('actions.delete'),
+      icon: <Trash2 className="w-4 h-4" />,
+      variant: 'destructive' as const,
+      onClick: (item: DebtTxn) => setDeleteItem(item),
+      condition: (item: DebtTxn) => item.status === 'pending' && user?.role === 'admin'
+    }
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-row justify-between items-center gap-4">
@@ -218,24 +262,20 @@ export function DebtList() {
         </div>
       </div>
 
-      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 ${!showFilters ? 'hidden md:block' : ''}`}>
+      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 ${!showFilters ? 'hidden md:block' : ''} ${employeeFilter !== 'all' ? 'lg:relative' : ''}`}>
         <div className="grid grid-cols-6 gap-4">
           <div className="col-span-6 lg:col-span-2">
-             <Combobox
-              options={employees.map(emp => ({
-                value: emp.id,
-                label: `${emp.employeeNumber} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`,
-                searchText: `${emp.employeeNumber} ${emp.fullNameTh} ${emp.firstName} ${emp.lastName}`
-              }))}
-              value={employeeFilter === 'all' ? '' : employeeFilter}
-              onValueChange={(value) => setEmployeeFilter(value || 'all')}
+             <EmployeeSelector
+              employees={employees}
+              selectedEmployeeId={employeeFilter}
+              onSelect={setEmployeeFilter}
               placeholder={t('fields.employee')}
               searchPlaceholder={tCommon('search')}
               emptyText={tCommon('noData')}
             />
           </div>
 
-          <div className="col-span-6 md:col-span-3 lg:col-span-1">
+          <div className="col-span-6 lg:col-span-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue placeholder={t('status.allStatuses')} />
@@ -248,7 +288,7 @@ export function DebtList() {
             </Select>
           </div>
 
-          <div className="col-span-6 md:col-span-3 lg:col-span-1">
+          <div className="col-span-6 lg:col-span-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger>
                 <SelectValue placeholder={t('status.allTypes')} />
@@ -262,8 +302,8 @@ export function DebtList() {
             </Select>
           </div>
 
-          {(statusFilter !== 'all' || employeeFilter !== 'all' || typeFilter !== 'all') && (
-            <div className="col-span-6 lg:col-span-2 flex items-center justify-end">
+          {(statusFilter !== 'all' || typeFilter !== 'all' || employeeFilter !== 'all') && (
+            <div className="col-span-6 lg:absolute lg:top-4 lg:right-4 flex items-center justify-end">
               <button
                 onClick={clearFilters}
                 className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -275,6 +315,15 @@ export function DebtList() {
           )}
         </div>
       </div>
+
+      {/* Mobile Employee Display */}
+      {!showFilters && employeeFilter !== 'all' && (
+        <MobileEmployeeDisplay
+          employees={employees}
+          selectedEmployeeId={employeeFilter}
+          onSelect={setEmployeeFilter}
+        />
+      )}
 
       {employeeFilter !== 'all' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -304,99 +353,29 @@ export function DebtList() {
         </div>
       )}
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('fields.txnDate')}</TableHead>
-              <TableHead>{t('fields.txnType')}</TableHead>
-              <TableHead>{t('fields.amount')}</TableHead>
-              <TableHead>{t('fields.status')}</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  {tCommon('loading')}
-                </TableCell>
-              </TableRow>
-            ) : !data || data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  {employeeFilter === 'all' ? t('selectEmployeeToView') : tCommon('noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{format(new Date(item.txnDate), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                        {t(`types.${item.txnType}`)}
-                        {item.installments && item.installments.length > 0 && ` (${t('types.installment')})`}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{item.amount.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.status === 'approved' ? 'default' : 'secondary'}>
-                      {t(`status.${item.status}`)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/${locale}/debt/${item.id}`)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          {t('actions.view')}
-                        </DropdownMenuItem>
-                        {item.status === 'pending' && user?.role === 'admin' && (
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={() => setDeleteItem(item)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {t('actions.delete')}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination 
-        currentPage={page} 
-        totalPages={totalPages} 
-        onPageChange={setPage} 
+      <GenericDataTable
+        data={data}
+        columns={columns}
+        loading={loading}
+        emptyStateText={employeeFilter === 'all' ? t('selectEmployeeToView') : tCommon('noData')}
+        actions={actions}
+        pagination={{
+          currentPage: page,
+          totalPages,
+          onPageChange: setPage
+        }}
       />
 
-      <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{tCommon('delete')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {tCommon('confirm')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              {tCommon('delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
+      <ConfirmationDialog
+        open={!!deleteItem}
+        onOpenChange={(open) => !open && setDeleteItem(null)}
+        title={tCommon('delete')}
+        description={tCommon('confirm')}
+        onConfirm={handleDelete}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+      />
 
       <CreateRepaymentDialog 
         open={repaymentOpen} 
