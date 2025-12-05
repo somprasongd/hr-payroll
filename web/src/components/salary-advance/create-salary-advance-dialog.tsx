@@ -105,8 +105,8 @@ export function CreateSalaryAdvanceDialog({
       const pendingRun = await payrollService.getPendingPayrollRun();
       let monthDate = `${currentYear}-${currentMonth.padStart(2, '0')}-01`;
 
-      if (pendingRun && pendingRun.monthDate) {
-        monthDate = pendingRun.monthDate;
+      if (pendingRun && pendingRun.payrollMonthDate) {
+        monthDate = pendingRun.payrollMonthDate;
       }
 
       form.reset({

@@ -1,14 +1,50 @@
+# Git
 .git
+.gitignore
+
+# Cache and temp
 .cache
 .tmp
+
+# OS
 .DS_Store
+
+# Dependencies - handled per-service
 node_modules
 web/node_modules
+
+# Build artifacts
 web/.next
+web/out
 api/bin
 api/tmp
+
+# Data volumes
 data
+
+# Documentation
 docs
+*.md
+!README.md
+
+# Logs
 *.log
+
+# Environment examples
 *.example
 *.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Agent/AI configs
+.agent
+.gemini
+.qwen
+openspec
+
+# Playground/test files
+playground
