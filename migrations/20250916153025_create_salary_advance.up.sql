@@ -33,13 +33,6 @@ CREATE TABLE salary_advance (
   CONSTRAINT salary_advance_month_ck
     CHECK (payroll_month_date = date_trunc('month', payroll_month_date)::date),
 
-  -- วันที่เบิกต้องอยู่ในงวดนั้น ๆ (เพื่อหักงวดเดียวกัน)
-  CONSTRAINT salary_advance_date_in_month_ck
-    CHECK (
-      advance_date >= date_trunc('month', payroll_month_date)::date
-      AND advance_date <  (date_trunc('month', payroll_month_date) + INTERVAL '1 month')::date
-    ),
-
   -- ลบ (soft) ได้เฉพาะตอน pending เท่านั้น
   CONSTRAINT salary_advance_soft_delete_guard
     CHECK (deleted_at IS NULL OR status = 'pending')

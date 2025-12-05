@@ -2,10 +2,10 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payroll_run_status') THEN
-    -- processing = รอประมวลผล, pending = รออนุมัติ, approved = อนุมัติแล้ว
+    -- pending = รออนุมัติ, approved = อนุมัติแล้ว
     CREATE DOMAIN payroll_run_status AS TEXT
       CONSTRAINT payroll_run_status_chk
-      CHECK (VALUE IN ('processing','pending','approved'));
+      CHECK (VALUE IN ('pending','approved'));
   END IF;
 END$$;
 
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS payroll_run (
   social_security_rate_employee NUMERIC(6,5) NOT NULL,
   social_security_rate_employer NUMERIC(6,5) NOT NULL,
 
-  status             payroll_run_status NOT NULL DEFAULT 'processing',
+  status             payroll_run_status NOT NULL DEFAULT 'pending',
 
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_by   UUID NOT NULL REFERENCES users(id),
@@ -163,10 +163,12 @@ CREATE TABLE IF NOT EXISTS payroll_run_item (
   -- ค่าสาธารณูปโภค
   water_meter_prev           NUMERIC(12,2),
   water_meter_curr           NUMERIC(12,2),
+  water_rate_per_unit        NUMERIC(12,2) NOT NULL DEFAULT 0.00,
   water_amount               NUMERIC(14,2) NOT NULL DEFAULT 0.00,
 
   electric_meter_prev        NUMERIC(12,2),
   electric_meter_curr        NUMERIC(12,2),
+  electricity_rate_per_unit  NUMERIC(12,2) NOT NULL DEFAULT 0.00,
   electric_amount            NUMERIC(14,2) NOT NULL DEFAULT 0.00,
 
   internet_amount            NUMERIC(14,2) NOT NULL DEFAULT 0.00,
@@ -198,18 +200,20 @@ CREATE TRIGGER tg_payroll_run_item_set_updated
 BEFORE UPDATE ON payroll_run_item
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- Guard: แก้ไขรายการได้เฉพาะเมื่อหัวงวดยัง pending
+-- Guard: สร้าง หรือ แก้ไขรายการได้เฉพาะเมื่อหัวงวดยัง pending
 CREATE OR REPLACE FUNCTION payroll_run_item_guard_edit()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE v_status TEXT;
 BEGIN
   SELECT status INTO v_status FROM payroll_run WHERE id = COALESCE(NEW.run_id, OLD.run_id);
+
   IF v_status <> 'pending' THEN
-    RAISE EXCEPTION 'Items can be edited only when payroll_run is pending (current: %)', v_status;
+    RAISE EXCEPTION 'Items can be created or edited only when payroll_run is pending (current: %)', v_status;
   END IF;
   RETURN NEW;
 END$$;
 
+-- Ensure trigger points to the updated function.
 DROP TRIGGER IF EXISTS tg_payroll_run_item_guard_biu ON payroll_run_item;
 CREATE TRIGGER tg_payroll_run_item_guard_biu
 BEFORE INSERT OR UPDATE ON payroll_run_item
@@ -278,9 +282,15 @@ DECLARE
   v_leave_hours_deduct NUMERIC(14,2);
   
   v_bonus_amt NUMERIC(14,2);
-  v_adv_repay NUMERIC(14,2);
+  v_adv NUMERIC(14,2);
   v_loan_repay_json JSONB;
   v_loan_total NUMERIC(14,2);
+  v_others_income JSONB := '[]'::jsonb;
+  v_sso_prev NUMERIC(14,2) := 0;
+  v_tax_prev NUMERIC(14,2) := 0;
+  v_pf_prev  NUMERIC(14,2) := 0;
+  v_water_prev NUMERIC(12,2);
+  v_electric_prev NUMERIC(12,2);
   
   -- ตัวแปรสำหรับ Part-time
   v_pt_hours NUMERIC(10,2);
@@ -312,9 +322,11 @@ BEGIN
     v_leave_days := 0; v_leave_deduct := 0;
     v_leave_double_days := 0; v_leave_double_deduct := 0;
     v_leave_hours := 0; v_leave_hours_deduct := 0;
-    v_bonus_amt := 0; v_adv_repay := 0; 
+    v_bonus_amt := 0; v_adv := 0; 
     v_loan_repay_json := '[]'::jsonb; v_loan_total := 0;
-    v_pt_hours := 0;
+    v_pt_hours := 0; v_others_income := '[]'::jsonb;
+    v_sso_prev := 0; v_tax_prev := 0; v_pf_prev := 0;
+    v_water_prev := NULL; v_electric_prev := NULL;
 
     -- ============================================================
     -- CASE 1: พนักงานประจำ (Full-Time)
@@ -379,7 +391,7 @@ BEGIN
       v_leave_hours_deduct := ROUND(((v_emp.base_pay_amount / 30.0) / 8.0) * v_leave_hours, 2);
 
       -- D. การเงินอื่นๆ (Advance, Debt, Bonus)
-      SELECT COALESCE(SUM(amount), 0) INTO v_adv_repay
+      SELECT COALESCE(SUM(amount), 0) INTO v_adv
       FROM salary_advance
       WHERE employee_id = v_emp.id AND payroll_month_date = NEW.payroll_month_date AND status = 'pending' AND deleted_at IS NULL;
 
@@ -411,6 +423,24 @@ BEGIN
       
     END IF;
 
+    -- ดึงยอดสะสม (ปีเดียวกับงวด, PF สะสมตลอดชีพ accum_year = NULL)
+    SELECT COALESCE(amount, 0) INTO v_sso_prev
+    FROM payroll_accumulation
+    WHERE employee_id = v_emp.id AND accum_type = 'sso' AND accum_year = EXTRACT(YEAR FROM NEW.payroll_month_date);
+
+    SELECT COALESCE(amount, 0) INTO v_tax_prev
+    FROM payroll_accumulation
+    WHERE employee_id = v_emp.id AND accum_type = 'tax' AND accum_year = EXTRACT(YEAR FROM NEW.payroll_month_date);
+
+    SELECT COALESCE(amount, 0) INTO v_pf_prev
+    FROM payroll_accumulation
+    WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
+
+    -- Doctor fee (allowance) ใส่ใน others_income เป็น 0 ถ้าเปิดสิทธิ์
+    IF v_emp.allow_doctor_fee THEN
+      v_others_income := v_others_income || jsonb_build_object('name', 'Doctor Fee', 'value', 0);
+    END IF;
+
     -- ============================================================
     -- 3. INSERT ลงตาราง payroll_run_item
     -- ============================================================
@@ -424,8 +454,12 @@ BEGIN
       leave_double_qty, leave_double_deduction,
       leave_hours_qty, leave_hours_deduction,
       
-      advance_repay_amount, loan_repayments, loan_outstanding_prev,
-      sso_declared_wage,
+      advance_amount, loan_repayments, loan_outstanding_prev,
+      sso_declared_wage, sso_accum_prev, tax_accum_prev, pf_accum_prev,
+      others_income,
+      water_meter_prev, water_meter_curr, water_rate_per_unit, water_amount,
+      electric_meter_prev, electric_meter_curr, electricity_rate_per_unit, electric_amount,
+      internet_amount,
       created_by, updated_by
     )
     VALUES (
@@ -442,7 +476,7 @@ BEGIN
       v_leave_double_days, v_leave_double_deduct,
       v_leave_hours, v_leave_hours_deduct,
       
-      v_adv_repay, v_loan_repay_json,
+      v_adv, v_loan_repay_json,
       COALESCE((SELECT amount FROM payroll_accumulation WHERE employee_id = v_emp.id AND accum_type = 'loan_outstanding'), 0),
       
       -- ฐาน SSO (Full-time ใช้ sso_declared_wage, Part-time อาจใช้รายได้จริงแต่ไม่เกินเพดาน)
@@ -451,6 +485,11 @@ BEGIN
         WHEN v_emp.sso_contribute AND v_emp.type_code = 'part_time' THEN LEAST(v_ft_salary, 15000) -- ตัวอย่าง Logic PT
         ELSE 0 
       END,
+      COALESCE(v_sso_prev,0), COALESCE(v_tax_prev,0), COALESCE(v_pf_prev,0),
+      v_others_income,
+      v_water_prev, NULL, v_config.water_rate_per_unit, 0,
+      v_electric_prev, NULL, v_config.electricity_rate_per_unit, 0,
+      0,
       
       NEW.created_by, NEW.created_by
     );
@@ -634,16 +673,22 @@ DECLARE
   v_leave_hours_deduct NUMERIC(14,2) := 0;
   
   v_bonus_amt NUMERIC(14,2) := 0;
-  v_adv_repay NUMERIC(14,2) := 0;
+  v_adv NUMERIC(14,2) := 0;
   v_loan_repay_json JSONB;
   v_loan_total NUMERIC(14,2) := 0;
+  v_others_income JSONB := '[]'::jsonb;
+  v_sso_prev NUMERIC(14,2) := 0;
+  v_tax_prev NUMERIC(14,2) := 0;
+  v_pf_prev  NUMERIC(14,2) := 0;
+  v_water_prev NUMERIC(12,2);
+  v_electric_prev NUMERIC(12,2);
   
 BEGIN
   -- 1. ดึงข้อมูล Payroll Run และ Config
   SELECT * INTO v_run FROM payroll_run WHERE id = p_run_id;
   
-  -- ถ้าสถานะไม่ใช่ pending/processing ให้จบการทำงาน (แก้ไขไม่ได้แล้ว)
-  IF v_run.status NOT IN ('pending', 'processing') THEN
+  -- ถ้าสถานะไม่ใช่ pending ให้จบการทำงาน (แก้ไขไม่ได้แล้ว)
+  IF v_run.status <> 'pending' THEN
     RETURN;
   END IF;
 
@@ -719,7 +764,7 @@ BEGIN
 
   -- 4. การเงินอื่นๆ (Common)
   -- Salary Advance
-  SELECT COALESCE(SUM(amount), 0) INTO v_adv_repay
+  SELECT COALESCE(SUM(amount), 0) INTO v_adv
   FROM salary_advance
   WHERE employee_id = v_emp.id AND payroll_month_date = v_run.payroll_month_date 
     AND status = 'pending' AND deleted_at IS NULL;
@@ -738,6 +783,37 @@ BEGIN
   FROM bonus_item bi JOIN bonus_cycle bc ON bc.id = bi.cycle_id
   WHERE bi.employee_id = v_emp.id AND bc.payroll_month_date = v_run.payroll_month_date 
     AND bc.status = 'approved' AND bc.deleted_at IS NULL;
+
+  -- ยอดสะสมก่อนหน้านี้
+  SELECT COALESCE(amount, 0) INTO v_sso_prev
+  FROM payroll_accumulation
+  WHERE employee_id = v_emp.id AND accum_type = 'sso' AND accum_year = EXTRACT(YEAR FROM v_run.payroll_month_date);
+
+  SELECT COALESCE(amount, 0) INTO v_tax_prev
+  FROM payroll_accumulation
+  WHERE employee_id = v_emp.id AND accum_type = 'tax' AND accum_year = EXTRACT(YEAR FROM v_run.payroll_month_date);
+
+  SELECT COALESCE(amount, 0) INTO v_pf_prev
+  FROM payroll_accumulation
+  WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
+
+  -- Doctor fee allowance in others_income
+  IF v_emp.allow_doctor_fee THEN
+    v_others_income := v_others_income || jsonb_build_object('name', 'Doctor Fee', 'value', 0);
+  END IF;
+
+  -- มิเตอร์รอบก่อน (ใช้ค่าปัจจุบันจากงวดก่อนหน้าที่ approved)
+  v_water_prev := NULL; v_electric_prev := NULL;
+  SELECT pri.water_meter_curr, pri.electric_meter_curr
+    INTO v_water_prev, v_electric_prev
+  FROM payroll_run_item pri
+  JOIN payroll_run pr ON pr.id = pri.run_id
+  WHERE pri.employee_id = v_emp.id
+    AND pr.payroll_month_date < v_run.payroll_month_date
+    AND pr.status = 'approved'
+    AND pr.deleted_at IS NULL
+  ORDER BY pr.payroll_month_date DESC
+  LIMIT 1;
 
   -- 5. UPDATE ลงตาราง
   UPDATE payroll_run_item
@@ -760,13 +836,21 @@ BEGIN
     leave_hours_qty = v_leave_hours,
     leave_hours_deduction = v_leave_hours_deduct,
     
-    advance_repay_amount = v_adv_repay,
+    advance_amount = v_adv,
     loan_repayments = v_loan_repay_json,
+    others_income = v_others_income,
     
     sso_declared_wage = CASE 
       WHEN v_emp.sso_contribute AND v_emp.type_code = 'full_time' THEN v_emp.sso_declared_wage 
       WHEN v_emp.sso_contribute AND v_emp.type_code = 'part_time' THEN LEAST(v_ft_salary, 15000)
       ELSE 0 END,
+    sso_accum_prev = COALESCE(v_sso_prev,0),
+    tax_accum_prev = COALESCE(v_tax_prev,0),
+    pf_accum_prev = COALESCE(v_pf_prev,0),
+    water_rate_per_unit = v_config.water_rate_per_unit,
+    electricity_rate_per_unit = v_config.electricity_rate_per_unit,
+    water_meter_prev = COALESCE(v_water_prev, water_meter_prev),
+    electric_meter_prev = COALESCE(v_electric_prev, electric_meter_prev),
       
     updated_at = now()
   WHERE run_id = p_run_id AND employee_id = p_employee_id;
@@ -783,7 +867,7 @@ DECLARE
 BEGIN
   -- หา Payroll Run ที่ยัง Pending อยู่
   FOR r_run IN 
-    SELECT id FROM payroll_run WHERE status IN ('pending', 'processing') AND deleted_at IS NULL
+    SELECT id FROM payroll_run WHERE status = 'pending' AND deleted_at IS NULL
   LOOP
     -- สั่งคำนวณใหม่เฉพาะพนักงานคนนี้
     PERFORM recalculate_payroll_item(r_run.id, NEW.id);
@@ -813,7 +897,7 @@ BEGIN
   FOR r_run IN 
     SELECT id, payroll_month_date, period_start_date 
     FROM payroll_run 
-    WHERE status IN ('pending', 'processing') AND deleted_at IS NULL
+    WHERE status = 'pending' AND deleted_at IS NULL
   LOOP
     v_end_date := (r_run.payroll_month_date + interval '1 month' - interval '1 day')::date;
     
@@ -880,7 +964,7 @@ BEGIN
     FOR r_run IN 
       SELECT id FROM payroll_run 
       WHERE payroll_month_date = v_target_month 
-        AND status IN ('pending', 'processing') AND deleted_at IS NULL
+        AND status = 'pending' AND deleted_at IS NULL
       LOOP
         PERFORM recalculate_payroll_item(r_run.id, v_emp_id);
       END LOOP;
@@ -935,7 +1019,7 @@ BEGIN
   FOR r_run IN 
     SELECT id, payroll_month_date 
     FROM payroll_run 
-    WHERE status IN ('pending', 'processing') 
+    WHERE status = 'pending' 
       AND deleted_at IS NULL
   LOOP
     -- เช็คว่า Config นี้ "มีผล" กับงวดเดือนนี้หรือไม่ (@> คือ contains)
@@ -967,3 +1051,42 @@ CREATE TRIGGER tg_sync_payroll_config
 AFTER INSERT OR UPDATE ON payroll_config
 FOR EACH ROW
 EXECUTE FUNCTION sync_payroll_on_config_change();
+
+-- When a new employee is created and there are pending payroll runs,
+-- add that employee to each pending run and compute their payroll item.
+CREATE OR REPLACE FUNCTION public.add_employee_to_pending_payroll_runs()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  r_run RECORD;
+BEGIN
+  FOR r_run IN
+    SELECT id, period_start_date
+    FROM payroll_run
+    WHERE status = 'pending'
+      AND deleted_at IS NULL
+  LOOP
+    -- Only attach to runs that overlap the employment period (or no end date).
+    IF NEW.employment_end_date IS NULL OR NEW.employment_end_date >= r_run.period_start_date THEN
+      INSERT INTO payroll_run_item (
+        run_id, employee_id, employee_type_id,
+        created_by, updated_by
+      ) VALUES (
+        r_run.id, NEW.id, NEW.employee_type_id,
+        NEW.created_by, NEW.created_by
+      )
+      ON CONFLICT (run_id, employee_id) DO NOTHING;
+
+      -- Calculate payroll figures for the new employee in this run.
+      PERFORM recalculate_payroll_item(r_run.id, NEW.id);
+    END IF;
+  END LOOP;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS tg_payroll_run_add_new_employee ON employees;
+CREATE TRIGGER tg_payroll_run_add_new_employee
+AFTER INSERT ON employees
+FOR EACH ROW
+EXECUTE FUNCTION public.add_employee_to_pending_payroll_runs();

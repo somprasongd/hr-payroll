@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { format } from 'date-fns';
-import { Eye, Plus, Banknote, Filter, RotateCcw } from 'lucide-react';
+import { Eye, Plus, Banknote, Filter, RotateCcw, Trash2 } from 'lucide-react';
 
 import { GenericDataTable } from '@/components/common/generic-data-table';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,10 @@ import {
 } from '@/components/ui/select';
 import { CreateCycleDialog } from '@/components/payroll/create-cycle-dialog';
 import { payrollService, PayrollRun } from '@/services/payroll.service';
+import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 
 export default function PayrollPage() {
+  const router = useRouter();
   const t = useTranslations('Payroll');
   const tCommon = useTranslations('Common');
   const [runs, setRuns] = useState<PayrollRun[]>([]);
@@ -32,6 +35,8 @@ export default function PayrollPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const [showFilters, setShowFilters] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [runToDelete, setRunToDelete] = useState<PayrollRun | null>(null);
 
   const fetchRuns = async () => {
     try {
@@ -119,16 +124,39 @@ export default function PayrollPage() {
     },
   ];
 
-  const actions = [
+  const actions: any[] = [
     {
       label: t('actions.view'),
       icon: <Eye className="h-4 w-4" />,
       onClick: (run: PayrollRun) => {
-        // Implement view action logic here, e.g., navigation
-        console.log('View run', run);
+        router.push(`/payroll/${run.id}`);
+      },
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      condition: (run: PayrollRun) => run.status === 'pending' || run.status === 'processing',
+      onClick: (run: PayrollRun) => {
+        setRunToDelete(run);
+        setDeleteDialogOpen(true);
       },
     }
   ];
+
+  const handleConfirmDelete = async () => {
+    if (runToDelete) {
+      try {
+        await payrollService.deletePayrollRun(runToDelete.id);
+        fetchRuns();
+      } catch (error) {
+        console.error('Failed to delete payroll run', error);
+      } finally {
+        setDeleteDialogOpen(false);
+        setRunToDelete(null);
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -210,6 +238,16 @@ export default function PayrollPage() {
           totalPages,
           onPageChange: handlePageChange
         }}
+      />
+
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={tCommon('confirmDeleteTitle')}
+        description={tCommon('confirmDeleteDescription')}
+        onConfirm={handleConfirmDelete}
+        confirmText={tCommon('delete')}
+        variant="destructive"
       />
     </div>
   );

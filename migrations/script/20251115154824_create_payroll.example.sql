@@ -69,7 +69,7 @@ VALUES (
   DATE '2025-09-30',
   0.05000,   -- ตัวอย่าง: สปส. 5% ลูกจ้าง
   0.05000,   -- ตัวอย่าง: สปส. 5% นายจ้าง (เผื่อรายงาน)
-  'processing',
+  'pending',
   (SELECT id FROM users WHERE username='payroll_tester'),
   (SELECT id FROM users WHERE username='payroll_tester')
 )
@@ -259,12 +259,7 @@ LIMIT 1;
 -- tax_accum_total = 5,000 + 1,000 = 6,000
 
 -- 4) เปลี่ยนสถานะ payroll_run เป็น pending → approved และลองแก้ item (ควรถูก block)
-
--- เปลี่ยนจาก processing → pending (รออนุมัติ)
-UPDATE payroll_run
-SET status = 'pending',
-    updated_by = (SELECT id FROM users WHERE username='payroll_tester')
-WHERE id = (SELECT id FROM payroll_run ORDER BY id DESC LIMIT 1);
+-- (สถานะเริ่มต้นของตัวอย่างคือ pending แล้ว)
 
 -- ยังสามารถแก้ไข item ได้ (เพราะ run = pending)
 UPDATE payroll_run_item

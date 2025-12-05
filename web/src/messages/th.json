@@ -82,7 +82,69 @@
     },
     "actions": {
       "view": "ดูรายละเอียด",
-      "title": "การกระทำ"
+      "title": "การกระทำ",
+      "approve": "อนุมัติ"
+    },
+    "approve": {
+      "title": "อนุมัติงวดเงินเดือน",
+      "description": "คุณแน่ใจหรือว่าต้องการอนุมัติงวดเงินเดือนนี้? ไม่สามารถย้อนกลับได้"
+    },
+    "detail": {
+      "title": "รายละเอียดเงินเดือน",
+      "backToList": "กลับไปรายการ",
+      "employeeList": "รายชื่อพนักงาน",
+      "searchPlaceholder": "ค้นหาจากรหัสหรือชื่อ...",
+      "filterByType": "ประเภทพนักงาน"
+    },
+    "payslip": {
+      "editTitle": "แก้ไขสลิปเงินเดือน",
+      "tabs": {
+        "income": "รายได้",
+        "attendance": "หักเวลาทำงาน",
+        "deductions": "หักรายเดือน",
+        "loans": "หนี้สิน"
+      },
+      "fields": {
+        "employee": "พนักงาน",
+        "salary": "เงินเดือนฐาน",
+        "ot": "ล่วงเวลา",
+        "otHours": "ชม.",
+        "bonus": "โบนัส",
+        "housingAllowance": "ค่าเช่าบ้าน",
+        "attendanceBonus": "เบี้ยขยัน",
+        "attendanceBonusNoLate": "เบี้ยขยัน (ไม่สาย)",
+        "attendanceBonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
+        "leaveCompensation": "ชดเชยวันลา",
+        "othersIncome": "รายได้อื่นๆ",
+        "tax": "ภาษีหัก ณ ที่จ่าย",
+        "sso": "ประกันสังคม",
+        "providentFund": "กองทุนสำรองเลี้ยงชีพ",
+        "lateMinutes": "สายกี่นาที",
+        "lateDeduction": "หักค่าสาย",
+        "leaveDays": "ลากี่วัน",
+        "leaveDeduction": "หักค่าลา",
+        "leaveDouble": "ลา 2 แรง",
+        "leaveDoubleDeduction": "หักลา 2 แรง",
+        "leaveHours": "ลารายชั่วโมง",
+        "leaveHoursDeduction": "หักลารายชั่วโมง",
+        "utilities": "ค่าสาธารณูปโภค",
+        "waterMeterPrev": "มิเตอร์น้ำ (ก่อน)",
+        "waterMeterCurr": "มิเตอร์น้ำ (หลัง)",
+        "waterAmount": "ค่าน้ำ",
+        "electricMeterPrev": "มิเตอร์ไฟ (ก่อน)",
+        "electricMeterCurr": "มิเตอร์ไฟ (หลัง)",
+        "electricAmount": "ค่าไฟ",
+        "internetAmount": "ค่าเน็ต",
+        "advanceRepay": "หักคืนเงินเบิกล่วงหน้า",
+        "loanRepayments": "หักชำระหนี้",
+        "incomeTotal": "รวมรายได้",
+        "deductionTotal": "รวมหัก",
+        "netPay": "รับสุทธิ"
+      },
+      "addItem": "เพิ่มรายการ",
+      "removeItem": "ลบ",
+      "itemName": "ชื่อรายการ",
+      "itemValue": "จำนวนเงิน"
     }
   },
   "Settings": {
@@ -520,6 +582,7 @@
     "all": "ทั้งหมด",
     "create": "สร้าง",
     "edit": "แก้ไข",
+    "view": "ดู",
     "save": "บันทึก",
     "saving": "กำลังบันทึก...",
     "delete": "ลบ",
@@ -533,7 +596,9 @@
     "errorLoadingData": "เกิดข้อผิดพลาดในการโหลดข้อมูล",
     "next": "ถัดไป",
     "previous": "ก่อนหน้า",
-    "filter": "ตัวกรอง"
+    "filter": "ตัวกรอง",
+    "confirmDeleteTitle": "ยืนยันการลบ",
+    "confirmDeleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
   },
   "Payouts": {
     "PT": {

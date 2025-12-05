@@ -2613,7 +2613,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
   - `page`, `limit`: Pagination
   - `year`: (int) กรองตามปีของ `payrollMonthDate`
   - `monthDate`: (date, YYYY-MM-DD) ใช้เดือน/ปี จากค่านี้ไปกรอง `payrollMonthDate` (ถ้ามี `monthDate` จะใช้ค่านี้ แม้จะไม่ได้ส่ง `year`)
-  - `status`: `processing`, `pending`, `approved`
+  - `status`: `pending`, `approved`, `all`
 
 **Success Response Example (200 OK):**
 
@@ -2670,7 +2670,14 @@ Logic (Database Trigger):
 ```json
 {
   "id": "019ee123-4567-...",
-  "status": "processing", // หรือ pending ถ้าเสร็จเร็ว
+  "payrollMonthDate": "2025-11-01",
+  "periodStartDate": "2025-10-01",
+  "payDate": "2025-11-30",
+  "status": "pending",
+  "socialSecurityRateEmployee": 0.05,
+  "socialSecurityRateEmployer": 0.05,
+  "createdAt": "2025-11-25T10:00:00Z",
+  "updatedAt": "2025-11-25T10:00:00Z",
   "message": "Payroll run created. System is generating payslips."
 }
 ```
@@ -2694,6 +2701,8 @@ Logic (Database Trigger):
 {
   "id": "019ee123-4567-...",
   "payrollMonthDate": "2025-11-01",
+  "periodStartDate": "2025-10-01",
+  "payDate": "2025-11-30",
   "status": "pending",
   "approvedAt": null,
   "totals": {
@@ -2752,7 +2761,8 @@ Logic (Database Trigger):
 - **Endpoint:** `GET /payroll-runs/{id}/items`
 - **Access:** Admin, HR
 - **Query Parameters:**
-  - `search`: ค้นหาชื่อพนักงาน
+  - `search`: ค้นหาชื่อพนักงาน **หรือ** รหัสพนักงาน (`employeeNumber`)
+  - `employeeTypeCode`: กรองตามประเภทพนักงาน (`full_time` หรือ `part_time`)
   - `limit`, `page`: Pagination
 
 **Success Response (200 OK):**
@@ -2763,8 +2773,11 @@ Logic (Database Trigger):
     {
       "id": "019ff111-...",
       "employeeId": "019aa095-...",
+      "employeeNumber": "EMP-001",
+      "employeeTypeCode": "full_time",
       "employeeName": "สมชาย ศรีสุข",
       "salaryAmount": 30000.0,
+      "leaveCompensationAmount": 200.0,
       "incomeTotal": 35000.0,
       "deductionTotal": 1500.0,
       "netPay": 33500.0 // (Income - Deduction) - Calculated in DB
@@ -2772,6 +2785,8 @@ Logic (Database Trigger):
   ]
 }
 ```
+
+**หมายเหตุ:** ระบบจะเรียงผลลัพธ์โดย `employeeTypeCode` (full_time ก่อน part_time) จากนั้นตาม `employeeNumber` แล้วชื่อพนักงาน
 
 ---
 
@@ -2793,8 +2808,11 @@ Logic (Database Trigger):
     "salary": 30000.0,
     "ot": 2500.0,
     "bonus": 0.0,
+    "leaveCompensationAmount": 200.0,
     "housingAllowance": 1000.0,
     "attendanceBonus": 500.0,
+    "waterRatePerUnit": 10.0,
+    "electricityRatePerUnit": 6.0,
     "others": [
       // JSONB others_income
       { "description": "ค่าคอมมิชชั่น", "amount": 1000.0 }
@@ -2826,6 +2844,8 @@ Logic (Database Trigger):
 
 - เมื่อมีการแก้ไขค่าใดๆ Trigger `payroll_run_item_compute_totals` ใน DB จะทำงานใหม่ เพื่อรวมยอด `incomeTotal`, `netPay` ให้ทันที
 - แก้ไขได้เฉพาะเมื่อ `payroll_run.status` = `pending`
+- ถ้า `advanceAmount` = 0 แต่ส่ง `advanceRepayAmount` > 0 จะถูกปฏิเสธ (400)
+- ถ้า `loanOutstandingTotal` = 0 แต่ส่ง `loanRepayments` ที่มีค่า จะถูกปฏิเสธ (400)
 
 **Request Body Example:**
 
@@ -2840,9 +2860,9 @@ Logic (Database Trigger):
 }
 ```
 
-**Success Response (200 OK):**
+**Success Response (204 No Content):**
 
-- คืนค่า Object ที่คำนวณใหม่แล้ว
+- ไม่มี Body
 
 **Error Responses:**
 

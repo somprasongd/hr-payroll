@@ -310,7 +310,7 @@ export default function SettingsPage() {
 
       {/* Configuration Form */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="rates">{t('rates')}</TabsTrigger>
           <TabsTrigger value="bonuses">{t('bonuses')}</TabsTrigger>
           <TabsTrigger value="utilities">{t('utilities')}</TabsTrigger>

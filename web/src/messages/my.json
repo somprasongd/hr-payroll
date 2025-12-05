@@ -81,7 +81,69 @@
     },
     "actions": {
       "view": "အသေးစိတ် ကြည့်ရန်",
-      "title": "လုပ်ဆောင်ချက်များ"
+      "title": "လုပ်ဆောင်ချက်များ",
+      "approve": "အတည်ပြုရန်"
+    },
+    "approve": {
+      "title": "လစာ အတည်ပြုရန်",
+      "description": "ဤလစာကို အတည်ပြုလိုပါသလာဿ ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။"
+    },
+    "detail": {
+      "title": "လစာ အသေးစိတ်",
+      "backToList": "စာရင်းသို့ ပြန်သွားရန်",
+      "employeeList": "ဝန်ထမ်း စာရင်း",
+      "searchPlaceholder": "နံပါတ် သို့မဟုတ် အမည်ဖြင့် ရှာဖွေပါ...",
+      "filterByType": "ဝန်ထမ်း အမျိုးအစား"
+    },
+    "payslip": {
+      "editTitle": "လစာစာရွက် ပြင်ဆင်ရန်",
+      "tabs": {
+        "income": "ဝင်ငွေ",
+        "attendance": "တက်ရောက်မှု နုတ်ယူခြင်း",
+        "deductions": "နုတ်ယူမှုများ",
+        "loans": "ချေးငွေ"
+      },
+      "fields": {
+        "employee": "ဝန်ထမ်း",
+        "salary": "အခြေခံလစာ",
+        "ot": "အချိန်ပို",
+        "otHours": "နာရီ",
+        "bonus": "ဆုကြေးငွေ",
+        "housingAllowance": "အိမ်ခ ထောက်ပံ့ကြေး",
+        "attendanceBonus": "တက်ရောက်မှု ဆုကြေး",
+        "attendanceBonusNoLate": "တက်ရောက်မှု ဆုကြေး (မနောက်ကျ)",
+        "attendanceBonusNoLeave": "တက်ရောက်မှု ဆုကြေး (မခွင့်ယူ)",
+        "leaveCompensation": "ခွင့်လျော်ကြေး",
+        "othersIncome": "အခြား ဝင်ငွေ",
+        "tax": "အခွန်",
+        "sso": "လူမှုဖူလုံရေး",
+        "providentFund": "စုဆောင်းငွေ",
+        "lateMinutes": "နောက်ကျမိနစ်",
+        "lateDeduction": "နောက်ကျ နုတ်ယူမှု",
+        "leaveDays": "ခွင့်ရက်",
+        "leaveDeduction": "ခွင့် နုတ်ယူမှု",
+        "leaveDouble": "ခွင့် (နှစ်ဆ)",
+        "leaveDoubleDeduction": "နှစ်ဆခွင့် နုတ်ယူမှု",
+        "leaveHours": "ခွင့်နာရီ",
+        "leaveHoursDeduction": "နာရီခွင့် နုတ်ယူမှု",
+        "utilities": "အသုံးစရိတ်",
+        "waterMeterPrev": "ရေမီတာ (အရင်)",
+        "waterMeterCurr": "ရေမီတာ (လက်ရှိ)",
+        "waterAmount": "ရေဖိုး",
+        "electricMeterPrev": "မီးမီတာ (အရင်)",
+        "electricMeterCurr": "မီးမီတာ (လက်ရှိ)",
+        "electricAmount": "မီးဖိုး",
+        "internetAmount": "အင်တာနက်",
+        "advanceRepay": "ကြိုတင်လစာထုတ်မှု နုတ်ယူခြင်း",
+        "loanRepayments": "ကြွေးပြန်ဆပ် နုတ်ယူမှု",
+        "incomeTotal": "ဝင်ငွေ စုစုပေါင်း",
+        "deductionTotal": "နုတ်ယူမှု စုစုပေါင်း",
+        "netPay": "အသားတင်လစာ"
+      },
+      "addItem": "ထည့်ရန်",
+      "removeItem": "ဖယ်ရန်",
+      "itemName": "အမည်",
+      "itemValue": "ပမာဏ"
     }
   },
   "Settings": {
@@ -345,6 +407,7 @@
       "editTitle": "မှတ်တမ်း ပြင်ဆင်ပါ",
       "formDescription": "အချိန်မှတ်တမ်း အချက်အလက်များ ဖြည့်ပါ",
       "noData": "မှတ်တမ်း မရှိပါ",
+
       "fields": {
         "employee": "ဝန်ထမ်း",
         "workDate": "ရက်စွဲ",
@@ -518,6 +581,7 @@
     "cancel": "ပယ်ဖျက်မည်",
     "delete": "ဖျက်မည်",
     "edit": "ပြင်ဆင်မည်",
+    "view": "ကြည့်ရန်",
     "create": "ဖန်တီးမည်",
     "search": "ရှာဖွေမည်",
     "filter": "စစ်ထုတ်မည်",
@@ -539,7 +603,9 @@
     "clearFilter": "စစ်ထုတ်မှု ရှင်းမည်",
     "currentMonth": "လက်ရှိလ",
     "noData": "အချက်အလက် မရှိပါ",
-    "errorLoadingData": "ဒေတာဆွဲယူရာတွင် အမှားအယွင်းဖြစ်နေသည်"
+    "errorLoadingData": "ဒေတာဆွဲယူရာတွင် အမှားအယွင်းဖြစ်နေသည်",
+    "confirmDeleteTitle": "ဖျက်ရန် အတည်ပြုပါ",
+    "confirmDeleteDescription": "ဤအရာကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။"
   },
   "Payouts": {
     "PT": {

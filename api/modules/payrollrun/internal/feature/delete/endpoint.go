@@ -11,7 +11,7 @@ import (
 )
 
 // @Summary Delete payroll run
-// @Description ลบงวดเงินเดือน (เฉพาะ processing/pending)
+// @Description ลบงวดเงินเดือน (เฉพาะ pending)
 // @Tags Payroll Run
 // @Security BearerAuth
 // @Param id path string true "run id"

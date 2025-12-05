@@ -19,7 +19,7 @@ import (
 // @Produce json
 // @Param page query int false "page"
 // @Param limit query int false "limit"
-// @Param status query string false "processing|pending|approved|all"
+// @Param status query string false "pending|approved|all"
 // @Param year query int false "filter by year of payrollMonthDate"
 // @Param monthDate query string false "YYYY-MM-DD (will use month & year from this date to filter payroll_month_date)"
 // @Security BearerAuth

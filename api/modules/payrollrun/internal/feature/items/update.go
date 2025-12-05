@@ -16,7 +16,6 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
-	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -37,18 +36,26 @@ type updateHandler struct{}
 func NewUpdateHandler() *updateHandler { return &updateHandler{} }
 
 type UpdateRequest struct {
-	SalaryAmount *float64 `json:"salaryAmount"`
-	OtHours      *float64 `json:"otHours"`
-	OtAmount     *float64 `json:"otAmount"`
-	BonusAmount  *float64 `json:"bonusAmount"`
-	OthersIncome *[]struct {
-		Description string  `json:"description"`
-		Value       float64 `json:"value"`
-	} `json:"othersIncome"`
-	LateMinutesQty       *int     `json:"lateMinutesQty"`
-	LateMinutesDeduction *float64 `json:"lateMinutesDeduction"`
-	TaxMonthAmount       *float64 `json:"taxMonthAmount"`
-	SsoMonthAmount       *float64 `json:"ssoMonthAmount"`
+	SalaryAmount            *float64                  `json:"salaryAmount"`
+	OtHours                 *float64                  `json:"otHours"`
+	OtAmount                *float64                  `json:"otAmount"`
+	BonusAmount             *float64                  `json:"bonusAmount"`
+	LeaveCompensationAmount *float64                  `json:"leaveCompensationAmount"`
+	OthersIncome            *[]map[string]interface{} `json:"othersIncome"`
+	LoanRepayments          *[]map[string]interface{} `json:"loanRepayments"`
+	LateMinutesQty          *int                      `json:"lateMinutesQty"`
+	LateMinutesDeduction    *float64                  `json:"lateMinutesDeduction"`
+	TaxMonthAmount          *float64                  `json:"taxMonthAmount"`
+	SsoMonthAmount          *float64                  `json:"ssoMonthAmount"`
+	PfMonthAmount           *float64                  `json:"pfMonthAmount"`
+	AdvanceRepayAmount      *float64                  `json:"advanceRepayAmount"`
+	WaterMeterPrev          *float64                  `json:"waterMeterPrev"`
+	WaterMeterCurr          *float64                  `json:"waterMeterCurr"`
+	WaterAmount             *float64                  `json:"waterAmount"`
+	ElectricMeterPrev       *float64                  `json:"electricMeterPrev"`
+	ElectricMeterCurr       *float64                  `json:"electricMeterCurr"`
+	ElectricAmount          *float64                  `json:"electricAmount"`
+	InternetAmount          *float64                  `json:"internetAmount"`
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
@@ -70,6 +77,14 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		return nil, errs.BadRequest("can adjust items only when run is pending")
 	}
 
+	// Business rules
+	if item.AdvanceAmount == 0 && cmd.Payload.AdvanceRepayAmount != nil && *cmd.Payload.AdvanceRepayAmount > 0 {
+		return nil, errs.BadRequest("cannot repay advance when advanceAmount is 0")
+	}
+	if item.LoanOutstandingTotal <= 0 && cmd.Payload.LoanRepayments != nil && len(*cmd.Payload.LoanRepayments) > 0 {
+		return nil, errs.BadRequest("cannot repay loan when outstanding is 0")
+	}
+
 	fields := map[string]interface{}{}
 	if cmd.Payload.SalaryAmount != nil {
 		fields["salary_amount"] = *cmd.Payload.SalaryAmount
@@ -83,9 +98,16 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	if cmd.Payload.BonusAmount != nil {
 		fields["bonus_amount"] = *cmd.Payload.BonusAmount
 	}
+	if cmd.Payload.LeaveCompensationAmount != nil {
+		fields["leave_compensation_amount"] = *cmd.Payload.LeaveCompensationAmount
+	}
 	if cmd.Payload.OthersIncome != nil {
 		bytes, _ := json.Marshal(cmd.Payload.OthersIncome)
 		fields["others_income"] = bytes
+	}
+	if cmd.Payload.LoanRepayments != nil {
+		bytes, _ := json.Marshal(cmd.Payload.LoanRepayments)
+		fields["loan_repayments"] = bytes
 	}
 	if cmd.Payload.LateMinutesQty != nil {
 		fields["late_minutes_qty"] = *cmd.Payload.LateMinutesQty
@@ -98,6 +120,33 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 	if cmd.Payload.SsoMonthAmount != nil {
 		fields["sso_month_amount"] = *cmd.Payload.SsoMonthAmount
+	}
+	if cmd.Payload.PfMonthAmount != nil {
+		fields["pf_month_amount"] = *cmd.Payload.PfMonthAmount
+	}
+	if cmd.Payload.AdvanceRepayAmount != nil {
+		fields["advance_repay_amount"] = *cmd.Payload.AdvanceRepayAmount
+	}
+	if cmd.Payload.WaterMeterPrev != nil {
+		fields["water_meter_prev"] = *cmd.Payload.WaterMeterPrev
+	}
+	if cmd.Payload.WaterMeterCurr != nil {
+		fields["water_meter_curr"] = *cmd.Payload.WaterMeterCurr
+	}
+	if cmd.Payload.WaterAmount != nil {
+		fields["water_amount"] = *cmd.Payload.WaterAmount
+	}
+	if cmd.Payload.ElectricMeterPrev != nil {
+		fields["electric_meter_prev"] = *cmd.Payload.ElectricMeterPrev
+	}
+	if cmd.Payload.ElectricMeterCurr != nil {
+		fields["electric_meter_curr"] = *cmd.Payload.ElectricMeterCurr
+	}
+	if cmd.Payload.ElectricAmount != nil {
+		fields["electric_amount"] = *cmd.Payload.ElectricAmount
+	}
+	if cmd.Payload.InternetAmount != nil {
+		fields["internet_amount"] = *cmd.Payload.InternetAmount
 	}
 	if len(fields) == 0 {
 		return nil, errs.BadRequest("no fields to update")
@@ -144,7 +193,7 @@ func RegisterUpdateItem(router fiber.Router, repo repository.Repository, tx tran
 		if !ok {
 			return errs.Unauthorized("missing user")
 		}
-		resp, err := mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &UpdateCommand{
+		_, err = mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &UpdateCommand{
 			ID:      itemID,
 			Payload: req,
 			ActorID: user.ID,
@@ -154,6 +203,6 @@ func RegisterUpdateItem(router fiber.Router, repo repository.Repository, tx tran
 		if err != nil {
 			return err
 		}
-		return response.JSON(c, fiber.StatusOK, resp.Item)
+		return c.SendStatus(fiber.StatusNoContent)
 	})
 }

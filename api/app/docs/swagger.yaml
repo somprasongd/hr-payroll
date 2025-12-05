@@ -1131,6 +1131,10 @@ definitions:
         type: string
       employeeName:
         type: string
+      employeeNumber:
+        type: string
+      employeeTypeCode:
+        type: string
       id:
         type: string
       incomeTotal:
@@ -1139,6 +1143,8 @@ definitions:
         type: number
       lateMinutesQty:
         type: integer
+      leaveCompensationAmount:
+        type: number
       leaveDaysDeduction:
         type: number
       leaveDaysQty:
@@ -1171,21 +1177,16 @@ definitions:
     type: object
   hrms_modules_payrollrun_internal_feature_create.Command:
     properties:
-      actorID:
-        type: string
       payDate:
         type: string
       payrollMonthDate:
         type: string
       periodStartDate:
         type: string
-      repo:
-        $ref: '#/definitions/hrms_modules_payrollrun_internal_repository.Repository'
       socialSecurityRateEmployee:
         type: number
       socialSecurityRateEmployer:
         type: number
-      tx: {}
     type: object
   hrms_modules_payrollrun_internal_feature_create.Response:
     properties:
@@ -1270,6 +1271,10 @@ definitions:
         type: string
       employeeName:
         type: string
+      employeeNumber:
+        type: string
+      employeeTypeCode:
+        type: string
       id:
         type: string
       incomeTotal:
@@ -1278,6 +1283,8 @@ definitions:
         type: number
       lateMinutesQty:
         type: integer
+      leaveCompensationAmount:
+        type: number
       leaveDaysDeduction:
         type: number
       leaveDaysQty:
@@ -1710,9 +1717,19 @@ definitions:
         type: number
       electricAmount:
         type: number
+      electricMeterCurr:
+        type: number
+      electricMeterPrev:
+        type: number
+      electricityRatePerUnit:
+        type: number
       employeeId:
         type: string
       employeeName:
+        type: string
+      employeeNumber:
+        type: string
+      employeeTypeCode:
         type: string
       housingAllowance:
         type: number
@@ -1726,6 +1743,8 @@ definitions:
         type: number
       lateMinutesQty:
         type: integer
+      leaveCompensationAmount:
+        type: number
       leaveDaysDeduction:
         type: number
       leaveDaysQty:
@@ -1786,33 +1805,60 @@ definitions:
         type: number
       waterAmount:
         type: number
+      waterMeterCurr:
+        type: number
+      waterMeterPrev:
+        type: number
+      waterRatePerUnit:
+        type: number
     type: object
   items.UpdateRequest:
     properties:
+      advanceRepayAmount:
+        type: number
       bonusAmount:
+        type: number
+      electricAmount:
+        type: number
+      electricMeterCurr:
+        type: number
+      electricMeterPrev:
+        type: number
+      internetAmount:
         type: number
       lateMinutesDeduction:
         type: number
       lateMinutesQty:
         type: integer
+      leaveCompensationAmount:
+        type: number
+      loanRepayments:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
       otAmount:
         type: number
       otHours:
         type: number
       othersIncome:
         items:
-          properties:
-            description:
-              type: string
-            value:
-              type: number
+          additionalProperties: true
           type: object
         type: array
+      pfMonthAmount:
+        type: number
       salaryAmount:
         type: number
       ssoMonthAmount:
         type: number
       taxMonthAmount:
+        type: number
+      waterAmount:
+        type: number
+      waterMeterCurr:
+        type: number
+      waterMeterPrev:
         type: number
     type: object
   itemslist.Response:
@@ -3510,7 +3556,7 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: processing|pending|approved|all
+      - description: pending|approved|all
         in: query
         name: status
         type: string
@@ -3565,7 +3611,7 @@ paths:
       - Payroll Run
   /payroll-runs/{id}:
     delete:
-      description: ลบงวดเงินเดือน (เฉพาะ processing/pending)
+      description: ลบงวดเงินเดือน (เฉพาะ pending)
       parameters:
       - description: run id
         in: path

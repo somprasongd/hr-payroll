@@ -109,8 +109,8 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
         payrollMonthDate: data.payrollMonthDate,
         periodStartDate: data.periodStartDate,
         payDate: data.payDate,
-        socialSecurityRateEmployee: data.socialSecurityRateEmployee,
-        socialSecurityRateEmployer: data.socialSecurityRateEmployer,
+        socialSecurityRateEmployee: data.socialSecurityRateEmployee / 100,
+        socialSecurityRateEmployer: data.socialSecurityRateEmployer / 100,
       });
       
       toast({

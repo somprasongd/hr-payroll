@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -19,11 +20,12 @@ import (
 )
 
 type ListQuery struct {
-	RunID  uuid.UUID
-	Page   int
-	Limit  int
-	Search string
-	Repo   repository.Repository
+	RunID            uuid.UUID
+	Page             int
+	Limit            int
+	Search           string
+	EmployeeTypeCode string
+	Repo             repository.Repository
 }
 
 type ListResponse struct {
@@ -42,7 +44,10 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 	if q.Limit <= 0 || q.Limit > 1000 {
 		q.Limit = 1000
 	}
-	res, err := q.Repo.ListItems(ctx, q.RunID, q.Page, q.Limit, q.Search)
+	if q.EmployeeTypeCode != "" && q.EmployeeTypeCode != "full_time" && q.EmployeeTypeCode != "part_time" {
+		return nil, errs.BadRequest("employeeTypeCode must be full_time or part_time")
+	}
+	res, err := q.Repo.ListItems(ctx, q.RunID, q.Page, q.Limit, q.Search, q.EmployeeTypeCode)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list payroll items", zap.Error(err))
 		return nil, errs.Internal("failed to list payroll items")
@@ -89,13 +94,15 @@ func Register(runRouter fiber.Router, itemRouter fiber.Router, repo repository.R
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
 		search := c.Query("search")
+		empType := strings.TrimSpace(c.Query("employeeTypeCode"))
 
 		resp, err := mediator.Send[*ListQuery, *ListResponse](c.Context(), &ListQuery{
-			RunID:  runID,
-			Page:   page,
-			Limit:  limit,
-			Search: search,
-			Repo:   repo,
+			RunID:            runID,
+			Page:             page,
+			Limit:            limit,
+			Search:           search,
+			EmployeeTypeCode: empType,
+			Repo:             repo,
 		})
 		if err != nil {
 			return err

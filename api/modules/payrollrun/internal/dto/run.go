@@ -10,9 +10,9 @@ import (
 
 type Run struct {
 	ID              uuid.UUID  `json:"id"`
-	PayrollMonth    time.Time  `json:"payrollMonthDate"`
-	PeriodStart     time.Time  `json:"periodStartDate"`
-	PayDate         time.Time  `json:"payDate"`
+	PayrollMonth    string     `json:"payrollMonthDate"`
+	PeriodStart     string     `json:"periodStartDate"`
+	PayDate         string     `json:"payDate"`
 	Status          string     `json:"status"`
 	ApprovedAt      *time.Time `json:"approvedAt,omitempty"`
 	ApprovedBy      *uuid.UUID `json:"approvedBy,omitempty"`
@@ -48,9 +48,9 @@ func FromRun(r repository.Run) Run {
 	}
 	return Run{
 		ID:              r.ID,
-		PayrollMonth:    r.PayrollMonth,
-		PeriodStart:     r.PeriodStart,
-		PayDate:         r.PayDate,
+		PayrollMonth:    dateOnly(r.PayrollMonth),
+		PeriodStart:     dateOnly(r.PeriodStart),
+		PayDate:         dateOnly(r.PayDate),
 		Status:          r.Status,
 		ApprovedAt:      r.ApprovedAt,
 		ApprovedBy:      r.ApprovedBy,
@@ -62,4 +62,11 @@ func FromRun(r repository.Run) Run {
 		TotalNetPay:     r.TotalNetPay,
 		Totals:          totals,
 	}
+}
+
+func dateOnly(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format("2006-01-02")
 }

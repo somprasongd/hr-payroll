@@ -20,8 +20,8 @@ import (
 
 type Command struct {
 	ID        uuid.UUID
-	Status    string     `json:"status"`
-	PayDate   *time.Time `json:"payDate"`
+	Status    string  `json:"status"`
+	PayDate   *string `json:"payDate"`
 	ActorID   uuid.UUID
 	ActorRole string
 	Repo      repository.Repository
@@ -42,12 +42,21 @@ func NewHandler() *Handler { return &Handler{} }
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if cmd.Status != "" {
 		cmd.Status = strings.TrimSpace(cmd.Status)
-		if cmd.Status != "pending" && cmd.Status != "approved" && cmd.Status != "processing" {
+		if cmd.Status != "pending" && cmd.Status != "approved" {
 			return nil, errs.BadRequest("invalid status")
 		}
 	}
 	if cmd.Status == "" && cmd.PayDate == nil {
 		return nil, errs.BadRequest("nothing to update")
+	}
+
+	var payDate *time.Time
+	if cmd.PayDate != nil {
+		parsed, err := parseDate(*cmd.PayDate, "payDate")
+		if err != nil {
+			return nil, err
+		}
+		payDate = &parsed
 	}
 
 	run, err := cmd.Repo.Get(ctx, cmd.ID)
@@ -65,9 +74,6 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if cmd.Status == "approved" && cmd.ActorRole != "admin" {
 		return nil, errs.Forbidden("only admin can approve payroll run")
 	}
-	if cmd.PayDate != nil && cmd.PayDate.IsZero() {
-		return nil, errs.BadRequest("invalid payDate")
-	}
 
 	var updated *repository.Run
 	if cmd.Status == "approved" {
@@ -77,7 +83,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if cmd.Status != "" {
 			newStatus = cmd.Status
 		}
-		updated, err = cmd.Repo.UpdateStatus(ctx, cmd.ID, newStatus, cmd.PayDate, cmd.ActorID)
+		updated, err = cmd.Repo.UpdateStatus(ctx, cmd.ID, newStatus, payDate, cmd.ActorID)
 	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -92,4 +98,30 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		resp.Message = "Payroll approved successfully. All related records updated."
 	}
 	return resp, nil
+}
+
+func parseDate(raw, field string) (time.Time, error) {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return time.Time{}, errs.BadRequest(field + " is required")
+	}
+
+	layouts := []string{
+		time.RFC3339,
+		"2006-01-02",
+	}
+	for _, layout := range layouts {
+		var t time.Time
+		var err error
+		if layout == "2006-01-02" {
+			t, err = time.ParseInLocation(layout, value, time.UTC)
+		} else {
+			t, err = time.Parse(layout, value)
+		}
+		if err == nil {
+			return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC), nil
+		}
+	}
+
+	return time.Time{}, errs.BadRequest(field + " must be a valid date (YYYY-MM-DD)")
 }

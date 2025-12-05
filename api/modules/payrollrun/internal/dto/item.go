@@ -12,11 +12,14 @@ type Item struct {
 	ID                   uuid.UUID `json:"id"`
 	RunID                uuid.UUID `json:"runId"`
 	EmployeeID           uuid.UUID `json:"employeeId"`
+	EmployeeNumber       string    `json:"employeeNumber,omitempty"`
+	EmployeeTypeCode     string    `json:"employeeTypeCode,omitempty"`
 	EmployeeName         string    `json:"employeeName,omitempty"`
 	SalaryAmount         float64   `json:"salaryAmount"`
 	OtHours              float64   `json:"otHours"`
 	OtAmount             float64   `json:"otAmount"`
 	BonusAmount          float64   `json:"bonusAmount"`
+	LeaveCompensation    float64   `json:"leaveCompensationAmount"`
 	IncomeTotal          float64   `json:"incomeTotal"`
 	LeaveDaysQty         float64   `json:"leaveDaysQty"`
 	LeaveDaysDeduction   float64   `json:"leaveDaysDeduction"`
@@ -34,11 +37,14 @@ func FromItem(r repository.Item) Item {
 		ID:                   r.ID,
 		RunID:                r.RunID,
 		EmployeeID:           r.EmployeeID,
+		EmployeeNumber:       r.EmployeeNumber,
+		EmployeeTypeCode:     r.EmployeeTypeCode,
 		EmployeeName:         r.EmployeeName,
 		SalaryAmount:         r.SalaryAmount,
 		OtHours:              r.OtHours,
 		OtAmount:             r.OtAmount,
 		BonusAmount:          r.BonusAmount,
+		LeaveCompensation:    r.LeaveCompensation,
 		IncomeTotal:          r.IncomeTotal,
 		LeaveDaysQty:         r.LeaveDaysQty,
 		LeaveDaysDeduction:   r.LeaveDaysDeduction,
@@ -58,11 +64,14 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 			ID:                   r.ID,
 			RunID:                r.RunID,
 			EmployeeID:           r.EmployeeID,
+			EmployeeNumber:       r.EmployeeNumber,
+			EmployeeTypeCode:     r.EmployeeTypeCode,
 			EmployeeName:         r.EmployeeName,
 			SalaryAmount:         r.SalaryAmount,
 			OtHours:              r.OtHours,
 			OtAmount:             r.OtAmount,
 			BonusAmount:          r.BonusAmount,
+			LeaveCompensation:    r.LeaveCompensation,
 			IncomeTotal:          r.IncomeTotal,
 			LeaveDaysQty:         r.LeaveDaysQty,
 			LeaveDaysDeduction:   r.LeaveDaysDeduction,
@@ -97,6 +106,12 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 		WaterAmount:            r.WaterAmount,
 		ElectricAmount:         r.ElectricAmount,
 		InternetAmount:         r.InternetAmount,
+		WaterMeterPrev:         r.WaterMeterPrev,
+		WaterMeterCurr:         r.WaterMeterCurr,
+		ElectricMeterPrev:      r.ElectricMeterPrev,
+		ElectricMeterCurr:      r.ElectricMeterCurr,
+		WaterRatePerUnit:       r.WaterRatePerUnit,
+		ElectricityRatePerUnit: r.ElectricityRatePerUnit,
 		BankAccount:            r.BankAccount,
 	}
 
@@ -124,6 +139,7 @@ type ItemDetail struct {
 	LeaveDoubleDeduction   float64                  `json:"leaveDoubleDeduction"`
 	LeaveHoursQty          float64                  `json:"leaveHoursQty"`
 	LeaveHoursDeduction    float64                  `json:"leaveHoursDeduction"`
+	LeaveCompensation      float64                  `json:"leaveCompensationAmount"`
 	SsoDeclaredWage        float64                  `json:"ssoDeclaredWage"`
 	SsoAccumPrev           float64                  `json:"ssoAccumPrev"`
 	SsoAccumTotal          float64                  `json:"ssoAccumTotal"`
@@ -142,5 +158,11 @@ type ItemDetail struct {
 	WaterAmount            float64                  `json:"waterAmount"`
 	ElectricAmount         float64                  `json:"electricAmount"`
 	InternetAmount         float64                  `json:"internetAmount"`
+	WaterMeterPrev         *float64                 `json:"waterMeterPrev,omitempty"`
+	WaterMeterCurr         *float64                 `json:"waterMeterCurr,omitempty"`
+	ElectricMeterPrev      *float64                 `json:"electricMeterPrev,omitempty"`
+	ElectricMeterCurr      *float64                 `json:"electricMeterCurr,omitempty"`
+	WaterRatePerUnit       float64                  `json:"waterRatePerUnit"`
+	ElectricityRatePerUnit float64                  `json:"electricityRatePerUnit"`
 	BankAccount            *string                  `json:"bankAccount,omitempty"`
 }

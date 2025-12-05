@@ -82,7 +82,69 @@
     },
     "actions": {
       "view": "View Details",
-      "title": "Actions"
+      "title": "Actions",
+      "approve": "Approve"
+    },
+    "approve": {
+      "title": "Approve Payroll",
+      "description": "Are you sure you want to approve this payroll? This action cannot be undone."
+    },
+    "detail": {
+      "title": "Payroll Details",
+      "backToList": "Back to List",
+      "employeeList": "Employee List",
+      "searchPlaceholder": "Search by number or name...",
+      "filterByType": "Employee Type"
+    },
+    "payslip": {
+      "editTitle": "Edit Payslip",
+      "tabs": {
+        "income": "Income",
+        "attendance": "Attendance Deductions",
+        "deductions": "Deductions",
+        "loans": "Loans"
+      },
+      "fields": {
+        "employee": "Employee",
+        "salary": "Base Salary",
+        "ot": "Overtime",
+        "otHours": "hours",
+        "bonus": "Bonus",
+        "housingAllowance": "Housing Allowance",
+        "attendanceBonus": "Attendance Bonus",
+        "attendanceBonusNoLate": "Attendance Bonus (No Late)",
+        "attendanceBonusNoLeave": "Attendance Bonus (No Leave)",
+        "leaveCompensation": "Leave Compensation",
+        "othersIncome": "Other Income",
+        "tax": "Withholding Tax",
+        "sso": "Social Security",
+        "providentFund": "Provident Fund",
+        "lateMinutes": "Late Minutes",
+        "lateDeduction": "Late Deduction",
+        "leaveDays": "Leave Days",
+        "leaveDeduction": "Leave Deduction",
+        "leaveDouble": "Leave (Double)",
+        "leaveDoubleDeduction": "Leave Double Deduction",
+        "leaveHours": "Leave Hours",
+        "leaveHoursDeduction": "Leave Hours Deduction",
+        "utilities": "Utilities",
+        "waterMeterPrev": "Water Meter (Prev)",
+        "waterMeterCurr": "Water Meter (Curr)",
+        "waterAmount": "Water Amount",
+        "electricMeterPrev": "Electric Meter (Prev)",
+        "electricMeterCurr": "Electric Meter (Curr)",
+        "electricAmount": "Electric Amount",
+        "internetAmount": "Internet",
+        "advanceRepay": "Salary Advance Deduction",
+        "loanRepayments": "Debt Repayment Deduction",
+        "incomeTotal": "Total Income",
+        "deductionTotal": "Total Deductions",
+        "netPay": "Net Pay"
+      },
+      "addItem": "Add Item",
+      "removeItem": "Remove",
+      "itemName": "Name",
+      "itemValue": "Amount"
     }
   },
   "Settings": {
@@ -517,6 +579,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
+    "view": "View",
     "create": "Create",
     "search": "Search",
     "filter": "Filter",
@@ -538,7 +601,9 @@
     "loading": "Loading...",
     "all": "All",
     "clearFilter": "Clear Filter",
-    "noData": "No data"
+    "noData": "No data",
+    "confirmDeleteTitle": "Confirm Delete",
+    "confirmDeleteDescription": "Are you sure you want to delete this item? This action cannot be undone."
   },
   "Payouts": {
     "PT": {

@@ -145,7 +145,7 @@ INSERT INTO payroll_run (
   payroll_month_date, period_start_date, pay_date,
   social_security_rate_employee, social_security_rate_employer,
   status, created_by, updated_by
-) VALUES ($1,$2,$3,$4,$5,'processing',$6,$6)
+) VALUES ($1,$2,$3,$4,$5,'pending',$6,$6)
 RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
@@ -211,7 +211,7 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
 
 func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE payroll_run SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL AND status IN ('processing','pending')`
+	const q = `UPDATE payroll_run SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL AND status = 'pending'`
 	res, err := db.ExecContext(ctx, q, actor, id)
 	if err != nil {
 		return err
@@ -227,10 +227,13 @@ type Item struct {
 	RunID                uuid.UUID `db:"run_id"`
 	EmployeeID           uuid.UUID `db:"employee_id"`
 	EmployeeName         string    `db:"employee_name"`
+	EmployeeTypeCode     string    `db:"employee_type_code"`
+	EmployeeNumber       string    `db:"employee_number"`
 	SalaryAmount         float64   `db:"salary_amount"`
 	OtHours              float64   `db:"ot_hours"`
 	OtAmount             float64   `db:"ot_amount"`
 	BonusAmount          float64   `db:"bonus_amount"`
+	LeaveCompensation    float64   `db:"leave_compensation_amount"`
 	IncomeTotal          float64   `db:"income_total"`
 	LeaveDaysQty         float64   `db:"leave_days_qty"`
 	LeaveDaysDeduction   float64   `db:"leave_days_deduction"`
@@ -241,6 +244,8 @@ type Item struct {
 	NetPay               float64   `db:"net_pay"`
 	Status               string    `db:"status"`
 	DeductionTotal       float64   `db:"deduction_total"`
+	AdvanceAmount        float64   `db:"advance_amount"`
+	LoanOutstandingTotal float64   `db:"loan_outstanding_total"`
 }
 
 type ItemListResult struct {
@@ -248,30 +253,38 @@ type ItemListResult struct {
 	Total int
 }
 
-func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit int, search string) (ItemListResult, error) {
+func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit int, search string, employeeTypeCode string) (ItemListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
 	where = append(where, "run_id = $1")
 	args = append(args, runID)
+	fullNameExpr := "concat_ws(' ', e.first_name, e.last_name)"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
-		where = append(where, fmt.Sprintf("e.full_name ILIKE $%d", len(args)))
+		where = append(where, fmt.Sprintf("(%s ILIKE $%d OR e.employee_number ILIKE $%d)", fullNameExpr, len(args), len(args)))
+	}
+	if employeeTypeCode != "" {
+		args = append(args, employeeTypeCode)
+		where = append(where, fmt.Sprintf("et.code = $%d", len(args)))
 	}
 	whereClause := strings.Join(where, " AND ")
 	args = append(args, limit, offset)
 	q := fmt.Sprintf(`
-SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
+SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
+JOIN employee_type et ON et.id = e.employee_type_id
 WHERE %s
-ORDER BY e.full_name ASC
-LIMIT $%d OFFSET $%d`, netPayExpr, deductionExpr, whereClause, len(args)-1, len(args))
+ORDER BY CASE et.code WHEN 'full_time' THEN 0 WHEN 'part_time' THEN 1 ELSE 2 END,
+         e.employee_number ASC,
+         %s ASC
+LIMIT $%d OFFSET $%d`, fullNameExpr, netPayExpr, deductionExpr, whereClause, fullNameExpr, len(args)-1, len(args))
 	rows, err := db.QueryxContext(ctx, q, args...)
 	if err != nil {
 		return ItemListResult{}, err
@@ -286,7 +299,7 @@ LIMIT $%d OFFSET $%d`, netPayExpr, deductionExpr, whereClause, len(args)-1, len(
 		list = append(list, it)
 	}
 	countArgs := args[:len(args)-2]
-	countQ := fmt.Sprintf("SELECT COUNT(1) FROM payroll_run_item pri JOIN employees e ON e.id = pri.employee_id WHERE %s", whereClause)
+	countQ := fmt.Sprintf("SELECT COUNT(1) FROM payroll_run_item pri JOIN employees e ON e.id = pri.employee_id JOIN employee_type et ON et.id = e.employee_type_id WHERE %s", whereClause)
 	var total int
 	if err := db.GetContext(ctx, &total, countQ, countArgs...); err != nil {
 		return ItemListResult{}, err
@@ -310,11 +323,13 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	args = append(args, id)
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE payroll_run_item SET %s WHERE id=$%d RETURNING id, run_id, employee_id,
-       (SELECT full_name FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_name,
+       (SELECT concat_ws(' ', e.first_name, e.last_name) FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_name,
+       (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
+       (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
        salary_amount, ot_hours, ot_amount, bonus_amount,
-       income_total, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
+       income_total, leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
        sso_month_amount, tax_month_amount, (%s) AS net_pay, 'pending' as status,
-       (%s) AS deduction_total`, setClause, i, netPayExpr, deductionExpr)
+        (%s) AS deduction_total`, setClause, i, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
@@ -324,13 +339,15 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
-	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
-       (%s) AS deduction_total
+       (%s) AS deduction_total,
+       pri.advance_amount, pri.loan_outstanding_total
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
+JOIN employee_type et ON et.id = e.employee_type_id
 WHERE pri.id=$1 LIMIT 1`, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, id); err != nil {
@@ -349,6 +366,7 @@ type ItemDetail struct {
 	LeaveDoubleDeduction   float64   `db:"leave_double_deduction"`
 	LeaveHoursQty          float64   `db:"leave_hours_qty"`
 	LeaveHoursDeduction    float64   `db:"leave_hours_deduction"`
+	LeaveCompensation      float64   `db:"leave_compensation_amount"`
 	SsoDeclaredWage        float64   `db:"sso_declared_wage"`
 	SsoAccumPrev           float64   `db:"sso_accum_prev"`
 	SsoAccumTotal          float64   `db:"sso_accum_total"`
@@ -367,14 +385,21 @@ type ItemDetail struct {
 	WaterAmount            float64   `db:"water_amount"`
 	ElectricAmount         float64   `db:"electric_amount"`
 	InternetAmount         float64   `db:"internet_amount"`
+	WaterMeterPrev         *float64  `db:"water_meter_prev"`
+	WaterMeterCurr         *float64  `db:"water_meter_curr"`
+	ElectricMeterPrev      *float64  `db:"electric_meter_prev"`
+	ElectricMeterCurr      *float64  `db:"electric_meter_curr"`
+	WaterRatePerUnit       float64   `db:"water_rate_per_unit"`
+	ElectricityRatePerUnit float64   `db:"electricity_rate_per_unit"`
 	BankAccount            *string   `db:"bank_account"`
 }
 
 func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetail, error) {
 	db := r.dbCtx(ctx)
-	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, e.full_name AS employee_name,
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
+       concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' AS status,
        (%s) AS deduction_total,
        pri.employee_type_id,
@@ -386,10 +411,12 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
        pri.advance_amount, pri.advance_repay_amount, pri.advance_diff_amount,
        pri.loan_outstanding_prev, pri.loan_outstanding_total, pri.loan_repayments,
        pri.others_income, pri.water_amount, pri.electric_amount, pri.internet_amount,
-       u.bank_account
+       pri.water_meter_prev, pri.water_meter_curr, pri.electric_meter_prev, pri.electric_meter_curr,
+       pri.water_rate_per_unit, pri.electricity_rate_per_unit,
+       e.bank_account_no AS bank_account
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
-LEFT JOIN users u ON u.id = e.user_id
+JOIN employee_type et ON et.id = e.employee_type_id
 WHERE pri.id = $1`, netPayExpr, deductionExpr)
 	var it ItemDetail
 	if err := db.GetContext(ctx, &it, q, id); err != nil {

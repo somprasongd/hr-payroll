@@ -294,7 +294,7 @@ interface EmployeeFormProps {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full ${isEditing ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          <TabsList className={`grid w-full h-auto grid-cols-2 ${isEditing ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
             <TabsTrigger value="personal">{t('personalInfo')}</TabsTrigger>
             <TabsTrigger value="employment">{t('employmentInfo')}</TabsTrigger>
             <TabsTrigger value="financial">{t('financialInfo')}</TabsTrigger>
