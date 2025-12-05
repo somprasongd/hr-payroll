@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { GenericDataTable } from '@/components/common/generic-data-table';
 import { Badge } from '@/components/ui/badge';
 import { DateInput } from '@/components/ui/date-input';
 import { PTWorklogForm } from '@/components/pt-worklog-form';
@@ -15,14 +15,6 @@ import { ptWorklogService, PTWorklog, CreatePTWorklogRequest, UpdatePTWorklogReq
 import { employeeService, Employee } from '@/services/employee.service';
 import { Plus, Search, Edit, Trash2, X, MoreHorizontal, Filter, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +26,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
-import { Pagination } from '@/components/ui/pagination';
 
 // Get default date range (current month)
 const getDefaultStartDate = () => format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -241,6 +232,73 @@ export default function PTWorklogsPage() {
     setCurrentPage(page);
   };
 
+  const columns = [
+    {
+      id: 'workDate',
+      header: t('table.workDate'),
+      accessorFn: (row: PTWorklog) => row.workDate,
+      cell: (info: any) => format(new Date(info.getValue()), 'dd/MM/yyyy'),
+    },
+    {
+      id: 'morningShift',
+      header: t('table.morningShift'),
+      accessorFn: (row: PTWorklog) => row,
+      cell: (info: any) => {
+        const worklog = info.getValue() as PTWorklog;
+        return worklog.morningIn && worklog.morningOut ? (
+          <span className="text-sm">
+            {formatTime(worklog.morningIn)} - {formatTime(worklog.morningOut)}
+          </span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        );
+      },
+    },
+    {
+      id: 'eveningShift',
+      header: t('table.eveningShift'),
+      accessorFn: (row: PTWorklog) => row,
+      cell: (info: any) => {
+        const worklog = info.getValue() as PTWorklog;
+        return worklog.eveningIn && worklog.eveningOut ? (
+          <span className="text-sm">
+            {formatTime(worklog.eveningIn)} - {formatTime(worklog.eveningOut)}
+          </span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        );
+      },
+    },
+    {
+      id: 'totalHours',
+      header: t('table.totalHours'),
+      accessorFn: (row: PTWorklog) => row.totalHours,
+      cell: (info: any) => `${info.getValue().toFixed(2)} ${t('units.hours')}`,
+    },
+    {
+      id: 'status',
+      header: t('table.status'),
+      accessorFn: (row: PTWorklog) => row.status,
+      cell: (info: any) => getStatusBadge(info.getValue()),
+    },
+  ];
+
+  const actions = [
+    {
+      label: t('editTitle'),
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (worklog: PTWorklog) => handleEdit(worklog),
+      condition: (worklog: PTWorklog) => worklog.status === 'pending',
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive' as const,
+      onClick: (worklog: PTWorklog) => handleDelete(worklog),
+      condition: (worklog: PTWorklog) => worklog.status === 'pending',
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-row justify-between items-center gap-4">
@@ -324,91 +382,18 @@ export default function PTWorklogsPage() {
         />
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border overflow-x-auto">
-        {loading ? (
-          <div className="p-12 text-center text-muted-foreground">{tCommon('loading')}</div>
-        ) : !employeeFilter ? (
-          <div className="p-12 text-center text-muted-foreground">{t('placeholders.selectEmployee')}</div>
-        ) : !worklogs || worklogs.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">{t('noData')}</div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('table.workDate')}</TableHead>
-                  <TableHead className="text-center">{t('table.morningShift')}</TableHead>
-                  <TableHead className="text-center">{t('table.eveningShift')}</TableHead>
-                  <TableHead className="text-center">{t('table.totalHours')}</TableHead>
-                  <TableHead>{t('table.status')}</TableHead>
-                  <TableHead className="text-right">{t('table.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {worklogs.map((worklog) => (
-                  <TableRow key={worklog.id}>
-                    <TableCell>{format(new Date(worklog.workDate), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell className="text-center">
-                      {worklog.morningIn && worklog.morningOut ? (
-                        <span className="text-sm">
-                          {formatTime(worklog.morningIn)} - {formatTime(worklog.morningOut)}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {worklog.eveningIn && worklog.eveningOut ? (
-                        <span className="text-sm">
-                          {formatTime(worklog.eveningIn)} - {formatTime(worklog.eveningOut)}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center font-semibold">
-                      {worklog.totalHours.toFixed(2)} {t('units.hours')}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(worklog.status)}</TableCell>
-                    <TableCell className="text-right">
-                      {worklog.status === 'pending' && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">{t('table.actions')}</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEdit(worklog)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              {t('editTitle')}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDelete(worklog)} className="text-red-600">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              {tCommon('delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </>
-        )}
-      </div>
+      <GenericDataTable
+        data={worklogs}
+        columns={columns}
+        loading={loading}
+        emptyStateText={!employeeFilter ? t('placeholders.selectEmployee') : t('noData')}
+        actions={actions}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
+      />
 
       {/* Form Dialog */}
       {mounted && (

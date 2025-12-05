@@ -11,7 +11,8 @@ import {
   User,
   ChevronRight,
   CreditCard,
-  Settings2
+  Settings2,
+  Banknote
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/routing"
@@ -86,6 +87,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Link href="/employees">
                   <Users />
                   <span>{tMenu('employeeManagement')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            {/* Payroll */}
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/payroll')} tooltip={tMenu('payroll')}>
+                <Link href="/payroll">
+                  <Banknote />
+                  <span>{tMenu('payroll')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

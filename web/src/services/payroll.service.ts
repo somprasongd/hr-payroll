@@ -2,10 +2,12 @@ import { apiClient } from '@/lib/api-client';
 
 export interface PayrollRun {
   id: string;
-  monthDate: string;
+  payrollMonthDate: string;
+  periodStartDate: string;
+  payDate: string;
   status: string;
-  cycleStartDate: string;
-  cycleEndDate: string;
+  totalEmployees?: number;
+  totalNetPay?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,8 +25,9 @@ export interface PayrollRunsResponse {
 export interface PayrollRunsQueryParams {
   page?: number;
   limit?: number;
-  monthDate?: string;
+  payrollMonthDate?: string;
   status?: string;
+  year?: number;
 }
 
 export const payrollService = {
@@ -42,9 +45,9 @@ export const payrollService = {
     }
   },
 
-  async validatePayrollMonth(monthDate: string): Promise<{ exists: boolean; approved: boolean }> {
+  async validatePayrollMonth(payrollMonthDate: string): Promise<{ exists: boolean; approved: boolean }> {
     try {
-      const response = await this.getPayrollRuns({ monthDate, limit: 1 });
+      const response = await this.getPayrollRuns({ payrollMonthDate, limit: 1 });
       if (!response?.data || response.data.length === 0) {
         return { exists: false, approved: false };
       }
@@ -55,4 +58,16 @@ export const payrollService = {
       return { exists: false, approved: false };
     }
   },
+
+  async createPayrollRun(data: CreatePayrollRunRequest): Promise<PayrollRun> {
+    return apiClient.post<PayrollRun>('/payroll-runs', data);
+  },
 };
+
+export interface CreatePayrollRunRequest {
+  payrollMonthDate: string;
+  periodStartDate: string;
+  payDate: string;
+  socialSecurityRateEmployee: number;
+  socialSecurityRateEmployer: number;
+}

@@ -9,24 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { GenericDataTable } from '@/components/common/generic-data-table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Shield, Key, Trash } from 'lucide-react';
+import { Shield, Key, Trash } from 'lucide-react';
 import { userService, User } from '@/services/user.service';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -35,7 +20,6 @@ import { RoleEditDialog } from './role-edit-dialog';
 
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
-import { Pagination } from '@/components/ui/pagination';
 
 export function UserList() {
   const t = useTranslations('Users');
@@ -100,92 +84,81 @@ export function UserList() {
     setCurrentPage(page);
   };
 
-  if (isLoading) {
-    return <div>{t('loading')}</div>;
-  }
+  const columns = [
+    {
+      id: 'username',
+      header: t('fields.username'),
+      accessorFn: (row: User) => row.username,
+      cell: (info: any) => <span className="font-medium">{info.getValue()}</span>,
+    },
+    {
+      id: 'role',
+      header: t('fields.role'),
+      accessorFn: (row: User) => row.role,
+      cell: (info: any) => (
+        <Badge variant={info.getValue() === 'admin' ? 'default' : 'secondary'}>
+          {t(`roles.${info.getValue()}`)}
+        </Badge>
+      ),
+    },
+    {
+      id: 'createdAt',
+      header: t('fields.createdAt'),
+      accessorFn: (row: User) => row.createdAt,
+      cell: (info: any) => format(new Date(info.getValue()), 'dd/MM/yyyy HH:mm'),
+    },
+    {
+      id: 'lastLoginAt',
+      header: t('fields.lastLoginAt'),
+      accessorFn: (row: User) => row.lastLoginAt,
+      cell: (info: any) => info.getValue() ? format(new Date(info.getValue()), 'dd/MM/yyyy HH:mm') : '-',
+    },
+  ];
+
+  const actions = [
+    {
+      label: t('actions.editRole'),
+      icon: <Shield className="h-4 w-4" />,
+      onClick: (user: User) => {
+        setSelectedUser(user);
+        setIsRoleEditOpen(true);
+      },
+      condition: (user: User) => user.id !== currentUser?.id,
+    },
+    {
+      label: t('actions.resetPassword'),
+      icon: <Key className="h-4 w-4" />,
+      onClick: (user: User) => {
+        setSelectedUser(user);
+        setIsPasswordResetOpen(true);
+      },
+      condition: (user: User) => user.id !== currentUser?.id,
+    },
+    {
+      label: t('actions.delete'),
+      icon: <Trash className="h-4 w-4" />,
+      variant: 'destructive' as const,
+      onClick: (user: User) => {
+        setSelectedUser(user);
+        setIsDeleteAlertOpen(true);
+      },
+      condition: (user: User) => user.id !== currentUser?.id,
+    },
+  ];
 
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('fields.username')}</TableHead>
-              <TableHead>{t('fields.role')}</TableHead>
-              <TableHead>{t('fields.createdAt')}</TableHead>
-              <TableHead>{t('fields.lastLoginAt')}</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.username}</TableCell>
-                <TableCell>
-                  <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                    {t(`roles.${user.role}`)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {format(new Date(user.createdAt), 'dd/MM/yyyy HH:mm')}
-                </TableCell>
-                <TableCell>
-                  {user.lastLoginAt
-                    ? format(new Date(user.lastLoginAt), 'dd/MM/yyyy HH:mm')
-                    : '-'}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild disabled={user.id === currentUser?.id}>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">{t('actions.openMenu')}</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>{t('actions.title')}</DropdownMenuLabel>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsRoleEditOpen(true);
-                        }}
-                      >
-                        <Shield className="mr-2 h-4 w-4" />
-                        {t('actions.editRole')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsPasswordResetOpen(true);
-                        }}
-                      >
-                        <Key className="mr-2 h-4 w-4" />
-                        {t('actions.resetPassword')}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsDeleteAlertOpen(true);
-                        }}
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        {t('actions.delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
+      <GenericDataTable
+        data={users}
+        columns={columns}
+        loading={isLoading}
+        emptyStateText={t('noData')}
+        actions={actions}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
       />
 
       {selectedUser && (

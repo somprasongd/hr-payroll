@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { GenericDataTable } from '@/components/common/generic-data-table';
 import { Badge } from '@/components/ui/badge';
 import { DateInput } from '@/components/ui/date-input';
 import { FTWorklogForm } from '@/components/ft-worklog-form';
@@ -15,14 +15,6 @@ import { ftWorklogService, FTWorklog, CreateFTWorklogRequest, UpdateFTWorklogReq
 import { employeeService, Employee } from '@/services/employee.service';
 import { Plus, Search, Edit, Trash2, X, MoreHorizontal, Filter, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +26,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { Pagination } from '@/components/ui/pagination';
 
 // Get default date range (current month)
 const getDefaultStartDate = () => format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -257,6 +248,49 @@ export default function FTWorklogsPage() {
     setCurrentPage(page);
   };
 
+  const columns = [
+    {
+      id: 'workDate',
+      header: t('table.workDate'),
+      accessorFn: (row: FTWorklog) => row.workDate,
+      cell: (info: any) => format(new Date(info.getValue()), 'dd/MM/yyyy'),
+    },
+    {
+      id: 'entryType',
+      header: t('table.entryType'),
+      accessorFn: (row: FTWorklog) => row.entryType,
+      cell: (info: any) => getEntryTypeBadge(info.getValue()),
+    },
+    {
+      id: 'quantity',
+      header: t('table.quantity'),
+      accessorFn: (row: FTWorklog) => row,
+      cell: (info: any) => getQuantityDisplay(info.getValue()),
+    },
+    {
+      id: 'status',
+      header: t('table.status'),
+      accessorFn: (row: FTWorklog) => row.status,
+      cell: (info: any) => getStatusBadge(info.getValue()),
+    },
+  ];
+
+  const actions = [
+    {
+      label: t('editTitle'),
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (worklog: FTWorklog) => handleEdit(worklog),
+      condition: (worklog: FTWorklog) => worklog.status === 'pending',
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive' as const,
+      onClick: (worklog: FTWorklog) => handleDelete(worklog),
+      condition: (worklog: FTWorklog) => worklog.status === 'pending',
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-row justify-between items-center gap-4">
@@ -355,71 +389,18 @@ export default function FTWorklogsPage() {
         />
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border">
-        {loading ? (
-          <div className="p-12 text-center text-muted-foreground">{tCommon('loading')}</div>
-        ) : !employeeFilter ? (
-          <div className="p-12 text-center text-muted-foreground">{t('placeholders.selectEmployee')}</div>
-        ) : !worklogs || worklogs.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">{t('noData')}</div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('table.workDate')}</TableHead>
-                  <TableHead>{t('table.entryType')}</TableHead>
-                  <TableHead>{t('table.quantity')}</TableHead>
-                  <TableHead>{t('table.status')}</TableHead>
-                  <TableHead className="text-right">{t('table.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {worklogs.map((worklog) => (
-                  <TableRow key={worklog.id}>
-                    <TableCell>{format(new Date(worklog.workDate), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell>{getEntryTypeBadge(worklog.entryType)}</TableCell>
-                    <TableCell>{getQuantityDisplay(worklog)}</TableCell>
-                    <TableCell>{getStatusBadge(worklog.status)}</TableCell>
-                    <TableCell className="text-right">
-                      {worklog.status === 'pending' && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">{t('table.actions')}</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEdit(worklog)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              {t('editTitle')}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDelete(worklog)} className="text-red-600">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              {tCommon('delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </>
-        )}
-      </div>
+      <GenericDataTable
+        data={worklogs}
+        columns={columns}
+        loading={loading}
+        emptyStateText={!employeeFilter ? t('placeholders.selectEmployee') : t('noData')}
+        actions={actions}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
+      />
 
       {/* Form Dialog */}
       {mounted && (

@@ -50,7 +50,40 @@
     "debt": "การจัดการหนี้สิน",
     "worklog": "บันทึกเวลาทำงาน",
     "compensation": "ค่าตอบแทน",
-    "collapse": "ย่อเมนู"
+    "collapse": "ย่อเมนู",
+    "payroll": "เงินเดือน"
+  },
+  "Payroll": {
+    "title": "เงินเดือน",
+    "description": "จัดการรอบเงินเดือนและสลิปเงินเดือน",
+    "createTitle": "สร้างรอบเงินเดือน",
+    "createDescription": "สร้างรอบเงินเดือนใหม่สำหรับเดือนที่เลือก",
+    "fields": {
+      "month": "เดือนที่จ่าย",
+      "periodStart": "วันที่เริ่มรอบ",
+      "payDate": "วันที่จ่ายเงิน",
+      "ssoEmployee": "ประกันสังคมลูกจ้าง (%)",
+      "ssoEmployer": "ประกันสังคมนายจ้าง (%)",
+      "period": "รอบระยะเวลา",
+      "status": "สถานะ",
+      "totalEmployees": "จำนวนพนักงาน",
+      "totalNetPay": "ยอดจ่ายสุทธิ"
+    },
+    "status": {
+      "approved": "อนุมัติแล้ว",
+      "paid": "จ่ายแล้ว",
+      "pending": "รอดำเนินการ",
+      "processing": "กำลังประมวลผล"
+    },
+    "filters": {
+      "year": "ปี",
+      "status": "สถานะ",
+      "allStatuses": "ทุกสถานะ"
+    },
+    "actions": {
+      "view": "ดูรายละเอียด",
+      "title": "การกระทำ"
+    }
   },
   "Settings": {
     "title": "การตั้งค่าระบบ Payroll",

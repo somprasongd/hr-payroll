@@ -50,7 +50,40 @@
     "debt": "Debt Management",
     "worklog": "Work Logs",
     "compensation": "Compensation",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "payroll": "Payroll"
+  },
+  "Payroll": {
+    "title": "Payroll",
+    "description": "Manage payroll cycles and payslips",
+    "createTitle": "Create Payroll Cycle",
+    "createDescription": "Create a new payroll cycle for the selected month.",
+    "fields": {
+      "month": "Payroll Month",
+      "periodStart": "Period Start Date",
+      "payDate": "Pay Date",
+      "ssoEmployee": "SSO Employee (%)",
+      "ssoEmployer": "SSO Employer (%)",
+      "period": "Period",
+      "status": "Status",
+      "totalEmployees": "Total Employees",
+      "totalNetPay": "Total Net Pay"
+    },
+    "status": {
+      "approved": "Approved",
+      "paid": "Paid",
+      "pending": "Pending",
+      "processing": "Processing"
+    },
+    "filters": {
+      "year": "Year",
+      "status": "Status",
+      "allStatuses": "All Statuses"
+    },
+    "actions": {
+      "view": "View Details",
+      "title": "Actions"
+    }
   },
   "Settings": {
     "title": "Payroll System Settings",
@@ -505,10 +538,7 @@
     "loading": "Loading...",
     "all": "All",
     "clearFilter": "Clear Filter",
-    "noData": "No data",
-    "next": "Next",
-    "previous": "Previous",
-    "filter": "Filter"
+    "noData": "No data"
   },
   "Payouts": {
     "PT": {

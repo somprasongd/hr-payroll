@@ -3,6 +3,7 @@ package create
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,14 +19,14 @@ import (
 )
 
 type Command struct {
-	PayrollMonth    time.Time `json:"payrollMonthDate"`
-	PeriodStart     time.Time `json:"periodStartDate"`
-	PayDate         time.Time `json:"payDate"`
-	SSORateEmp      float64   `json:"socialSecurityRateEmployee"`
-	SSORateEmployer float64   `json:"socialSecurityRateEmployer"`
-	ActorID         uuid.UUID
-	Repo            repository.Repository
-	Tx              transactor.Transactor
+	PayrollMonthRaw string                `json:"payrollMonthDate"`
+	PeriodStartRaw  string                `json:"periodStartDate"`
+	PayDateRaw      string                `json:"payDate"`
+	SSORateEmp      float64               `json:"socialSecurityRateEmployee"`
+	SSORateEmployer float64               `json:"socialSecurityRateEmployer"`
+	ActorID         uuid.UUID             `json:"-"`
+	Repo            repository.Repository `json:"-"`
+	Tx              transactor.Transactor `json:"-"`
 }
 
 type Response struct {
@@ -40,20 +41,30 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if cmd.PayrollMonth.IsZero() || cmd.PayrollMonth.Day() != 1 {
-		return nil, errs.BadRequest("payrollMonthDate must be first day of month")
+	payrollMonth, err := parseDate(cmd.PayrollMonthRaw, "payrollMonthDate")
+	if err != nil {
+		return nil, err
 	}
-	if cmd.PeriodStart.IsZero() || cmd.PayDate.IsZero() {
-		return nil, errs.BadRequest("periodStartDate and payDate are required")
+	if payrollMonth.Day() != 1 {
+		return nil, errs.BadRequest("payrollMonthDate must be first day of month (YYYY-MM-01)")
+	}
+
+	periodStart, err := parseDate(cmd.PeriodStartRaw, "periodStartDate")
+	if err != nil {
+		return nil, err
+	}
+	payDate, err := parseDate(cmd.PayDateRaw, "payDate")
+	if err != nil {
+		return nil, err
 	}
 	if cmd.SSORateEmp < 0 || cmd.SSORateEmployer < 0 {
 		return nil, errs.BadRequest("sso rates must be positive")
 	}
 
 	run := repository.Run{
-		PayrollMonth:    cmd.PayrollMonth,
-		PeriodStart:     cmd.PeriodStart,
-		PayDate:         cmd.PayDate,
+		PayrollMonth:    payrollMonth,
+		PeriodStart:     periodStart,
+		PayDate:         payDate,
 		SSORateEmp:      cmd.SSORateEmp,
 		SSORateEmployer: cmd.SSORateEmployer,
 	}
@@ -76,4 +87,30 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		Run:     dto.FromRun(*created),
 		Message: "Payroll run created. System is generating payslips.",
 	}, nil
+}
+
+func parseDate(raw, field string) (time.Time, error) {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return time.Time{}, errs.BadRequest(field + " is required")
+	}
+
+	layouts := []string{
+		time.RFC3339,
+		"2006-01-02",
+	}
+	for _, layout := range layouts {
+		var t time.Time
+		var err error
+		if layout == "2006-01-02" {
+			t, err = time.ParseInLocation(layout, value, time.UTC)
+		} else {
+			t, err = time.Parse(layout, value)
+		}
+		if err == nil {
+			return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC), nil
+		}
+	}
+
+	return time.Time{}, errs.BadRequest(field + " must be a valid date (YYYY-MM-DD)")
 }
