@@ -2764,6 +2764,7 @@ Logic (Database Trigger):
   - `search`: ค้นหาชื่อพนักงาน **หรือ** รหัสพนักงาน (`employeeNumber`)
   - `employeeTypeCode`: กรองตามประเภทพนักงาน (`full_time` หรือ `part_time`)
   - `limit`, `page`: Pagination
+- **Fields:** `doctorFee` และ flags จากตาราง `employees` (`ssoContribute`, `providentFundContribute`, `withholdTax`, `allowHousing`, `allowWater`, `allowElectric`, `allowInternet`, `allowDoctorFee`) ถูกส่งไปด้วยเพื่อให้ UI lock/disable input ตามการตั้งค่า
 
 **Success Response (200 OK):**
 
@@ -2780,7 +2781,16 @@ Logic (Database Trigger):
       "leaveCompensationAmount": 200.0,
       "incomeTotal": 35000.0,
       "deductionTotal": 1500.0,
-      "netPay": 33500.0 // (Income - Deduction) - Calculated in DB
+      "netPay": 33500.0, // (Income - Deduction) - Calculated in DB
+      "doctorFee": 800.0,
+      "ssoContribute": true,
+      "providentFundContribute": true,
+      "withholdTax": true,
+      "allowHousing": true,
+      "allowWater": false,
+      "allowElectric": true,
+      "allowInternet": true,
+      "allowDoctorFee": true
     }
   ]
 }
@@ -2797,12 +2807,22 @@ Logic (Database Trigger):
 - **Endpoint:** `GET /payroll-items/{id}`
 - **Access:** Admin, HR (Admin/HR ดูของทุกคน, User ดูของตัวเองผ่าน API อื่น)
 - **Params:** `id` (UUIDv7 ของ Item)
+- **Fields:** ส่งกลับ `doctorFee` และ flags จาก `employees` (`ssoContribute`, `providentFundContribute`, `withholdTax`, `allowHousing`, `allowWater`, `allowElectric`, `allowInternet`, `allowDoctorFee`) สำหรับใช้ disable input ตามสิทธิ์พนักงาน
 
 **Success Response (Full Payslip Detail):**
 
 ```json
 {
   "id": "019ff111-...",
+  "doctorFee": 800.0,
+  "ssoContribute": true,
+  "providentFundContribute": true,
+  "withholdTax": true,
+  "allowHousing": true,
+  "allowWater": false,
+  "allowElectric": true,
+  "allowInternet": true,
+  "allowDoctorFee": true,
   "employee": { "id": "...", "name": "สมชาย", "bankAccount": "..." },
   "earnings": {
     "salary": 30000.0,
@@ -2846,6 +2866,8 @@ Logic (Database Trigger):
 - แก้ไขได้เฉพาะเมื่อ `payroll_run.status` = `pending`
 - ถ้า `advanceAmount` = 0 แต่ส่ง `advanceRepayAmount` > 0 จะถูกปฏิเสธ (400)
 - ถ้า `loanOutstandingTotal` = 0 แต่ส่ง `loanRepayments` ที่มีค่า จะถูกปฏิเสธ (400)
+- สามารถส่ง `doctorFee` เพื่อบันทึกค่าตรวจแพทย์/เบิกแพทย์ของพนักงาน (ใช้ trigger เดิมคำนวณยอดรวม)
+- ถ้าสิทธิ์พนักงานปิดไว้จะไม่รับค่าที่เกี่ยวข้อง (ตอบ `409 Conflict`): `ssoContribute=false` + `ssoMonthAmount`, `providentFundContribute=false` + `pfMonthAmount`, `withholdTax=false` + `taxMonthAmount`, `allowWater=false` + water*, `allowElectric=false` + electric*, `allowInternet=false` + `internetAmount`, `allowDoctorFee=false` + `doctorFee`
 
 **Request Body Example:**
 
@@ -2856,7 +2878,8 @@ Logic (Database Trigger):
     // เพิ่มรายได้อื่นๆ
     { "description": "ค่าคอมมิชชั่น", "value": 5000.0 }
   ],
-  "taxMonthAmount": 800.0 // Override ภาษี (ถ้าคำนวณมือมา)
+  "taxMonthAmount": 800.0, // Override ภาษี (ถ้าคำนวณมือมา)
+  "doctorFee": 500.0
 }
 ```
 

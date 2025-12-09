@@ -131,6 +131,7 @@ CREATE TABLE IF NOT EXISTS payroll_run_item (
   attendance_bonus_noleave   NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   bonus_amount               NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   leave_compensation_amount  NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+  doctor_fee                 NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   others_income              JSONB NULL, -- [{name,value}]
   income_total               NUMERIC(14,2) NOT NULL DEFAULT 0.00,
 
@@ -237,6 +238,7 @@ BEGIN
       COALESCE(NEW.attendance_bonus_noleave,0) +
       COALESCE(NEW.bonus_amount,0) +
       COALESCE(NEW.leave_compensation_amount,0) +
+      COALESCE(NEW.doctor_fee,0) +
       COALESCE(v_others_income,0);
 
   NEW.sso_accum_total := COALESCE(NEW.sso_accum_prev,0) + COALESCE(NEW.sso_month_amount,0);
@@ -286,6 +288,7 @@ DECLARE
   v_loan_repay_json JSONB;
   v_loan_total NUMERIC(14,2);
   v_others_income JSONB := '[]'::jsonb;
+  v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
@@ -324,7 +327,7 @@ BEGIN
     v_leave_hours := 0; v_leave_hours_deduct := 0;
     v_bonus_amt := 0; v_adv := 0; 
     v_loan_repay_json := '[]'::jsonb; v_loan_total := 0;
-    v_pt_hours := 0; v_others_income := '[]'::jsonb;
+    v_pt_hours := 0; v_others_income := '[]'::jsonb; v_doctor_fee := 0;
     v_sso_prev := 0; v_tax_prev := 0; v_pf_prev := 0;
     v_water_prev := NULL; v_electric_prev := NULL;
 
@@ -436,9 +439,9 @@ BEGIN
     FROM payroll_accumulation
     WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
 
-    -- Doctor fee (allowance) ใส่ใน others_income เป็น 0 ถ้าเปิดสิทธิ์
+    -- Doctor fee allowance defaults to 0 when enabled
     IF v_emp.allow_doctor_fee THEN
-      v_others_income := v_others_income || jsonb_build_object('name', 'Doctor Fee', 'value', 0);
+      v_doctor_fee := 0;
     END IF;
 
     -- ============================================================
@@ -456,7 +459,7 @@ BEGIN
       
       advance_amount, loan_repayments, loan_outstanding_prev,
       sso_declared_wage, sso_accum_prev, tax_accum_prev, pf_accum_prev,
-      others_income,
+      doctor_fee, others_income,
       water_meter_prev, water_meter_curr, water_rate_per_unit, water_amount,
       electric_meter_prev, electric_meter_curr, electricity_rate_per_unit, electric_amount,
       internet_amount,
@@ -486,7 +489,7 @@ BEGIN
         ELSE 0 
       END,
       COALESCE(v_sso_prev,0), COALESCE(v_tax_prev,0), COALESCE(v_pf_prev,0),
-      v_others_income,
+      v_doctor_fee, v_others_income,
       v_water_prev, NULL, v_config.water_rate_per_unit, 0,
       v_electric_prev, NULL, v_config.electricity_rate_per_unit, 0,
       0,
@@ -677,6 +680,7 @@ DECLARE
   v_loan_repay_json JSONB;
   v_loan_total NUMERIC(14,2) := 0;
   v_others_income JSONB := '[]'::jsonb;
+  v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
@@ -797,9 +801,14 @@ BEGIN
   FROM payroll_accumulation
   WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
 
-  -- Doctor fee allowance in others_income
+  -- Doctor fee allowance keeps any existing value for this run/employee
   IF v_emp.allow_doctor_fee THEN
-    v_others_income := v_others_income || jsonb_build_object('name', 'Doctor Fee', 'value', 0);
+    SELECT COALESCE(doctor_fee, 0)
+      INTO v_doctor_fee
+    FROM payroll_run_item
+    WHERE run_id = p_run_id AND employee_id = v_emp.id;
+  ELSE
+    v_doctor_fee := 0;
   END IF;
 
   -- มิเตอร์รอบก่อน (ใช้ค่าปัจจุบันจากงวดก่อนหน้าที่ approved)
@@ -838,6 +847,7 @@ BEGIN
     
     advance_amount = v_adv,
     loan_repayments = v_loan_repay_json,
+    doctor_fee = v_doctor_fee,
     others_income = v_others_income,
     
     sso_declared_wage = CASE 

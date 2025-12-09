@@ -246,6 +246,15 @@ type Item struct {
 	DeductionTotal       float64   `db:"deduction_total"`
 	AdvanceAmount        float64   `db:"advance_amount"`
 	LoanOutstandingTotal float64   `db:"loan_outstanding_total"`
+	DoctorFee            float64   `db:"doctor_fee"`
+	SsoContribute        bool      `db:"sso_contribute"`
+	ProvidentFundContrib bool      `db:"provident_fund_contribute"`
+	WithholdTax          bool      `db:"withhold_tax"`
+	AllowHousing         bool      `db:"allow_housing"`
+	AllowWater           bool      `db:"allow_water"`
+	AllowElectric        bool      `db:"allow_electric"`
+	AllowInternet        bool      `db:"allow_internet"`
+	AllowDoctorFee       bool      `db:"allow_doctor_fee"`
 }
 
 type ItemListResult struct {
@@ -276,7 +285,10 @@ SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_numb
        pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
-       (%s) AS deduction_total
+       (%s) AS deduction_total,
+       pri.doctor_fee,
+       e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
+       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 JOIN employee_type et ON et.id = e.employee_type_id
@@ -329,7 +341,16 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
        salary_amount, ot_hours, ot_amount, bonus_amount,
        income_total, leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
        sso_month_amount, tax_month_amount, (%s) AS net_pay, 'pending' as status,
-        (%s) AS deduction_total`, setClause, i, netPayExpr, deductionExpr)
+        (%s) AS deduction_total,
+        doctor_fee,
+        (SELECT sso_contribute FROM employees e WHERE e.id = payroll_run_item.employee_id) AS sso_contribute,
+        (SELECT provident_fund_contribute FROM employees e WHERE e.id = payroll_run_item.employee_id) AS provident_fund_contribute,
+        (SELECT withhold_tax FROM employees e WHERE e.id = payroll_run_item.employee_id) AS withhold_tax,
+        (SELECT allow_housing FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_housing,
+        (SELECT allow_water FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_water,
+        (SELECT allow_electric FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_electric,
+        (SELECT allow_internet FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_internet,
+        (SELECT allow_doctor_fee FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_doctor_fee`, setClause, i, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
@@ -344,7 +365,10 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
        pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total,
-       pri.advance_amount, pri.loan_outstanding_total
+       pri.advance_amount, pri.loan_outstanding_total,
+       pri.doctor_fee,
+       e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
+       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 JOIN employee_type et ON et.id = e.employee_type_id
@@ -412,7 +436,9 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
        pri.loan_outstanding_prev, pri.loan_outstanding_total, pri.loan_repayments,
        pri.others_income, pri.water_amount, pri.electric_amount, pri.internet_amount,
        pri.water_meter_prev, pri.water_meter_curr, pri.electric_meter_prev, pri.electric_meter_curr,
-       pri.water_rate_per_unit, pri.electricity_rate_per_unit,
+       pri.water_rate_per_unit, pri.electricity_rate_per_unit, pri.doctor_fee,
+       e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
+       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee,
        e.bank_account_no AS bank_account
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id

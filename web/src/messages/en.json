@@ -115,6 +115,7 @@
         "attendanceBonusNoLate": "Attendance Bonus (No Late)",
         "attendanceBonusNoLeave": "Attendance Bonus (No Leave)",
         "leaveCompensation": "Leave Compensation",
+        "doctorFee": "Doctor Fee",
         "othersIncome": "Other Income",
         "tax": "Withholding Tax",
         "sso": "Social Security",

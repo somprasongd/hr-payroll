@@ -115,6 +115,7 @@
         "attendanceBonusNoLate": "เบี้ยขยัน (ไม่สาย)",
         "attendanceBonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
         "leaveCompensation": "ชดเชยวันลา",
+        "doctorFee": "ค่าแพทย์",
         "othersIncome": "รายได้อื่นๆ",
         "tax": "ภาษีหัก ณ ที่จ่าย",
         "sso": "ประกันสังคม",

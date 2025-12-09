@@ -68,6 +68,7 @@ export function PayslipEditDialog({
 
   // Editable fields
   const [leaveCompensation, setLeaveCompensation] = useState(0);
+  const [doctorFee, setDoctorFee] = useState(0);
   const [othersIncome, setOthersIncome] = useState<OtherIncomeItem[]>([]);
   const [taxAmount, setTaxAmount] = useState(0);
   const [pfAmount, setPfAmount] = useState(0);
@@ -92,6 +93,7 @@ export function PayslipEditDialog({
   // Original values for dirty checking
   const [originalValues, setOriginalValues] = useState<{
     leaveCompensation: number;
+    doctorFee: number;
     othersIncome: OtherIncomeItem[];
     taxAmount: number;
     pfAmount: number;
@@ -114,6 +116,7 @@ export function PayslipEditDialog({
       
       // Populate editable fields from flat structure
       const leaveComp = data?.leaveCompensationAmount ?? 0;
+      const drFee = data?.doctorFee ?? 0;
       const others = data?.othersIncome ?? [];
       const tax = data?.taxMonthAmount ?? 0;
       const pf = data?.pfMonthAmount ?? 0;
@@ -128,6 +131,7 @@ export function PayslipEditDialog({
       const loans = data?.loanRepayments ?? [];
 
       setLeaveCompensation(leaveComp);
+      setDoctorFee(drFee);
       setOthersIncome(others);
       setTaxAmount(tax);
       setPfAmount(pf);
@@ -144,6 +148,7 @@ export function PayslipEditDialog({
       // Save original values for dirty checking
       setOriginalValues({
         leaveCompensation: leaveComp,
+        doctorFee: drFee,
         othersIncome: JSON.parse(JSON.stringify(others)),
         taxAmount: tax,
         pfAmount: pf,
@@ -181,16 +186,17 @@ export function PayslipEditDialog({
       setSaving(true);
       const data: UpdatePayslipRequest = {
         leaveCompensationAmount: leaveCompensation,
+        doctorFee: detail?.allowDoctorFee ? doctorFee : undefined,
         othersIncome,
-        taxMonthAmount: taxAmount,
-        pfMonthAmount: pfAmount,
-        waterMeterPrev: waterMeterPrev ?? 0,
-        waterMeterCurr: waterMeterCurr ?? 0,
-        waterAmount,
-        electricMeterPrev: electricMeterPrev ?? 0,
-        electricMeterCurr: electricMeterCurr ?? 0,
-        electricAmount,
-        internetAmount,
+        taxMonthAmount: detail?.withholdTax ? taxAmount : undefined,
+        pfMonthAmount: detail?.providentFundContribute ? pfAmount : undefined,
+        waterMeterPrev: detail?.allowWater ? (waterMeterPrev ?? 0) : undefined,
+        waterMeterCurr: detail?.allowWater ? (waterMeterCurr ?? 0) : undefined,
+        waterAmount: detail?.allowWater ? waterAmount : undefined,
+        electricMeterPrev: detail?.allowElectric ? (electricMeterPrev ?? 0) : undefined,
+        electricMeterCurr: detail?.allowElectric ? (electricMeterCurr ?? 0) : undefined,
+        electricAmount: detail?.allowElectric ? electricAmount : undefined,
+        internetAmount: detail?.allowInternet ? internetAmount : undefined,
         advanceRepayAmount: advanceRepay,
         loanRepayments,
       };
@@ -241,6 +247,7 @@ export function PayslipEditDialog({
     if (!originalValues || !canEdit) return false;
     
     if (leaveCompensation !== originalValues.leaveCompensation) return true;
+    if (doctorFee !== originalValues.doctorFee) return true;
     if (taxAmount !== originalValues.taxAmount) return true;
     if (pfAmount !== originalValues.pfAmount) return true;
     if (waterMeterPrev !== originalValues.waterMeterPrev) return true;
@@ -258,7 +265,7 @@ export function PayslipEditDialog({
     
     return false;
   }, [
-    originalValues, canEdit, leaveCompensation, taxAmount, pfAmount,
+    originalValues, canEdit, leaveCompensation, doctorFee, taxAmount, pfAmount,
     waterMeterPrev, waterMeterCurr, waterAmount,
     electricMeterPrev, electricMeterCurr, electricAmount,
     internetAmount, advanceRepay, othersIncome, loanRepayments
@@ -420,6 +427,21 @@ export function PayslipEditDialog({
                       />
                     </div>
 
+                    {/* Editable: Doctor Fee */}
+                    <div>
+                      <Label htmlFor="doctorFee">{t('payslip.fields.doctorFee')}</Label>
+                      <Input
+                        id="doctorFee"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={doctorFee}
+                        onChange={(e) => setDoctorFee(parseFloat(e.target.value) || 0)}
+                        disabled={!canEdit || !detail.allowDoctorFee}
+                        className="max-w-xs"
+                      />
+                    </div>
+
                     {/* Editable: Others Income Array */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -530,7 +552,7 @@ export function PayslipEditDialog({
                         step="0.01"
                         value={taxAmount}
                         onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
-                        disabled={!canEdit}
+                        disabled={!canEdit || !detail.withholdTax}
                         className="max-w-xs"
                       />
                       <div className="text-xs text-gray-400">
@@ -557,7 +579,7 @@ export function PayslipEditDialog({
                         step="0.01"
                         value={pfAmount}
                         onChange={(e) => setPfAmount(parseFloat(e.target.value) || 0)}
-                        disabled={!canEdit}
+                        disabled={!canEdit || !detail.providentFundContribute}
                         className="max-w-xs"
                       />
                       <div className="text-xs text-gray-400">
@@ -588,7 +610,7 @@ export function PayslipEditDialog({
                                 setWaterAmount(usage * detail.waterRatePerUnit);
                               }
                             }}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !detail.allowWater}
                           />
                         </div>
                         <div>
@@ -615,7 +637,7 @@ export function PayslipEditDialog({
                                 }
                               }
                             }}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !detail.allowWater}
                             className={waterMeterError ? 'border-red-500' : ''}
                           />
                           {waterMeterError && (
@@ -634,7 +656,7 @@ export function PayslipEditDialog({
                             step="0.01"
                             value={waterAmount}
                             onChange={(e) => setWaterAmount(parseFloat(e.target.value) || 0)}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !detail.allowWater}
                           />
                         </div>
                       </div>
@@ -658,7 +680,7 @@ export function PayslipEditDialog({
                                 setElectricAmount(usage * detail.electricityRatePerUnit);
                               }
                             }}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !detail.allowElectric}
                           />
                         </div>
                         <div>
@@ -685,7 +707,7 @@ export function PayslipEditDialog({
                                 }
                               }
                             }}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !detail.allowElectric}
                             className={electricMeterError ? 'border-red-500' : ''}
                           />
                           {electricMeterError && (
@@ -704,7 +726,7 @@ export function PayslipEditDialog({
                             step="0.01"
                             value={electricAmount}
                             onChange={(e) => setElectricAmount(parseFloat(e.target.value) || 0)}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !detail.allowElectric}
                           />
                         </div>
                       </div>
@@ -719,7 +741,7 @@ export function PayslipEditDialog({
                           step="0.01"
                           value={internetAmount}
                           onChange={(e) => setInternetAmount(parseFloat(e.target.value) || 0)}
-                          disabled={!canEdit}
+                          disabled={!canEdit || !detail.allowInternet}
                         />
                       </div>
                     </div>

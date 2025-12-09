@@ -30,6 +30,15 @@ type Item struct {
 	NetPay               float64   `json:"netPay"`
 	DeductionTotal       float64   `json:"deductionTotal"`
 	Status               string    `json:"status"`
+	DoctorFee            float64   `json:"doctorFee"`
+	SsoContribute        bool      `json:"ssoContribute"`
+	ProvidentFundContrib bool      `json:"providentFundContribute"`
+	WithholdTax          bool      `json:"withholdTax"`
+	AllowHousing         bool      `json:"allowHousing"`
+	AllowWater           bool      `json:"allowWater"`
+	AllowElectric        bool      `json:"allowElectric"`
+	AllowInternet        bool      `json:"allowInternet"`
+	AllowDoctorFee       bool      `json:"allowDoctorFee"`
 }
 
 func FromItem(r repository.Item) Item {
@@ -55,6 +64,15 @@ func FromItem(r repository.Item) Item {
 		NetPay:               r.NetPay,
 		DeductionTotal:       r.DeductionTotal,
 		Status:               r.Status,
+		DoctorFee:            r.DoctorFee,
+		SsoContribute:        r.SsoContribute,
+		ProvidentFundContrib: r.ProvidentFundContrib,
+		WithholdTax:          r.WithholdTax,
+		AllowHousing:         r.AllowHousing,
+		AllowWater:           r.AllowWater,
+		AllowElectric:        r.AllowElectric,
+		AllowInternet:        r.AllowInternet,
+		AllowDoctorFee:       r.AllowDoctorFee,
 	}
 }
 
@@ -82,6 +100,15 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 			NetPay:               r.NetPay,
 			DeductionTotal:       r.DeductionTotal,
 			Status:               r.Status,
+			DoctorFee:            r.DoctorFee,
+			SsoContribute:        r.SsoContribute,
+			ProvidentFundContrib: r.ProvidentFundContrib,
+			WithholdTax:          r.WithholdTax,
+			AllowHousing:         r.AllowHousing,
+			AllowWater:           r.AllowWater,
+			AllowElectric:        r.AllowElectric,
+			AllowInternet:        r.AllowInternet,
+			AllowDoctorFee:       r.AllowDoctorFee,
 		},
 		HousingAllowance:       r.HousingAllowance,
 		AttendanceBonusNoLate:  r.AttendanceBonusNoLate,

@@ -98,8 +98,19 @@ export interface PayslipDetail {
   attendanceBonusNoLate: number;
   attendanceBonusNoLeave: number;
   leaveCompensationAmount: number;
+  doctorFee: number;
   othersIncome: OtherIncomeItem[];
   incomeTotal: number;
+  
+  // Employee flags for field permissions
+  ssoContribute: boolean;
+  providentFundContribute: boolean;
+  withholdTax: boolean;
+  allowHousing: boolean;
+  allowWater: boolean;
+  allowElectric: boolean;
+  allowInternet: boolean;
+  allowDoctorFee: boolean;
   
   // Attendance deductions
   lateMinutesQty: number;
@@ -149,6 +160,7 @@ export interface PayslipDetail {
 // Update Payslip Request
 export interface UpdatePayslipRequest {
   leaveCompensationAmount?: number;
+  doctorFee?: number;
   othersIncome?: OtherIncomeItem[];
   taxMonthAmount?: number;
   pfMonthAmount?: number;

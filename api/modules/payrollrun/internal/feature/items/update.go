@@ -56,6 +56,7 @@ type UpdateRequest struct {
 	ElectricMeterCurr       *float64                  `json:"electricMeterCurr"`
 	ElectricAmount          *float64                  `json:"electricAmount"`
 	InternetAmount          *float64                  `json:"internetAmount"`
+	DoctorFee               *float64                  `json:"doctorFee"`
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
@@ -75,6 +76,29 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 	if run.Status != "pending" {
 		return nil, errs.BadRequest("can adjust items only when run is pending")
+	}
+
+	// Validate employee settings to prevent overriding disabled benefits/deductions.
+	if !item.AllowWater && (cmd.Payload.WaterMeterPrev != nil || cmd.Payload.WaterMeterCurr != nil || cmd.Payload.WaterAmount != nil) {
+		return nil, errs.Conflict("water charges are not allowed for this employee")
+	}
+	if !item.AllowElectric && (cmd.Payload.ElectricMeterPrev != nil || cmd.Payload.ElectricMeterCurr != nil || cmd.Payload.ElectricAmount != nil) {
+		return nil, errs.Conflict("electricity charges are not allowed for this employee")
+	}
+	if !item.AllowInternet && cmd.Payload.InternetAmount != nil {
+		return nil, errs.Conflict("internet charges are not allowed for this employee")
+	}
+	if !item.AllowDoctorFee && cmd.Payload.DoctorFee != nil {
+		return nil, errs.Conflict("doctor fee is not allowed for this employee")
+	}
+	if !item.SsoContribute && cmd.Payload.SsoMonthAmount != nil {
+		return nil, errs.Conflict("social security contribution is disabled for this employee")
+	}
+	if !item.ProvidentFundContrib && cmd.Payload.PfMonthAmount != nil {
+		return nil, errs.Conflict("provident fund contribution is disabled for this employee")
+	}
+	if !item.WithholdTax && cmd.Payload.TaxMonthAmount != nil {
+		return nil, errs.Conflict("withhold tax is disabled for this employee")
 	}
 
 	// Business rules
@@ -147,6 +171,9 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 	if cmd.Payload.InternetAmount != nil {
 		fields["internet_amount"] = *cmd.Payload.InternetAmount
+	}
+	if cmd.Payload.DoctorFee != nil {
+		fields["doctor_fee"] = *cmd.Payload.DoctorFee
 	}
 	if len(fields) == 0 {
 		return nil, errs.BadRequest("no fields to update")
