@@ -117,8 +117,8 @@ interface EmployeeFormProps {
       ssoContribute: initialData?.ssoContribute || false,
       ssoDeclaredWage: initialData?.ssoDeclaredWage || 0,
       providentFundContribute: initialData?.providentFundContribute || false,
-      providentFundRateEmployee: initialData?.providentFundRateEmployee || 0,
-      providentFundRateEmployer: initialData?.providentFundRateEmployer || 0,
+      providentFundRateEmployee: (initialData?.providentFundRateEmployee || 0) * 100,
+      providentFundRateEmployer: (initialData?.providentFundRateEmployer || 0) * 100,
       withholdTax: initialData?.withholdTax ?? false,
       allowHousing: initialData?.allowHousing || false,
       allowWater: initialData?.allowWater || false,
@@ -148,10 +148,14 @@ interface EmployeeFormProps {
     setLoading(true);
     setSubmitError(null);
     try {
-      // Transform data if necessary (e.g. handle nulls, numbers)
-      // For now, passing as is, but ensuring numbers are numbers
+      // Transform data: convert percentage to decimal for API
+      const transformedData = {
+        ...data,
+        providentFundRateEmployee: data.providentFundRateEmployee ? data.providentFundRateEmployee / 100 : 0,
+        providentFundRateEmployer: data.providentFundRateEmployer ? data.providentFundRateEmployer / 100 : 0,
+      };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await onSubmit(data as any); // Type casting for simplicity as Create/Update requests match mostly
+      await onSubmit(transformedData as any);
     } catch (error: any) {
       console.error(error);
       const errorMessage = error?.response?.data?.message || error?.message || t('submitError');
@@ -186,27 +190,33 @@ interface EmployeeFormProps {
   }, []);
 
   useEffect(() => {
-    if (masterData?.employeeTypes && employeeTypeId) {
+    if (masterData?.employeeTypes && employeeTypeId && payrollConfig) {
       const selectedType = masterData.employeeTypes.find(t => t.id === employeeTypeId);
-      const isPartTime = selectedType?.name?.toLowerCase().includes('part') || 
-                         selectedType?.Name?.toLowerCase().includes('part') ||
-                         selectedType?.code?.toLowerCase().includes('part') ||
-                         selectedType?.Code?.toLowerCase().includes('part');
+      
+      // Check if explicitly Part-Time (code 'pt' or name contains 'part')
+      const isPartTime = selectedType?.code?.toLowerCase() === 'pt' ||
+                         selectedType?.Code?.toLowerCase() === 'pt' ||
+                         selectedType?.name?.toLowerCase().includes('part') || 
+                         selectedType?.Name?.toLowerCase().includes('part');
+      
+      // Check if explicitly Full-Time (code 'ft' or name contains 'full' or 'ประจำ')
+      const isFullTime = selectedType?.code?.toLowerCase() === 'ft' ||
+                         selectedType?.Code?.toLowerCase() === 'ft' ||
+                         selectedType?.name?.toLowerCase().includes('full') || 
+                         selectedType?.Name?.toLowerCase().includes('full') ||
+                         selectedType?.name?.includes('ประจำ') || 
+                         selectedType?.Name?.includes('ประจำ');
 
-      // Auto-fill SSO Declared Wage
-      if (ssoContribute && !isPartTime) {
-        const wage = Math.min(basePayAmount || 0, 15000);
+      // Auto-fill SSO Declared Wage using the wage cap from config (for full-time only)
+      if (ssoContribute && isFullTime) {
+        const wageCap = payrollConfig.socialSecurityWageCap || 15000;
+        const wage = Math.min(basePayAmount || 0, wageCap);
         form.setValue('ssoDeclaredWage', wage);
       }
 
-      // Auto-fill Hourly Wage for Part-Time
-      if (isPartTime && payrollConfig?.hourlyRate) {
-        // Only set if it's 0 (new or unset) or if we want to enforce it on type change.
-        // Let's set it if it's 0 to be safe, or maybe we should be more aggressive?
-        // User asked: "If select part time, pull hourly rate from config as default".
-        // So if they switch to PT, we should probably suggest it.
-        // But we don't want to overwrite if they manually set it to something else.
-        // A safe bet is: if value is 0, set it.
+      // Auto-fill Hourly Wage for Part-Time ONLY (not for full-time)
+      if (isPartTime && !isFullTime) {
+        // Only set if it's 0 (new or unset)
         if (!basePayAmount || basePayAmount === 0) {
              form.setValue('basePayAmount', payrollConfig.hourlyRate);
         }

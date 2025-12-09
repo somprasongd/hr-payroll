@@ -56,4 +56,8 @@ export const payoutPtService = {
     const response = await apiClient.post(`/payouts/pt/${id}/pay`);
     return response;
   },
+
+  delete: async (id: string) => {
+    return apiClient.delete<void>(`/payouts/pt/${id}`);
+  },
 };

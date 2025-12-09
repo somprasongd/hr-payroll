@@ -230,6 +230,8 @@ type Item struct {
 	EmployeeTypeCode     string    `db:"employee_type_code"`
 	EmployeeNumber       string    `db:"employee_number"`
 	SalaryAmount         float64   `db:"salary_amount"`
+	PTHoursWorked        float64   `db:"pt_hours_worked"`
+	PTHourlyRate         float64   `db:"pt_hourly_rate"`
 	OtHours              float64   `db:"ot_hours"`
 	OtAmount             float64   `db:"ot_amount"`
 	BonusAmount          float64   `db:"bonus_amount"`
@@ -282,7 +284,7 @@ func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit 
 	args = append(args, limit, offset)
 	q := fmt.Sprintf(`
 SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_number, et.code AS employee_type_code,
-       pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
+       pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total,
@@ -338,7 +340,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
        (SELECT concat_ws(' ', e.first_name, e.last_name) FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
-       salary_amount, ot_hours, ot_amount, bonus_amount,
+       salary_amount, pt_hours_worked, pt_hourly_rate, ot_hours, ot_amount, bonus_amount,
        income_total, leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
        sso_month_amount, tax_month_amount, (%s) AS net_pay, 'pending' as status,
         (%s) AS deduction_total,
@@ -361,7 +363,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
-       pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
+       pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total,
@@ -386,6 +388,8 @@ type ItemDetail struct {
 	HousingAllowance       float64   `db:"housing_allowance"`
 	AttendanceBonusNoLate  float64   `db:"attendance_bonus_nolate"`
 	AttendanceBonusNoLeave float64   `db:"attendance_bonus_noleave"`
+	PTHoursWorked          float64   `db:"pt_hours_worked"`
+	PTHourlyRate           float64   `db:"pt_hourly_rate"`
 	LeaveDoubleQty         float64   `db:"leave_double_qty"`
 	LeaveDoubleDeduction   float64   `db:"leave_double_deduction"`
 	LeaveHoursQty          float64   `db:"leave_hours_qty"`
@@ -422,12 +426,13 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
        concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
-       pri.salary_amount, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
+       pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' AS status,
        (%s) AS deduction_total,
        pri.employee_type_id,
        pri.housing_allowance, pri.attendance_bonus_nolate, pri.attendance_bonus_noleave,
+       pri.pt_hours_worked, pri.pt_hourly_rate,
        pri.leave_double_qty, pri.leave_double_deduction, pri.leave_hours_qty, pri.leave_hours_deduction,
        pri.sso_declared_wage, pri.sso_accum_prev, pri.sso_accum_total,
        pri.tax_accum_prev, pri.tax_accum_total,

@@ -42,6 +42,7 @@ export function SalaryRaiseItemsTable({ items, cycleStatus, onRefresh }: SalaryR
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('fields.employeeNumber')}</TableHead>
               <TableHead>{t('fields.employee')}</TableHead>
               <TableHead className="text-right">{t('fields.tenure')}</TableHead>
               <TableHead className="text-right">{t('fields.currentSalary')}</TableHead>
@@ -55,13 +56,14 @@ export function SalaryRaiseItemsTable({ items, cycleStatus, onRefresh }: SalaryR
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isEditable ? 8 : 7} className="h-24 text-center">
+                <TableCell colSpan={isEditable ? 9 : 8} className="h-24 text-center">
                   No items found
                 </TableCell>
               </TableRow>
             ) : (
               items.map((item, index) => (
                 <TableRow key={item.id || index}>
+                  <TableCell className="font-medium text-muted-foreground">{item.employeeNumber || '-'}</TableCell>
                   <TableCell className="font-medium">{item.employeeName}</TableCell>
                   <TableCell className="text-right">{formatTenure(item.tenureDays || 0, t)}</TableCell>
                   <TableCell className="text-right">

@@ -124,6 +124,8 @@ definitions:
         type: number
       socialSecurityRateEmployer:
         type: number
+      socialSecurityWageCap:
+        type: number
       startDate:
         type: string
       status:
@@ -285,6 +287,8 @@ definitions:
         type: number
       socialSecurityRateEmployer:
         type: number
+      socialSecurityWageCap:
+        type: number
       startDate:
         type: string
       status:
@@ -444,6 +448,8 @@ definitions:
         type: string
       employeeName:
         type: string
+      employeeNumber:
+        type: string
       id:
         type: string
       stats:
@@ -597,6 +603,8 @@ definitions:
       employeeId:
         type: string
       employeeName:
+        type: string
+      employeeNumber:
         type: string
       id:
         type: string
@@ -1068,6 +1076,8 @@ definitions:
         type: number
       socialSecurityRateEmployer:
         type: number
+      socialSecurityWageCap:
+        type: number
       startDate:
         type: string
       waterRatePerUnit:
@@ -1101,6 +1111,8 @@ definitions:
         type: number
       socialSecurityRateEmployer:
         type: number
+      socialSecurityWageCap:
+        type: number
       startDate:
         type: string
       status:
@@ -1123,9 +1135,21 @@ definitions:
     type: object
   hrms_modules_payrollrun_internal_dto.Item:
     properties:
+      allowDoctorFee:
+        type: boolean
+      allowElectric:
+        type: boolean
+      allowHousing:
+        type: boolean
+      allowInternet:
+        type: boolean
+      allowWater:
+        type: boolean
       bonusAmount:
         type: number
       deductionTotal:
+        type: number
+      doctorFee:
         type: number
       employeeId:
         type: string
@@ -1155,16 +1179,28 @@ definitions:
         type: number
       otHours:
         type: number
+      providentFundContribute:
+        type: boolean
+      ptHourlyRate:
+        description: part-time only
+        type: number
+      ptHoursWorked:
+        description: part-time only
+        type: number
       runId:
         type: string
       salaryAmount:
         type: number
+      ssoContribute:
+        type: boolean
       ssoMonthAmount:
         type: number
       status:
         type: string
       taxMonthAmount:
         type: number
+      withholdTax:
+        type: boolean
     type: object
   hrms_modules_payrollrun_internal_dto.Meta:
     properties:
@@ -1263,9 +1299,21 @@ definitions:
     type: object
   hrms_modules_payrollrun_internal_feature_items.UpdateResponse:
     properties:
+      allowDoctorFee:
+        type: boolean
+      allowElectric:
+        type: boolean
+      allowHousing:
+        type: boolean
+      allowInternet:
+        type: boolean
+      allowWater:
+        type: boolean
       bonusAmount:
         type: number
       deductionTotal:
+        type: number
+      doctorFee:
         type: number
       employeeId:
         type: string
@@ -1295,16 +1343,28 @@ definitions:
         type: number
       otHours:
         type: number
+      providentFundContribute:
+        type: boolean
+      ptHourlyRate:
+        description: part-time only
+        type: number
+      ptHoursWorked:
+        description: part-time only
+        type: number
       runId:
         type: string
       salaryAmount:
         type: number
+      ssoContribute:
+        type: boolean
       ssoMonthAmount:
         type: number
       status:
         type: string
       taxMonthAmount:
         type: number
+      withholdTax:
+        type: boolean
     type: object
   hrms_modules_payrollrun_internal_feature_list.Response:
     properties:
@@ -1501,6 +1561,8 @@ definitions:
         type: string
       employeeName:
         type: string
+      employeeNumber:
+        type: string
       id:
         type: string
       newSalary:
@@ -1651,6 +1713,8 @@ definitions:
         type: string
       employeeName:
         type: string
+      employeeNumber:
+        type: string
       id:
         type: string
       newSalary:
@@ -1705,6 +1769,16 @@ definitions:
         type: number
       advanceRepayAmount:
         type: number
+      allowDoctorFee:
+        type: boolean
+      allowElectric:
+        type: boolean
+      allowHousing:
+        type: boolean
+      allowInternet:
+        type: boolean
+      allowWater:
+        type: boolean
       attendanceBonusNoLate:
         type: number
       attendanceBonusNoLeave:
@@ -1714,6 +1788,8 @@ definitions:
       bonusAmount:
         type: number
       deductionTotal:
+        type: number
+      doctorFee:
         type: number
       electricAmount:
         type: number
@@ -1783,6 +1859,14 @@ definitions:
         type: number
       pfMonthAmount:
         type: number
+      providentFundContribute:
+        type: boolean
+      ptHourlyRate:
+        description: part-time only
+        type: number
+      ptHoursWorked:
+        description: part-time only
+        type: number
       runId:
         type: string
       salaryAmount:
@@ -1791,6 +1875,8 @@ definitions:
         type: number
       ssoAccumTotal:
         type: number
+      ssoContribute:
+        type: boolean
       ssoDeclaredWage:
         type: number
       ssoMonthAmount:
@@ -1811,12 +1897,16 @@ definitions:
         type: number
       waterRatePerUnit:
         type: number
+      withholdTax:
+        type: boolean
     type: object
   items.UpdateRequest:
     properties:
       advanceRepayAmount:
         type: number
       bonusAmount:
+        type: number
+      doctorFee:
         type: number
       electricAmount:
         type: number
@@ -1894,6 +1984,8 @@ definitions:
       employeeId:
         type: string
       employeeName:
+        type: string
+      employeeNumber:
         type: string
       id:
         type: string
@@ -3442,6 +3534,30 @@ paths:
       tags:
       - Part-Time Payout
   /payouts/pt/{id}:
+    delete:
+      description: ยกเลิกใบเบิกจ่ายที่ยังไม่ได้จ่าย (status=to_pay)
+      parameters:
+      - description: payout id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Cancel part-time payout
+      tags:
+      - Part-Time Payout
     get:
       parameters:
       - description: payout id

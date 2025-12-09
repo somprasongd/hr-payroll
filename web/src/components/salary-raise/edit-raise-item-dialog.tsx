@@ -27,6 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { salaryRaiseService, SalaryRaiseItem } from '@/services/salary-raise.service';
+import { payrollConfigService, PayrollConfig } from '@/services/payroll-config.service';
 import { formatTenure } from '@/lib/format-tenure';
 
 const editItemSchema = z.object({
@@ -49,6 +50,7 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
   const tCommon = useTranslations('Common');
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [payrollConfig, setPayrollConfig] = useState<PayrollConfig | null>(null);
 
   const form = useForm<EditItemFormValues>({
     resolver: zodResolver(editItemSchema) as any,
@@ -58,6 +60,21 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
       newSsoWage: 0,
     },
   });
+
+  // Fetch payroll config when dialog opens
+  useEffect(() => {
+    if (open) {
+      const fetchConfig = async () => {
+        try {
+          const config = await payrollConfigService.getEffective();
+          setPayrollConfig(config);
+        } catch (error) {
+          console.error('Failed to fetch payroll config:', error);
+        }
+      };
+      fetchConfig();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (item) {
@@ -73,28 +90,34 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
   const raisePercent = form.watch('raisePercent');
   const raiseAmount = form.watch('raiseAmount');
 
-  // Calculate new salary for preview
-  // Note: This is just a preview. The actual logic might be slightly different depending on which field was edited last.
-  // For simplicity, we'll assume if user edits percent, we update amount, and vice versa.
-  // But react-hook-form doesn't easily support circular dependencies without careful handling.
-  // Let's just show the calculation based on base + amount.
-  // And maybe add a handler to update amount when percent changes.
+  // Get wage cap from config or default to 15000
+  const wageCap = payrollConfig?.socialSecurityWageCap || 15000;
 
+  // Calculate new salary for preview
+  const newSalary = currentSalary + (form.watch('raiseAmount') || 0);
+
+  // Auto-update newSsoWage when raise amount changes (cap at wageCap)
   const handlePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const percent = parseFloat(e.target.value) || 0;
     const amount = (currentSalary * percent) / 100;
+    const calculatedNewSalary = currentSalary + amount;
+    const calculatedSsoWage = Math.min(calculatedNewSalary, wageCap);
+    
     form.setValue('raisePercent', percent);
     form.setValue('raiseAmount', parseFloat(amount.toFixed(2)));
+    form.setValue('newSsoWage', parseFloat(calculatedSsoWage.toFixed(2)));
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const amount = parseFloat(e.target.value) || 0;
     const percent = currentSalary > 0 ? (amount / currentSalary) * 100 : 0;
+    const calculatedNewSalary = currentSalary + amount;
+    const calculatedSsoWage = Math.min(calculatedNewSalary, wageCap);
+    
     form.setValue('raiseAmount', amount);
     form.setValue('raisePercent', parseFloat(percent.toFixed(2)));
+    form.setValue('newSsoWage', parseFloat(calculatedSsoWage.toFixed(2)));
   };
-
-  const newSalary = currentSalary + (form.watch('raiseAmount') || 0);
 
   async function onSubmit(data: EditItemFormValues) {
     if (!item) return;
@@ -208,7 +231,12 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
                 <FormItem>
                   <FormLabel>{t('fields.newSsoWage')}</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      max={wageCap}
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

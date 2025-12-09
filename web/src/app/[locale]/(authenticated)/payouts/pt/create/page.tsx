@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import {
@@ -29,6 +30,7 @@ import { ptWorklogService, PTWorklog } from '@/services/pt-worklog.service';
 import { payoutPtService } from '@/services/payout-pt.service';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/store/auth-store';
 
 export default function CreatePayoutPtPage() {
   const t = useTranslations('Payouts.PT.create');
@@ -37,9 +39,11 @@ export default function CreatePayoutPtPage() {
   const tSuccess = useTranslations('Payouts.PT.success');
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuthStore();
+  const searchParams = useSearchParams();
 
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(searchParams.get('employeeId') || '');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [worklogs, setWorklogs] = useState<PTWorklog[]>([]);
   const [selectedWorklogIds, setSelectedWorklogIds] = useState<string[]>([]);
@@ -141,14 +145,19 @@ export default function CreatePayoutPtPage() {
 
     setSubmitting(true);
     try {
-      await payoutPtService.createPayout({
+      const result = await payoutPtService.createPayout({
         employeeId: selectedEmployeeId,
         worklogIds: selectedWorklogIds,
       });
       toast({
         title: tSuccess('created'),
       });
-      router.push('/payouts/pt');
+      // Redirect to detail page for review (all roles)
+      if (result?.id) {
+        router.push(`/payouts/pt/${result.id}`);
+      } else {
+        router.push(`/payouts/pt?employeeId=${selectedEmployeeId}`);
+      }
     } catch (error) {
       console.error('Failed to create payout', error);
       toast({
@@ -165,7 +174,7 @@ export default function CreatePayoutPtPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.push(`/payouts/pt${selectedEmployeeId ? `?employeeId=${selectedEmployeeId}` : ''}`)}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>

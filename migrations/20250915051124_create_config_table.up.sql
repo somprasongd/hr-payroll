@@ -37,6 +37,7 @@ CREATE TABLE payroll_config (
   -- อัตราเงินสมทบประกันสังคม: เก็บแบบทศนิยม (เช่น 0.05 = 5%)
   social_security_rate_employee NUMERIC(6,5) NOT NULL,  -- พนักงาน
   social_security_rate_employer NUMERIC(6,5) NOT NULL,  -- นายจ้าง (อนาคตอาจใช้คำนวณรายงาน)
+  social_security_wage_cap      NUMERIC(12,2) NOT NULL DEFAULT 15000.00, -- ฐานเงินเดือนสูงสุดสำหรับประกันสังคม
   
 
   status        config_status NOT NULL DEFAULT 'active',
@@ -147,7 +148,11 @@ $$;
 
 -- ค่า default
 WITH admin_user AS (
-  SELECT id FROM users WHERE user_role = 'admin' AND deleted_at IS NULL ORDER BY created_at LIMIT 1
+  SELECT id
+  FROM users
+  WHERE user_role = 'admin' AND deleted_at IS NULL
+  ORDER BY created_at
+  LIMIT 1
 )
 INSERT INTO payroll_config (
   effective_daterange,
@@ -155,16 +160,20 @@ INSERT INTO payroll_config (
   attendance_bonus_no_late, attendance_bonus_no_leave,
   housing_allowance, water_rate_per_unit, electricity_rate_per_unit,
   internet_fee_monthly,
-  social_security_rate_employee, social_security_rate_employer,
+  social_security_rate_employee, social_security_rate_employer, social_security_wage_cap,
   status, note, created_by, updated_by
 )
 SELECT
-  daterange(current_date, NULL, '[)'),
+  daterange(
+    date_trunc('month', current_date)::date, -- วันที่ 1 ของเดือน
+    NULL::date,
+    '[)'
+  ),
   70.00, 70.00,
   500.00, 1000.00,
   1000.00, 10.00, 6.00,
   80.00,
-  0.05, 0.05,          -- SSO 5%
+  0.05, 0.05, 15000.00,
   'active',
   'ค่าเริ่มต้นของระบบ',
   id, id

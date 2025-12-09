@@ -340,6 +340,7 @@ export default function BonusDetailPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('fields.employeeNumber')}</TableHead>
               <TableHead>{t('fields.employee')}</TableHead>
               <TableHead>{t('fields.tenure')}</TableHead>
               <TableHead>{t('fields.currentSalary')}</TableHead>
@@ -352,12 +353,8 @@ export default function BonusDetailPage() {
           <TableBody>
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>
-                  <div className="font-medium">
-                    {item.employeeName}
-                  </div>
-                  <div className="text-xs text-muted-foreground">{item.employeeNumber}</div>
-                </TableCell>
+                <TableCell className="font-medium text-muted-foreground">{item.employeeNumber || '-'}</TableCell>
+                <TableCell className="font-medium">{item.employeeName}</TableCell>
                 <TableCell>{formatTenure(item.tenureDays || 0, t)}</TableCell>
                 <TableCell>{item.currentSalary?.toLocaleString() || '0'}</TableCell>
                 <TableCell>{item.bonusMonths || 0}</TableCell>

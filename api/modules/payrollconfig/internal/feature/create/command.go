@@ -38,6 +38,10 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if cmd.Payload.SocialSecurityWageCap <= 0 {
+		cmd.Payload.SocialSecurityWageCap = 15000.00
+	}
+
 	if err := validatePayload(cmd.Payload); err != nil {
 		return nil, err
 	}
@@ -67,6 +71,9 @@ func validatePayload(p RequestBody) error {
 	}
 	if p.SocialSecurityRateEmployee < 0 || p.SocialSecurityRateEmployer < 0 {
 		return errs.BadRequest("social security rates must be positive")
+	}
+	if p.SocialSecurityWageCap <= 0 {
+		return errs.BadRequest("socialSecurityWageCap must be positive")
 	}
 	return nil
 }

@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect, use } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Loader2, DollarSign } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, DollarSign, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -19,6 +19,7 @@ import { payoutPtService, PayoutPt } from '@/services/payout-pt.service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/store/auth-store';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,11 +46,15 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
   const tSuccess = useTranslations('Payouts.PT.success');
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
 
   const [payout, setPayout] = useState<PayoutPt | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [markingPaid, setMarkingPaid] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     fetchPayout();
@@ -104,6 +109,26 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!payout) return;
+    setDeleting(true);
+    try {
+      await payoutPtService.delete(payout.id);
+      toast({
+        title: t('deleteSuccess'),
+      });
+      router.push(`/payouts/pt${payout.employeeId ? `?employeeId=${payout.employeeId}` : ''}`);
+    } catch (error) {
+      console.error('Failed to delete payout', error);
+      toast({
+        variant: 'destructive',
+        title: t('deleteError'),
+      });
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'to_pay':
@@ -127,7 +152,8 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <Button variant="ghost" size="icon" onClick={() => router.push(`/payouts/pt${payout?.employeeId ? `?employeeId=${payout.employeeId}` : ''}`)}>
+
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
@@ -137,28 +163,57 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
         </div>
         
         {payout.status === 'to_pay' && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-700">
-                <DollarSign className="w-4 h-4 mr-2" />
-                {t('actions.markAsPaid')}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t('confirmPay.title')}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('confirmPay.description')}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-                <AlertDialogAction onClick={handleMarkAsPaid} disabled={markingPaid}>
-                  {markingPaid ? <Loader2 className="w-4 h-4 animate-spin" /> : t('actions.markAsPaid')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div className="flex items-center gap-2">
+            {/* Approve button - admin only */}
+            {isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="bg-green-600 hover:bg-green-700">
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    {t('actions.markAsPaid')}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('confirmPay.title')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t('confirmPay.description')}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleMarkAsPaid} disabled={markingPaid}>
+                      {markingPaid ? <Loader2 className="w-4 h-4 animate-spin" /> : t('actions.markAsPaid')}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            
+            {/* Delete button - all roles */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {tCommon('delete')}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{tCommon('confirmDeleteTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {tCommon('confirmDeleteDescription')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
+                    {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : tCommon('delete')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
       </div>
 

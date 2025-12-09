@@ -36,7 +36,7 @@
     "attendance": "Attendance",
     "worklogFT": "Full-Time",
     "worklogPT": "Part-Time",
-    "payoutPT": "Payout (PT)",
+    "payoutPT": "Advance Payout (Part-time)",
     "leaveManagement": "Leave Management",
     "payrollExpenses": "Payroll & Expenses",
     "reports": "Reports",
@@ -106,7 +106,7 @@
       },
       "fields": {
         "employee": "Employee",
-        "salary": "Base Salary",
+        "salary": "Salary",
         "ot": "Overtime",
         "otHours": "hours",
         "bonus": "Bonus",
@@ -198,6 +198,8 @@
     "employeeRateHint": "Employee social security deduction percentage (enter 5 for 5%)",
     "employerRate": "Employer Rate",
     "employerRateHint": "Employer social security contribution percentage (enter 5 for 5%)",
+    "ssoWageCap": "SSO Wage Cap (max base)",
+    "ssoWageCapHint": "Maximum wage base used for SSO calculation (THB).",
     "notes": "Notes",
     "notesDescription": "Record reasons or details for this change",
     "notesPlaceholder": "e.g. Adjusted wages according to new law or Updated electricity rates to actual costs",
@@ -396,7 +398,8 @@
     "resetPasswordDescription": "Set a new password for user {username}",
     "editRoleDescription": "Update role for user {username}",
     "deleteConfirmTitle": "Are you sure?",
-    "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user {username}."
+    "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user {username}.",
+    "noData": "No users found"
   },
   "Worklogs": {
     "FT": {
@@ -567,7 +570,9 @@
         "cannotEdit": "Cannot Edit",
         "cannotEditDescription": "Only pending records can be edited",
         "cannotDelete": "Cannot Delete",
-        "cannotDeleteDescription": "Only pending records can be deleted"
+        "cannotDeleteDescription": "Only pending records can be deleted",
+        "duplicateWorklog": "A worklog already exists for this employee on this date",
+        "submitFailed": "Failed to save the worklog"
       },
       "deleteDialog": {
         "title": "Confirm Delete",
@@ -634,6 +639,8 @@
         "view": "View Details",
         "markAsPaid": "Approve Payment"
       },
+      "deleteSuccess": "Payout deleted successfully",
+      "deleteError": "Failed to delete payout",
       "filters": {
         "allStatuses": "All Statuses",
         "allEmployees": "All Employees",
@@ -682,6 +689,7 @@
       "updatedAt": "Updated At",
       "note": "Note",
       "employee": "Employee",
+      "employeeNumber": "Employee No.",
       "currentSalary": "Current Salary",
       "tenure": "Tenure (Days)",
       "raisePercent": "Raise %",
@@ -808,6 +816,7 @@
       "totalAmount": "Total Amount",
       "createdAt": "Created At",
       "employee": "Employee",
+      "employeeNumber": "Employee No.",
       "currentSalary": "Current Salary",
       "tenure": "Tenure",
       "bonusMonths": "Bonus Months",

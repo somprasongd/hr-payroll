@@ -166,6 +166,11 @@ export function PayslipEditDialog({
       // Clear validation errors
       setWaterMeterError(null);
       setElectricMeterError(null);
+      
+      // Reset to income tab if part-time employee and currently on attendance tab
+      if (data?.employeeTypeCode !== 'full_time' && activeTab === 'attendance') {
+        setActiveTab('income');
+      }
     } catch (error) {
       console.error('Failed to fetch payslip detail:', error);
     } finally {
@@ -376,7 +381,9 @@ export function PayslipEditDialog({
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="flex w-full overflow-x-auto">
                 <TabsTrigger value="income" className="flex-1 min-w-fit whitespace-nowrap">{t('payslip.tabs.income')}</TabsTrigger>
-                <TabsTrigger value="attendance" className="flex-1 min-w-fit whitespace-nowrap">{t('payslip.tabs.attendance')}</TabsTrigger>
+                {detail?.employeeTypeCode === 'full_time' && (
+                  <TabsTrigger value="attendance" className="flex-1 min-w-fit whitespace-nowrap">{t('payslip.tabs.attendance')}</TabsTrigger>
+                )}
                 <TabsTrigger value="deductions" className="flex-1 min-w-fit whitespace-nowrap">{t('payslip.tabs.deductions')}</TabsTrigger>
                 <TabsTrigger value="loans" className="flex-1 min-w-fit whitespace-nowrap">{t('payslip.tabs.loans')}</TabsTrigger>
               </TabsList>
@@ -389,6 +396,11 @@ export function PayslipEditDialog({
                       <div>
                         <Label className="text-gray-500">{t('payslip.fields.salary')}</Label>
                         <div className="text-lg font-medium">{formatNumber(detail.salaryAmount)}</div>
+                        {detail.employeeTypeCode !== 'full_time' && detail.ptHoursWorked > 0 && (
+                          <div className="text-xs text-gray-400">
+                            ({detail.ptHoursWorked} ชม. x {formatNumber(detail.ptHourlyRate)} บาท)
+                          </div>
+                        )}
                       </div>
                       <div>
                         <Label className="text-gray-500">{t('payslip.fields.ot')} ({detail.otHours} {t('payslip.fields.otHours')})</Label>

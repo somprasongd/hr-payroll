@@ -65,6 +65,7 @@ interface ConfigFormData {
   internetFeeMonthly: number;
   socialSecurityRateEmployee: number; // Displayed as percentage (e.g., 5 for 5%)
   socialSecurityRateEmployer: number; // Displayed as percentage (e.g., 5 for 5%)
+  socialSecurityWageCap: number;
   note: string;
 }
 
@@ -85,6 +86,7 @@ export default function SettingsPage() {
     internetFeeMonthly: 0,
     socialSecurityRateEmployee: 5, // Default 5%
     socialSecurityRateEmployer: 5, // Default 5%
+    socialSecurityWageCap: 15000,
     note: '',
   });
   const [loading, setLoading] = useState(false);
@@ -129,6 +131,7 @@ export default function SettingsPage() {
         internetFeeMonthly: data.internetFeeMonthly || 0,
         socialSecurityRateEmployee: (data.socialSecurityRateEmployee || 0.05) * 100, // Convert to %
         socialSecurityRateEmployer: (data.socialSecurityRateEmployer || 0.05) * 100, // Convert to %
+        socialSecurityWageCap: data.socialSecurityWageCap || 15000,
         note: data.note || '',
       });
     } catch (err) {
@@ -166,6 +169,7 @@ export default function SettingsPage() {
         ...formData,
         socialSecurityRateEmployee: formData.socialSecurityRateEmployee / 100,
         socialSecurityRateEmployer: formData.socialSecurityRateEmployer / 100,
+        socialSecurityWageCap: formData.socialSecurityWageCap,
       };
 
       const result = await payrollConfigService.create(apiPayload);
@@ -522,6 +526,21 @@ export default function SettingsPage() {
                 </div>
                 <p className="text-xs text-gray-500">{t('employerRateHint')}</p>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="socialSecurityWageCap">{t('ssoWageCap')}</Label>
+                <Input
+                  id="socialSecurityWageCap"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.socialSecurityWageCap}
+                  onChange={(e) => handleInputChange('socialSecurityWageCap', parseFloat(e.target.value) || 0)}
+                  onFocus={handleInputFocus}
+                  placeholder="15000.00"
+                />
+                <p className="text-xs text-gray-500">{t('ssoWageCapHint')}</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -589,4 +608,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

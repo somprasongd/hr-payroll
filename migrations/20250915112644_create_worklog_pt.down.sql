@@ -9,7 +9,7 @@ DROP FUNCTION IF EXISTS payout_pt_item_after_delete() CASCADE;
 DROP FUNCTION IF EXISTS payout_pt_after_update() CASCADE;
 
 -- 2. Drop all triggers
-DROP TRIGGER IF EXISTS tg_employees_sync_payout_rate;
+DROP TRIGGER IF EXISTS tg_employees_sync_payout_rate ON employees;
 DROP TRIGGER IF EXISTS tg_worklog_pt_set_updated ON worklog_pt;
 DROP TRIGGER IF EXISTS tg_worklog_pt_no_edit ON worklog_pt;
 DROP TRIGGER IF EXISTS tg_payout_pt_set_updated ON payout_pt;

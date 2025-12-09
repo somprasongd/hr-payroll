@@ -16,6 +16,8 @@ type Item struct {
 	EmployeeTypeCode     string    `json:"employeeTypeCode,omitempty"`
 	EmployeeName         string    `json:"employeeName,omitempty"`
 	SalaryAmount         float64   `json:"salaryAmount"`
+	PTHoursWorked        float64   `json:"ptHoursWorked"` // part-time only
+	PTHourlyRate         float64   `json:"ptHourlyRate"`  // part-time only
 	OtHours              float64   `json:"otHours"`
 	OtAmount             float64   `json:"otAmount"`
 	BonusAmount          float64   `json:"bonusAmount"`
@@ -50,6 +52,8 @@ func FromItem(r repository.Item) Item {
 		EmployeeTypeCode:     r.EmployeeTypeCode,
 		EmployeeName:         r.EmployeeName,
 		SalaryAmount:         r.SalaryAmount,
+		PTHoursWorked:        r.PTHoursWorked,
+		PTHourlyRate:         r.PTHourlyRate,
 		OtHours:              r.OtHours,
 		OtAmount:             r.OtAmount,
 		BonusAmount:          r.BonusAmount,
@@ -86,6 +90,8 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 			EmployeeTypeCode:     r.EmployeeTypeCode,
 			EmployeeName:         r.EmployeeName,
 			SalaryAmount:         r.SalaryAmount,
+			PTHoursWorked:        r.PTHoursWorked,
+			PTHourlyRate:         r.PTHourlyRate,
 			OtHours:              r.OtHours,
 			OtAmount:             r.OtAmount,
 			BonusAmount:          r.BonusAmount,
@@ -113,6 +119,8 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 		HousingAllowance:       r.HousingAllowance,
 		AttendanceBonusNoLate:  r.AttendanceBonusNoLate,
 		AttendanceBonusNoLeave: r.AttendanceBonusNoLeave,
+		PTHoursWorked:          r.PTHoursWorked,
+		PTHourlyRate:           r.PTHourlyRate,
 		LeaveDoubleQty:         r.LeaveDoubleQty,
 		LeaveDoubleDeduction:   r.LeaveDoubleDeduction,
 		LeaveHoursQty:          r.LeaveHoursQty,
@@ -162,6 +170,8 @@ type ItemDetail struct {
 	HousingAllowance       float64                  `json:"housingAllowance"`
 	AttendanceBonusNoLate  float64                  `json:"attendanceBonusNoLate"`
 	AttendanceBonusNoLeave float64                  `json:"attendanceBonusNoLeave"`
+	PTHoursWorked          float64                  `json:"ptHoursWorked"` // part-time only
+	PTHourlyRate           float64                  `json:"ptHourlyRate"`  // part-time only
 	LeaveDoubleQty         float64                  `json:"leaveDoubleQty"`
 	LeaveDoubleDeduction   float64                  `json:"leaveDoubleDeduction"`
 	LeaveHoursQty          float64                  `json:"leaveHoursQty"`

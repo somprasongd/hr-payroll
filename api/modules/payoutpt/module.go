@@ -1,6 +1,7 @@
 package payoutpt
 
 import (
+	"hrms/modules/payoutpt/internal/feature/cancel"
 	"hrms/modules/payoutpt/internal/feature/create"
 	"hrms/modules/payoutpt/internal/feature/get"
 	"hrms/modules/payoutpt/internal/feature/list"
@@ -37,6 +38,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler())
 	mediator.Register[*get.Query, *get.Response](get.NewHandler())
 	mediator.Register[*pay.Command, *pay.Response](pay.NewHandler())
+	mediator.Register[*cancel.Command, mediator.NoResponse](cancel.NewHandler())
 	return nil
 }
 
@@ -45,6 +47,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	create.NewEndpoint(group, m.repo, m.ctx.Transactor)
 	list.NewEndpoint(group, m.repo)
 	get.NewEndpoint(group, m.repo)
+	cancel.NewEndpoint(group, m.repo)
 	// pay admin only
 	admin := group.Group("", middleware.RequireRoles("admin"))
 	pay.NewEndpoint(admin, m.repo, m.ctx.Transactor)

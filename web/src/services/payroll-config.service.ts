@@ -22,6 +22,7 @@ export interface PayrollConfig {
   internetFeeMonthly: number;
   socialSecurityRateEmployee: number; // Stored as decimal (e.g., 0.05 for 5%)
   socialSecurityRateEmployer: number; // Stored as decimal (e.g., 0.05 for 5%)
+  socialSecurityWageCap: number;
   note: string;
   createdAt: string;
   updatedAt: string;
@@ -39,6 +40,7 @@ export interface CreatePayrollConfigRequest {
   internetFeeMonthly: number;
   socialSecurityRateEmployee: number; // Should be decimal (e.g., 0.05 for 5%)
   socialSecurityRateEmployer: number; // Should be decimal (e.g., 0.05 for 5%)
+  socialSecurityWageCap: number;
   note: string;
 }
 

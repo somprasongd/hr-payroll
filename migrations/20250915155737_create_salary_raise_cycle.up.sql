@@ -229,14 +229,24 @@ EXECUTE FUNCTION public.salary_raise_item_validate_employee_type();
 CREATE OR REPLACE FUNCTION public.salary_raise_cycle_on_approve() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
+DECLARE
+  v_sso_cap NUMERIC(12,2) := 15000.00;
 BEGIN
+  -- โหลดเพดาน SSO ปัจจุบัน (fallback 15,000 หากไม่พบ config)
+  SELECT COALESCE(social_security_wage_cap, 15000.00)
+    INTO v_sso_cap
+  FROM get_effective_payroll_config(current_date)
+  LIMIT 1;
+
   -- ทำงานเฉพาะเมื่อมีการเปลี่ยนสถานะเป็น 'approved'
   IF NEW.status = 'approved' AND OLD.status <> 'approved' THEN
     
     -- อัปเดตฐานเงินเดือนและ SSO Wage ของพนักงานทุกคนที่มีรายการในรอบนี้
     UPDATE employees e
     SET base_pay_amount   = item.new_salary,
-        sso_declared_wage = item.new_sso_wage,
+        sso_declared_wage = CASE
+          WHEN e.sso_contribute THEN LEAST(v_sso_cap, COALESCE(item.new_sso_wage, item.new_salary))
+          ELSE 0 END,
         updated_at        = now(),
         updated_by        = NEW.updated_by
     FROM salary_raise_item item
@@ -248,7 +258,6 @@ BEGIN
 
   RETURN NEW;
 END$$;
-
 -- ลบ Trigger เดิมถ้ามี (เผื่อรันซ้ำ)
 DROP TRIGGER IF EXISTS tg_salary_raise_cycle_on_approve ON public.salary_raise_cycle;
 

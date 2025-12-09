@@ -24,6 +24,7 @@ type Config struct {
 	InternetFeeMonthly         float64   `json:"internetFeeMonthly"`
 	SocialSecurityRateEmployee float64   `json:"socialSecurityRateEmployee"`
 	SocialSecurityRateEmployer float64   `json:"socialSecurityRateEmployer"`
+	SocialSecurityWageCap      float64   `json:"socialSecurityWageCap"`
 	Note                       *string   `json:"note,omitempty"`
 	CreatedAt                  time.Time `json:"createdAt"`
 	UpdatedAt                  time.Time `json:"updatedAt"`
@@ -60,6 +61,7 @@ func FromRecord(r repository.Record) Config {
 		InternetFeeMonthly:         r.InternetFeeMonthly,
 		SocialSecurityRateEmployee: r.SocialSecurityRateEmployee,
 		SocialSecurityRateEmployer: r.SocialSecurityRateEmployer,
+		SocialSecurityWageCap:      r.SocialSecurityWageCap,
 		Note:                       r.Note,
 		CreatedAt:                  r.CreatedAt,
 		UpdatedAt:                  r.UpdatedAt,

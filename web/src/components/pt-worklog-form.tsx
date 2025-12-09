@@ -9,6 +9,8 @@ import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { DateInput } from '@/components/ui/date-input';
 import { TimeInput } from '@/components/ui/time-input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 import { Employee } from '@/services/employee.service';
 import { CreatePTWorklogRequest, UpdatePTWorklogRequest, PTWorklog } from '@/services/pt-worklog.service';
 import { format } from 'date-fns';
@@ -21,9 +23,10 @@ interface PTWorklogFormProps {
   worklog?: PTWorklog;
   mode: 'create' | 'edit';
   lastSelectedEmployeeId?: string;
+  onEmployeeSelect?: (employeeId: string) => void;
 }
 
-export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog, mode, lastSelectedEmployeeId }: PTWorklogFormProps) {
+export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog, mode, lastSelectedEmployeeId, onEmployeeSelect }: PTWorklogFormProps) {
   const t = useTranslations('Worklogs.PT');
   const tCommon = useTranslations('Common');
 
@@ -35,6 +38,7 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
   const [eveningOut, setEveningOut] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (mode === 'edit' && worklog) {
@@ -54,6 +58,7 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
       setEveningOut('');
     }
     setErrors({});
+    setSubmitError(null);
   }, [mode, worklog, open, lastSelectedEmployeeId]);
 
   const calculateTotalHours = () => {
@@ -121,6 +126,7 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       if (mode === 'create') {
         await onSubmit({
@@ -131,6 +137,23 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
           eveningIn: eveningIn || undefined,
           eveningOut: eveningOut || undefined,
         } as CreatePTWorklogRequest);
+        
+        // After success: clear form and set next date (if not future)
+        const today = new Date();
+        const currentWorkDate = new Date(workDate);
+        const nextDate = new Date(currentWorkDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        
+        // If next date is not in the future, use it; otherwise use today
+        const dateToSet = nextDate <= today ? nextDate : today;
+        
+        setWorkDate(format(dateToSet, 'yyyy-MM-dd'));
+        setMorningIn('');
+        setMorningOut('');
+        setEveningIn('');
+        setEveningOut('');
+        setErrors({});
+        // Don't close dialog
       } else {
         await onSubmit({
           morningIn: morningIn || undefined,
@@ -138,10 +161,19 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
           eveningIn: eveningIn || undefined,
           eveningOut: eveningOut || undefined,
         } as UpdatePTWorklogRequest);
+        onOpenChange(false);
       }
-      onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Form submit error:', error);
+      // Handle 409 Conflict (duplicate worklog)
+      const is409 = error?.response?.status === 409 || 
+                    error?.status === 409 || 
+                    error?.message?.includes('409');
+      if (is409) {
+        setSubmitError(t('errors.duplicateWorklog'));
+      } else {
+        setSubmitError(error?.response?.data?.detail || t('errors.submitFailed'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -159,8 +191,15 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
     searchText: `${emp.employeeNumber || ''} ${emp.fullNameTh || ''} ${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase(),
   }));
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && employeeId && onEmployeeSelect) {
+      onEmployeeSelect(employeeId);
+    }
+    onOpenChange(isOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -169,6 +208,12 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
+            {submitError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{submitError}</AlertDescription>
+              </Alert>
+            )}
             {mode === 'create' && (
               <div className="grid gap-2">
                 <Label htmlFor="employee">{t('fields.employee')}</Label>
@@ -192,9 +237,19 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
                   id="workDate"
                   value={workDate}
                   onValueChange={setWorkDate}
+                  max={format(new Date(), 'yyyy-MM-dd')}
                   className={errors.workDate ? 'border-red-500' : ''}
                 />
                 {errors.workDate && <p className="text-sm text-red-500">{errors.workDate}</p>}
+              </div>
+            )}
+
+            {mode === 'edit' && worklog && (
+              <div className="grid gap-2">
+                <Label>{t('fields.workDate')}</Label>
+                <div className="text-lg font-medium text-gray-900">
+                  {format(new Date(worklog.workDate), 'dd/MM/yyyy')}
+                </div>
               </div>
             )}
 
@@ -259,7 +314,7 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>
               {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>

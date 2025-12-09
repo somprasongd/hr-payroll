@@ -26,13 +26,14 @@ type Item struct {
 	ID             uuid.UUID `json:"id"`
 	EmployeeID     uuid.UUID `json:"employeeId"`
 	EmployeeName   string    `json:"employeeName,omitempty"`
+	EmployeeNumber string    `json:"employeeNumber,omitempty"`
 	TenureDays     int       `json:"tenureDays"`
 	CurrentSalary  float64   `json:"currentSalary"`
 	CurrentSSOWage *float64  `json:"currentSsoWage,omitempty"`
 	RaisePercent   float64   `json:"raisePercent"`
 	RaiseAmount    float64   `json:"raiseAmount"`
 	NewSalary      float64   `json:"newSalary"`
-	NewSSOWage     float64   `json:"newSsoWage"`
+	NewSSOWage     *float64  `json:"newSsoWage,omitempty"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 	Stats          Stats     `json:"stats"`
 }
@@ -69,6 +70,7 @@ func FromItem(r repository.Item) Item {
 		ID:             r.ID,
 		EmployeeID:     r.EmployeeID,
 		EmployeeName:   r.EmployeeName,
+		EmployeeNumber: r.EmployeeNumber,
 		TenureDays:     r.TenureDays,
 		CurrentSalary:  r.CurrentSalary,
 		CurrentSSOWage: r.CurrentSSOWage,

@@ -14,18 +14,19 @@ import (
 )
 
 type RequestBody struct {
-	StartDate                  string    `json:"startDate"`
-	HourlyRate                 float64   `json:"hourlyRate"`
-	OtHourlyRate               float64   `json:"otHourlyRate"`
-	AttendanceBonusNoLate      float64   `json:"attendanceBonusNoLate"`
-	AttendanceBonusNoLeave     float64   `json:"attendanceBonusNoLeave"`
-	HousingAllowance           float64   `json:"housingAllowance"`
-	WaterRatePerUnit           float64   `json:"waterRatePerUnit"`
-	ElectricityRatePerUnit     float64   `json:"electricityRatePerUnit"`
-	InternetFeeMonthly         float64   `json:"internetFeeMonthly"`
-	SocialSecurityRateEmployee float64   `json:"socialSecurityRateEmployee"`
-	SocialSecurityRateEmployer float64   `json:"socialSecurityRateEmployer"`
-	Note                       *string   `json:"note"`
+	StartDate                  string  `json:"startDate"`
+	HourlyRate                 float64 `json:"hourlyRate"`
+	OtHourlyRate               float64 `json:"otHourlyRate"`
+	AttendanceBonusNoLate      float64 `json:"attendanceBonusNoLate"`
+	AttendanceBonusNoLeave     float64 `json:"attendanceBonusNoLeave"`
+	HousingAllowance           float64 `json:"housingAllowance"`
+	WaterRatePerUnit           float64 `json:"waterRatePerUnit"`
+	ElectricityRatePerUnit     float64 `json:"electricityRatePerUnit"`
+	InternetFeeMonthly         float64 `json:"internetFeeMonthly"`
+	SocialSecurityRateEmployee float64 `json:"socialSecurityRateEmployee"`
+	SocialSecurityRateEmployer float64 `json:"socialSecurityRateEmployer"`
+	SocialSecurityWageCap      float64 `json:"socialSecurityWageCap"`
+	Note                       *string `json:"note"`
 
 	ParsedStartDate time.Time `json:"-"`
 }
@@ -43,6 +44,7 @@ func (p RequestBody) ToRecord() repository.Record {
 		InternetFeeMonthly:         p.InternetFeeMonthly,
 		SocialSecurityRateEmployee: p.SocialSecurityRateEmployee,
 		SocialSecurityRateEmployer: p.SocialSecurityRateEmployer,
+		SocialSecurityWageCap:      p.SocialSecurityWageCap,
 		Note:                       p.Note,
 	}
 }

@@ -24,15 +24,16 @@ type Cycle struct {
 }
 
 type Item struct {
-	ID            uuid.UUID `json:"id"`
-	EmployeeID    uuid.UUID `json:"employeeId"`
-	EmployeeName  string    `json:"employeeName,omitempty"`
-	TenureDays    int       `json:"tenureDays"`
-	CurrentSalary float64   `json:"currentSalary"`
-	BonusMonths   float64   `json:"bonusMonths"`
-	BonusAmount   float64   `json:"bonusAmount"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	Stats         Stats     `json:"stats"`
+	ID             uuid.UUID `json:"id"`
+	EmployeeID     uuid.UUID `json:"employeeId"`
+	EmployeeName   string    `json:"employeeName,omitempty"`
+	EmployeeNumber string    `json:"employeeNumber,omitempty"`
+	TenureDays     int       `json:"tenureDays"`
+	CurrentSalary  float64   `json:"currentSalary"`
+	BonusMonths    float64   `json:"bonusMonths"`
+	BonusAmount    float64   `json:"bonusAmount"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+	Stats          Stats     `json:"stats"`
 }
 
 type Stats struct {
@@ -65,14 +66,15 @@ func FromCycle(r repository.Cycle) Cycle {
 
 func FromItem(r repository.Item) Item {
 	return Item{
-		ID:            r.ID,
-		EmployeeID:    r.EmployeeID,
-		EmployeeName:  r.EmployeeName,
-		TenureDays:    r.TenureDays,
-		CurrentSalary: r.CurrentSalary,
-		BonusMonths:   r.BonusMonths,
-		BonusAmount:   r.BonusAmount,
-		UpdatedAt:     r.UpdatedAt,
+		ID:             r.ID,
+		EmployeeID:     r.EmployeeID,
+		EmployeeName:   r.EmployeeName,
+		EmployeeNumber: r.EmployeeNumber,
+		TenureDays:     r.TenureDays,
+		CurrentSalary:  r.CurrentSalary,
+		BonusMonths:    r.BonusMonths,
+		BonusAmount:    r.BonusAmount,
+		UpdatedAt:      r.UpdatedAt,
 		Stats: Stats{
 			LateMinutes:     r.LateMinutes,
 			LeaveDays:       r.LeaveDays,

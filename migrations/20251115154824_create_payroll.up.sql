@@ -124,6 +124,8 @@ CREATE TABLE IF NOT EXISTS payroll_run_item (
 
   -- รายได้
   salary_amount              NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+  pt_hours_worked            NUMERIC(10,2) NOT NULL DEFAULT 0.00, -- ชั่วโมงทำงาน (ใช้สำหรับ Part-time)
+  pt_hourly_rate             NUMERIC(12,2) NOT NULL DEFAULT 0.00, -- อัตราค่าจ้างต่อชั่วโมงของ Part-time
   ot_hours                   NUMERIC(10,2) NOT NULL DEFAULT 0.00,
   ot_amount                  NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   housing_allowance          NUMERIC(14,2) NOT NULL DEFAULT 0.00,
@@ -290,8 +292,12 @@ DECLARE
   v_others_income JSONB := '[]'::jsonb;
   v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
+  v_sso_cap NUMERIC(14,2) := 15000.00;
+  v_sso_base NUMERIC(14,2) := 0;
+  v_sso_amount NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
+  v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
   v_electric_prev NUMERIC(12,2);
   
@@ -309,6 +315,7 @@ BEGIN
 
   -- คำนวณวันสิ้นงวด
   v_end_date := (NEW.payroll_month_date + interval '1 month' - interval '1 day')::date;
+  v_sso_cap := LEAST(COALESCE(v_config.social_security_wage_cap, 15000.00), 15000.00);
 
   -- 2. วนลูปพนักงานทุกคนที่ Active
   FOR v_emp IN 
@@ -328,7 +335,8 @@ BEGIN
     v_bonus_amt := 0; v_adv := 0; 
     v_loan_repay_json := '[]'::jsonb; v_loan_total := 0;
     v_pt_hours := 0; v_others_income := '[]'::jsonb; v_doctor_fee := 0;
-    v_sso_prev := 0; v_tax_prev := 0; v_pf_prev := 0;
+    v_sso_prev := 0; v_sso_base := 0; v_sso_amount := 0;
+    v_tax_prev := 0; v_pf_prev := 0; v_pf_amount := 0;
     v_water_prev := NULL; v_electric_prev := NULL;
 
     -- ============================================================
@@ -413,13 +421,22 @@ BEGIN
     -- CASE 2: พนักงาน Part-Time
     -- ============================================================
     ELSIF v_emp.type_code = 'part_time' THEN
-      -- ดึงชั่วโมงทำงานรวม
-      SELECT COALESCE(SUM(total_hours), 0) INTO v_pt_hours
-      FROM worklog_pt
-      WHERE employee_id = v_emp.id
-        AND work_date BETWEEN NEW.period_start_date AND v_end_date
-        AND status IN ('pending', 'approved')
-        AND deleted_at IS NULL;
+      -- ดึงชั่วโมงทำงานรวม (ตัดรายการที่ถูกจ่ายผ่าน payout_pt แล้ว)
+      SELECT COALESCE(SUM(w.total_hours), 0) INTO v_pt_hours
+      FROM worklog_pt w
+      WHERE w.employee_id = v_emp.id
+        AND w.work_date BETWEEN NEW.period_start_date AND v_end_date
+        AND w.status IN ('pending', 'approved')
+        AND w.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM payout_pt_item pi
+          JOIN payout_pt p ON p.id = pi.payout_id
+          WHERE pi.worklog_id = w.id
+            AND pi.deleted_at IS NULL
+            AND p.deleted_at IS NULL
+            AND p.status = 'paid'
+        );
 
       -- v_emp.base_pay_amount คือ Hourly Rate
       v_ft_salary := ROUND(v_pt_hours * v_emp.base_pay_amount, 2);
@@ -439,6 +456,24 @@ BEGIN
     FROM payroll_accumulation
     WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
 
+    -- SSO: use declared wage (capped 15,000) times run rate when enabled
+    v_sso_base := 0; v_sso_amount := 0;
+    IF v_emp.sso_contribute THEN
+      IF v_emp.type_code = 'full_time' THEN
+        v_sso_base := v_emp.sso_declared_wage;
+      ELSE
+        v_sso_base := LEAST(v_ft_salary, v_sso_cap);
+      END IF;
+      v_sso_base := LEAST(COALESCE(v_sso_base, 0), v_sso_cap);
+      v_sso_amount := ROUND(v_sso_base * NEW.social_security_rate_employee, 2);
+  END IF;
+
+  -- Provident fund: calculate this month's deduction from wage base
+  v_pf_amount := 0;
+  IF v_emp.provident_fund_contribute THEN
+      v_pf_amount := ROUND(COALESCE(v_ft_salary, 0) * COALESCE(v_emp.provident_fund_rate_employee, 0), 2);
+  END IF;
+
     -- Doctor fee allowance defaults to 0 when enabled
     IF v_emp.allow_doctor_fee THEN
       v_doctor_fee := 0;
@@ -447,9 +482,9 @@ BEGIN
     -- ============================================================
     -- 3. INSERT ลงตาราง payroll_run_item
     -- ============================================================
-    INSERT INTO payroll_run_item (
+  INSERT INTO payroll_run_item (
       run_id, employee_id, employee_type_id,
-      salary_amount, ot_hours, ot_amount, bonus_amount,
+      salary_amount, pt_hours_worked, pt_hourly_rate, ot_hours, ot_amount, bonus_amount,
       housing_allowance, attendance_bonus_nolate, attendance_bonus_noleave,
       
       late_minutes_qty, late_minutes_deduction,
@@ -458,7 +493,8 @@ BEGIN
       leave_hours_qty, leave_hours_deduction,
       
       advance_amount, loan_repayments, loan_outstanding_prev,
-      sso_declared_wage, sso_accum_prev, tax_accum_prev, pf_accum_prev,
+      sso_declared_wage, sso_month_amount, sso_accum_prev,
+      tax_accum_prev, pf_accum_prev, pf_month_amount,
       doctor_fee, others_income,
       water_meter_prev, water_meter_curr, water_rate_per_unit, water_amount,
       electric_meter_prev, electric_meter_curr, electricity_rate_per_unit, electric_amount,
@@ -467,12 +503,24 @@ BEGIN
     )
     VALUES (
       NEW.id, v_emp.id, v_emp.employee_type_id,
-      v_ft_salary, v_ot_hours, v_ot_amount, v_bonus_amt,
+      v_ft_salary,
+      CASE WHEN v_emp.type_code = 'part_time' THEN v_pt_hours ELSE 0 END,
+      CASE WHEN v_emp.type_code = 'part_time' THEN v_emp.base_pay_amount ELSE 0 END,
+      v_ot_hours, v_ot_amount, v_bonus_amt,
       
       -- สวัสดิการ (เฉพาะ Full-time หรือตามเงื่อนไข)
       CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
-      CASE WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 THEN v_config.attendance_bonus_no_late ELSE 0 END,
-      CASE WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 THEN v_config.attendance_bonus_no_leave ELSE 0 END,
+      CASE
+        WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+          THEN v_config.attendance_bonus_no_late
+        ELSE 0
+      END,
+      CASE
+        WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0
+             AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+          THEN v_config.attendance_bonus_no_leave
+        ELSE 0
+      END,
       
       v_late_mins, v_late_deduct,
       v_leave_days, v_leave_deduct,
@@ -483,16 +531,13 @@ BEGIN
       COALESCE((SELECT amount FROM payroll_accumulation WHERE employee_id = v_emp.id AND accum_type = 'loan_outstanding'), 0),
       
       -- ฐาน SSO (Full-time ใช้ sso_declared_wage, Part-time อาจใช้รายได้จริงแต่ไม่เกินเพดาน)
-      CASE 
-        WHEN v_emp.sso_contribute AND v_emp.type_code = 'full_time' THEN v_emp.sso_declared_wage 
-        WHEN v_emp.sso_contribute AND v_emp.type_code = 'part_time' THEN LEAST(v_ft_salary, 15000) -- ตัวอย่าง Logic PT
-        ELSE 0 
-      END,
-      COALESCE(v_sso_prev,0), COALESCE(v_tax_prev,0), COALESCE(v_pf_prev,0),
+      v_sso_base, v_sso_amount,
+      COALESCE(v_sso_prev,0),
+      COALESCE(v_tax_prev,0), COALESCE(v_pf_prev,0), v_pf_amount,
       v_doctor_fee, v_others_income,
       v_water_prev, NULL, v_config.water_rate_per_unit, 0,
       v_electric_prev, NULL, v_config.electricity_rate_per_unit, 0,
-      0,
+      CASE WHEN v_emp.allow_internet THEN v_config.internet_fee_monthly ELSE 0 END,
       
       NEW.created_by, NEW.created_by
     );
@@ -682,8 +727,12 @@ DECLARE
   v_others_income JSONB := '[]'::jsonb;
   v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
+  v_sso_cap NUMERIC(14,2) := 15000.00;
+  v_sso_base NUMERIC(14,2) := 0;
+  v_sso_amount NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
+  v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
   v_electric_prev NUMERIC(12,2);
   
@@ -698,6 +747,7 @@ BEGIN
 
   SELECT * INTO v_config FROM get_effective_payroll_config(v_run.payroll_month_date);
   v_end_date := (v_run.payroll_month_date + interval '1 month' - interval '1 day')::date;
+  v_sso_cap := LEAST(COALESCE(v_config.social_security_wage_cap, 15000.00), 15000.00);
 
   -- 2. ดึงข้อมูลพนักงาน
   SELECT e.*, t.code as type_code
@@ -757,13 +807,40 @@ BEGIN
 
   -- === CASE 2: Part-Time ===
   ELSIF v_emp.type_code = 'part_time' THEN
-    SELECT COALESCE(SUM(total_hours), 0) INTO v_pt_hours
-    FROM worklog_pt
-    WHERE employee_id = v_emp.id
-      AND work_date BETWEEN v_run.period_start_date AND v_end_date
-      AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+    SELECT COALESCE(SUM(w.total_hours), 0) INTO v_pt_hours
+    FROM worklog_pt w
+    WHERE w.employee_id = v_emp.id
+      AND w.work_date BETWEEN v_run.period_start_date AND v_end_date
+      AND w.status IN ('pending', 'approved') AND w.deleted_at IS NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM payout_pt_item pi
+        JOIN payout_pt p ON p.id = pi.payout_id
+        WHERE pi.worklog_id = w.id
+          AND pi.deleted_at IS NULL
+          AND p.deleted_at IS NULL
+          AND p.status = 'paid'
+      );
       
     v_ft_salary := ROUND(v_pt_hours * v_emp.base_pay_amount, 2);
+  END IF;
+
+  -- SSO amount for this run
+  v_sso_base := 0; v_sso_amount := 0;
+  IF v_emp.sso_contribute THEN
+    IF v_emp.type_code = 'full_time' THEN
+      v_sso_base := v_emp.sso_declared_wage;
+    ELSE
+      v_sso_base := LEAST(v_ft_salary, v_sso_cap);
+    END IF;
+    v_sso_base := LEAST(COALESCE(v_sso_base, 0), v_sso_cap);
+    v_sso_amount := ROUND(v_sso_base * v_run.social_security_rate_employee, 2);
+  END IF;
+
+  -- Provident fund deduction for this run
+  v_pf_amount := 0;
+  IF v_emp.provident_fund_contribute THEN
+    v_pf_amount := ROUND(COALESCE(v_ft_salary, 0) * COALESCE(v_emp.provident_fund_rate_employee, 0), 2);
   END IF;
 
   -- 4. การเงินอื่นๆ (Common)
@@ -828,13 +905,24 @@ BEGIN
   UPDATE payroll_run_item
   SET 
     salary_amount = v_ft_salary,
+    pt_hours_worked = CASE WHEN v_emp.type_code='part_time' THEN v_pt_hours ELSE 0 END,
+    pt_hourly_rate = CASE WHEN v_emp.type_code='part_time' THEN v_emp.base_pay_amount ELSE 0 END,
     ot_hours = v_ot_hours,
     ot_amount = v_ot_amount,
     bonus_amount = v_bonus_amt,
     
     housing_allowance = CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
-    attendance_bonus_nolate = CASE WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 THEN v_config.attendance_bonus_no_late ELSE 0 END,
-    attendance_bonus_noleave = CASE WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 THEN v_config.attendance_bonus_no_leave ELSE 0 END,
+    attendance_bonus_nolate = CASE
+      WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+        THEN v_config.attendance_bonus_no_late
+      ELSE 0
+    END,
+    attendance_bonus_noleave = CASE
+      WHEN v_emp.type_code='full_time' AND v_ft_salary > 0
+           AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+        THEN v_config.attendance_bonus_no_leave
+      ELSE 0
+    END,
     
     late_minutes_qty = v_late_mins,
     late_minutes_deduction = v_late_deduct,
@@ -850,15 +938,15 @@ BEGIN
     doctor_fee = v_doctor_fee,
     others_income = v_others_income,
     
-    sso_declared_wage = CASE 
-      WHEN v_emp.sso_contribute AND v_emp.type_code = 'full_time' THEN v_emp.sso_declared_wage 
-      WHEN v_emp.sso_contribute AND v_emp.type_code = 'part_time' THEN LEAST(v_ft_salary, 15000)
-      ELSE 0 END,
+    sso_declared_wage = v_sso_base,
+    sso_month_amount = v_sso_amount,
     sso_accum_prev = COALESCE(v_sso_prev,0),
     tax_accum_prev = COALESCE(v_tax_prev,0),
     pf_accum_prev = COALESCE(v_pf_prev,0),
+    pf_month_amount = v_pf_amount,
     water_rate_per_unit = v_config.water_rate_per_unit,
     electricity_rate_per_unit = v_config.electricity_rate_per_unit,
+    internet_amount = CASE WHEN v_emp.allow_internet THEN v_config.internet_fee_monthly ELSE 0 END,
     water_meter_prev = COALESCE(v_water_prev, water_meter_prev),
     electric_meter_prev = COALESCE(v_electric_prev, electric_meter_prev),
       
@@ -887,7 +975,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tg_sync_payroll_emp
-AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage, allow_housing
+AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage, allow_housing, allow_internet,
+  provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer
 ON employees
 FOR EACH ROW
 EXECUTE FUNCTION sync_payroll_on_employee_change();
@@ -1002,6 +1091,36 @@ CREATE TRIGGER tg_sync_payroll_bonus
 AFTER UPDATE OF bonus_amount ON bonus_item
 FOR EACH ROW EXECUTE FUNCTION sync_payroll_on_financial_change();
 
+---  2.4 เมื่อ payout_pt ถูกจ่าย ให้ตัดชั่วโมงออกจาก payroll pending
+CREATE OR REPLACE FUNCTION public.sync_payroll_on_payout_pt_paid() RETURNS trigger AS $$
+DECLARE
+  r_target RECORD;
+BEGIN
+  IF NEW.status = 'paid' AND OLD.status <> 'paid' THEN
+    FOR r_target IN
+      SELECT DISTINCT pr.id AS run_id, w.employee_id
+      FROM payout_pt_item pi
+      JOIN worklog_pt w ON w.id = pi.worklog_id
+      JOIN payroll_run pr ON pr.status = 'pending'
+        AND pr.deleted_at IS NULL
+        AND w.work_date BETWEEN pr.period_start_date AND (pr.payroll_month_date + interval '1 month' - interval '1 day')::date
+      WHERE pi.payout_id = NEW.id
+        AND pi.deleted_at IS NULL
+        AND w.deleted_at IS NULL
+    LOOP
+      PERFORM recalculate_payroll_item(r_target.run_id, r_target.employee_id);
+    END LOOP;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tg_sync_payroll_payout_pt_paid ON payout_pt;
+CREATE TRIGGER tg_sync_payroll_payout_pt_paid
+AFTER UPDATE ON payout_pt
+FOR EACH ROW EXECUTE FUNCTION sync_payroll_on_payout_pt_paid();
+
 --- ====================================================
 --- Trigger สำหรับ Payroll Config
 --- Scope: เมื่อ Config เปลี่ยน มันกระทบ "ทุกคน" ในงวดนั้น (Global Impact) ไม่ใช่แค่คนใดคนหนึ่ง
@@ -1014,6 +1133,11 @@ DECLARE
   v_config_start DATE;
   v_config_end DATE;
 BEGIN
+  -- ทำงานเฉพาะ config ที่ยัง active; ข้ามการ update ที่เปลี่ยนสถานะเป็น retired
+  IF NEW.status <> 'active' THEN
+    RETURN NEW;
+  END IF;
+
   -- ดึงช่วงเวลาของ Config ที่เพิ่งถูกเพิ่ม/แก้ไข
   -- (ใช้ lower/upper bound ของ daterange)
   v_config_start := lower(NEW.effective_daterange);
@@ -1060,6 +1184,7 @@ DROP TRIGGER IF EXISTS tg_sync_payroll_config ON public.payroll_config;
 CREATE TRIGGER tg_sync_payroll_config
 AFTER INSERT OR UPDATE ON payroll_config
 FOR EACH ROW
+WHEN (NEW.status = 'active')
 EXECUTE FUNCTION sync_payroll_on_config_change();
 
 -- When a new employee is created and there are pending payroll runs,

@@ -45,13 +45,14 @@ type Item struct {
 	CycleID        uuid.UUID `db:"cycle_id" json:"cycleId"`
 	EmployeeID     uuid.UUID `db:"employee_id" json:"employeeId"`
 	EmployeeName   string    `db:"employee_name" json:"employeeName"`
+	EmployeeNumber string    `db:"employee_number" json:"employeeNumber"`
 	TenureDays     int       `db:"tenure_days" json:"tenureDays"`
 	CurrentSalary  float64   `db:"current_salary" json:"currentSalary"`
 	CurrentSSOWage *float64  `db:"current_sso_wage" json:"currentSsoWage,omitempty"`
 	RaisePercent   float64   `db:"raise_percent" json:"raisePercent"`
 	RaiseAmount    float64   `db:"raise_amount" json:"raiseAmount"`
 	NewSalary      float64   `db:"new_salary" json:"newSalary"`
-	NewSSOWage     float64   `db:"new_sso_wage" json:"newSsoWage,omitempty"`
+	NewSSOWage     *float64  `db:"new_sso_wage" json:"newSsoWage,omitempty"`
 	UpdatedAt      time.Time `db:"updated_at" json:"updatedAt"`
 	LateMinutes    int       `db:"late_minutes" json:"-"`
 	LeaveDays      float64   `db:"leave_days" json:"-"`
@@ -204,6 +205,7 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, e
 	db := r.dbCtx(ctx)
 	const qi = `SELECT sri.id, sri.cycle_id, sri.employee_id,
        (e.first_name || ' ' || e.last_name) AS employee_name,
+       e.employee_number AS employee_number,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
        sri.late_minutes, sri.leave_days, sri.leave_double_days, sri.leave_hours, sri.ot_hours,
@@ -245,6 +247,7 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
 	}
 	q := fmt.Sprintf(`SELECT sri.id, sri.cycle_id, sri.employee_id,
        (e.first_name || ' ' || e.last_name) AS employee_name,
+       e.employee_number AS employee_number,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
        sri.late_minutes, sri.leave_days, sri.leave_double_days, sri.leave_hours, sri.ot_hours,

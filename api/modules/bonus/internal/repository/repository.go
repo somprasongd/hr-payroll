@@ -36,20 +36,21 @@ type Cycle struct {
 }
 
 type Item struct {
-	ID            uuid.UUID `db:"id"`
-	CycleID       uuid.UUID `db:"cycle_id"`
-	EmployeeID    uuid.UUID `db:"employee_id"`
-	EmployeeName  string    `db:"employee_name"`
-	TenureDays    int       `db:"tenure_days"`
-	CurrentSalary float64   `db:"current_salary"`
-	LateMinutes   int       `db:"late_minutes"`
-	LeaveDays     float64   `db:"leave_days"`
-	LeaveDouble   float64   `db:"leave_double_days"`
-	LeaveHours    float64   `db:"leave_hours"`
-	OtHours       float64   `db:"ot_hours"`
-	BonusMonths   float64   `db:"bonus_months"`
-	BonusAmount   float64   `db:"bonus_amount"`
-	UpdatedAt     time.Time `db:"updated_at"`
+	ID             uuid.UUID `db:"id"`
+	CycleID        uuid.UUID `db:"cycle_id"`
+	EmployeeID     uuid.UUID `db:"employee_id"`
+	EmployeeName   string    `db:"employee_name"`
+	EmployeeNumber string    `db:"employee_number"`
+	TenureDays     int       `db:"tenure_days"`
+	CurrentSalary  float64   `db:"current_salary"`
+	LateMinutes    int       `db:"late_minutes"`
+	LeaveDays      float64   `db:"leave_days"`
+	LeaveDouble    float64   `db:"leave_double_days"`
+	LeaveHours     float64   `db:"leave_hours"`
+	OtHours        float64   `db:"ot_hours"`
+	BonusMonths    float64   `db:"bonus_months"`
+	BonusAmount    float64   `db:"bonus_amount"`
+	UpdatedAt      time.Time `db:"updated_at"`
 }
 
 type ListResult struct {
@@ -170,6 +171,7 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
 	}
 	q := fmt.Sprintf(`SELECT bi.id, bi.cycle_id, bi.employee_id,
        (e.first_name || ' ' || e.last_name) AS employee_name,
+       e.employee_number AS employee_number,
        bi.tenure_days, bi.current_salary, bi.late_minutes, bi.leave_days, bi.leave_double_days, bi.leave_hours, bi.ot_hours,
        bi.bonus_months, bi.bonus_amount, bi.updated_at
 FROM bonus_item bi
@@ -187,6 +189,7 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, e
 	db := r.dbCtx(ctx)
 	const q = `SELECT bi.id, bi.cycle_id, bi.employee_id,
        (e.first_name || ' ' || e.last_name) AS employee_name,
+       e.employee_number AS employee_number,
        bi.tenure_days, bi.current_salary, bi.late_minutes, bi.leave_days, bi.leave_double_days, bi.leave_hours, bi.ot_hours,
        bi.bonus_months, bi.bonus_amount, bi.updated_at
 FROM bonus_item bi

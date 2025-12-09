@@ -116,6 +116,20 @@ func (r PTRepository) Get(ctx context.Context, id uuid.UUID) (*PTRecord, error) 
 	return &rec, nil
 }
 
+func (r PTRepository) ExistsActiveByEmployeeDate(ctx context.Context, employeeID uuid.UUID, workDate time.Time) (bool, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+SELECT EXISTS (
+  SELECT 1 FROM worklog_pt
+  WHERE employee_id=$1 AND work_date=$2 AND deleted_at IS NULL
+)`
+	var exists bool
+	if err := db.GetContext(ctx, &exists, q, employeeID, workDate); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func (r PTRepository) Insert(ctx context.Context, rec PTRecord) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
@@ -174,7 +188,7 @@ func (r PTRepository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.U
 	return nil
 }
 
-func isUniqueErrPT(err error) bool {
+func IsUniqueErrPT(err error) bool {
 	var pqErr *pq.Error
 	if errors.As(err, &pqErr) {
 		return pqErr.Code == "23505"

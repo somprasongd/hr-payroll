@@ -1,10 +1,12 @@
 -- =========================
 -- 1) Domains (Part-time)
 -- =========================
+DROP DOMAIN IF EXISTS worklog_pt_status CASCADE;
 CREATE DOMAIN worklog_pt_status AS TEXT
   CONSTRAINT worklog_pt_status_chk
   CHECK (VALUE IN ('pending','approved'));
 
+DROP DOMAIN IF EXISTS payout_pt_status CASCADE;
 CREATE DOMAIN payout_pt_status AS TEXT
   CONSTRAINT payout_pt_status_chk
   CHECK (VALUE IN ('to_pay','paid'));
@@ -122,7 +124,7 @@ CREATE INDEX worklog_pt_filter_idx
   ON worklog_pt (work_date, status)
   WHERE deleted_at IS NULL;
 
-CREATE INDEX worklog_pt_emp_date_idx
+CREATE UNIQUE INDEX IF NOT EXISTS worklog_pt_emp_date_uk
   ON worklog_pt (employee_id, work_date)
   WHERE deleted_at IS NULL;
 

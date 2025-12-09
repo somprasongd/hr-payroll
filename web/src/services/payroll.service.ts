@@ -91,6 +91,8 @@ export interface PayslipDetail {
   
   // Income
   salaryAmount: number;
+  ptHoursWorked: number;
+  ptHourlyRate: number;
   otHours: number;
   otAmount: number;
   bonusAmount: number;

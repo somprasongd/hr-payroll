@@ -33,6 +33,7 @@ type Record struct {
 	InternetFeeMonthly         float64    `db:"internet_fee_monthly"`
 	SocialSecurityRateEmployee float64    `db:"social_security_rate_employee"`
 	SocialSecurityRateEmployer float64    `db:"social_security_rate_employer"`
+	SocialSecurityWageCap      float64    `db:"social_security_wage_cap"`
 	Note                       *string    `db:"note"`
 	CreatedAt                  time.Time  `db:"created_at"`
 	UpdatedAt                  time.Time  `db:"updated_at"`
@@ -67,6 +68,7 @@ SELECT
   internet_fee_monthly,
   social_security_rate_employee,
   social_security_rate_employer,
+  social_security_wage_cap,
   note,
   created_at,
   updated_at
@@ -118,6 +120,7 @@ SELECT
   internet_fee_monthly,
   social_security_rate_employee,
   social_security_rate_employer,
+  social_security_wage_cap,
   note,
   created_at,
   updated_at
@@ -146,12 +149,13 @@ INSERT INTO payroll_config (
   internet_fee_monthly,
   social_security_rate_employee,
   social_security_rate_employer,
+  social_security_wage_cap,
   note,
   created_by,
   updated_by
 ) VALUES (
   daterange($1, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
 )
 RETURNING
   id,
@@ -169,6 +173,7 @@ RETURNING
   internet_fee_monthly,
   social_security_rate_employee,
   social_security_rate_employer,
+  social_security_wage_cap,
   note,
   created_at,
   updated_at`
@@ -186,6 +191,7 @@ RETURNING
 		payload.InternetFeeMonthly,
 		payload.SocialSecurityRateEmployee,
 		payload.SocialSecurityRateEmployer,
+		payload.SocialSecurityWageCap,
 		payload.Note,
 		actor,
 		actor,

@@ -2,9 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, X, RotateCcw } from 'lucide-react';
+import { Plus, Search, Filter, X, RotateCcw, Eye, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -30,21 +31,36 @@ import { employeeService } from '@/services/employee.service';
 import { Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
 import { Pagination } from '@/components/ui/pagination';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 
 export default function PayoutPtListPage() {
   const t = useTranslations('Payouts.PT');
   const tCommon = useTranslations('Common');
+  const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [payouts, setPayouts] = useState<PayoutPt[]>([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   
-  // Filters
+  // Filters - initialize from URL query
   const [status, setStatus] = useState<string>('all');
-  const [employeeId, setEmployeeId] = useState<string>('');
+  const [employeeId, setEmployeeId] = useState<string>(searchParams.get('employeeId') || '');
 
   useEffect(() => {
     fetchEmployees();
@@ -109,6 +125,27 @@ export default function PayoutPtListPage() {
     setCurrentPage(page);
   };
 
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await payoutPtService.delete(deleteId);
+      toast({
+        title: tCommon('success'),
+        description: t('deleteSuccess'),
+      });
+      fetchPayouts();
+    } catch (error) {
+      console.error('Failed to delete payout', error);
+      toast({
+        variant: 'destructive',
+        title: tCommon('error'),
+        description: t('deleteError'),
+      });
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-row justify-between items-center gap-4">
@@ -125,7 +162,7 @@ export default function PayoutPtListPage() {
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <Link href="/payouts/pt/create">
+          <Link href={`/payouts/pt/create${employeeId ? `?employeeId=${employeeId}` : ''}`}>
             <Button>
               <Plus className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{t('createButton')}</span>
@@ -193,7 +230,7 @@ export default function PayoutPtListPage() {
               <TableHead>{t('fields.totalHours')}</TableHead>
               <TableHead>{t('fields.amountTotal')}</TableHead>
               <TableHead>{t('fields.status')}</TableHead>
-              <TableHead className="text-right">{t('actions.view')}</TableHead>
+              <TableHead className="text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -229,11 +266,23 @@ export default function PayoutPtListPage() {
                     <TableCell>{(payout.amount || 0).toLocaleString()}</TableCell>
                     <TableCell>{getStatusBadge(payout.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/payouts/pt/${payout.id}`}>
-                        <Button variant="ghost" size="sm">
-                          {t('actions.view')}
-                        </Button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/payouts/pt/${payout.id}`}>
+                          <Button variant="ghost" size="icon" title={t('actions.view')}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        {payout.status === 'to_pay' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteId(payout.id)}
+                            title={tCommon('delete')}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -248,6 +297,24 @@ export default function PayoutPtListPage() {
         totalPages={totalPages}
         onPageChange={handlePageChange}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tCommon('confirmDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {tCommon('confirmDeleteDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              {tCommon('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

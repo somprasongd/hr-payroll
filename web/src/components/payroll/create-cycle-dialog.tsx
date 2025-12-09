@@ -29,6 +29,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { payrollService } from '@/services/payroll.service';
+import { payrollConfigService, PayrollConfig } from '@/services/payroll-config.service';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MonthPicker } from '@/components/ui/month-picker';
 
@@ -62,6 +63,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [payrollConfig, setPayrollConfig] = useState<PayrollConfig | null>(null);
 
   const form = useForm<CreateCycleFormValues>({
     resolver: zodResolver(createCycleSchema) as any,
@@ -75,23 +77,46 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
     },
   });
 
-  // Reset form when dialog opens
+  // Fetch payroll config when dialog opens
+  useEffect(() => {
+    if (open) {
+      const fetchConfig = async () => {
+        try {
+          const config = await payrollConfigService.getEffective();
+          setPayrollConfig(config);
+        } catch (error) {
+          console.error('Failed to fetch payroll config:', error);
+        }
+      };
+      fetchConfig();
+    }
+  }, [open]);
+
+  // Reset form when dialog opens or config is loaded
   useEffect(() => {
     if (open) {
       const today = new Date();
       const start = startOfMonth(today);
       const end = endOfMonth(today);
       
+      // Use SSO rates from config (convert from decimal to percentage) or default to 5%
+      const ssoEmployeeRate = payrollConfig 
+        ? (payrollConfig.socialSecurityRateEmployee * 100) 
+        : 5;
+      const ssoEmployerRate = payrollConfig 
+        ? (payrollConfig.socialSecurityRateEmployer * 100) 
+        : 5;
+      
       form.reset({
         payrollMonthDate: format(start, 'yyyy-MM-dd'),
         periodStartDate: format(start, 'yyyy-MM-dd'),
         periodEndDate: format(end, 'yyyy-MM-dd'),
         payDate: format(end, 'yyyy-MM-dd'), // Default pay date to end of month
-        socialSecurityRateEmployee: 5,
-        socialSecurityRateEmployer: 5,
+        socialSecurityRateEmployee: ssoEmployeeRate,
+        socialSecurityRateEmployer: ssoEmployerRate,
       });
     }
-  }, [open, form]);
+  }, [open, form, payrollConfig]);
 
   async function onSubmit(data: CreateCycleFormValues) {
     setError(null);

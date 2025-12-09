@@ -16,6 +16,7 @@ export interface SalaryRaiseItem {
   id: string;
   cycleId: string;
   employeeId: string;
+  employeeNumber: string;
   employeeName: string;
   tenureDays: number;
   currentSalary: number;
