@@ -82,16 +82,17 @@ axiosInstance.interceptors.response.use(
     if (originalRequest._retry) {
       // Refresh token also failed, logout user
       if (typeof window !== 'undefined') {
-        const { logout, setReturnUrl } = useAuthStore.getState();
+        const { logout, setReturnUrl, user } = useAuthStore.getState();
         const currentPath = window.location.pathname;
-        
-        // Save return URL before logout (without locale prefix)
-        if (currentPath !== '/' && !currentPath.includes('/login')) {
-          const pathWithoutLocale = removeLocalePrefix(currentPath);
-          setReturnUrl(pathWithoutLocale);
-        }
+        const currentUserId = user?.id;
         
         logout();
+        
+        // Save return URL and user ID AFTER logout (because logout clears them)
+        if (currentPath !== '/' && !currentPath.includes('/login')) {
+          const pathWithoutLocale = removeLocalePrefix(currentPath);
+          setReturnUrl(pathWithoutLocale, currentUserId);
+        }
         
         // Redirect to login
         window.location.href = '/';
@@ -123,15 +124,18 @@ axiosInstance.interceptors.response.use(
     if (!refreshToken) {
       isRefreshing = false;
       if (typeof window !== 'undefined') {
-        const { logout, setReturnUrl } = useAuthStore.getState();
+        const { logout, setReturnUrl, user } = useAuthStore.getState();
         const currentPath = window.location.pathname;
-        
-        if (currentPath !== '/' && !currentPath.includes('/login')) {
-          const pathWithoutLocale = removeLocalePrefix(currentPath);
-          setReturnUrl(pathWithoutLocale);
-        }
+        const currentUserId = user?.id;
         
         logout();
+        
+        // Save return URL and user ID AFTER logout (because logout clears them)
+        if (currentPath !== '/' && !currentPath.includes('/login')) {
+          const pathWithoutLocale = removeLocalePrefix(currentPath);
+          setReturnUrl(pathWithoutLocale, currentUserId);
+        }
+        
         window.location.href = '/';
       }
       return Promise.reject(error);
@@ -172,15 +176,18 @@ axiosInstance.interceptors.response.use(
 
       // Refresh failed, logout user
       if (typeof window !== 'undefined') {
-        const { logout, setReturnUrl } = useAuthStore.getState();
+        const { logout, setReturnUrl, user } = useAuthStore.getState();
         const currentPath = window.location.pathname;
-        
-        if (currentPath !== '/' && !currentPath.includes('/login')) {
-          const pathWithoutLocale = removeLocalePrefix(currentPath);
-          setReturnUrl(pathWithoutLocale);
-        }
+        const currentUserId = user?.id;
         
         logout();
+        
+        // Save return URL and user ID AFTER logout (because logout clears them)
+        if (currentPath !== '/' && !currentPath.includes('/login')) {
+          const pathWithoutLocale = removeLocalePrefix(currentPath);
+          setReturnUrl(pathWithoutLocale, currentUserId);
+        }
+        
         window.location.href = '/';
       }
 

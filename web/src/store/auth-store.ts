@@ -13,10 +13,12 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   returnUrl: string | null;
+  returnUrlUserId: string | null;
   _hasHydrated: boolean;
   login: (user: User, token: string, refreshToken: string) => void;
   logout: () => void;
-  setReturnUrl: (url: string | null) => void;
+  setReturnUrl: (url: string | null, userId?: string | null) => void;
+  clearReturnUrl: () => void;
   updateToken: (token: string) => void;
   updateTokens: (token: string, refreshToken: string) => void;
   setHasHydrated: (state: boolean) => void;
@@ -30,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       isAuthenticated: false,
       returnUrl: null,
+      returnUrlUserId: null,
       _hasHydrated: false,
       login: (user, token, refreshToken) => {
         if (typeof window !== 'undefined') {
@@ -43,10 +46,14 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
         }
-        set({ user: null, token: null, refreshToken: null, isAuthenticated: false, returnUrl: null });
+        // Clear returnUrl and returnUrlUserId on manual logout
+        set({ user: null, token: null, refreshToken: null, isAuthenticated: false, returnUrl: null, returnUrlUserId: null });
       },
-      setReturnUrl: (url) => {
-        set({ returnUrl: url });
+      setReturnUrl: (url, userId) => {
+        set({ returnUrl: url, returnUrlUserId: userId ?? null });
+      },
+      clearReturnUrl: () => {
+        set({ returnUrl: null, returnUrlUserId: null });
       },
       updateToken: (token) => {
         if (typeof window !== 'undefined') {
@@ -73,6 +80,7 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
         returnUrl: state.returnUrl,
+        returnUrlUserId: state.returnUrlUserId,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

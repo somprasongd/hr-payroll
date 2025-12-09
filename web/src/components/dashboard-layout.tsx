@@ -31,11 +31,22 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const tDashboard = useTranslations('Dashboard');
-  const { user, logout } = useAuthStore();
+  const { user, logout, setReturnUrl } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
+    // Save current path and userId before logout for same-user return
+    const currentUserId = user?.id;
+    const currentPath = pathname;
+    
     logout();
+    
+    // Set returnUrl after logout so same user can return to this page
+    if (currentPath && currentPath !== '/' && !currentPath.includes('/login')) {
+      setReturnUrl(currentPath, currentUserId);
+    }
+    
     router.push('/');
   };
 

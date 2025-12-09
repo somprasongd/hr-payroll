@@ -19,20 +19,28 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, setReturnUrl, _hasHydrated } = useAuthStore();
+  const { isAuthenticated, setReturnUrl, _hasHydrated, user, returnUrlUserId } = useAuthStore();
 
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {
-      console.log('[ProtectedRoute] Not authenticated, redirecting to login', { pathname });
-      // Save current path for return after login (without locale prefix)
-      setReturnUrl(pathname);
+      console.log('[ProtectedRoute] Not authenticated, redirecting to login', { pathname, hasUser: !!user, returnUrlUserId });
+      // Only save returnUrl if:
+      // 1. user is still available (session just expired, not manual logout)
+      // 2. AND returnUrlUserId is not already set (axios.ts hasn't saved it yet)
+      // If user is null, it means:
+      // - Manual logout (shouldn't save returnUrl) OR
+      // - Fresh visit without login (shouldn't save returnUrl) OR
+      // - axios.ts already handled session expiry and saved returnUrl+userId
+      if (user && !returnUrlUserId) {
+        setReturnUrl(pathname, user.id);
+      }
       
       // Redirect to login
       router.push('/');
     } else if (_hasHydrated && isAuthenticated) {
       console.log('[ProtectedRoute] Authenticated, rendering children', { pathname });
     }
-  }, [isAuthenticated, pathname, router, setReturnUrl, _hasHydrated]);
+  }, [isAuthenticated, pathname, router, setReturnUrl, _hasHydrated, user, returnUrlUserId]);
 
   // Show loading while checking authentication or hydrating
   if (!_hasHydrated || !isAuthenticated) {

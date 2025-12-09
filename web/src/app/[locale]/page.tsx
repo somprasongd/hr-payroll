@@ -28,7 +28,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function LoginPage() {
   const t = useTranslations('Index');
   const locale = useLocale();
-  const { login, returnUrl, setReturnUrl, isAuthenticated, _hasHydrated, refreshToken, updateToken, updateTokens, logout } = useAuthStore()
+  const { login, returnUrl, returnUrlUserId, clearReturnUrl, isAuthenticated, _hasHydrated, refreshToken, updateToken, updateTokens, logout } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string>('')
@@ -91,7 +91,7 @@ export default function LoginPage() {
     };
 
     verifySession();
-  }, [_hasHydrated, isAuthenticated, refreshToken, router, returnUrl, locale, updateToken, logout]);
+  }, [_hasHydrated, isAuthenticated, refreshToken, router, returnUrl, returnUrlUserId, locale, updateToken, updateTokens, logout]);
 
   const formSchema = z.object({
     username: z.string().min(3, {
@@ -142,6 +142,16 @@ export default function LoginPage() {
         refreshTokenPreview: response.refreshToken?.substring(0, 20) + '...',
       });
       
+      // Capture return URL and user ID BEFORE login (in case login clears them)
+      const savedReturnUrl = useAuthStore.getState().returnUrl;
+      const savedReturnUrlUserId = useAuthStore.getState().returnUrlUserId;
+      
+      console.log('[Login] Before login - saved state:', { 
+        savedReturnUrl, 
+        savedReturnUrlUserId,
+        newUserId: response.user.id 
+      });
+      
       // Store authentication data (using accessToken as token)
       login(response.user, response.accessToken, response.refreshToken)
 
@@ -158,9 +168,25 @@ export default function LoginPage() {
         localStorageRefreshToken: localStorage.getItem('refreshToken')?.substring(0, 20) + '...',
       });
       
-      // Redirect to return URL or dashboard
-      const redirectTo = returnUrl || '/dashboard'
-      setReturnUrl(null) // Clear return URL
+      // Determine redirect destination
+      // If the logged-in user is the same as the one who was redirected to login, use returnUrl
+      // Otherwise, redirect to dashboard (different user logged in)
+      let redirectTo = '/dashboard';
+      if (savedReturnUrl && savedReturnUrlUserId && savedReturnUrlUserId === response.user.id) {
+        // Same user - redirect to saved URL
+        console.log('[Login] Same user detected, redirecting to saved URL:', savedReturnUrl);
+        redirectTo = savedReturnUrl;
+      } else if (savedReturnUrl && savedReturnUrlUserId && savedReturnUrlUserId !== response.user.id) {
+        // Different user - redirect to dashboard
+        console.log('[Login] Different user detected, redirecting to dashboard instead of:', savedReturnUrl);
+      } else if (savedReturnUrl && !savedReturnUrlUserId) {
+        // No saved user ID (legacy case), use returnUrl
+        console.log('[Login] No saved user ID, redirecting to saved URL:', savedReturnUrl);
+        redirectTo = savedReturnUrl;
+      }
+      
+      console.log('[Login] Final redirect destination:', redirectTo);
+      clearReturnUrl() // Clear return URL and user ID
       router.push(redirectTo)
     } catch (err) {
       const apiError = err as ApiError
