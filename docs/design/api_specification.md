@@ -543,6 +543,22 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
       "socialSecurityRateEmployee": 0.05,
       "socialSecurityRateEmployer": 0.05,
       "socialSecurityWageCap": 15000.0,
+      "taxApplyStandardExpense": true,
+      "taxStandardExpenseRate": 0.5,
+      "taxStandardExpenseCap": 10000.0,
+      "taxApplyPersonalAllowance": true,
+      "taxPersonalAllowanceAmount": 60000.0,
+      "taxProgressiveBrackets": [
+        {"min": 0, "max": 150000, "rate": 0},
+        {"min": 150000, "max": 300000, "rate": 0.05},
+        {"min": 300000, "max": 500000, "rate": 0.1},
+        {"min": 500000, "max": 750000, "rate": 0.15},
+        {"min": 750000, "max": 1000000, "rate": 0.2},
+        {"min": 1000000, "max": 2000000, "rate": 0.25},
+        {"min": 2000000, "max": 5000000, "rate": 0.3},
+        {"min": 5000000, "max": null, "rate": 0.35}
+      ],
+      "withholdingTaxRateService": 0.03,
       "note": "ปรับขึ้นค่าแรงและสวัสดิการประจำปี 2026",
       "createdAt": "2025-11-20T15:00:00Z",
       "updatedAt": "2025-11-20T15:00:00Z"
@@ -564,6 +580,22 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
       "socialSecurityRateEmployee": 0.05,
       "socialSecurityRateEmployer": 0.05,
       "socialSecurityWageCap": 15000.0,
+      "taxApplyStandardExpense": true,
+      "taxStandardExpenseRate": 0.5,
+      "taxStandardExpenseCap": 10000.0,
+      "taxApplyPersonalAllowance": true,
+      "taxPersonalAllowanceAmount": 60000.0,
+      "taxProgressiveBrackets": [
+        {"min": 0, "max": 150000, "rate": 0},
+        {"min": 150000, "max": 300000, "rate": 0.05},
+        {"min": 300000, "max": 500000, "rate": 0.1},
+        {"min": 500000, "max": 750000, "rate": 0.15},
+        {"min": 750000, "max": 1000000, "rate": 0.2},
+        {"min": 1000000, "max": 2000000, "rate": 0.25},
+        {"min": 2000000, "max": 5000000, "rate": 0.3},
+        {"min": 5000000, "max": null, "rate": 0.35}
+      ],
+      "withholdingTaxRateService": 0.03,
       "note": "Initial Config",
       "createdAt": "2025-01-01T09:00:00Z",
       "updatedAt": "2025-11-20T15:00:00Z"
@@ -597,6 +629,13 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 | `data[].socialSecurityRateEmployee` | อัตราหักประกันสังคมลูกจ้าง (ทศนิยม)           | Number              | **Yes**      | `0.05`                 |
 | `data[].socialSecurityRateEmployer` | อัตราสมทบประกันสังคมนายจ้าง (ทศนิยม)          | Number              | **Yes**      | `0.05`                 |
 | `data[].socialSecurityWageCap`      | ฐานเงินเดือนสูงสุดใช้คำนวณประกันสังคม (บาท)    | Number              | **Yes**      | `15000.00`             |
+| `data[].taxApplyStandardExpense`    | เปิด/ปิดการหักค่าใช้จ่ายเหมา 50%               | Boolean             | **Yes**      | `true`                 |
+| `data[].taxStandardExpenseRate`     | อัตราค่าใช้จ่ายเหมา (0-1)                      | Number              | **Yes**      | `0.5`                  |
+| `data[].taxStandardExpenseCap`      | เพดานค่าใช้จ่ายเหมา                            | Number              | **Yes**      | `10000.00`             |
+| `data[].taxApplyPersonalAllowance`  | เปิด/ปิดค่าลดหย่อนส่วนตัว                     | Boolean             | **Yes**      | `true`                 |
+| `data[].taxPersonalAllowanceAmount` | จำนวนค่าลดหย่อนส่วนตัว                         | Number              | **Yes**      | `60000.00`             |
+| `data[].taxProgressiveBrackets`     | แผนภาษีก้าวหน้า (array ของ {min,max,rate})     | Array               | **Yes**      | `[{"min":0,...}]`      |
+| `data[].withholdingTaxRateService`  | อัตราหัก ณ ที่จ่าย ฟรีแลนซ์/เหมาบริการ (0-1)   | Number              | **Yes**      | `0.03`                 |
 | `data[].note`                       | หมายเหตุ                                      | String              | No           | `"..."`                |
 | `data[].createdAt`                  | เวลาที่สร้าง                                  | String              | **Yes**      | `"2025..."`            |
 | `data[].updatedAt`                  | เวลาแก้ไขล่าสุด                               | String              | **Yes**      | `"2025..."`            |
@@ -639,6 +678,23 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
   "internetFeeMonthly": 80.0,
   "socialSecurityRateEmployee": 0.05,
   "socialSecurityRateEmployer": 0.05,
+  "socialSecurityWageCap": 15000.0,
+  "taxApplyStandardExpense": true,
+  "taxStandardExpenseRate": 0.5,
+  "taxStandardExpenseCap": 10000.0,
+  "taxApplyPersonalAllowance": true,
+  "taxPersonalAllowanceAmount": 60000.0,
+  "taxProgressiveBrackets": [
+    {"min": 0, "max": 150000, "rate": 0},
+    {"min": 150000, "max": 300000, "rate": 0.05},
+    {"min": 300000, "max": 500000, "rate": 0.1},
+    {"min": 500000, "max": 750000, "rate": 0.15},
+    {"min": 750000, "max": 1000000, "rate": 0.2},
+    {"min": 1000000, "max": 2000000, "rate": 0.25},
+    {"min": 2000000, "max": 5000000, "rate": 0.3},
+    {"min": 5000000, "max": null, "rate": 0.35}
+  ],
+  "withholdingTaxRateService": 0.03,
   "note": "ปรับขึ้นค่าแรงประจำปี 2026"
 }
 ```
@@ -683,6 +739,23 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "internetFeeMonthly": 100.0,
   "socialSecurityRateEmployee": 0.05,
   "socialSecurityRateEmployer": 0.05,
+  "socialSecurityWageCap": 15000.0,
+  "taxApplyStandardExpense": true,
+  "taxStandardExpenseRate": 0.5,
+  "taxStandardExpenseCap": 10000.0,
+  "taxApplyPersonalAllowance": true,
+  "taxPersonalAllowanceAmount": 60000.0,
+  "taxProgressiveBrackets": [
+    {"min": 0, "max": 150000, "rate": 0},
+    {"min": 150000, "max": 300000, "rate": 0.05},
+    {"min": 300000, "max": 500000, "rate": 0.1},
+    {"min": 500000, "max": 750000, "rate": 0.15},
+    {"min": 750000, "max": 1000000, "rate": 0.2},
+    {"min": 1000000, "max": 2000000, "rate": 0.25},
+    {"min": 2000000, "max": 5000000, "rate": 0.3},
+    {"min": 5000000, "max": null, "rate": 0.35}
+  ],
+  "withholdingTaxRateService": 0.03,
   "note": "ปรับค่าไฟและเน็ตตามจริง"
 }
 ```
@@ -702,6 +775,14 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 | `internetFeeMonthly`         | ค่าเน็ต (รายเดือน)            | Number              | **Yes**      | `100.00`               |
 | `socialSecurityRateEmployee` | ประกันสังคมลูกจ้าง (0-1)      | Number              | **Yes**      | `0.05`                 |
 | `socialSecurityRateEmployer` | ประกันสังคมนายจ้าง (0-1)      | Number              | **Yes**      | `0.05`                 |
+| `socialSecurityWageCap`      | เพดานฐานเงินเดือนประกันสังคม   | Number              | **Yes**      | `15000.00`             |
+| `taxApplyStandardExpense`    | เปิด/ปิดการหักค่าใช้จ่ายเหมา   | Boolean             | **Yes**      | `true`                 |
+| `taxStandardExpenseRate`     | อัตราค่าใช้จ่ายเหมา (0-1)      | Number              | **Yes**      | `0.5`                  |
+| `taxStandardExpenseCap`      | เพดานค่าใช้จ่ายเหมา            | Number              | **Yes**      | `10000.00`             |
+| `taxApplyPersonalAllowance`  | เปิด/ปิดค่าลดหย่อนส่วนตัว     | Boolean             | **Yes**      | `true`                 |
+| `taxPersonalAllowanceAmount` | จำนวนค่าลดหย่อนส่วนตัว         | Number              | **Yes**      | `60000.00`             |
+| `taxProgressiveBrackets`     | Array ของ `{min, max, rate}` (max เป็น null = ไม่มีเพดาน) | Array | **Yes** | `[{"min":0,"max":150000,"rate":0}, ...]` |
+| `withholdingTaxRateService`  | อัตราหัก ณ ที่จ่ายสำหรับ ม.40(2) (0-1) | Number | **Yes** | `0.03` |
 | `note`                       | หมายเหตุการปรับปรุง           | String              | No           | `"..."`                |
 
 **Success Response Example (201 Created):**

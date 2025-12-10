@@ -14,19 +14,26 @@ import (
 )
 
 type RequestBody struct {
-	StartDate                  string  `json:"startDate"`
-	HourlyRate                 float64 `json:"hourlyRate"`
-	OtHourlyRate               float64 `json:"otHourlyRate"`
-	AttendanceBonusNoLate      float64 `json:"attendanceBonusNoLate"`
-	AttendanceBonusNoLeave     float64 `json:"attendanceBonusNoLeave"`
-	HousingAllowance           float64 `json:"housingAllowance"`
-	WaterRatePerUnit           float64 `json:"waterRatePerUnit"`
-	ElectricityRatePerUnit     float64 `json:"electricityRatePerUnit"`
-	InternetFeeMonthly         float64 `json:"internetFeeMonthly"`
-	SocialSecurityRateEmployee float64 `json:"socialSecurityRateEmployee"`
-	SocialSecurityRateEmployer float64 `json:"socialSecurityRateEmployer"`
-	SocialSecurityWageCap      float64 `json:"socialSecurityWageCap"`
-	Note                       *string `json:"note"`
+	StartDate                  string                 `json:"startDate"`
+	HourlyRate                 float64                `json:"hourlyRate"`
+	OtHourlyRate               float64                `json:"otHourlyRate"`
+	AttendanceBonusNoLate      float64                `json:"attendanceBonusNoLate"`
+	AttendanceBonusNoLeave     float64                `json:"attendanceBonusNoLeave"`
+	HousingAllowance           float64                `json:"housingAllowance"`
+	WaterRatePerUnit           float64                `json:"waterRatePerUnit"`
+	ElectricityRatePerUnit     float64                `json:"electricityRatePerUnit"`
+	InternetFeeMonthly         float64                `json:"internetFeeMonthly"`
+	SocialSecurityRateEmployee float64                `json:"socialSecurityRateEmployee"`
+	SocialSecurityRateEmployer float64                `json:"socialSecurityRateEmployer"`
+	SocialSecurityWageCap      float64                `json:"socialSecurityWageCap"`
+	TaxApplyStandardExpense    *bool                  `json:"taxApplyStandardExpense"`
+	TaxStandardExpenseRate     *float64               `json:"taxStandardExpenseRate"`
+	TaxStandardExpenseCap      *float64               `json:"taxStandardExpenseCap"`
+	TaxApplyPersonalAllowance  *bool                  `json:"taxApplyPersonalAllowance"`
+	TaxPersonalAllowanceAmount *float64               `json:"taxPersonalAllowanceAmount"`
+	TaxProgressiveBrackets     repository.TaxBrackets `json:"taxProgressiveBrackets"`
+	WithholdingTaxRateService  *float64               `json:"withholdingTaxRateService"`
+	Note                       *string                `json:"note"`
 
 	ParsedStartDate time.Time `json:"-"`
 }
@@ -45,6 +52,13 @@ func (p RequestBody) ToRecord() repository.Record {
 		SocialSecurityRateEmployee: p.SocialSecurityRateEmployee,
 		SocialSecurityRateEmployer: p.SocialSecurityRateEmployer,
 		SocialSecurityWageCap:      p.SocialSecurityWageCap,
+		TaxApplyStandardExpense:    boolValue(p.TaxApplyStandardExpense),
+		TaxStandardExpenseRate:     floatValue(p.TaxStandardExpenseRate),
+		TaxStandardExpenseCap:      floatValue(p.TaxStandardExpenseCap),
+		TaxApplyPersonalAllowance:  boolValue(p.TaxApplyPersonalAllowance),
+		TaxPersonalAllowanceAmount: floatValue(p.TaxPersonalAllowanceAmount),
+		TaxProgressiveBrackets:     p.TaxProgressiveBrackets,
+		WithholdingTaxRateService:  floatValue(p.WithholdingTaxRateService),
 		Note:                       p.Note,
 	}
 }
@@ -91,4 +105,18 @@ func NewEndpoint(router fiber.Router) {
 
 		return response.JSON(c, fiber.StatusCreated, resp.Config)
 	})
+}
+
+func boolValue(v *bool) bool {
+	if v == nil {
+		return false
+	}
+	return *v
+}
+
+func floatValue(v *float64) float64 {
+	if v == nil {
+		return 0
+	}
+	return *v
 }

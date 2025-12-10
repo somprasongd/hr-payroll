@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { payrollConfigService, type PayrollConfig } from "@/services/payroll-config.service";
+import { payrollConfigService, type PayrollConfig, type TaxProgressiveBracket } from "@/services/payroll-config.service";
 import { ApiError } from "@/lib/api-client";
 import { 
   Save, 
@@ -11,12 +11,14 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle,
-  Info
+  Info,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -53,6 +55,19 @@ import {
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
+// Default Thai progressive tax brackets (rate in percentage for form display)
+// min = previous max + 1 (except first row which starts at 0)
+const DEFAULT_TAX_BRACKETS: TaxProgressiveBracket[] = [
+  { min: 0, max: 150000, rate: 0 },
+  { min: 150001, max: 300000, rate: 5 },
+  { min: 300001, max: 500000, rate: 10 },
+  { min: 500001, max: 750000, rate: 15 },
+  { min: 750001, max: 1000000, rate: 20 },
+  { min: 1000001, max: 2000000, rate: 25 },
+  { min: 2000001, max: 5000000, rate: 30 },
+  { min: 5000001, max: null, rate: 35 },
+];
+
 interface ConfigFormData {
   startDate: string;
   hourlyRate: number;
@@ -66,6 +81,15 @@ interface ConfigFormData {
   socialSecurityRateEmployee: number; // Displayed as percentage (e.g., 5 for 5%)
   socialSecurityRateEmployer: number; // Displayed as percentage (e.g., 5 for 5%)
   socialSecurityWageCap: number;
+  // Tax config for Section 40(1) - Regular employees
+  taxApplyStandardExpense: boolean;
+  taxStandardExpenseRate: number; // Displayed as percentage (e.g., 50 for 50%)
+  taxStandardExpenseCap: number;
+  taxApplyPersonalAllowance: boolean;
+  taxPersonalAllowanceAmount: number;
+  taxProgressiveBrackets: TaxProgressiveBracket[];
+  // Tax config for Section 40(2) - Freelance/Contract workers
+  withholdingTaxRateService: number; // Displayed as percentage (e.g., 3 for 3%)
   note: string;
 }
 
@@ -87,6 +111,15 @@ export default function SettingsPage() {
     socialSecurityRateEmployee: 5, // Default 5%
     socialSecurityRateEmployer: 5, // Default 5%
     socialSecurityWageCap: 15000,
+    // Tax defaults for Section 40(1)
+    taxApplyStandardExpense: true,
+    taxStandardExpenseRate: 50, // 50%
+    taxStandardExpenseCap: 100000,
+    taxApplyPersonalAllowance: true,
+    taxPersonalAllowanceAmount: 60000,
+    taxProgressiveBrackets: DEFAULT_TAX_BRACKETS,
+    // Tax defaults for Section 40(2)
+    withholdingTaxRateService: 3, // 3%
     note: '',
   });
   const [loading, setLoading] = useState(false);
@@ -102,12 +135,14 @@ export default function SettingsPage() {
     if (activeTab === 'rates') setActiveTab('bonuses');
     else if (activeTab === 'bonuses') setActiveTab('utilities');
     else if (activeTab === 'utilities') setActiveTab('social');
+    else if (activeTab === 'social') setActiveTab('tax');
   };
 
   const handleBack = () => {
     if (activeTab === 'bonuses') setActiveTab('rates');
     else if (activeTab === 'utilities') setActiveTab('bonuses');
     else if (activeTab === 'social') setActiveTab('utilities');
+    else if (activeTab === 'tax') setActiveTab('social');
   };
 
   // Fetch effective config
@@ -118,7 +153,7 @@ export default function SettingsPage() {
       const data = await payrollConfigService.getEffective();
       setActiveConfig(data);
       
-      // Load data into form (convert decimal to percentage for social security)
+      // Load data into form (convert decimal to percentage for social security and tax rates)
       setFormData({
         startDate: data.startDate || new Date().toISOString().split('T')[0],
         hourlyRate: data.hourlyRate || 0,
@@ -132,6 +167,17 @@ export default function SettingsPage() {
         socialSecurityRateEmployee: (data.socialSecurityRateEmployee || 0.05) * 100, // Convert to %
         socialSecurityRateEmployer: (data.socialSecurityRateEmployer || 0.05) * 100, // Convert to %
         socialSecurityWageCap: data.socialSecurityWageCap || 15000,
+        // Tax config for Section 40(1)
+        taxApplyStandardExpense: data.taxApplyStandardExpense ?? true,
+        taxStandardExpenseRate: (data.taxStandardExpenseRate ?? 0.5) * 100, // Convert to %
+        taxStandardExpenseCap: data.taxStandardExpenseCap ?? 100000,
+        taxApplyPersonalAllowance: data.taxApplyPersonalAllowance ?? true,
+        taxPersonalAllowanceAmount: data.taxPersonalAllowanceAmount ?? 60000,
+        taxProgressiveBrackets: data.taxProgressiveBrackets?.length > 0 
+          ? data.taxProgressiveBrackets.map(b => ({ ...b, rate: b.rate * 100 })) // Convert rate to %
+          : DEFAULT_TAX_BRACKETS,
+        // Tax config for Section 40(2)
+        withholdingTaxRateService: (data.withholdingTaxRateService ?? 0.03) * 100, // Convert to %
         note: data.note || '',
       });
     } catch (err) {
@@ -157,11 +203,56 @@ export default function SettingsPage() {
     }
   };
 
+  // Validate tax brackets: min should equal previous max + 1, and max > min
+  const validateTaxBrackets = (): string | null => {
+    const brackets = formData.taxProgressiveBrackets;
+    
+    for (let i = 0; i < brackets.length; i++) {
+      const bracket = brackets[i];
+      
+      // Validate max > min (except for last row where max can be null)
+      if (bracket.max !== null && bracket.max <= bracket.min) {
+        return t('taxBracketValidation.maxLessThanMin', { 
+          row: i + 1, 
+          min: bracket.min, 
+          max: bracket.max 
+        });
+      }
+      
+      // Validate min = prev max + 1 (skip first row)
+      if (i > 0) {
+        const prevMax = brackets[i - 1].max;
+        
+        if (prevMax === null) {
+          return t('taxBracketValidation.prevMaxNull', { row: i });
+        }
+        
+        if (bracket.min !== prevMax + 1) {
+          return t('taxBracketValidation.minMismatch', { 
+            row: i + 1, 
+            expected: prevMax + 1, 
+            actual: bracket.min
+          });
+        }
+      }
+    }
+    return null;
+  };
+
   // Save configuration
   const handleSaveConfig = async () => {
-    setSaving(true);
     setError(null);
     setSuccess(null);
+
+    // Validate tax brackets before saving
+    const bracketError = validateTaxBrackets();
+    if (bracketError) {
+      setError(bracketError);
+      setActiveTab('tax'); // Switch to tax tab to show the error
+      return;
+    }
+
+    setSaving(true);
 
     try {
       // Convert percentage to decimal for API
@@ -170,6 +261,17 @@ export default function SettingsPage() {
         socialSecurityRateEmployee: formData.socialSecurityRateEmployee / 100,
         socialSecurityRateEmployer: formData.socialSecurityRateEmployer / 100,
         socialSecurityWageCap: formData.socialSecurityWageCap,
+        // Tax config - convert percentages to decimals
+        taxApplyStandardExpense: formData.taxApplyStandardExpense,
+        taxStandardExpenseRate: formData.taxStandardExpenseRate / 100,
+        taxStandardExpenseCap: formData.taxStandardExpenseCap,
+        taxApplyPersonalAllowance: formData.taxApplyPersonalAllowance,
+        taxPersonalAllowanceAmount: formData.taxPersonalAllowanceAmount,
+        taxProgressiveBrackets: formData.taxProgressiveBrackets.map(b => ({
+          ...b,
+          rate: b.rate / 100 // Convert rate from % to decimal
+        })),
+        withholdingTaxRateService: formData.withholdingTaxRateService / 100,
       };
 
       const result = await payrollConfigService.create(apiPayload);
@@ -190,10 +292,49 @@ export default function SettingsPage() {
   };
 
   // Handle form input changes
-  const handleInputChange = (field: keyof ConfigFormData, value: string | number) => {
+  const handleInputChange = (field: keyof ConfigFormData, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  // Handle tax bracket changes
+  const handleBracketChange = (index: number, field: 'min' | 'max' | 'rate', value: number | null) => {
+    setFormData(prev => {
+      const newBrackets = [...prev.taxProgressiveBrackets];
+      newBrackets[index] = { ...newBrackets[index], [field]: value };
+      
+      // When max is changed, auto-update the next row's min to max + 1
+      if (field === 'max' && value !== null && index < newBrackets.length - 1) {
+        newBrackets[index + 1] = { ...newBrackets[index + 1], min: value + 1 };
+      }
+      
+      return { ...prev, taxProgressiveBrackets: newBrackets };
+    });
+  };
+
+  // Add new tax bracket
+  const addTaxBracket = () => {
+    setFormData(prev => {
+      const lastBracket = prev.taxProgressiveBrackets[prev.taxProgressiveBrackets.length - 1];
+      // newMin = lastMax + 1, or 0 if no last bracket
+      const newMin = lastBracket?.max !== null ? (lastBracket.max + 1) : 0;
+      return {
+        ...prev,
+        taxProgressiveBrackets: [
+          ...prev.taxProgressiveBrackets,
+          { min: newMin, max: null, rate: 0 }
+        ]
+      };
+    });
+  };
+
+  // Remove tax bracket
+  const removeTaxBracket = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      taxProgressiveBrackets: prev.taxProgressiveBrackets.filter((_, i) => i !== index)
     }));
   };
 
@@ -314,11 +455,12 @@ export default function SettingsPage() {
 
       {/* Configuration Form */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-auto">
           <TabsTrigger value="rates">{t('rates')}</TabsTrigger>
           <TabsTrigger value="bonuses">{t('bonuses')}</TabsTrigger>
           <TabsTrigger value="utilities">{t('utilities')}</TabsTrigger>
           <TabsTrigger value="social">{t('socialSecurity')}</TabsTrigger>
+          <TabsTrigger value="tax">{t('tax')}</TabsTrigger>
         </TabsList>
 
         {/* Rates Tab */}
@@ -543,6 +685,213 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Tax Configuration Tab */}
+        <TabsContent value="tax" className="space-y-4 mt-6">
+          {/* Section 40(1) - Regular Employees */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('taxSection40_1Title')}</CardTitle>
+              <CardDescription>{t('taxSection40_1Description')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Standard Expense Deduction */}
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label className="font-medium">{t('taxApplyStandardExpense')}</Label>
+                  <p className="text-xs text-gray-500">{t('taxApplyStandardExpenseHint')}</p>
+                </div>
+                <Switch
+                  checked={formData.taxApplyStandardExpense}
+                  onCheckedChange={(checked: boolean) => handleInputChange('taxApplyStandardExpense', checked)}
+                />
+              </div>
+
+              {formData.taxApplyStandardExpense && (
+                <div className="grid gap-4 md:grid-cols-2 pl-4 border-l-2 border-blue-200">
+                  <div className="space-y-2">
+                    <Label htmlFor="taxStandardExpenseRate">{t('taxStandardExpenseRate')}</Label>
+                    <div className="relative">
+                      <Input
+                        id="taxStandardExpenseRate"
+                        type="number"
+                        step="1"
+                        min="0"
+                        max="100"
+                        value={formData.taxStandardExpenseRate}
+                        onChange={(e) => handleInputChange('taxStandardExpenseRate', parseFloat(e.target.value) || 0)}
+                        onFocus={handleInputFocus}
+                        placeholder="50"
+                        className="pr-8"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxStandardExpenseCap">{t('taxStandardExpenseCap')}</Label>
+                    <Input
+                      id="taxStandardExpenseCap"
+                      type="number"
+                      step="1000"
+                      min="0"
+                      value={formData.taxStandardExpenseCap}
+                      onChange={(e) => handleInputChange('taxStandardExpenseCap', parseFloat(e.target.value) || 0)}
+                      onFocus={handleInputFocus}
+                      placeholder="100000"
+                    />
+                    <p className="text-xs text-gray-500">{t('taxStandardExpenseCapHint')}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Personal Allowance */}
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label className="font-medium">{t('taxApplyPersonalAllowance')}</Label>
+                  <p className="text-xs text-gray-500">{t('taxApplyPersonalAllowanceHint')}</p>
+                </div>
+                <Switch
+                  checked={formData.taxApplyPersonalAllowance}
+                  onCheckedChange={(checked: boolean) => handleInputChange('taxApplyPersonalAllowance', checked)}
+                />
+              </div>
+
+              {formData.taxApplyPersonalAllowance && (
+                <div className="grid gap-4 md:grid-cols-2 pl-4 border-l-2 border-blue-200">
+                  <div className="space-y-2">
+                    <Label htmlFor="taxPersonalAllowanceAmount">{t('taxPersonalAllowanceAmount')}</Label>
+                    <Input
+                      id="taxPersonalAllowanceAmount"
+                      type="number"
+                      step="1000"
+                      min="0"
+                      value={formData.taxPersonalAllowanceAmount}
+                      onChange={(e) => handleInputChange('taxPersonalAllowanceAmount', parseFloat(e.target.value) || 0)}
+                      onFocus={handleInputFocus}
+                      placeholder="60000"
+                    />
+                    <p className="text-xs text-gray-500">{t('taxPersonalAllowanceAmountHint')}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Progressive Tax Brackets */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium">{t('taxProgressiveBrackets')}</Label>
+                    <p className="text-xs text-gray-500">{t('taxProgressiveBracketsHint')}</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={addTaxBracket}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    {t('addBracket')}
+                  </Button>
+                </div>
+                
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[120px]">{t('bracketMin')}</TableHead>
+                        <TableHead className="w-[120px]">{t('bracketMax')}</TableHead>
+                        <TableHead className="w-[100px]">{t('bracketRate')}</TableHead>
+                        <TableHead className="w-[60px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {formData.taxProgressiveBrackets.map((bracket, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={bracket.min}
+                              readOnly
+                              disabled={index > 0}
+                              onChange={(e) => index === 0 && handleBracketChange(index, 'min', parseFloat(e.target.value) || 0)}
+                              onFocus={handleInputFocus}
+                              className={`w-full ${index > 0 ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={bracket.max ?? ''}
+                              placeholder="ไม่จำกัด"
+                              onChange={(e) => handleBracketChange(index, 'max', e.target.value === '' ? null : parseFloat(e.target.value))}
+                              onFocus={handleInputFocus}
+                              className="w-full"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                step="1"
+                                min="0"
+                                max="100"
+                                value={bracket.rate}
+                                onChange={(e) => handleBracketChange(index, 'rate', parseFloat(e.target.value) || 0)}
+                                onFocus={handleInputFocus}
+                                className="w-full pr-8"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {formData.taxProgressiveBrackets.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeTaxBracket(index)}
+                                className="h-8 w-8 text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 40(2) - Freelance/Contract Workers */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('taxSection40_2Title')}</CardTitle>
+              <CardDescription>{t('taxSection40_2Description')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="withholdingTaxRateService">{t('withholdingTaxRateService')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="withholdingTaxRateService"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={formData.withholdingTaxRateService}
+                      onChange={(e) => handleInputChange('withholdingTaxRateService', parseFloat(e.target.value) || 0)}
+                      onFocus={handleInputFocus}
+                      placeholder="3"
+                      className="pr-8"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{t('withholdingTaxRateServiceHint')}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Notes - Only show on last tab */}
           <Card>
@@ -580,7 +929,7 @@ export default function SettingsPage() {
           </Button>
         )}
         
-        {activeTab !== 'social' ? (
+        {activeTab !== 'tax' ? (
           <Button onClick={handleNext}>
             {t('next')}
           </Button>

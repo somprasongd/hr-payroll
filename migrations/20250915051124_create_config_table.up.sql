@@ -38,6 +38,15 @@ CREATE TABLE payroll_config (
   social_security_rate_employee NUMERIC(6,5) NOT NULL,  -- พนักงาน
   social_security_rate_employer NUMERIC(6,5) NOT NULL,  -- นายจ้าง (อนาคตอาจใช้คำนวณรายงาน)
   social_security_wage_cap      NUMERIC(12,2) NOT NULL DEFAULT 15000.00, -- ฐานเงินเดือนสูงสุดสำหรับประกันสังคม
+  -- ภาษี: ลูกจ้าง ม.40(1) ใช้ค่าลดหย่อน/หักค่าใช้จ่ายและอัตราก้าวหน้า
+  tax_apply_standard_expense    BOOLEAN NOT NULL DEFAULT TRUE,  -- ใช้หักค่าใช้จ่ายเหมา 50%
+  tax_standard_expense_rate     NUMERIC(6,5) NOT NULL DEFAULT 0.50, -- อัตราค่าใช้จ่ายเหมา เช่น 0.50 = 50%
+  tax_standard_expense_cap      NUMERIC(12,2) NOT NULL DEFAULT 10000.00, -- เพดานค่าใช้จ่ายเหมา
+  tax_apply_personal_allowance  BOOLEAN NOT NULL DEFAULT TRUE,  -- ใช้ค่าลดหย่อนส่วนตัว
+  tax_personal_allowance_amount NUMERIC(12,2) NOT NULL DEFAULT 60000.00, -- จำนวนค่าลดหย่อนส่วนตัว
+  tax_progressive_brackets      JSONB NOT NULL DEFAULT '[{"min":0,"max":150000,"rate":0},{"min":150000,"max":300000,"rate":0.05},{"min":300000,"max":500000,"rate":0.10},{"min":500000,"max":750000,"rate":0.15},{"min":750000,"max":1000000,"rate":0.20},{"min":1000000,"max":2000000,"rate":0.25},{"min":2000000,"max":5000000,"rate":0.30},{"min":5000000,"max":null,"rate":0.35}]'::jsonb, -- อัตราภาษีก้าวหน้า
+  -- ภาษี: เหมาบริการ/ฟรีแลนซ์ ม.40(2) ใช้อัตราหัก ณ ที่จ่าย
+  withholding_tax_rate_service  NUMERIC(6,5) NOT NULL DEFAULT 0.03, -- อัตราหัก ณ ที่จ่าย เช่น 0.03 = 3%
   
 
   status        config_status NOT NULL DEFAULT 'active',
@@ -58,6 +67,16 @@ CREATE UNIQUE INDEX payroll_config_version_uk ON payroll_config (version_no);
 
 -- คิวรี่ช่วงวันที่มีผลได้เร็ว
 CREATE INDEX payroll_config_effective_daterange_idx ON payroll_config USING gist (effective_daterange);
+
+-- คุมค่าตั้งภาษีให้ปลอดภัย
+ALTER TABLE payroll_config
+  ADD CONSTRAINT payroll_config_tax_brackets_array CHECK (jsonb_typeof(tax_progressive_brackets) = 'array');
+
+ALTER TABLE payroll_config
+  ADD CONSTRAINT payroll_config_tax_standard_expense_rate_range CHECK (tax_standard_expense_rate >= 0 AND tax_standard_expense_rate <= 1),
+  ADD CONSTRAINT payroll_config_withholding_rate_service_range CHECK (withholding_tax_rate_service >= 0 AND withholding_tax_rate_service <= 1),
+  ADD CONSTRAINT payroll_config_tax_standard_expense_cap_min CHECK (tax_standard_expense_cap >= 0),
+  ADD CONSTRAINT payroll_config_tax_personal_allowance_min CHECK (tax_personal_allowance_amount >= 0);
 
 -- =============================================
 -- สร้างระบบป้องกัน: ต้องเป็น Admin เท่านั้นถึงจะสร้าง Config ใหม่ได้
@@ -161,6 +180,9 @@ INSERT INTO payroll_config (
   housing_allowance, water_rate_per_unit, electricity_rate_per_unit,
   internet_fee_monthly,
   social_security_rate_employee, social_security_rate_employer, social_security_wage_cap,
+  tax_apply_standard_expense, tax_standard_expense_rate, tax_standard_expense_cap,
+  tax_apply_personal_allowance, tax_personal_allowance_amount, tax_progressive_brackets,
+  withholding_tax_rate_service,
   status, note, created_by, updated_by
 )
 SELECT
@@ -174,6 +196,9 @@ SELECT
   1000.00, 10.00, 6.00,
   80.00,
   0.05, 0.05, 15000.00,
+  TRUE, 0.50, 10000.00,
+  TRUE, 60000.00, '[{"min":0,"max":150000,"rate":0},{"min":150001,"max":300000,"rate":0.05},{"min":300001,"max":500000,"rate":0.10},{"min":500001,"max":750000,"rate":0.15},{"min":750001,"max":1000000,"rate":0.20},{"min":1000001,"max":2000000,"rate":0.25},{"min":2000001,"max":5000000,"rate":0.30},{"min":5000001,"max":null,"rate":0.35}]'::jsonb,
+  0.03,
   'active',
   'ค่าเริ่มต้นของระบบ',
   id, id

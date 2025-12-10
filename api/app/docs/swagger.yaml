@@ -130,11 +130,27 @@ definitions:
         type: string
       status:
         type: string
+      taxApplyPersonalAllowance:
+        type: boolean
+      taxApplyStandardExpense:
+        type: boolean
+      taxPersonalAllowanceAmount:
+        type: number
+      taxProgressiveBrackets:
+        items:
+          $ref: '#/definitions/repository.TaxBracket'
+        type: array
+      taxStandardExpenseCap:
+        type: number
+      taxStandardExpenseRate:
+        type: number
       updatedAt:
         type: string
       versionNo:
         type: integer
       waterRatePerUnit:
+        type: number
+      withholdingTaxRateService:
         type: number
     type: object
   dto.FTItem:
@@ -293,11 +309,27 @@ definitions:
         type: string
       status:
         type: string
+      taxApplyPersonalAllowance:
+        type: boolean
+      taxApplyStandardExpense:
+        type: boolean
+      taxPersonalAllowanceAmount:
+        type: number
+      taxProgressiveBrackets:
+        items:
+          $ref: '#/definitions/repository.TaxBracket'
+        type: array
+      taxStandardExpenseCap:
+        type: number
+      taxStandardExpenseRate:
+        type: number
       updatedAt:
         type: string
       versionNo:
         type: integer
       waterRatePerUnit:
+        type: number
+      withholdingTaxRateService:
         type: number
     type: object
   feature.Response:
@@ -1080,7 +1112,23 @@ definitions:
         type: number
       startDate:
         type: string
+      taxApplyPersonalAllowance:
+        type: boolean
+      taxApplyStandardExpense:
+        type: boolean
+      taxPersonalAllowanceAmount:
+        type: number
+      taxProgressiveBrackets:
+        items:
+          $ref: '#/definitions/repository.TaxBracket'
+        type: array
+      taxStandardExpenseCap:
+        type: number
+      taxStandardExpenseRate:
+        type: number
       waterRatePerUnit:
+        type: number
+      withholdingTaxRateService:
         type: number
     type: object
   hrms_modules_payrollconfig_internal_feature_create.Response:
@@ -1117,11 +1165,27 @@ definitions:
         type: string
       status:
         type: string
+      taxApplyPersonalAllowance:
+        type: boolean
+      taxApplyStandardExpense:
+        type: boolean
+      taxPersonalAllowanceAmount:
+        type: number
+      taxProgressiveBrackets:
+        items:
+          $ref: '#/definitions/repository.TaxBracket'
+        type: array
+      taxStandardExpenseCap:
+        type: number
+      taxStandardExpenseRate:
+        type: number
       updatedAt:
         type: string
       versionNo:
         type: integer
       waterRatePerUnit:
+        type: number
+      withholdingTaxRateService:
         type: number
     type: object
   hrms_modules_payrollconfig_internal_feature_list.Response:
@@ -2337,6 +2401,15 @@ definitions:
       leaveHours:
         type: number
       otHours:
+        type: number
+    type: object
+  repository.TaxBracket:
+    properties:
+      max:
+        type: number
+      min:
+        type: number
+      rate:
         type: number
     type: object
   resetpassword.RequestBody:

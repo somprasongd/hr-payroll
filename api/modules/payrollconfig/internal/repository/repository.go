@@ -18,25 +18,32 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 }
 
 type Record struct {
-	ID                         uuid.UUID  `db:"id"`
-	VersionNo                  int64      `db:"version_no"`
-	StartDate                  time.Time  `db:"start_date"`
-	EndDate                    *time.Time `db:"end_date"`
-	Status                     string     `db:"status"`
-	HourlyRate                 float64    `db:"hourly_rate"`
-	OtHourlyRate               float64    `db:"ot_hourly_rate"`
-	AttendanceBonusNoLate      float64    `db:"attendance_bonus_no_late"`
-	AttendanceBonusNoLeave     float64    `db:"attendance_bonus_no_leave"`
-	HousingAllowance           float64    `db:"housing_allowance"`
-	WaterRatePerUnit           float64    `db:"water_rate_per_unit"`
-	ElectricityRatePerUnit     float64    `db:"electricity_rate_per_unit"`
-	InternetFeeMonthly         float64    `db:"internet_fee_monthly"`
-	SocialSecurityRateEmployee float64    `db:"social_security_rate_employee"`
-	SocialSecurityRateEmployer float64    `db:"social_security_rate_employer"`
-	SocialSecurityWageCap      float64    `db:"social_security_wage_cap"`
-	Note                       *string    `db:"note"`
-	CreatedAt                  time.Time  `db:"created_at"`
-	UpdatedAt                  time.Time  `db:"updated_at"`
+	ID                         uuid.UUID   `db:"id"`
+	VersionNo                  int64       `db:"version_no"`
+	StartDate                  time.Time   `db:"start_date"`
+	EndDate                    *time.Time  `db:"end_date"`
+	Status                     string      `db:"status"`
+	HourlyRate                 float64     `db:"hourly_rate"`
+	OtHourlyRate               float64     `db:"ot_hourly_rate"`
+	AttendanceBonusNoLate      float64     `db:"attendance_bonus_no_late"`
+	AttendanceBonusNoLeave     float64     `db:"attendance_bonus_no_leave"`
+	HousingAllowance           float64     `db:"housing_allowance"`
+	WaterRatePerUnit           float64     `db:"water_rate_per_unit"`
+	ElectricityRatePerUnit     float64     `db:"electricity_rate_per_unit"`
+	InternetFeeMonthly         float64     `db:"internet_fee_monthly"`
+	SocialSecurityRateEmployee float64     `db:"social_security_rate_employee"`
+	SocialSecurityRateEmployer float64     `db:"social_security_rate_employer"`
+	SocialSecurityWageCap      float64     `db:"social_security_wage_cap"`
+	TaxApplyStandardExpense    bool        `db:"tax_apply_standard_expense"`
+	TaxStandardExpenseRate     float64     `db:"tax_standard_expense_rate"`
+	TaxStandardExpenseCap      float64     `db:"tax_standard_expense_cap"`
+	TaxApplyPersonalAllowance  bool        `db:"tax_apply_personal_allowance"`
+	TaxPersonalAllowanceAmount float64     `db:"tax_personal_allowance_amount"`
+	TaxProgressiveBrackets     TaxBrackets `db:"tax_progressive_brackets"`
+	WithholdingTaxRateService  float64     `db:"withholding_tax_rate_service"`
+	Note                       *string     `db:"note"`
+	CreatedAt                  time.Time   `db:"created_at"`
+	UpdatedAt                  time.Time   `db:"updated_at"`
 }
 
 type ListResult struct {
@@ -69,6 +76,13 @@ SELECT
   social_security_rate_employee,
   social_security_rate_employer,
   social_security_wage_cap,
+  tax_apply_standard_expense,
+  tax_standard_expense_rate,
+  tax_standard_expense_cap,
+  tax_apply_personal_allowance,
+  tax_personal_allowance_amount,
+  tax_progressive_brackets,
+  withholding_tax_rate_service,
   note,
   created_at,
   updated_at
@@ -121,6 +135,13 @@ SELECT
   social_security_rate_employee,
   social_security_rate_employer,
   social_security_wage_cap,
+  tax_apply_standard_expense,
+  tax_standard_expense_rate,
+  tax_standard_expense_cap,
+  tax_apply_personal_allowance,
+  tax_personal_allowance_amount,
+  tax_progressive_brackets,
+  withholding_tax_rate_service,
   note,
   created_at,
   updated_at
@@ -150,12 +171,19 @@ INSERT INTO payroll_config (
   social_security_rate_employee,
   social_security_rate_employer,
   social_security_wage_cap,
+  tax_apply_standard_expense,
+  tax_standard_expense_rate,
+  tax_standard_expense_cap,
+  tax_apply_personal_allowance,
+  tax_personal_allowance_amount,
+  tax_progressive_brackets,
+  withholding_tax_rate_service,
   note,
   created_by,
   updated_by
 ) VALUES (
   daterange($1, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
 )
 RETURNING
   id,
@@ -174,6 +202,13 @@ RETURNING
   social_security_rate_employee,
   social_security_rate_employer,
   social_security_wage_cap,
+  tax_apply_standard_expense,
+  tax_standard_expense_rate,
+  tax_standard_expense_cap,
+  tax_apply_personal_allowance,
+  tax_personal_allowance_amount,
+  tax_progressive_brackets,
+  withholding_tax_rate_service,
   note,
   created_at,
   updated_at`
@@ -192,6 +227,13 @@ RETURNING
 		payload.SocialSecurityRateEmployee,
 		payload.SocialSecurityRateEmployer,
 		payload.SocialSecurityWageCap,
+		payload.TaxApplyStandardExpense,
+		payload.TaxStandardExpenseRate,
+		payload.TaxStandardExpenseCap,
+		payload.TaxApplyPersonalAllowance,
+		payload.TaxPersonalAllowanceAmount,
+		payload.TaxProgressiveBrackets,
+		payload.WithholdingTaxRateService,
 		payload.Note,
 		actor,
 		actor,
