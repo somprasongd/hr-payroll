@@ -416,7 +416,7 @@ export function PayslipEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg">{t('payslip.editTitle')}</DialogTitle>
+          <DialogTitle className="text-lg">{canEdit ? t('payslip.editTitle') : t('payslip.viewTitle')}</DialogTitle>
         </DialogHeader>
 
         {/* Employee Header with Navigation */}
@@ -642,7 +642,7 @@ export function PayslipEditDialog({
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <Label htmlFor="tax">{t('payslip.fields.tax')}</Label>
-                        {isAutoTax && detail.withholdTax && (
+                        {canEdit && isAutoTax && detail.withholdTax && (
                           <span className="text-xs text-blue-500">(คำนวณอัตโนมัติ)</span>
                         )}
                       </div>
@@ -949,12 +949,18 @@ export function PayslipEditDialog({
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => handleActionWithDirtyCheck('cancel')}>
-                    {tCommon('cancel')}
-                  </Button>
-                  {canEdit && (
-                    <Button onClick={handleSave} disabled={saving || !!waterMeterError || !!electricMeterError}>
-                      {saving ? tCommon('loading') : tCommon('save')}
+                  {canEdit ? (
+                    <>
+                      <Button variant="outline" onClick={() => handleActionWithDirtyCheck('cancel')}>
+                        {tCommon('cancel')}
+                      </Button>
+                      <Button onClick={handleSave} disabled={saving || !!waterMeterError || !!electricMeterError}>
+                        {saving ? tCommon('loading') : tCommon('save')}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                      {tCommon('close')}
                     </Button>
                   )}
                 </div>

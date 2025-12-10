@@ -101,6 +101,7 @@
     },
     "payslip": {
       "editTitle": "Edit Payslip",
+      "viewTitle": "View Payslip",
       "tabs": {
         "income": "Income",
         "attendance": "Attendance Deductions",

@@ -101,6 +101,7 @@
     },
     "payslip": {
       "editTitle": "แก้ไขสลิปเงินเดือน",
+      "viewTitle": "ดูสลิปเงินเดือน",
       "tabs": {
         "income": "รายได้",
         "attendance": "หักเวลาทำงาน",
