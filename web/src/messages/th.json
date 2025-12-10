@@ -67,7 +67,10 @@
       "period": "รอบระยะเวลา",
       "status": "สถานะ",
       "totalEmployees": "จำนวนพนักงาน",
-      "totalNetPay": "ยอดจ่ายสุทธิ"
+      "totalNetPay": "ยอดจ่ายสุทธิ",
+      "totalTax": "ยอดหักภาษี",
+      "totalSocialSecurity": "ยอดประกันสังคม",
+      "totalProvidentFund": "ยอดกองทุนสำรองเลี้ยงชีพ"
     },
     "status": {
       "approved": "อนุมัติแล้ว",

@@ -67,7 +67,10 @@
       "period": "Period",
       "status": "Status",
       "totalEmployees": "Total Employees",
-      "totalNetPay": "Total Net Pay"
+      "totalNetPay": "Total Net Pay",
+      "totalTax": "Total Tax",
+      "totalSocialSecurity": "Total Social Security",
+      "totalProvidentFund": "Total Provident Fund"
     },
     "status": {
       "approved": "Approved",

@@ -32,18 +32,25 @@ type Meta struct {
 }
 
 type RunTotals struct {
-	TotalIncome    float64 `json:"totalIncome"`
-	TotalDeduction float64 `json:"totalDeduction"`
-	TotalNetPay    float64 `json:"totalNetPay"`
+	TotalIncome         float64 `json:"totalIncome"`
+	TotalDeduction      float64 `json:"totalDeduction"`
+	TotalNetPay         float64 `json:"totalNetPay"`
+	TotalTax            float64 `json:"totalTax"`
+	TotalSocialSecurity float64 `json:"totalSocialSecurity"`
+	TotalProvidentFund  float64 `json:"totalProvidentFund"`
 }
 
 func FromRun(r repository.Run) Run {
 	var totals *RunTotals
-	if r.TotalIncome != 0 || r.TotalDeduction != 0 || r.TotalNetPay != 0 {
+	if r.TotalIncome != 0 || r.TotalDeduction != 0 || r.TotalNetPay != 0 ||
+		r.TotalTax != 0 || r.TotalSSO != 0 || r.TotalProvidentFund != 0 {
 		totals = &RunTotals{
-			TotalIncome:    r.TotalIncome,
-			TotalDeduction: r.TotalDeduction,
-			TotalNetPay:    r.TotalNetPay,
+			TotalIncome:         r.TotalIncome,
+			TotalDeduction:      r.TotalDeduction,
+			TotalNetPay:         r.TotalNetPay,
+			TotalTax:            r.TotalTax,
+			TotalSocialSecurity: r.TotalSSO,
+			TotalProvidentFund:  r.TotalProvidentFund,
 		}
 	}
 	return Run{

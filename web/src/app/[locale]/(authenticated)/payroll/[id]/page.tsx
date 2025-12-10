@@ -267,17 +267,7 @@ export default function PayrollDetailPage() {
 
       {/* Summary Cards */}
       {run && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">{t('fields.period')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold">
-                {format(new Date(run.periodStartDate), 'dd/MM/yyyy')}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">{t('fields.payDate')}</CardTitle>
@@ -305,6 +295,36 @@ export default function PayrollDetailPage() {
             <CardContent>
               <div className="text-lg font-semibold text-green-600">
                 {(run.totalNetPay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">{t('fields.totalTax')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold text-red-600">
+                {(run.totals?.totalTax || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">{t('fields.totalSocialSecurity')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold text-red-600">
+                {(run.totals?.totalSocialSecurity || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">{t('fields.totalProvidentFund')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold text-red-600">
+                {(run.totals?.totalProvidentFund || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </CardContent>
           </Card>

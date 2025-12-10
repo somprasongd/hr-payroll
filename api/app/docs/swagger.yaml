@@ -261,6 +261,12 @@ definitions:
         type: number
       totalNetPay:
         type: number
+      totalTax:
+        type: number
+      totalSocialSecurity:
+        type: number
+      totalProvidentFund:
+        type: number
     type: object
   dto.User:
     properties:

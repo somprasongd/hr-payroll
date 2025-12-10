@@ -22,22 +22,25 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 }
 
 type Run struct {
-	ID              uuid.UUID  `db:"id"`
-	PayrollMonth    time.Time  `db:"payroll_month_date"`
-	PeriodStart     time.Time  `db:"period_start_date"`
-	PayDate         time.Time  `db:"pay_date"`
-	Status          string     `db:"status"`
-	CreatedAt       time.Time  `db:"created_at"`
-	UpdatedAt       time.Time  `db:"updated_at"`
-	DeletedAt       *time.Time `db:"deleted_at"`
-	ApprovedAt      *time.Time `db:"approved_at"`
-	ApprovedBy      *uuid.UUID `db:"approved_by"`
-	SSORateEmp      float64    `db:"social_security_rate_employee"`
-	SSORateEmployer float64    `db:"social_security_rate_employer"`
-	TotalEmployees  int        `db:"total_employees"`
-	TotalNetPay     float64    `db:"total_net_pay"`
-	TotalIncome     float64    `db:"total_income"`
-	TotalDeduction  float64    `db:"total_deduction"`
+	ID                 uuid.UUID  `db:"id"`
+	PayrollMonth       time.Time  `db:"payroll_month_date"`
+	PeriodStart        time.Time  `db:"period_start_date"`
+	PayDate            time.Time  `db:"pay_date"`
+	Status             string     `db:"status"`
+	CreatedAt          time.Time  `db:"created_at"`
+	UpdatedAt          time.Time  `db:"updated_at"`
+	DeletedAt          *time.Time `db:"deleted_at"`
+	ApprovedAt         *time.Time `db:"approved_at"`
+	ApprovedBy         *uuid.UUID `db:"approved_by"`
+	SSORateEmp         float64    `db:"social_security_rate_employee"`
+	SSORateEmployer    float64    `db:"social_security_rate_employer"`
+	TotalEmployees     int        `db:"total_employees"`
+	TotalNetPay        float64    `db:"total_net_pay"`
+	TotalIncome        float64    `db:"total_income"`
+	TotalDeduction     float64    `db:"total_deduction"`
+	TotalTax           float64    `db:"total_tax"`
+	TotalSSO           float64    `db:"total_sso"`
+	TotalProvidentFund float64    `db:"total_provident_fund"`
 }
 
 type RunListResult struct {
@@ -91,7 +94,10 @@ SELECT id, payroll_month_date, period_start_date, pay_date, status,
        COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
        COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
        COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction
+       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction,
+       COALESCE((SELECT SUM(tax_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_tax,
+       COALESCE((SELECT SUM(sso_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_sso,
+       COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund
 FROM payroll_run
 WHERE %s
 ORDER BY payroll_month_date DESC
@@ -127,7 +133,10 @@ SELECT id, payroll_month_date, period_start_date, pay_date, status,
        COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
        COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
        COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction
+       COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction,
+       COALESCE((SELECT SUM(tax_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_tax,
+       COALESCE((SELECT SUM(sso_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_sso,
+       COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund
 FROM payroll_run
 WHERE id=$1 AND deleted_at IS NULL
 LIMIT 1`, netPayExpr, deductionExpr)
@@ -149,7 +158,8 @@ INSERT INTO payroll_run (
 RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
-          0 as total_employees, 0 as total_net_pay, 0 as total_income, 0 as total_deduction`
+          0 as total_employees, 0 as total_net_pay, 0 as total_income, 0 as total_deduction,
+          0 as total_tax, 0 as total_sso, 0 as total_provident_fund`
 	var out Run
 	if err := db.GetContext(ctx, &out, q,
 		run.PayrollMonth, run.PeriodStart, run.PayDate,
@@ -179,7 +189,10 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
           COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
           COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction`
+          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction,
+          COALESCE((SELECT SUM(tax_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_tax,
+          COALESCE((SELECT SUM(sso_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_sso,
+          COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund`
 	q := fmt.Sprintf(base, setPayDate, netPayExpr, deductionExpr)
 
 	var run Run
@@ -201,7 +214,10 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
           COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
           COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
-          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction`, netPayExpr, deductionExpr)
+          COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction,
+          COALESCE((SELECT SUM(tax_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_tax,
+          COALESCE((SELECT SUM(sso_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_sso,
+          COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund`, netPayExpr, deductionExpr)
 	var run Run
 	if err := db.GetContext(ctx, &run, q, actor, id); err != nil {
 		return nil, err

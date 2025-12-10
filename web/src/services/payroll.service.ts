@@ -17,6 +17,9 @@ export interface PayrollRunDetail extends PayrollRun {
     totalIncome: number;
     totalDeduction: number;
     totalNetPay: number;
+    totalTax: number;
+    totalSocialSecurity: number;
+    totalProvidentFund: number;
   };
 }
 
@@ -244,4 +247,3 @@ export const payrollService = {
     return apiClient.patch<PayrollRunDetail>(`/payroll-runs/${id}`, { status: 'approved' });
   },
 };
-

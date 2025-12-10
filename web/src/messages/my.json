@@ -67,7 +67,10 @@
       "period": "ကာလ",
       "status": "အခြေအနေ",
       "totalEmployees": "ဝန်ထမ်းဦးရေ",
-      "totalNetPay": "စုစုပေါင်း အသားတင်လစာ"
+      "totalNetPay": "စုစုပေါင်း အသားတင်လစာ",
+      "totalTax": "စုစုပေါင်း အခွန်",
+      "totalSocialSecurity": "စုစုပေါင်း လူမှုဖူလုံရေး",
+      "totalProvidentFund": "စုစုပေါင်း စုဆောင်းငွေ"
     },
     "status": {
       "approved": "အတည်ပြုပြီး",

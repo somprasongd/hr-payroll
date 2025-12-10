@@ -2833,7 +2833,10 @@ Logic (Database Trigger):
   "totals": {
     "totalIncome": 5000000.0,
     "totalDeduction": 500000.0,
-    "totalNetPay": 4500000.0
+    "totalNetPay": 4500000.0,
+    "totalTax": 250000.0,
+    "totalSocialSecurity": 150000.0,
+    "totalProvidentFund": 100000.0
   }
 }
 ```
