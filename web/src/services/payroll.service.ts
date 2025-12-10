@@ -128,6 +128,7 @@ export interface PayslipDetail {
   taxMonthAmount: number;
   taxAccumPrev: number;
   taxAccumTotal: number;
+  ssoDeclaredWage: number;
   ssoMonthAmount: number;
   ssoAccumPrev: number;
   ssoAccumTotal: number;

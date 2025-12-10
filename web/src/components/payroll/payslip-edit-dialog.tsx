@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, RotateCcw } from 'lucide-react';
 
 import {
   Dialog,
@@ -32,6 +32,8 @@ import {
   OtherIncomeItem,
   LoanRepaymentItem,
 } from '@/services/payroll.service';
+import { payrollConfigService, PayrollConfig } from '@/services/payroll-config.service';
+import { calculateWithholdingTax } from '@/lib/tax-calculator';
 
 interface PayslipEditDialogProps {
   open: boolean;
@@ -85,6 +87,10 @@ export function PayslipEditDialog({
   // Validation errors
   const [waterMeterError, setWaterMeterError] = useState<string | null>(null);
   const [electricMeterError, setElectricMeterError] = useState<string | null>(null);
+
+  // Payroll config for tax calculation
+  const [payrollConfig, setPayrollConfig] = useState<PayrollConfig | null>(null);
+  const [isAutoTax, setIsAutoTax] = useState(true); // Track if tax should auto-calculate
 
   // Unsaved changes confirmation
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -183,6 +189,84 @@ export function PayslipEditDialog({
       fetchDetail();
     }
   }, [open, itemId, fetchDetail]);
+
+  // Fetch payroll config for tax calculation
+  useEffect(() => {
+    if (open) {
+      payrollConfigService.getEffective()
+        .then(setPayrollConfig)
+        .catch(err => console.error('Failed to fetch payroll config:', err));
+    }
+  }, [open]);
+
+  // Calculate income total in real-time
+  const calculatedIncomeTotal = useMemo(() => {
+    if (!detail) return 0;
+    const othersSum = othersIncome.reduce((sum, item) => sum + (item.value || 0), 0);
+    return (
+      detail.salaryAmount +
+      detail.otAmount +
+      detail.housingAllowance +
+      detail.attendanceBonusNoLate +
+      detail.attendanceBonusNoLeave +
+      detail.bonusAmount +
+      leaveCompensation +
+      doctorFee +
+      othersSum
+    );
+  }, [detail, leaveCompensation, doctorFee, othersIncome]);
+
+  // Calculate tax automatically based on income
+  const calculatedTax = useMemo(() => {
+    if (!detail || !payrollConfig || !detail.withholdTax) return 0;
+
+    return calculateWithholdingTax(
+      calculatedIncomeTotal,
+      {
+        withholdTax: detail.withholdTax,
+        ssoContribute: detail.ssoContribute,
+        ssoRateEmployee: payrollConfig.socialSecurityRateEmployee,
+        ssoWageCap: payrollConfig.socialSecurityWageCap,
+        ssoBase: detail.ssoDeclaredWage || calculatedIncomeTotal,
+      },
+      {
+        taxApplyStandardExpense: payrollConfig.taxApplyStandardExpense,
+        taxStandardExpenseRate: payrollConfig.taxStandardExpenseRate,
+        taxStandardExpenseCap: payrollConfig.taxStandardExpenseCap,
+        taxApplyPersonalAllowance: payrollConfig.taxApplyPersonalAllowance,
+        taxPersonalAllowanceAmount: payrollConfig.taxPersonalAllowanceAmount,
+        taxProgressiveBrackets: payrollConfig.taxProgressiveBrackets,
+        withholdingTaxRateService: payrollConfig.withholdingTaxRateService,
+      }
+    );
+  }, [calculatedIncomeTotal, detail, payrollConfig]);
+
+  // Auto-update tax amount when calculated tax changes (if auto mode)
+  useEffect(() => {
+    if (isAutoTax && canEdit && detail?.withholdTax) {
+      setTaxAmount(calculatedTax);
+    }
+  }, [calculatedTax, isAutoTax, canEdit, detail?.withholdTax]);
+
+  // Reset auto tax when dialog opens
+  useEffect(() => {
+    if (open) {
+      setIsAutoTax(true);
+    }
+  }, [open]);
+
+  // Handle manual tax input
+  const handleTaxChange = (value: number) => {
+    setTaxAmount(value);
+    setIsAutoTax(false); // User manually changed, disable auto
+  };
+
+  // Reset tax to auto-calculated value
+  const resetTaxToAuto = () => {
+    setTaxAmount(calculatedTax);
+    setIsAutoTax(true);
+  };
+
 
   const handleSave = async () => {
     if (!canEdit) return;
@@ -501,7 +585,7 @@ export function PayslipEditDialog({
                     <div className="pt-4 border-t">
                       <div className="flex justify-between text-lg font-semibold">
                         <span>{t('payslip.fields.incomeTotal')}</span>
-                        <span className="text-green-600">{formatNumber(detail.incomeTotal)}</span>
+                        <span className="text-green-600">{formatNumber(calculatedIncomeTotal)}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -554,20 +638,38 @@ export function PayslipEditDialog({
               <TabsContent value="deductions" className="space-y-4">
                 <Card>
                   <CardContent className="pt-4 space-y-4">
-                    {/* Tax - Editable */}
+                    {/* Tax - Editable with auto-calculation */}
                     <div>
-                      <Label htmlFor="tax">{t('payslip.fields.tax')}</Label>
-                      <Input
-                        id="tax"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={taxAmount}
-                        onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
-                        disabled={!canEdit || !detail.withholdTax}
-                        className="max-w-xs"
-                      />
-                      <div className="text-xs text-gray-400">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Label htmlFor="tax">{t('payslip.fields.tax')}</Label>
+                        {isAutoTax && detail.withholdTax && (
+                          <span className="text-xs text-blue-500">(คำนวณอัตโนมัติ)</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="tax"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={taxAmount}
+                          onChange={(e) => handleTaxChange(parseFloat(e.target.value) || 0)}
+                          disabled={!canEdit || !detail.withholdTax}
+                          className="max-w-xs"
+                        />
+                        {canEdit && detail.withholdTax && !isAutoTax && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={resetTaxToAuto}
+                            title="รีเซ็ตเป็นค่าคำนวณอัตโนมัติ"
+                          >
+                            <RotateCcw className="h-4 w-4 text-blue-500" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
                         สะสม: {formatNumber(detail.taxAccumPrev)} → {formatNumber(detail.taxAccumTotal)}
                       </div>
                     </div>

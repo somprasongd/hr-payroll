@@ -116,6 +116,111 @@ BEGIN
   RETURN v;
 END$$;
 
+-- คำนวณภาษีก้าวหน้า ตาม brackets JSON [{min,max,rate}]
+CREATE OR REPLACE FUNCTION calculate_progressive_tax(p_taxable NUMERIC, p_brackets JSONB)
+RETURNS NUMERIC LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+  v_tax NUMERIC := 0;
+  r RECORD;
+  v_min NUMERIC;
+  v_max NUMERIC;
+  v_rate NUMERIC;
+  v_slice NUMERIC;
+BEGIN
+  IF p_taxable IS NULL OR p_taxable <= 0 THEN
+    RETURN 0;
+  END IF;
+  IF p_brackets IS NULL OR jsonb_typeof(p_brackets) <> 'array' THEN
+    RETURN 0;
+  END IF;
+
+  FOR r IN
+    SELECT
+      COALESCE((elem->>'min')::numeric, 0) AS min_val,
+      CASE
+        WHEN elem ? 'max' AND elem->>'max' IS NOT NULL AND lower(elem->>'max') <> 'null' THEN (elem->>'max')::numeric
+        ELSE NULL
+      END AS max_val,
+      COALESCE((elem->>'rate')::numeric, 0) AS rate_val
+    FROM jsonb_array_elements(p_brackets) elem
+    ORDER BY COALESCE((elem->>'min')::numeric, 0)
+  LOOP
+    v_min := COALESCE(r.min_val, 0);
+    v_max := r.max_val;
+    v_rate := COALESCE(r.rate_val, 0);
+
+    IF p_taxable <= v_min THEN
+      CONTINUE;
+    END IF;
+
+    v_slice := LEAST(p_taxable, COALESCE(v_max, p_taxable)) - v_min;
+    IF v_slice > 0 THEN
+      v_tax := v_tax + (v_slice * v_rate);
+    END IF;
+  END LOOP;
+
+  RETURN ROUND(v_tax, 2);
+END$$;
+
+-- คำนวณภาษีหัก ณ ที่จ่ายรายเดือน ตาม config + สถานะประกันสังคม
+CREATE OR REPLACE FUNCTION calculate_withholding_tax(
+  p_monthly_income NUMERIC,
+  p_withhold_tax BOOLEAN,
+  p_sso_contribute BOOLEAN,
+  p_sso_rate_employee NUMERIC,
+  p_sso_wage_cap NUMERIC,
+  p_sso_base NUMERIC,
+  p_tax_apply_standard_expense BOOLEAN,
+  p_tax_standard_expense_rate NUMERIC,
+  p_tax_standard_expense_cap NUMERIC,
+  p_tax_apply_personal_allowance BOOLEAN,
+  p_tax_personal_allowance_amount NUMERIC,
+  p_tax_progressive_brackets JSONB,
+  p_withholding_tax_rate_service NUMERIC
+) RETURNS NUMERIC
+LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+  v_income_month NUMERIC := COALESCE(p_monthly_income, 0);
+  v_annual_income NUMERIC := 0;
+  v_expense NUMERIC := 0;
+  v_allowance NUMERIC := 0;
+  v_taxable NUMERIC := 0;
+  v_tax_annual NUMERIC := 0;
+  v_sso_month NUMERIC := 0;
+BEGIN
+  IF NOT COALESCE(p_withhold_tax, false) THEN
+    RETURN 0;
+  END IF;
+
+  -- แบบ ม.40(2): ฟรีแลนซ์/ไม่มีประกันสังคม ใช้อัตราหัก ณ ที่จ่ายเป็น % ของรายได้ต่อเดือน
+  IF NOT COALESCE(p_sso_contribute, false) THEN
+    RETURN ROUND(v_income_month * COALESCE(p_withholding_tax_rate_service, 0), 2);
+  END IF;
+
+  -- คำนวนยอดสมทบประกันสังคมต่อเดือน (ใช้เป็นส่วนลดหย่อน)
+  v_sso_month := LEAST(COALESCE(p_sso_base, v_income_month), COALESCE(p_sso_wage_cap, v_income_month)) * COALESCE(p_sso_rate_employee, 0);
+
+  -- แบบ ม.40(1): คำนวณรายได้ทั้งปี - ค่าใช้จ่ายเหมา - ค่าลดหย่อน แล้วคิดตามขั้น
+  v_annual_income := v_income_month * 12;
+
+  IF COALESCE(p_tax_apply_standard_expense, false) THEN
+    v_expense := v_annual_income * COALESCE(p_tax_standard_expense_rate, 0);
+    IF p_tax_standard_expense_cap IS NOT NULL THEN
+      v_expense := LEAST(v_expense, p_tax_standard_expense_cap);
+    END IF;
+  END IF;
+
+  IF COALESCE(p_tax_apply_personal_allowance, false) THEN
+    v_allowance := COALESCE(p_tax_personal_allowance_amount, 0);
+  END IF;
+
+  v_taxable := GREATEST(v_annual_income - v_expense - v_allowance - (v_sso_month * 12), 0);
+
+  v_tax_annual := calculate_progressive_tax(v_taxable, p_tax_progressive_brackets);
+
+  RETURN ROUND(v_tax_annual / 12.0, 2);
+END$$;
+
 CREATE TABLE IF NOT EXISTS payroll_run_item (
   id                 UUID PRIMARY KEY DEFAULT uuidv7(),
   run_id             UUID NOT NULL REFERENCES payroll_run(id) ON DELETE CASCADE,
@@ -300,6 +405,8 @@ DECLARE
   v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
   v_electric_prev NUMERIC(12,2);
+  v_income_total NUMERIC(14,2) := 0;
+  v_tax_month NUMERIC(14,2) := 0;
   
   -- ตัวแปรสำหรับ Part-time
   v_pt_hours NUMERIC(10,2);
@@ -479,6 +586,42 @@ BEGIN
       v_doctor_fee := 0;
     END IF;
 
+    -- สรุปรายได้ต่อเดือนเพื่อใช้คำนวณภาษีหัก ณ ที่จ่าย
+    v_income_total :=
+        COALESCE(v_ft_salary,0) +
+        COALESCE(v_ot_amount,0) +
+        CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
+        CASE
+          WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+            THEN v_config.attendance_bonus_no_late
+          ELSE 0
+        END +
+        CASE
+          WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0
+               AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+            THEN v_config.attendance_bonus_no_leave
+          ELSE 0
+        END +
+        COALESCE(v_bonus_amt,0) +
+        COALESCE(v_doctor_fee,0) +
+        COALESCE(jsonb_sum_value(v_others_income),0);
+
+    v_tax_month := calculate_withholding_tax(
+      v_income_total,
+      v_emp.withhold_tax,
+      v_emp.sso_contribute,
+      NEW.social_security_rate_employee,
+      v_sso_cap,
+      v_sso_base,
+      v_config.tax_apply_standard_expense,
+      v_config.tax_standard_expense_rate,
+      v_config.tax_standard_expense_cap,
+      v_config.tax_apply_personal_allowance,
+      v_config.tax_personal_allowance_amount,
+      v_config.tax_progressive_brackets,
+      v_config.withholding_tax_rate_service
+    );
+
     -- ============================================================
     -- 3. INSERT ลงตาราง payroll_run_item
     -- ============================================================
@@ -494,7 +637,7 @@ BEGIN
       
       advance_amount, loan_repayments, loan_outstanding_prev,
       sso_declared_wage, sso_month_amount, sso_accum_prev,
-      tax_accum_prev, pf_accum_prev, pf_month_amount,
+      tax_accum_prev, tax_month_amount, pf_accum_prev, pf_month_amount,
       doctor_fee, others_income,
       water_meter_prev, water_meter_curr, water_rate_per_unit, water_amount,
       electric_meter_prev, electric_meter_curr, electricity_rate_per_unit, electric_amount,
@@ -533,7 +676,7 @@ BEGIN
       -- ฐาน SSO (Full-time ใช้ sso_declared_wage, Part-time อาจใช้รายได้จริงแต่ไม่เกินเพดาน)
       v_sso_base, v_sso_amount,
       COALESCE(v_sso_prev,0),
-      COALESCE(v_tax_prev,0), COALESCE(v_pf_prev,0), v_pf_amount,
+      COALESCE(v_tax_prev,0), v_tax_month, COALESCE(v_pf_prev,0), v_pf_amount,
       v_doctor_fee, v_others_income,
       v_water_prev, NULL, v_config.water_rate_per_unit, 0,
       v_electric_prev, NULL, v_config.electricity_rate_per_unit, 0,
@@ -735,6 +878,8 @@ DECLARE
   v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
   v_electric_prev NUMERIC(12,2);
+  v_income_total NUMERIC(14,2) := 0;
+  v_tax_month NUMERIC(14,2) := 0;
   
 BEGIN
   -- 1. ดึงข้อมูล Payroll Run และ Config
@@ -901,6 +1046,42 @@ BEGIN
   ORDER BY pr.payroll_month_date DESC
   LIMIT 1;
 
+  -- รายได้รวมใช้คำนวณภาษีหัก ณ ที่จ่าย
+  v_income_total :=
+      COALESCE(v_ft_salary,0) +
+      COALESCE(v_ot_amount,0) +
+      CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
+      CASE
+        WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+          THEN v_config.attendance_bonus_no_late
+        ELSE 0
+      END +
+      CASE
+        WHEN v_emp.type_code='full_time' AND v_ft_salary > 0
+             AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+          THEN v_config.attendance_bonus_no_leave
+        ELSE 0
+      END +
+      COALESCE(v_bonus_amt,0) +
+      COALESCE(v_doctor_fee,0) +
+      COALESCE(jsonb_sum_value(v_others_income),0);
+
+  v_tax_month := calculate_withholding_tax(
+    v_income_total,
+    v_emp.withhold_tax,
+    v_emp.sso_contribute,
+    v_run.social_security_rate_employee,
+    v_sso_cap,
+    v_sso_base,
+    v_config.tax_apply_standard_expense,
+    v_config.tax_standard_expense_rate,
+    v_config.tax_standard_expense_cap,
+    v_config.tax_apply_personal_allowance,
+    v_config.tax_personal_allowance_amount,
+    v_config.tax_progressive_brackets,
+    v_config.withholding_tax_rate_service
+  );
+
   -- 5. UPDATE ลงตาราง
   UPDATE payroll_run_item
   SET 
@@ -942,6 +1123,7 @@ BEGIN
     sso_month_amount = v_sso_amount,
     sso_accum_prev = COALESCE(v_sso_prev,0),
     tax_accum_prev = COALESCE(v_tax_prev,0),
+    tax_month_amount = v_tax_month,
     pf_accum_prev = COALESCE(v_pf_prev,0),
     pf_month_amount = v_pf_amount,
     water_rate_per_unit = v_config.water_rate_per_unit,

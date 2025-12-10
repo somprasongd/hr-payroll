@@ -223,40 +223,40 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 }
 
 type Item struct {
-	ID                   uuid.UUID `db:"id"`
-	RunID                uuid.UUID `db:"run_id"`
-	EmployeeID           uuid.UUID `db:"employee_id"`
-	EmployeeName         string    `db:"employee_name"`
-	EmployeeTypeCode     string    `db:"employee_type_code"`
-	EmployeeNumber       string    `db:"employee_number"`
-	SalaryAmount         float64   `db:"salary_amount"`
-	PTHoursWorked        float64   `db:"pt_hours_worked"`
-	PTHourlyRate         float64   `db:"pt_hourly_rate"`
-	OtHours              float64   `db:"ot_hours"`
-	OtAmount             float64   `db:"ot_amount"`
-	BonusAmount          float64   `db:"bonus_amount"`
-	LeaveCompensation    float64   `db:"leave_compensation_amount"`
-	IncomeTotal          float64   `db:"income_total"`
-	LeaveDaysQty         float64   `db:"leave_days_qty"`
-	LeaveDaysDeduction   float64   `db:"leave_days_deduction"`
-	LateMinutesQty       int       `db:"late_minutes_qty"`
-	LateMinutesDeduction float64   `db:"late_minutes_deduction"`
-	SsoMonthAmount       float64   `db:"sso_month_amount"`
-	TaxMonthAmount       float64   `db:"tax_month_amount"`
-	NetPay               float64   `db:"net_pay"`
-	Status               string    `db:"status"`
-	DeductionTotal       float64   `db:"deduction_total"`
-	AdvanceAmount        float64   `db:"advance_amount"`
-	LoanOutstandingTotal float64   `db:"loan_outstanding_total"`
-	DoctorFee            float64   `db:"doctor_fee"`
-	SsoContribute        bool      `db:"sso_contribute"`
-	ProvidentFundContrib bool      `db:"provident_fund_contribute"`
-	WithholdTax          bool      `db:"withhold_tax"`
-	AllowHousing         bool      `db:"allow_housing"`
-	AllowWater           bool      `db:"allow_water"`
-	AllowElectric        bool      `db:"allow_electric"`
-	AllowInternet        bool      `db:"allow_internet"`
-	AllowDoctorFee       bool      `db:"allow_doctor_fee"`
+	ID                      uuid.UUID `db:"id"`
+	RunID                   uuid.UUID `db:"run_id"`
+	EmployeeID              uuid.UUID `db:"employee_id"`
+	EmployeeName            string    `db:"employee_name"`
+	EmployeeTypeCode        string    `db:"employee_type_code"`
+	EmployeeNumber          string    `db:"employee_number"`
+	SalaryAmount            float64   `db:"salary_amount"`
+	PTHoursWorked           float64   `db:"pt_hours_worked"`
+	PTHourlyRate            float64   `db:"pt_hourly_rate"`
+	OtHours                 float64   `db:"ot_hours"`
+	OtAmount                float64   `db:"ot_amount"`
+	BonusAmount             float64   `db:"bonus_amount"`
+	LeaveCompensationAmount float64   `db:"leave_compensation_amount"`
+	IncomeTotal             float64   `db:"income_total"`
+	LeaveDaysQty            float64   `db:"leave_days_qty"`
+	LeaveDaysDeduction      float64   `db:"leave_days_deduction"`
+	LateMinutesQty          int       `db:"late_minutes_qty"`
+	LateMinutesDeduction    float64   `db:"late_minutes_deduction"`
+	SsoMonthAmount          float64   `db:"sso_month_amount"`
+	TaxMonthAmount          float64   `db:"tax_month_amount"`
+	NetPay                  float64   `db:"net_pay"`
+	Status                  string    `db:"status"`
+	DeductionTotal          float64   `db:"deduction_total"`
+	AdvanceAmount           float64   `db:"advance_amount"`
+	LoanOutstandingTotal    float64   `db:"loan_outstanding_total"`
+	DoctorFee               float64   `db:"doctor_fee"`
+	SsoContribute           bool      `db:"sso_contribute"`
+	ProvidentFundContrib    bool      `db:"provident_fund_contribute"`
+	WithholdTax             bool      `db:"withhold_tax"`
+	AllowHousing            bool      `db:"allow_housing"`
+	AllowWater              bool      `db:"allow_water"`
+	AllowElectric           bool      `db:"allow_electric"`
+	AllowInternet           bool      `db:"allow_internet"`
+	AllowDoctorFee          bool      `db:"allow_doctor_fee"`
 }
 
 type ItemListResult struct {
@@ -341,7 +341,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
        salary_amount, pt_hours_worked, pt_hourly_rate, ot_hours, ot_amount, bonus_amount,
-       income_total, leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
+       income_total, COALESCE(leave_compensation_amount,0) AS leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
        sso_month_amount, tax_month_amount, (%s) AS net_pay, 'pending' as status,
         (%s) AS deduction_total,
         doctor_fee,
@@ -364,7 +364,7 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total,
        pri.advance_amount, pri.loan_outstanding_total,
@@ -384,42 +384,40 @@ WHERE pri.id=$1 LIMIT 1`, netPayExpr, deductionExpr)
 
 type ItemDetail struct {
 	Item
-	EmployeeTypeID         uuid.UUID `db:"employee_type_id"`
-	HousingAllowance       float64   `db:"housing_allowance"`
-	AttendanceBonusNoLate  float64   `db:"attendance_bonus_nolate"`
-	AttendanceBonusNoLeave float64   `db:"attendance_bonus_noleave"`
-	PTHoursWorked          float64   `db:"pt_hours_worked"`
-	PTHourlyRate           float64   `db:"pt_hourly_rate"`
-	LeaveDoubleQty         float64   `db:"leave_double_qty"`
-	LeaveDoubleDeduction   float64   `db:"leave_double_deduction"`
-	LeaveHoursQty          float64   `db:"leave_hours_qty"`
-	LeaveHoursDeduction    float64   `db:"leave_hours_deduction"`
-	LeaveCompensation      float64   `db:"leave_compensation_amount"`
-	SsoDeclaredWage        float64   `db:"sso_declared_wage"`
-	SsoAccumPrev           float64   `db:"sso_accum_prev"`
-	SsoAccumTotal          float64   `db:"sso_accum_total"`
-	TaxAccumPrev           float64   `db:"tax_accum_prev"`
-	TaxAccumTotal          float64   `db:"tax_accum_total"`
-	PFAccumPrev            float64   `db:"pf_accum_prev"`
-	PFMonthAmount          float64   `db:"pf_month_amount"`
-	PFAccumTotal           float64   `db:"pf_accum_total"`
-	AdvanceAmount          float64   `db:"advance_amount"`
-	AdvanceRepayAmount     float64   `db:"advance_repay_amount"`
-	AdvanceDiffAmount      float64   `db:"advance_diff_amount"`
-	LoanOutstandingPrev    float64   `db:"loan_outstanding_prev"`
-	LoanOutstandingTotal   float64   `db:"loan_outstanding_total"`
-	LoanRepayments         []byte    `db:"loan_repayments"`
-	OthersIncome           []byte    `db:"others_income"`
-	WaterAmount            float64   `db:"water_amount"`
-	ElectricAmount         float64   `db:"electric_amount"`
-	InternetAmount         float64   `db:"internet_amount"`
-	WaterMeterPrev         *float64  `db:"water_meter_prev"`
-	WaterMeterCurr         *float64  `db:"water_meter_curr"`
-	ElectricMeterPrev      *float64  `db:"electric_meter_prev"`
-	ElectricMeterCurr      *float64  `db:"electric_meter_curr"`
-	WaterRatePerUnit       float64   `db:"water_rate_per_unit"`
-	ElectricityRatePerUnit float64   `db:"electricity_rate_per_unit"`
-	BankAccount            *string   `db:"bank_account"`
+	EmployeeTypeID          uuid.UUID `db:"employee_type_id"`
+	HousingAllowance        float64   `db:"housing_allowance"`
+	AttendanceBonusNoLate   float64   `db:"attendance_bonus_nolate"`
+	AttendanceBonusNoLeave  float64   `db:"attendance_bonus_noleave"`
+	LeaveDoubleQty          float64   `db:"leave_double_qty"`
+	LeaveDoubleDeduction    float64   `db:"leave_double_deduction"`
+	LeaveHoursQty           float64   `db:"leave_hours_qty"`
+	LeaveHoursDeduction     float64   `db:"leave_hours_deduction"`
+	LeaveCompensationAmount float64   `db:"leave_compensation_amount"`
+	SsoDeclaredWage         float64   `db:"sso_declared_wage"`
+	SsoAccumPrev            float64   `db:"sso_accum_prev"`
+	SsoAccumTotal           float64   `db:"sso_accum_total"`
+	TaxAccumPrev            float64   `db:"tax_accum_prev"`
+	TaxAccumTotal           float64   `db:"tax_accum_total"`
+	PFAccumPrev             float64   `db:"pf_accum_prev"`
+	PFMonthAmount           float64   `db:"pf_month_amount"`
+	PFAccumTotal            float64   `db:"pf_accum_total"`
+	AdvanceAmount           float64   `db:"advance_amount"`
+	AdvanceRepayAmount      float64   `db:"advance_repay_amount"`
+	AdvanceDiffAmount       float64   `db:"advance_diff_amount"`
+	LoanOutstandingPrev     float64   `db:"loan_outstanding_prev"`
+	LoanOutstandingTotal    float64   `db:"loan_outstanding_total"`
+	LoanRepayments          []byte    `db:"loan_repayments"`
+	OthersIncome            []byte    `db:"others_income"`
+	WaterAmount             float64   `db:"water_amount"`
+	ElectricAmount          float64   `db:"electric_amount"`
+	InternetAmount          float64   `db:"internet_amount"`
+	WaterMeterPrev          *float64  `db:"water_meter_prev"`
+	WaterMeterCurr          *float64  `db:"water_meter_curr"`
+	ElectricMeterPrev       *float64  `db:"electric_meter_prev"`
+	ElectricMeterCurr       *float64  `db:"electric_meter_curr"`
+	WaterRatePerUnit        float64   `db:"water_rate_per_unit"`
+	ElectricityRatePerUnit  float64   `db:"electricity_rate_per_unit"`
+	BankAccount             *string   `db:"bank_account"`
 }
 
 func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetail, error) {
@@ -427,7 +425,7 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
        concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' AS status,
        (%s) AS deduction_total,
        pri.employee_type_id,

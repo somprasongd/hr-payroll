@@ -127,11 +127,11 @@ var defaultTaxProgressiveBrackets = repository.TaxBrackets{
 }
 
 const (
-	defaultTaxStandardExpenseRate     = 0.50
-	defaultTaxStandardExpenseCap      = 10000.00
-	defaultTaxPersonalAllowanceAmount = 60000.00
-	defaultWithholdingTaxRateService  = 0.03
-	defaultSocialSecurityWageCap      = 15000.00
+defaultTaxStandardExpenseRate     = 0.50
+defaultTaxStandardExpenseCap      = 100000.00
+defaultTaxPersonalAllowanceAmount = 60000.00
+defaultWithholdingTaxRateService  = 0.03
+defaultSocialSecurityWageCap      = 15000.00
 )
 
 func applyDefaults(p *RequestBody) {
