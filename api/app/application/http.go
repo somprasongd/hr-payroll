@@ -47,6 +47,9 @@ func newFiber(cfg config.Config, healthCheck HealthCheck) *fiber.App {
 	app.Use(recover.New())
 	app.Use(mw.ErrorHandler())
 
+	app.Get("/favicon.ico", func(c fiber.Ctx) error {
+		return c.SendStatus(http.StatusNoContent)
+	})
 	app.Get("/docs/*", middleware.APIDoc(cfg))
 	registerHealthRoutes(app, cfg, healthCheck)
 
