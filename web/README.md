@@ -1,102 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HR Payroll Web
 
-## Getting Started
+Frontend Web Application สำหรับระบบ HR Payroll พัฒนาด้วย Next.js
 
-First, run the development server:
+## 🏗️ Project Structure
+
+```
+web/
+├── src/
+│   ├── app/             # Next.js App Router pages
+│   ├── components/      # React components
+│   ├── hooks/           # Custom React hooks
+│   ├── lib/             # Utilities & helpers
+│   ├── services/        # API services
+│   ├── stores/          # Zustand stores
+│   ├── messages/        # i18n translations (th, en, my)
+│   └── types/           # TypeScript types
+├── e2e/                 # Playwright E2E tests
+│   ├── fixtures/        # Test fixtures
+│   ├── helpers/         # Test helpers
+│   ├── pages/           # Page Object Models
+│   └── tests/           # Test specs
+└── public/              # Static assets
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+```bash
+cd web
+npm install
+```
+
+### Run Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Build Production
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Docker
 
-## Learn More
+```bash
+# From project root
+make image-web
+```
 
-To learn more about Next.js, take a look at the following resources:
+## ⚙️ Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copy `.env.local.example` to `.env.local`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cp .env.local.example .env.local
+```
 
-## E2E Testing
+| Variable              | Description     |
+| --------------------- | --------------- |
+| `NEXT_PUBLIC_API_URL` | Backend API URL |
 
-This project uses [Playwright](https://playwright.dev/) for end-to-end testing.
+## 🧪 E2E Testing
+
+Uses [Playwright](https://playwright.dev/) for end-to-end testing.
 
 ### Setup
 
 ```bash
-# Copy test environment file
 cp .env.test.example .env.test
-
-# Edit .env.test with your test credentials
+# Edit .env.test with test credentials
 ```
 
 ### Run Tests
 
 ```bash
-# Run all tests (headless)
-npm run test:e2e
-
-# Run with browser visible
-npm run test:e2e:headed
-
-# Run interactive UI mode
-npm run test:e2e:ui
-
-# View HTML report
-npm run test:e2e:report
-```
-
-### Test Structure
-
-```
-e2e/
-├── fixtures/          # Test fixtures and credentials
-├── helpers/           # API helpers for setup/teardown
-├── pages/             # Page Object Model (12 files)
-└── tests/             # Test specs (11 files)
-    ├── 01-login.spec.ts
-    ├── 02-users.spec.ts
-    ├── 03-employees.spec.ts
-    ├── 04-worklogs.spec.ts
-    ├── 05-salary-advance.spec.ts
-    ├── 06-debt-loan.spec.ts
-    ├── 07-bonus.spec.ts
-    ├── 08-salary-raise.spec.ts
-    ├── 09-pt-payout.spec.ts
-    ├── 10-payroll.spec.ts
-    └── 11-filters.spec.ts
+npm run test:e2e          # Headless mode
+npm run test:e2e:headed   # With browser visible
+npm run test:e2e:ui       # Interactive UI mode
+npm run test:e2e:report   # View HTML report
 ```
 
 ### Test Coverage
 
-| Phase | Description         |
-| ----- | ------------------- |
-| 1     | Login/Logout        |
-| 2     | Users Management    |
-| 3     | Employees (FT/PT)   |
-| 4     | Worklogs (FT/PT)    |
-| 5     | Salary Advance      |
-| 6     | Debt/Loan           |
-| 7     | Bonus Cycles        |
-| 8     | Salary Raise        |
-| 9     | PT Payout           |
-| 10    | Payroll Run         |
-| 11    | Filters (all pages) |
+| Spec | Description       |
+| ---- | ----------------- |
+| 01   | Login/Logout      |
+| 02   | Users Management  |
+| 03   | Employees (FT/PT) |
+| 04   | Worklogs (FT/PT)  |
+| 05   | Salary Advance    |
+| 06   | Debt/Loan         |
+| 07   | Bonus Cycles      |
+| 08   | Salary Raise      |
+| 09   | PT Payout         |
+| 10   | Payroll Run       |
+| 11   | Filters           |
 
-## Deploy on Vercel
+## 🛠️ Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Category      | Technology            |
+| ------------- | --------------------- |
+| Framework     | Next.js 16            |
+| React         | React 19              |
+| Styling       | TailwindCSS 4         |
+| State         | Zustand               |
+| Data Fetching | TanStack Query        |
+| Forms         | React Hook Form + Zod |
+| UI Components | Radix UI + shadcn/ui  |
+| i18n          | next-intl             |
+| Testing       | Playwright            |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📦 Available Scripts
+
+| Script             | Description              |
+| ------------------ | ------------------------ |
+| `npm run dev`      | Start development server |
+| `npm run build`    | Build for production     |
+| `npm start`        | Start production server  |
+| `npm run lint`     | Run ESLint               |
+| `npm run test:e2e` | Run E2E tests            |
+
+## 🌐 Internationalization
+
+Supported languages:
+
+- 🇹🇭 Thai (`th`)
+- 🇬🇧 English (`en`)
+- 🇲🇲 Burmese (`my`)
+
+Translation files: `src/messages/`
