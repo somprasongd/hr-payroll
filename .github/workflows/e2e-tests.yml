@@ -92,6 +92,9 @@ jobs:
         run: |
           cd web
           npm run build
+          # Copy static assets for standalone mode
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
 
       - name: Wait for API to be ready
         run: |
