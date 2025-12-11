@@ -43,7 +43,7 @@ services:
         # ต้องรันหลังจากที่ migrate ทำงานสำเร็จแล้ว
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/"]
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/health"]
       interval: 10s
       timeout: 5s
       retries: 5

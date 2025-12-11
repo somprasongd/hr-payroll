@@ -9,10 +9,12 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 
-	"hrms/config"
-	appmw "hrms/application/middleware"
 	"hrms/shared/common/logger"
 	mw "hrms/shared/common/middleware"
+
+	"hrms/application/middleware"
+	"hrms/build"
+	"hrms/config"
 )
 
 type HTTPServer interface {
@@ -21,19 +23,21 @@ type HTTPServer interface {
 	Group(prefix string) fiber.Router
 }
 
+type HealthCheck func(ctx context.Context) error
+
 type httpServer struct {
 	config config.Config
 	app    *fiber.App
 }
 
-func newHTTPServer(cfg config.Config) HTTPServer {
+func newHTTPServer(cfg config.Config, healthCheck HealthCheck) HTTPServer {
 	return &httpServer{
 		config: cfg,
-		app:    newFiber(cfg),
+		app:    newFiber(cfg, healthCheck),
 	}
 }
 
-func newFiber(cfg config.Config) *fiber.App {
+func newFiber(cfg config.Config, healthCheck HealthCheck) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName: cfg.AppName,
 	})
@@ -43,13 +47,37 @@ func newFiber(cfg config.Config) *fiber.App {
 	app.Use(recover.New())
 	app.Use(mw.ErrorHandler())
 
-	app.Get("/docs/*", appmw.APIDoc(cfg))
-
-	app.Get("/", func(c fiber.Ctx) error {
-		return c.JSON(fiber.Map{"app": cfg.AppName})
-	})
+	app.Get("/docs/*", middleware.APIDoc(cfg))
+	registerHealthRoutes(app, cfg, healthCheck)
 
 	return app
+}
+
+func registerHealthRoutes(app *fiber.App, cfg config.Config, healthCheck HealthCheck) {
+	handler := healthHandler(cfg, healthCheck)
+	for _, route := range []string{"/", "/health", "/api/health", "/api/v1/health"} {
+		app.Get(route, handler)
+	}
+}
+
+func healthHandler(cfg config.Config, healthCheck HealthCheck) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		resp := fiber.Map{
+			"status":  "ok",
+			"app":     cfg.AppName,
+			"version": build.Version,
+		}
+
+		if healthCheck != nil {
+			if err := healthCheck(c.Context()); err != nil {
+				resp["status"] = "unhealthy"
+				resp["error"] = err.Error()
+				return c.Status(http.StatusServiceUnavailable).JSON(resp)
+			}
+		}
+
+		return c.JSON(resp)
+	}
 }
 
 func (s *httpServer) Start() {

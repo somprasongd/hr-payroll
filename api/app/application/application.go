@@ -17,10 +17,10 @@ type Application struct {
 	eventBus        eventbus.EventBus
 }
 
-func New(cfg config.Config) *Application {
+func New(cfg config.Config, healthCheck HealthCheck) *Application {
 	return &Application{
 		config:          cfg,
-		httpServer:      newHTTPServer(cfg),
+		httpServer:      newHTTPServer(cfg, healthCheck),
 		serviceRegistry: registry.NewServiceRegistry(),
 		eventBus:        eventbus.NewInMemory(),
 	}

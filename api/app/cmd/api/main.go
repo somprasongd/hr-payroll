@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"hrms/application"
 	"hrms/config"
@@ -57,7 +59,13 @@ func main() {
 		}
 	}()
 
-	app := application.New(*cfg)
+	healthCheck := func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		return dbCtx.DB().PingContext(ctx)
+	}
+
+	app := application.New(*cfg, healthCheck)
 
 	trans, dbtxCtx := transactor.New(dbCtx.DB(),
 		transactor.WithNestedTransactionStrategy(transactor.NestedTransactionsSavepoints))
