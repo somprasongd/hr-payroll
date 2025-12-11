@@ -90,6 +90,37 @@ jobs:
           cd web
           npm run build
 
+      - name: Start Web server
+        run: |
+          cd web
+          npm run start &
+          # Wait for web server to be ready
+          sleep 5
+
+      - name: Wait for API to be ready
+        run: |
+          echo "Waiting for API to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8080 > /dev/null 2>&1; then
+              echo "API is ready!"
+              break
+            fi
+            echo "Waiting for API... ($i/30)"
+            sleep 2
+          done
+
+      - name: Wait for Web to be ready
+        run: |
+          echo "Waiting for Web to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "Web is ready!"
+              break
+            fi
+            echo "Waiting for Web... ($i/30)"
+            sleep 2
+          done
+
       - name: Run E2E tests
         run: |
           cd web
