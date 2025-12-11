@@ -1,0 +1,18 @@
+/**
+ * Test user credentials loaded from environment variables
+ */
+export const testUsers = {
+  admin: {
+    username: process.env.TEST_ADMIN_USERNAME || 'admin',
+    password: process.env.TEST_ADMIN_PASSWORD || 'Admin@123456',
+  },
+  hr: {
+    username: process.env.TEST_HR_USERNAME || 'test_hr',
+    password: process.env.TEST_HR_PASSWORD || 'Hr@123456',
+  },
+};
+
+/**
+ * API base URL for test setup/teardown
+ */
+export const apiBaseUrl = process.env.TEST_API_BASE_URL || 'http://localhost:8080/api/v1';
