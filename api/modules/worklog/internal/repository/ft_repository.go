@@ -114,6 +114,26 @@ func (r FTRepository) Get(ctx context.Context, id uuid.UUID) (*FTRecord, error) 
 	return &rec, nil
 }
 
+func (r FTRepository) ExistsActiveByEmployeeDateType(ctx context.Context, employeeID uuid.UUID, workDate time.Time, entryType string, excludeID *uuid.UUID) (bool, error) {
+	db := r.dbCtx(ctx)
+	q := `
+SELECT EXISTS (
+  SELECT 1 FROM worklog_ft
+  WHERE employee_id=$1 AND work_date=$2 AND entry_type=$3 AND deleted_at IS NULL`
+	args := []interface{}{employeeID, workDate, entryType}
+	if excludeID != nil {
+		q += fmt.Sprintf(" AND id <> $%d", len(args)+1)
+		args = append(args, *excludeID)
+	}
+	q += `
+)`
+	var exists bool
+	if err := db.GetContext(ctx, &exists, q, args...); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func (r FTRepository) Insert(ctx context.Context, rec FTRecord) (*FTRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
@@ -162,4 +182,8 @@ func isUniqueErr(err error) bool {
 		return pqErr.Code == "23505"
 	}
 	return false
+}
+
+func IsUniqueErrFT(err error) bool {
+	return isUniqueErr(err)
 }

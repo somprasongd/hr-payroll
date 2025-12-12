@@ -75,12 +75,33 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	var updated *repository.FTRecord
 	err = cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
+		if entryType != current.EntryType || !workDate.Equal(current.WorkDate) {
+			exists, err := cmd.Repo.ExistsActiveByEmployeeDateType(ctxTx, current.EmployeeID, workDate, entryType, &cmd.ID)
+			if err != nil {
+				return err
+			}
+			if exists {
+				return errs.Conflict("worklog already exists for this employee, date, and entryType")
+			}
+		}
+
 		updated, err = cmd.Repo.Update(ctxTx, cmd.ID, rec)
-		return err
+		if err != nil {
+			if repository.IsUniqueErrFT(err) {
+				return errs.Conflict("worklog already exists for this employee, date, and entryType")
+			}
+			return err
+		}
+		return nil
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")
+		}
+		var appErr *errs.AppError
+		if errors.As(err, &appErr) {
+			logger.FromContext(ctx).Warn("failed to update worklog", zap.Error(err))
+			return nil, err
 		}
 		logger.FromContext(ctx).Error("failed to update worklog", zap.Error(err))
 		return nil, errs.Internal("failed to update worklog")
@@ -146,6 +167,7 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.FTRecord) (str
 // @Failure 401
 // @Failure 403
 // @Failure 404
+// @Failure 409
 // @Router /worklogs/ft/{id} [patch]
 func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor) {
 	router.Patch("/:id", func(c fiber.Ctx) error {

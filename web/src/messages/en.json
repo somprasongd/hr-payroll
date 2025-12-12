@@ -444,6 +444,8 @@
       "fields": {
         "employee": "Employee",
         "workDate": "Date",
+        "startDate": "Start Date",
+        "endDate": "End Date",
         "entryType": "Type",
         "quantity": "Quantity"
       },
@@ -497,6 +499,7 @@
       "validation": {
         "employeeRequired": "Please select an employee",
         "workDateRequired": "Please select a date",
+        "endDateRequired": "Please select an end date",
         "quantityRequired": "Please enter a valid quantity"
       },
       "success": {
@@ -517,7 +520,8 @@
         "cannotEdit": "Cannot Edit",
         "cannotEditDescription": "Only pending records can be edited",
         "cannotDelete": "Cannot Delete",
-        "cannotDeleteDescription": "Only pending records can be deleted"
+        "cannotDeleteDescription": "Only pending records can be deleted",
+        "duplicateWorklog": "A worklog already exists for this employee, date, and type"
       },
       "deleteDialog": {
         "title": "Confirm Delete",

@@ -1321,7 +1321,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 ### 8.3 Create Worklog
 
-เพิ่มรายการบันทึกเวลา
+เพิ่มรายการบันทึกเวลา (พนักงาน 1 คน บันทึก `entryType` เดียวกันได้ 1 รายการต่อวัน)
 
 - **Endpoint:** `POST /worklogs/ft`
 
@@ -1339,6 +1339,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 **Success Response (201 Created):**
 
 - คืนค่า Object ที่สร้าง
+
+**Error Responses:**
+
+- `409 Conflict`: มี worklog ของพนักงานเดียวกัน ประเภทเดียวกัน ในวันที่เดียวกันแล้ว
 
 ### 8.4 Update Worklog
 

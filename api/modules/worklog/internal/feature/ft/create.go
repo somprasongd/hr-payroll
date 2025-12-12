@@ -2,6 +2,7 @@ package ft
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -39,9 +40,11 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	if err != nil {
 		return nil, err
 	}
+	entryType := strings.TrimSpace(cmd.Payload.EntryType)
+
 	rec := repository.FTRecord{
 		EmployeeID: cmd.Payload.EmployeeID,
-		EntryType:  cmd.Payload.EntryType,
+		EntryType:  entryType,
 		WorkDate:   parsedDate,
 		Quantity:   cmd.Payload.Quantity,
 		Status:     "pending",
@@ -52,9 +55,28 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	var created *repository.FTRecord
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
+		exists, err := cmd.Repo.ExistsActiveByEmployeeDateType(ctxTx, rec.EmployeeID, rec.WorkDate, rec.EntryType, nil)
+		if err != nil {
+			return err
+		}
+		if exists {
+			return errs.Conflict("worklog already exists for this employee, date, and entryType")
+		}
+
 		created, err = cmd.Repo.Insert(ctxTx, rec)
-		return err
+		if err != nil {
+			if repository.IsUniqueErrFT(err) {
+				return errs.Conflict("worklog already exists for this employee, date, and entryType")
+			}
+			return err
+		}
+		return nil
 	}); err != nil {
+		var appErr *errs.AppError
+		if errors.As(err, &appErr) {
+			logger.FromContext(ctx).Warn("failed to create worklog", zap.Error(err))
+			return nil, err
+		}
 		logger.FromContext(ctx).Error("failed to create worklog", zap.Error(err))
 		return nil, errs.Internal("failed to create worklog")
 	}
@@ -104,6 +126,7 @@ func validateFTPayload(p *CreateRequest) (time.Time, error) {
 // @Failure 400
 // @Failure 401
 // @Failure 403
+// @Failure 409
 // @Router /worklogs/ft [post]
 func registerCreate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor) {
 	router.Post("/", func(c fiber.Ctx) error {

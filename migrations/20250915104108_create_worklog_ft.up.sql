@@ -44,6 +44,11 @@ CREATE INDEX worklog_ft_active_emp_date_idx
   ON worklog_ft (employee_id, work_date)
   WHERE deleted_at IS NULL;
 
+-- Prevent duplicate FT worklogs per employee/date/entryType (active rows only)
+CREATE UNIQUE INDEX IF NOT EXISTS worklog_ft_emp_date_type_uk
+  ON worklog_ft (employee_id, work_date, entry_type)
+  WHERE deleted_at IS NULL;
+
 -- 3) อัปเดต updated_at อัตโนมัติเมื่อมีการแก้ไข
 DROP TRIGGER IF EXISTS trg_worklog_ft_set_updated ON worklog_ft;
 CREATE TRIGGER trg_worklog_ft_set_updated

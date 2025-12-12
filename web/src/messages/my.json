@@ -447,6 +447,8 @@
       "fields": {
         "employee": "ဝန်ထမ်း",
         "workDate": "ရက်စွဲ",
+        "startDate": "စတင်ရက်",
+        "endDate": "ပြီးဆုံးရက်",
         "entryType": "အမျိုးအစား",
         "quantity": "ပမာဏ"
       },
@@ -500,6 +502,7 @@
       "validation": {
         "employeeRequired": "ဝန်ထမ်း ရွေးချယ်ပါ",
         "workDateRequired": "ရက်စွဲ ရွေးချယ်ပါ",
+        "endDateRequired": "ပြီးဆုံးရက်ကို ရွေးချယ်ပါ",
         "quantityRequired": "မှန်ကန်သော ပမာဏ ထည့်ပါ"
       },
       "success": {
@@ -520,7 +523,8 @@
         "cannotEdit": "ပြင်ဆင်၍မရပါ",
         "cannotEditDescription": "စောင့်ဆိုင်းဆဲ မှတ်တမ်းများကိုသာ ပြင်ဆင်နိုင်သည်",
         "cannotDelete": "ဖျက်၍မရပါ",
-        "cannotDeleteDescription": "စောင့်ဆိုင်းဆဲ မှတ်တမ်းများကိုသာ ဖျက်နိုင်သည်"
+        "cannotDeleteDescription": "စောင့်ဆိုင်းဆဲ မှတ်တမ်းများကိုသာ ဖျက်နိုင်သည်",
+        "duplicateWorklog": "ဤဝန်ထမ်းအတွက် ဤရက်စွဲနှင့် ဤအမျိုးအစားအတွက် မှတ်တမ်း ရှိနှင့်ပြီးသား"
       },
       "deleteDialog": {
         "title": "ဖျက်ရန် အတည်ပြုပါ",

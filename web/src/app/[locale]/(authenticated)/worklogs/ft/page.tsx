@@ -412,6 +412,12 @@ export default function FTWorklogsPage() {
           worklog={selectedWorklog}
           mode={formMode}
           lastSelectedEmployeeId={employeeFilter || lastSelectedEmployeeId}
+          onEmployeeSelect={(empId) => {
+            if (empId) {
+              setEmployeeFilter(empId);
+              setLastSelectedEmployeeId(empId);
+            }
+          }}
         />
       )}
 

@@ -174,10 +174,16 @@ interface EmployeeFormProps {
   const employeeNumber = form.watch('employeeNumber');
 
   // Fetch Payroll Config for default hourly rate
-  const [payrollConfig, setPayrollConfig] = useState<any>(null); // Using any to avoid import cycle if type not exported, or just import it.
-  // Better to import PayrollConfig. Let's add import first.
+  const [payrollConfig, setPayrollConfig] = useState<any>(null);
+  // Track if we've already auto-filled the hourly rate for part-time
+  const hasAutoFilledHourlyRate = React.useRef(false);
+  // Track the last employee type to detect changes
+  const lastEmployeeTypeRef = React.useRef<string | null>(null);
 
   useEffect(() => {
+    // Skip if already fetched
+    if (payrollConfig) return;
+    
     const fetchConfig = async () => {
       try {
         const config = await import('@/services/payroll-config.service').then(m => m.payrollConfigService.getEffective());
@@ -187,42 +193,65 @@ interface EmployeeFormProps {
       }
     };
     fetchConfig();
-  }, []);
+  }, [payrollConfig]);
 
   useEffect(() => {
     if (masterData?.employeeTypes && employeeTypeId && payrollConfig) {
       const selectedType = masterData.employeeTypes.find(t => t.id === employeeTypeId);
       
-      // Check if explicitly Part-Time (code 'pt' or name contains 'part')
-      const isPartTime = selectedType?.code?.toLowerCase() === 'pt' ||
-                         selectedType?.Code?.toLowerCase() === 'pt' ||
-                         selectedType?.name?.toLowerCase().includes('part') || 
-                         selectedType?.Name?.toLowerCase().includes('part');
+      // Get the name and code (handle both cases)
+      const typeCode = (selectedType?.code || selectedType?.Code || '').toLowerCase();
+      const typeName = (selectedType?.name || selectedType?.Name || '').toLowerCase();
+      
+      // Check if explicitly Part-Time (code 'pt' or name contains 'part', 'พาร์ทไทม์', 'ชั่วคราว')
+      const isPartTime = typeCode === 'pt' ||
+                         typeName.includes('part') || 
+                         typeName.includes('พาร์ท') ||
+                         typeName.includes('ชั่วคราว');
       
       // Check if explicitly Full-Time (code 'ft' or name contains 'full' or 'ประจำ')
-      const isFullTime = selectedType?.code?.toLowerCase() === 'ft' ||
-                         selectedType?.Code?.toLowerCase() === 'ft' ||
-                         selectedType?.name?.toLowerCase().includes('full') || 
-                         selectedType?.Name?.toLowerCase().includes('full') ||
-                         selectedType?.name?.includes('ประจำ') || 
-                         selectedType?.Name?.includes('ประจำ');
+      const isFullTime = typeCode === 'ft' ||
+                         typeName.includes('full') || 
+                         typeName.includes('ประจำ');
+
+      // Detect if employee type changed
+      const employeeTypeChanged = lastEmployeeTypeRef.current !== employeeTypeId;
+      if (employeeTypeChanged) {
+        lastEmployeeTypeRef.current = employeeTypeId;
+        // Reset auto-fill flag when employee type changes to allow re-fill
+        hasAutoFilledHourlyRate.current = false;
+      }
 
       // Auto-fill SSO Declared Wage using the wage cap from config (for full-time only)
       if (ssoContribute && isFullTime) {
+        const currentBasePayAmount = form.getValues('basePayAmount');
         const wageCap = payrollConfig.socialSecurityWageCap || 15000;
-        const wage = Math.min(basePayAmount || 0, wageCap);
+        const wage = Math.min(currentBasePayAmount || 0, wageCap);
         form.setValue('ssoDeclaredWage', wage);
       }
 
-      // Auto-fill Hourly Wage for Part-Time ONLY (not for full-time)
-      if (isPartTime && !isFullTime) {
-        // Only set if it's 0 (new or unset)
-        if (!basePayAmount || basePayAmount === 0) {
-             form.setValue('basePayAmount', payrollConfig.hourlyRate);
+      // Auto-fill Hourly Wage for Part-Time when:
+      // 1. It's a part-time employee
+      // 2. We haven't already auto-filled for this selection
+      // 3. Current value is 0 or empty
+      if (isPartTime && !hasAutoFilledHourlyRate.current) {
+        const currentBasePayAmount = form.getValues('basePayAmount');
+        console.log('[EmployeeForm] Part-time detected, checking auto-fill:', {
+          isPartTime,
+          hasAutoFilledHourlyRate: hasAutoFilledHourlyRate.current,
+          currentBasePayAmount,
+          hourlyRateFromConfig: payrollConfig.hourlyRate,
+          typeCode,
+          typeName
+        });
+        if (!currentBasePayAmount || currentBasePayAmount === 0) {
+          console.log('[EmployeeForm] Setting basePayAmount to:', payrollConfig.hourlyRate);
+          form.setValue('basePayAmount', payrollConfig.hourlyRate);
+          hasAutoFilledHourlyRate.current = true;
         }
       }
     }
-  }, [ssoContribute, basePayAmount, employeeTypeId, masterData, form, payrollConfig]);
+  }, [ssoContribute, employeeTypeId, masterData, form, payrollConfig]);
 
   const handleNext = async (e?: React.MouseEvent) => {
     e?.preventDefault();

@@ -444,6 +444,8 @@
       "fields": {
         "employee": "พนักงาน",
         "workDate": "วันที่",
+        "startDate": "วันที่เริ่มต้น",
+        "endDate": "วันที่สิ้นสุด",
         "entryType": "ประเภท",
         "quantity": "จำนวน"
       },
@@ -497,6 +499,7 @@
       "validation": {
         "employeeRequired": "กรุณาเลือกพนักงาน",
         "workDateRequired": "กรุณาเลือกวันที่",
+        "endDateRequired": "กรุณาเลือกวันที่สิ้นสุด",
         "quantityRequired": "กรุณากรอกจำนวนที่ถูกต้อง"
       },
       "success": {
@@ -517,7 +520,8 @@
         "cannotEdit": "ไม่สามารถแก้ไขได้",
         "cannotEditDescription": "สามารถแก้ไขได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
         "cannotDelete": "ไม่สามารถลบได้",
-        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น"
+        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
+        "duplicateWorklog": "มีรายการบันทึกซ้ำสำหรับพนักงาน วันที่ และประเภทนี้แล้ว"
       },
       "deleteDialog": {
         "title": "ยืนยันการลบ",
