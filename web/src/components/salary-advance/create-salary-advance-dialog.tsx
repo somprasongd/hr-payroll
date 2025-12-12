@@ -50,13 +50,15 @@ interface CreateSalaryAdvanceDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   defaultEmployeeId?: string;
+  onEmployeeSelect?: (employeeId: string) => void;
 }
 
 export function CreateSalaryAdvanceDialog({ 
   open, 
   onOpenChange,
   onSuccess,
-  defaultEmployeeId
+  defaultEmployeeId,
+  onEmployeeSelect
 }: CreateSalaryAdvanceDialogProps) {
   const t = useTranslations('SalaryAdvance');
   const tCommon = useTranslations('Common');
@@ -169,8 +171,19 @@ export function CreateSalaryAdvanceDialog({
     }
   };
 
+  // Handle dialog close - notify parent of selected employee
+  const handleDialogClose = (isOpen: boolean) => {
+    if (!isOpen) {
+      const selectedEmployee = form.getValues('employeeId');
+      if (selectedEmployee && onEmployeeSelect) {
+        onEmployeeSelect(selectedEmployee);
+      }
+    }
+    onOpenChange(isOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('createTitle')}</DialogTitle>
@@ -246,7 +259,7 @@ export function CreateSalaryAdvanceDialog({
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>
                 {tCommon('cancel')}
               </Button>
               <Button type="submit" disabled={isValidating}>

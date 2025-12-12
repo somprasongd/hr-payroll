@@ -140,7 +140,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </Collapsible>
 
             {/* Compensation - Collapsible */}
-            <Collapsible asChild defaultOpen={isActive('/salary-raise') || isActive('/salary-advance') || isActive('/bonuses')} className="group/collapsible">
+            <Collapsible asChild defaultOpen={isActive('/salary-raise') || isActive('/bonuses')} className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={tMenu('compensation')}>
@@ -159,13 +159,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/salary-advance')}>
-                        <Link href="/salary-advance">
-                          <span>{tMenu('salaryAdvance')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
                       <SidebarMenuSubButton asChild isActive={isActive('/bonuses')}>
                         <Link href="/bonuses">
                           <span>{tMenu('bonus')}</span>
@@ -177,15 +170,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuItem>
             </Collapsible>
 
-             {/* Debt */}
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive('/debt')} tooltip={tMenu('debt')}>
-                <Link href="/debt">
-                  <CreditCard />
-                  <span>{tMenu('debt')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {/* Deductions - Collapsible (Salary Advance & Debt) */}
+            <Collapsible asChild defaultOpen={isActive('/salary-advance') || isActive('/debt')} className="group/collapsible">
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton tooltip={tMenu('deductions')}>
+                    <CreditCard />
+                    <span>{tMenu('deductions')}</span>
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild isActive={isActive('/salary-advance')}>
+                        <Link href="/salary-advance">
+                          <span>{tMenu('salaryAdvance')}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild isActive={isActive('/debt')}>
+                        <Link href="/debt">
+                          <span>{tMenu('debt')}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
 
           </SidebarMenu>
         </SidebarGroup>

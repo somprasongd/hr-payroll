@@ -159,7 +159,7 @@ export function SalaryAdvanceList() {
 
       <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 ${!showFilters ? 'hidden md:block' : ''} ${employeeFilter !== 'all' ? 'lg:relative' : ''}`}>
         <div className="grid grid-cols-6 gap-4">
-          <div className="col-span-6 lg:col-span-2">
+          <div className="col-span-6 lg:col-span-3">
              <EmployeeSelector
               employees={employees}
               selectedEmployeeId={employeeFilter}
@@ -282,6 +282,11 @@ export function SalaryAdvanceList() {
         onOpenChange={setCreateOpen}
         onSuccess={fetchData}
         defaultEmployeeId={employeeFilter !== 'all' ? employeeFilter : undefined}
+        onEmployeeSelect={(empId) => {
+          if (empId) {
+            setEmployeeFilter(empId);
+          }
+        }}
       />
 
       {editItem && (
