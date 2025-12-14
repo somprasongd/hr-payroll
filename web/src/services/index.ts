@@ -12,3 +12,4 @@ export * from './master-data.service';
 export * from './accumulation.service';
 export * from './ft-worklog.service';
 export * from './pt-worklog.service';
+export * from './org-profile.service';

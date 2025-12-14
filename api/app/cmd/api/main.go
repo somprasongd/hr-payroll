@@ -17,6 +17,7 @@ import (
 	"hrms/modules/masterdata"
 	"hrms/modules/payoutpt"
 	"hrms/modules/payrollconfig"
+	"hrms/modules/payrollorgprofile"
 	"hrms/modules/payrollrun"
 	"hrms/modules/salaryadvance"
 	"hrms/modules/salaryraise"
@@ -86,6 +87,7 @@ func main() {
 		masterdata.NewModule(mCtx, tokenSvc),
 		payrollrun.NewModule(mCtx, tokenSvc),
 		worklog.NewModule(mCtx, tokenSvc),
+		payrollorgprofile.NewModule(mCtx, tokenSvc),
 	)
 
 	app.Run()

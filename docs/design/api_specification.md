@@ -3072,3 +3072,95 @@ Logic (Database Trigger):
 |               | `loan`             | `loan_repayments` (Sum from JSON)          |
 |               | `advance`          | `advance_repay_amount`                     |
 |               | `utilities`        | `water_` + `electric_` + `internet_amount` |
+
+
+---
+
+## 17. Payroll Org Profile (Slip Header) — Admin Only
+
+จัดการข้อมูลหัวสลิปเงินเดือนแบบเวอร์ชัน (daterange) และโลโก้ที่เก็บเป็น binary ใน DB
+
+### 17.1 List Profiles (Full History)
+
+- **Endpoint:** `GET /admin/payroll-org-profiles`
+- **Access:** Admin
+- **Query:** `page`, `limit`
+- **Response (200):** `{ data: Profile[], meta: {currentPage,totalPages,totalItems} }`
+- **Profile Fields:** `id, versionNo, startDate, endDate, status, companyName, addressLine1, addressLine2, subdistrict, district, province, postalCode, phoneMain, phoneAlt, email, taxId, slipFooterNote, logoId, createdAt, updatedAt, createdBy, updatedBy`
+
+### 17.2 Get Profile by ID
+
+- **Endpoint:** `GET /admin/payroll-org-profiles/{id}`
+- **Access:** Admin
+- **Response (200):** `Profile`
+- **404:** ไม่พบ id
+
+### 17.3 Get Effective Profile
+
+- **Endpoint:** `GET /admin/payroll-org-profiles/effective`
+- **Access:** Admin
+- **Query:** `date` (YYYY-MM-DD, default = today)
+- **Response (200):** โปรไฟล์ที่ effective_daterange ครอบคลุมวันที่ระบุ (เลือกเวอร์ชันล่าสุดถ้าวันเริ่มซ้ำ)
+- **404:** ไม่พบโปรไฟล์สำหรับวันนั้น
+
+### 17.4 Create New Profile (Insert New Version)
+
+- **Endpoint:** `POST /admin/payroll-org-profiles`
+- **Access:** Admin
+- **Request Body (JSON) ตัวอย่าง:**
+
+```json
+{
+  "startDate": "2026-01-01",
+  "companyName": "ACME Hospital Co., Ltd.",
+  "addressLine1": "123/4 Moo 1",
+  "district": "Muang",
+  "province": "Phuket",
+  "postalCode": "83000",
+  "phoneMain": "076-123456",
+  "phoneAlt": "081-2345678",
+  "email": "info@acme.com",
+  "taxId": "1234567890123",
+  "slipFooterNote": "เลขประจำตัวผู้เสียภาษี 1234567890123",
+  "logoId": "0195d3af-aaaa-7d69-9f3a-1c3d4e5f9999"
+}
+```
+
+- **Behavior:** สร้างเวอร์ชันใหม่เสมอ (ไม่มี patch/upsert ทับแถวเดิม) และ trigger DB จะ retire เวอร์ชันปลายเปิดที่ทับช่วง
+- **Response (201):** `Profile`
+- **400:** ข้อมูลไม่ครบหรือ startDate รูปแบบไม่ถูกต้อง
+
+### 17.5 Upload Logo (Binary Stored in DB)
+
+- **Endpoint:** `POST /admin/payroll-org-logos`
+- **Access:** Admin
+- **Content-Type:** `multipart/form-data`
+- **Form Data:** `file` (required) — image ≤ 2MB
+- **Response (201) ตัวอย่าง:**
+
+```json
+{
+  "id": "0195d3bf-bbbb-7d69-9f3a-1c3d4e5f8888",
+  "fileName": "logo.png",
+  "contentType": "image/png",
+  "fileSizeBytes": 123456,
+  "checksumMd5": "d41d8cd98f00b204e9800998ecf8427e"
+}
+```
+
+- **การใช้งาน:** อัปโหลดโลโก้ → นำ `id` ไปใส่ `logoId` ตอน `POST /admin/payroll-org-profiles`
+- **400:** ไฟล์ใหญ่เกิน, ไม่ใช่ image หรือว่างเปล่า
+
+### 17.6 Download Logo
+
+- **Endpoint:** `GET /admin/payroll-org-logos/{id}`
+- **Access:** Admin
+- **Response:** binary image พร้อม `Content-Type`, `Content-Length`, `ETag`
+- **404:** ไม่พบโลโก้
+
+### 17.7 Get Logo Metadata
+
+- **Endpoint:** `GET /admin/payroll-org-logos/{id}/meta`
+- **Access:** Admin
+- **Response (200):** `{ id, fileName, contentType, fileSizeBytes, checksumMd5, createdAt, createdBy }` (ไม่มีข้อมูล binary)
+- **404:** ไม่พบโลโก้

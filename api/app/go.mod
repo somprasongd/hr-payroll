@@ -28,6 +28,8 @@ replace hrms/modules/masterdata v0.0.0 => ../modules/masterdata
 
 replace hrms/modules/payoutpt v0.0.0 => ../modules/payoutpt
 
+replace hrms/modules/payrollorgprofile v0.0.0 => ../modules/payrollorgprofile
+
 require (
 	github.com/caarlos0/env/v11 v11.1.0
 	github.com/gofiber/fiber/v3 v3.0.0-beta.4
@@ -40,6 +42,7 @@ require (
 	hrms/modules/masterdata v0.0.0
 	hrms/modules/payoutpt v0.0.0
 	hrms/modules/payrollconfig v0.0.0
+	hrms/modules/payrollorgprofile v0.0.0
 	hrms/modules/payrollrun v0.0.0
 	hrms/modules/salaryadvance v0.0.0
 	hrms/modules/salaryraise v0.0.0

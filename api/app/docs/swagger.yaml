@@ -222,6 +222,53 @@ definitions:
       workDate:
         type: string
     type: object
+  dto.Profile:
+    properties:
+      addressLine1:
+        type: string
+      addressLine2:
+        type: string
+      companyName:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      logoId:
+        type: string
+      phoneAlt:
+        type: string
+      phoneMain:
+        type: string
+      postalCode:
+        type: string
+      province:
+        type: string
+      slipFooterNote:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      subdistrict:
+        type: string
+      taxId:
+        type: string
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+      versionNo:
+        type: integer
+    type: object
   dto.Run:
     properties:
       approvedAt:
@@ -261,11 +308,11 @@ definitions:
         type: number
       totalNetPay:
         type: number
-      totalTax:
+      totalProvidentFund:
         type: number
       totalSocialSecurity:
         type: number
-      totalProvidentFund:
+      totalTax:
         type: number
     type: object
   dto.User:
@@ -280,63 +327,6 @@ definitions:
         type: string
       username:
         type: string
-    type: object
-  effective.Response:
-    properties:
-      attendanceBonusNoLate:
-        type: number
-      attendanceBonusNoLeave:
-        type: number
-      createdAt:
-        type: string
-      electricityRatePerUnit:
-        type: number
-      endDate:
-        type: string
-      hourlyRate:
-        type: number
-      housingAllowance:
-        type: number
-      id:
-        type: string
-      internetFeeMonthly:
-        type: number
-      note:
-        type: string
-      otHourlyRate:
-        type: number
-      socialSecurityRateEmployee:
-        type: number
-      socialSecurityRateEmployer:
-        type: number
-      socialSecurityWageCap:
-        type: number
-      startDate:
-        type: string
-      status:
-        type: string
-      taxApplyPersonalAllowance:
-        type: boolean
-      taxApplyStandardExpense:
-        type: boolean
-      taxPersonalAllowanceAmount:
-        type: number
-      taxProgressiveBrackets:
-        items:
-          $ref: '#/definitions/repository.TaxBracket'
-        type: array
-      taxStandardExpenseCap:
-        type: number
-      taxStandardExpenseRate:
-        type: number
-      updatedAt:
-        type: string
-      versionNo:
-        type: integer
-      waterRatePerUnit:
-        type: number
-      withholdingTaxRateService:
-        type: number
     type: object
   feature.Response:
     properties:
@@ -1194,6 +1184,63 @@ definitions:
       withholdingTaxRateService:
         type: number
     type: object
+  hrms_modules_payrollconfig_internal_feature_effective.Response:
+    properties:
+      attendanceBonusNoLate:
+        type: number
+      attendanceBonusNoLeave:
+        type: number
+      createdAt:
+        type: string
+      electricityRatePerUnit:
+        type: number
+      endDate:
+        type: string
+      hourlyRate:
+        type: number
+      housingAllowance:
+        type: number
+      id:
+        type: string
+      internetFeeMonthly:
+        type: number
+      note:
+        type: string
+      otHourlyRate:
+        type: number
+      socialSecurityRateEmployee:
+        type: number
+      socialSecurityRateEmployer:
+        type: number
+      socialSecurityWageCap:
+        type: number
+      startDate:
+        type: string
+      status:
+        type: string
+      taxApplyPersonalAllowance:
+        type: boolean
+      taxApplyStandardExpense:
+        type: boolean
+      taxPersonalAllowanceAmount:
+        type: number
+      taxProgressiveBrackets:
+        items:
+          $ref: '#/definitions/repository.TaxBracket'
+        type: array
+      taxStandardExpenseCap:
+        type: number
+      taxStandardExpenseRate:
+        type: number
+      updatedAt:
+        type: string
+      versionNo:
+        type: integer
+      waterRatePerUnit:
+        type: number
+      withholdingTaxRateService:
+        type: number
+    type: object
   hrms_modules_payrollconfig_internal_feature_list.Response:
     properties:
       data:
@@ -1202,6 +1249,114 @@ definitions:
         type: array
       meta:
         $ref: '#/definitions/hrms_modules_payrollconfig_internal_dto.Meta'
+    type: object
+  hrms_modules_payrollorgprofile_internal_dto.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  hrms_modules_payrollorgprofile_internal_feature_create.RequestBody:
+    properties:
+      addressLine1:
+        type: string
+      addressLine2:
+        type: string
+      companyName:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      logoId:
+        type: string
+      phoneAlt:
+        type: string
+      phoneMain:
+        type: string
+      postalCode:
+        type: string
+      province:
+        type: string
+      slipFooterNote:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      subdistrict:
+        type: string
+      taxId:
+        type: string
+    type: object
+  hrms_modules_payrollorgprofile_internal_feature_create.Response:
+    properties:
+      addressLine1:
+        type: string
+      addressLine2:
+        type: string
+      companyName:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      logoId:
+        type: string
+      phoneAlt:
+        type: string
+      phoneMain:
+        type: string
+      postalCode:
+        type: string
+      province:
+        type: string
+      slipFooterNote:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      subdistrict:
+        type: string
+      taxId:
+        type: string
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+      versionNo:
+        type: integer
+    type: object
+  hrms_modules_payrollorgprofile_internal_feature_effective.Response:
+    properties:
+      profile:
+        $ref: '#/definitions/dto.Profile'
+    type: object
+  hrms_modules_payrollorgprofile_internal_feature_get.Response:
+    properties:
+      profile:
+        $ref: '#/definitions/dto.Profile'
+    type: object
+  hrms_modules_payrollorgprofile_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.Profile'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_dto.Meta'
     type: object
   hrms_modules_payrollrun_internal_dto.Item:
     properties:
@@ -1231,6 +1386,10 @@ definitions:
         type: string
       id:
         type: string
+      incomeAccumPrev:
+        type: number
+      incomeAccumTotal:
+        type: number
       incomeTotal:
         type: number
       lateMinutesDeduction:
@@ -1395,6 +1554,10 @@ definitions:
         type: string
       id:
         type: string
+      incomeAccumPrev:
+        type: number
+      incomeAccumTotal:
+        type: number
       incomeTotal:
         type: number
       lateMinutesDeduction:
@@ -1881,6 +2044,10 @@ definitions:
         type: number
       id:
         type: string
+      incomeAccumPrev:
+        type: number
+      incomeAccumTotal:
+        type: number
       incomeTotal:
         type: number
       internetAmount:
@@ -2117,6 +2284,11 @@ definitions:
       refreshToken:
         type: string
     type: object
+  metalogo.Response:
+    properties:
+      logo:
+        $ref: '#/definitions/repository.LogoRecord'
+    type: object
   outstanding.Response:
     properties:
       employeeId:
@@ -2351,6 +2523,27 @@ definitions:
       updatedBy:
         type: string
     type: object
+  repository.LogoRecord:
+    properties:
+      checksumMD5:
+        type: string
+      contentType:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      data:
+        items:
+          type: integer
+        type: array
+      fileName:
+        type: string
+      fileSizeBytes:
+        type: integer
+      id:
+        type: string
+    type: object
   repository.MasterRecord:
     properties:
       code:
@@ -2458,6 +2651,19 @@ definitions:
       role:
         type: string
     type: object
+  uploadlogo.Response:
+    properties:
+      checksumMd5:
+        type: string
+      contentType:
+        type: string
+      fileName:
+        type: string
+      fileSizeBytes:
+        type: integer
+      id:
+        type: string
+    type: object
   upsert.Response:
     properties:
       accumType:
@@ -2550,7 +2756,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/effective.Response'
+            $ref: '#/definitions/hrms_modules_payrollconfig_internal_feature_effective.Response'
         "404":
           description: Not Found
       security:
@@ -2558,6 +2764,199 @@ paths:
       summary: Get effective payroll config
       tags:
       - Payroll Config
+  /admin/payroll-org-logos:
+    post:
+      consumes:
+      - multipart/form-data
+      description: อัปโหลดไฟล์โลโก้ (image) เพื่อใช้อ้างอิงใน org profile
+      parameters:
+      - description: logo file (<=2MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/uploadlogo.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Upload payroll org logo
+      tags:
+      - Payroll Org Profile
+  /admin/payroll-org-logos/{id}:
+    get:
+      parameters:
+      - description: logo id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/png
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Download payroll org logo by ID
+      tags:
+      - Payroll Org Profile
+  /admin/payroll-org-logos/{id}/meta:
+    get:
+      parameters:
+      - description: logo id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/metalogo.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get payroll org logo metadata
+      tags:
+      - Payroll Org Profile
+  /admin/payroll-org-profiles:
+    get:
+      description: ดึงประวัติโปรไฟล์หัวสลิปทั้งหมด
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_feature_list.Response'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List payroll org profiles
+      tags:
+      - Payroll Org Profile
+    post:
+      consumes:
+      - application/json
+      description: สร้างโปรไฟล์หัวสลิปเงินเดือนแบบเวอร์ชัน (daterange)
+      parameters:
+      - description: profile payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_feature_create.RequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_feature_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create payroll org profile
+      tags:
+      - Payroll Org Profile
+  /admin/payroll-org-profiles/{id}:
+    get:
+      parameters:
+      - description: profile id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_feature_get.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get payroll org profile by ID
+      tags:
+      - Payroll Org Profile
+  /admin/payroll-org-profiles/effective:
+    get:
+      description: ดึงโปรไฟล์หัวสลิปที่มีผล ณ วันที่ระบุ
+      parameters:
+      - description: YYYY-MM-DD
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_feature_effective.Response'
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get effective payroll org profile
+      tags:
+      - Payroll Org Profile
   /admin/users:
     get:
       description: ดึงรายชื่อผู้ใช้งานทั้งหมด (Admin)
@@ -4375,6 +4774,8 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden
+        "409":
+          description: Conflict
       security:
       - BearerAuth: []
       summary: Create worklog FT
@@ -4465,6 +4866,8 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+        "409":
+          description: Conflict
       security:
       - BearerAuth: []
       summary: Update worklog FT

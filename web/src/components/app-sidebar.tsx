@@ -12,7 +12,8 @@ import {
   ChevronRight,
   CreditCard,
   Settings2,
-  Banknote
+  Banknote,
+  Building2
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/routing"
@@ -42,6 +43,7 @@ import { Link } from "@/i18n/routing"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const tMenu = useTranslations('Menu')
+  const tNav = useTranslations('Nav')
   const pathname = usePathname()
   const { user } = useAuthStore()
 
@@ -223,6 +225,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <SidebarMenuSubButton asChild isActive={isActive('/admin/users')}>
                           <Link href="/admin/users">
                             <span>{tMenu('users')}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/admin/org-profile')}>
+                          <Link href="/admin/org-profile">
+                            <span>{tNav('orgProfile')}</span>
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>

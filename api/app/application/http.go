@@ -43,7 +43,22 @@ func newFiber(cfg config.Config, healthCheck HealthCheck) *fiber.App {
 	})
 
 	app.Use(mw.RequestLogger())
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowMethods:     []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+		AllowCredentials: false,
+	}))
+	// Ensure CORS headers are present even when downstream returns an error
+	app.Use(func(c fiber.Ctx) error {
+		c.Set(fiber.HeaderAccessControlAllowOrigin, "*")
+		c.Set(fiber.HeaderAccessControlAllowHeaders, "Origin, Content-Type, Accept, Authorization")
+		c.Set(fiber.HeaderAccessControlAllowMethods, "GET,POST,PATCH,PUT,DELETE,OPTIONS")
+		if c.Method() == fiber.MethodOptions {
+			return c.SendStatus(http.StatusNoContent)
+		}
+		return c.Next()
+	})
 	app.Use(recover.New())
 	app.Use(mw.ErrorHandler())
 
