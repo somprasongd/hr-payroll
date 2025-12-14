@@ -587,6 +587,9 @@ export function PayslipEditDialog({
                         <span>{t('payslip.fields.incomeTotal')}</span>
                         <span className="text-green-600">{formatNumber(calculatedIncomeTotal)}</span>
                       </div>
+                      <div className="text-xs text-gray-400 text-right">
+                        สะสม: {formatNumber(detail.incomeAccumPrev)} → {formatNumber(detail.incomeAccumTotal)}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

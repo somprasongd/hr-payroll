@@ -253,6 +253,8 @@ type Item struct {
 	BonusAmount             float64   `db:"bonus_amount"`
 	LeaveCompensationAmount float64   `db:"leave_compensation_amount"`
 	IncomeTotal             float64   `db:"income_total"`
+	IncomeAccumPrev         float64   `db:"income_accum_prev"`
+	IncomeAccumTotal        float64   `db:"income_accum_total"`
 	LeaveDaysQty            float64   `db:"leave_days_qty"`
 	LeaveDaysDeduction      float64   `db:"leave_days_deduction"`
 	LateMinutesQty          int       `db:"late_minutes_qty"`
@@ -301,7 +303,8 @@ func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit 
 	q := fmt.Sprintf(`
 SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, pri.income_accum_prev, pri.income_accum_total,
+       pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total,
        pri.doctor_fee,
@@ -357,7 +360,8 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
        salary_amount, pt_hours_worked, pt_hourly_rate, ot_hours, ot_amount, bonus_amount,
-       income_total, COALESCE(leave_compensation_amount,0) AS leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
+       income_total, income_accum_prev, income_accum_total,
+       COALESCE(leave_compensation_amount,0) AS leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
        sso_month_amount, tax_month_amount, (%s) AS net_pay, 'pending' as status,
         (%s) AS deduction_total,
         doctor_fee,
@@ -380,7 +384,8 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, pri.income_accum_prev, pri.income_accum_total,
+       COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total,
        pri.advance_amount, pri.loan_outstanding_total,
@@ -441,7 +446,8 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
        concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
-       pri.income_total, COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
+       pri.income_total, pri.income_accum_prev, pri.income_accum_total,
+       COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' AS status,
        (%s) AS deduction_total,
        pri.employee_type_id,

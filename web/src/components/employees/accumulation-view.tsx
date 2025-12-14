@@ -100,105 +100,136 @@ export function AccumulationView({ employeeId }: AccumulationViewProps) {
         </Select>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Social Security */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('types.sso')} ({selectedYear})
-            </CardTitle>
-            {isAdmin && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => handleAdjust('sso', selectedYear)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {getAmount('sso', selectedYear).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Yearly Accumulations */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">{t('yearly')}</h3>
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Social Security */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t('types.sso')} ({selectedYear})
+              </CardTitle>
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleAdjust('sso', selectedYear)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {getAmount('sso', selectedYear).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Tax */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('types.tax')} ({selectedYear})
-            </CardTitle>
-            {isAdmin && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => handleAdjust('tax', selectedYear)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {getAmount('tax', selectedYear).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Tax */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t('types.tax')} ({selectedYear})
+              </CardTitle>
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleAdjust('tax', selectedYear)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {getAmount('tax', selectedYear).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Provident Fund */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('types.pf')} ({t('lifetime')})
-            </CardTitle>
-            {isAdmin && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => handleAdjust('pf', undefined)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {getAmount('pf', undefined).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Income */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t('types.income')} ({selectedYear})
+              </CardTitle>
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleAdjust('income', selectedYear)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {getAmount('income', selectedYear).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 mt-4">
-        {/* Loan Outstanding */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('types.loan_outstanding')} ({t('lifetime')})
-            </CardTitle>
-            {isAdmin && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => handleAdjust('loan_outstanding', undefined)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {getAmount('loan_outstanding', undefined).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Lifetime Accumulations */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">{t('lifetimeGroup')}</h3>
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Provident Fund */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t('types.pf')} ({t('lifetime')})
+              </CardTitle>
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleAdjust('pf', undefined)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {getAmount('pf', undefined).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
 
+          {/* Loan Outstanding */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t('types.loan_outstanding')} ({t('lifetime')})
+              </CardTitle>
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleAdjust('loan_outstanding', undefined)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {getAmount('loan_outstanding', undefined).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <AccumulationAdjustDialog

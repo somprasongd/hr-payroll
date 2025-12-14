@@ -38,14 +38,14 @@ func NewHandler(repo repository.Repository) *Handler {
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	cmd.AccumType = strings.TrimSpace(cmd.AccumType)
 	validTypes := map[string]struct{}{
-		"tax": {}, "sso": {}, "sso_employer": {}, "pf": {}, "pf_employer": {}, "loan_outstanding": {},
+		"tax": {}, "sso": {}, "sso_employer": {}, "income": {}, "pf": {}, "pf_employer": {}, "loan_outstanding": {},
 	}
 	if _, ok := validTypes[cmd.AccumType]; !ok {
 		return nil, errs.BadRequest("invalid accumType")
 	}
-	if cmd.AccumType == "tax" || cmd.AccumType == "sso" || cmd.AccumType == "sso_employer" {
+	if cmd.AccumType == "tax" || cmd.AccumType == "sso" || cmd.AccumType == "sso_employer" || cmd.AccumType == "income" {
 		if cmd.AccumYear == nil {
-			return nil, errs.BadRequest("accumYear required for tax/sso")
+			return nil, errs.BadRequest("accumYear required for tax/sso/income")
 		}
 	} else {
 		cmd.AccumYear = nil

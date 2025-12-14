@@ -14,9 +14,9 @@ Table "users" {
   "password_hash" text [not null]
   "user_role" text [not null, default: 'hr']
   "created_at" timestamptz [not null, default: `now()`]
-  "created_by" uuid [not null, default: '019b0296-679d-70c5-a013-d48fdeab03fc']
+  "created_by" uuid [not null, default: '019b10c3-994f-768a-90c0-d7008c5fb4f0']
   "updated_at" timestamptz [not null, default: `now()`]
-  "updated_by" uuid [not null, default: '019b0296-679d-70c5-a013-d48fdeab03fc']
+  "updated_by" uuid [not null, default: '019b10c3-994f-768a-90c0-d7008c5fb4f0']
   "deleted_at" timestamptz
   "deleted_by" uuid
 
@@ -176,6 +176,7 @@ Table "worklog_ft" {
   "deleted_by" uuid
 
   Indexes {
+    (employee_id, work_date, entry_type) [type: btree, name: "worklog_ft_emp_date_type_uk"]
     (work_date, entry_type, status) [type: btree, name: "worklog_ft_active_dts_idx"]
     (employee_id, work_date) [type: btree, name: "worklog_ft_active_emp_date_idx"]
   }
@@ -417,6 +418,8 @@ Table "payroll_run_item" {
   "doctor_fee" numeric(14,2) [not null, default: 0.00]
   "others_income" jsonb
   "income_total" numeric(14,2) [not null, default: 0.00]
+  "income_accum_prev" numeric(14,2) [not null, default: 0.00]
+  "income_accum_total" numeric(14,2) [not null, default: 0.00]
   "leave_days_qty" numeric(10,2) [not null, default: 0.00]
   "leave_days_deduction" numeric(14,2) [not null, default: 0.00]
   "leave_double_qty" numeric(10,2) [not null, default: 0.00]

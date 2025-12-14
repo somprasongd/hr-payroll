@@ -241,6 +241,8 @@ CREATE TABLE IF NOT EXISTS payroll_run_item (
   doctor_fee                 NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   others_income              JSONB NULL, -- [{name,value}]
   income_total               NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+  income_accum_prev          NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+  income_accum_total         NUMERIC(14,2) NOT NULL DEFAULT 0.00,
 
   -- ขาดงาน/หักจากเวลา
   leave_days_qty             NUMERIC(10,2) NOT NULL DEFAULT 0.00,
@@ -348,6 +350,7 @@ BEGIN
       COALESCE(NEW.doctor_fee,0) +
       COALESCE(v_others_income,0);
 
+  NEW.income_accum_total := COALESCE(NEW.income_accum_prev,0) + COALESCE(NEW.income_total,0);
   NEW.sso_accum_total := COALESCE(NEW.sso_accum_prev,0) + COALESCE(NEW.sso_month_amount,0);
   NEW.tax_accum_total := COALESCE(NEW.tax_accum_prev,0) + COALESCE(NEW.tax_month_amount,0);
   NEW.pf_accum_total  := COALESCE(NEW.pf_accum_prev,0)  + COALESCE(NEW.pf_month_amount,0);
@@ -401,6 +404,7 @@ DECLARE
   v_sso_base NUMERIC(14,2) := 0;
   v_sso_amount NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
+  v_income_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
   v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
@@ -443,7 +447,7 @@ BEGIN
     v_loan_repay_json := '[]'::jsonb; v_loan_total := 0;
     v_pt_hours := 0; v_others_income := '[]'::jsonb; v_doctor_fee := 0;
     v_sso_prev := 0; v_sso_base := 0; v_sso_amount := 0;
-    v_tax_prev := 0; v_pf_prev := 0; v_pf_amount := 0;
+    v_tax_prev := 0; v_income_prev := 0; v_pf_prev := 0; v_pf_amount := 0;
     v_water_prev := NULL; v_electric_prev := NULL;
 
     -- ============================================================
@@ -559,6 +563,10 @@ BEGIN
     FROM payroll_accumulation
     WHERE employee_id = v_emp.id AND accum_type = 'tax' AND accum_year = EXTRACT(YEAR FROM NEW.payroll_month_date);
 
+    SELECT COALESCE(amount, 0) INTO v_income_prev
+    FROM payroll_accumulation
+    WHERE employee_id = v_emp.id AND accum_type = 'income' AND accum_year = EXTRACT(YEAR FROM NEW.payroll_month_date);
+
     SELECT COALESCE(amount, 0) INTO v_pf_prev
     FROM payroll_accumulation
     WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
@@ -635,7 +643,7 @@ BEGIN
       leave_double_qty, leave_double_deduction,
       leave_hours_qty, leave_hours_deduction,
       
-      advance_amount, loan_repayments, loan_outstanding_prev,
+      advance_amount, loan_repayments, loan_outstanding_prev, income_accum_prev,
       sso_declared_wage, sso_month_amount, sso_accum_prev,
       tax_accum_prev, tax_month_amount, pf_accum_prev, pf_month_amount,
       doctor_fee, others_income,
@@ -672,6 +680,7 @@ BEGIN
       
       v_adv, v_loan_repay_json,
       COALESCE((SELECT amount FROM payroll_accumulation WHERE employee_id = v_emp.id AND accum_type = 'loan_outstanding'), 0),
+      COALESCE(v_income_prev,0),
       
       -- ฐาน SSO (Full-time ใช้ sso_declared_wage, Part-time อาจใช้รายได้จริงแต่ไม่เกินเพดาน)
       v_sso_base, v_sso_amount,
@@ -774,7 +783,7 @@ BEGIN
       AND dt.deleted_at IS NULL;
 
     -- =================================================================
-    -- 4. อัปเดต Payroll Accumulation (SSO, Tax, PF)
+    -- 4. อัปเดต Payroll Accumulation (SSO, Tax, Income, PF)
     -- =================================================================
     
     -- 4.1 SSO (รายปี)
@@ -805,7 +814,21 @@ BEGIN
       updated_at = EXCLUDED.updated_at,
       updated_by = EXCLUDED.updated_by;
 
-    -- 4.3 Provident Fund (ตลอดชีพ / accum_year = NULL)
+    -- 4.3 Income (รายปี)
+    INSERT INTO payroll_accumulation (
+      employee_id, accum_type, accum_year, amount, updated_at, updated_by
+    )
+    SELECT 
+      pri.employee_id, 'income', v_year, pri.income_total, now(), NEW.updated_by
+    FROM payroll_run_item pri
+    WHERE pri.run_id = NEW.id AND pri.income_total > 0
+    ON CONFLICT (employee_id, accum_type, COALESCE(accum_year, -1))
+    DO UPDATE SET 
+      amount = payroll_accumulation.amount + EXCLUDED.amount,
+      updated_at = EXCLUDED.updated_at,
+      updated_by = EXCLUDED.updated_by;
+
+    -- 4.4 Provident Fund (ตลอดชีพ / accum_year = NULL)
     INSERT INTO payroll_accumulation (
       employee_id, accum_type, accum_year, amount, updated_at, updated_by
     )
@@ -874,6 +897,7 @@ DECLARE
   v_sso_base NUMERIC(14,2) := 0;
   v_sso_amount NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
+  v_income_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
   v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
@@ -1019,6 +1043,10 @@ BEGIN
   FROM payroll_accumulation
   WHERE employee_id = v_emp.id AND accum_type = 'tax' AND accum_year = EXTRACT(YEAR FROM v_run.payroll_month_date);
 
+  SELECT COALESCE(amount, 0) INTO v_income_prev
+  FROM payroll_accumulation
+  WHERE employee_id = v_emp.id AND accum_type = 'income' AND accum_year = EXTRACT(YEAR FROM v_run.payroll_month_date);
+
   SELECT COALESCE(amount, 0) INTO v_pf_prev
   FROM payroll_accumulation
   WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
@@ -1124,6 +1152,7 @@ BEGIN
     sso_accum_prev = COALESCE(v_sso_prev,0),
     tax_accum_prev = COALESCE(v_tax_prev,0),
     tax_month_amount = v_tax_month,
+    income_accum_prev = COALESCE(v_income_prev,0),
     pf_accum_prev = COALESCE(v_pf_prev,0),
     pf_month_amount = v_pf_amount,
     water_rate_per_unit = v_config.water_rate_per_unit,
@@ -1272,6 +1301,51 @@ FOR EACH ROW EXECUTE FUNCTION sync_payroll_on_financial_change();
 CREATE TRIGGER tg_sync_payroll_bonus
 AFTER UPDATE OF bonus_amount ON bonus_item
 FOR EACH ROW EXECUTE FUNCTION sync_payroll_on_financial_change();
+
+---  2.5 เมื่อมีการแก้ไข payroll_accumulation ให้คำนวณยอด prev ใหม่ในงวดที่ยัง Pending
+CREATE OR REPLACE FUNCTION public.sync_payroll_on_accum_change() RETURNS trigger AS $$
+DECLARE
+  r_run RECORD;
+  v_emp_id UUID;
+  v_type TEXT;
+  v_year INT;
+BEGIN
+  v_emp_id := COALESCE(NEW.employee_id, OLD.employee_id);
+  v_type := COALESCE(NEW.accum_type, OLD.accum_type);
+  v_year := COALESCE(NEW.accum_year, OLD.accum_year);
+
+  IF v_emp_id IS NULL OR v_type IS NULL THEN
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  FOR r_run IN
+    SELECT id, payroll_month_date
+    FROM payroll_run
+    WHERE status = 'pending'
+      AND deleted_at IS NULL
+      AND (
+        (v_type IN ('sso', 'sso_employer', 'tax', 'income') AND v_year IS NOT NULL AND EXTRACT(YEAR FROM payroll_month_date) = v_year)
+        OR
+        (v_type IN ('pf', 'pf_employer', 'loan_outstanding') AND v_year IS NULL)
+      )
+  LOOP
+    PERFORM recalculate_payroll_item(r_run.id, v_emp_id);
+  END LOOP;
+
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tg_sync_payroll_accum_change ON payroll_accumulation;
+CREATE TRIGGER tg_sync_payroll_accum_change
+AFTER INSERT OR UPDATE OR DELETE ON payroll_accumulation
+FOR EACH ROW EXECUTE FUNCTION sync_payroll_on_accum_change();
 
 ---  2.4 เมื่อ payout_pt ถูกจ่าย ให้ตัดชั่วโมงออกจาก payroll pending
 CREATE OR REPLACE FUNCTION public.sync_payroll_on_payout_pt_paid() RETURNS trigger AS $$

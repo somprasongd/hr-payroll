@@ -336,11 +336,14 @@
       "sso": "Social Security",
       "tax": "Withholding Tax",
       "pf": "Provident Fund",
-      "loan_outstanding": "Accumulated Debt"
+      "loan_outstanding": "Accumulated Debt",
+      "income": "Accumulated Income"
     },
     "amount": "Amount",
     "selectYear": "Select Year",
+    "yearly": "Yearly",
     "lifetime": "Lifetime",
+    "lifetimeGroup": "Lifetime Accumulated",
     "cancel": "Cancel",
     "save": "Save"
   },

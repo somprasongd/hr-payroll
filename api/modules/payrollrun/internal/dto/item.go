@@ -23,6 +23,8 @@ type Item struct {
 	BonusAmount             float64   `json:"bonusAmount"`
 	LeaveCompensationAmount float64   `json:"leaveCompensationAmount"`
 	IncomeTotal             float64   `json:"incomeTotal"`
+	IncomeAccumPrev         float64   `json:"incomeAccumPrev"`
+	IncomeAccumTotal        float64   `json:"incomeAccumTotal"`
 	LeaveDaysQty            float64   `json:"leaveDaysQty"`
 	LeaveDaysDeduction      float64   `json:"leaveDaysDeduction"`
 	LateMinutesQty          int       `json:"lateMinutesQty"`
@@ -59,6 +61,8 @@ func FromItem(r repository.Item) Item {
 		BonusAmount:             r.BonusAmount,
 		LeaveCompensationAmount: r.LeaveCompensationAmount,
 		IncomeTotal:             r.IncomeTotal,
+		IncomeAccumPrev:         r.IncomeAccumPrev,
+		IncomeAccumTotal:        r.IncomeAccumTotal,
 		LeaveDaysQty:            r.LeaveDaysQty,
 		LeaveDaysDeduction:      r.LeaveDaysDeduction,
 		LateMinutesQty:          r.LateMinutesQty,
@@ -97,6 +101,8 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 			BonusAmount:             r.BonusAmount,
 			LeaveCompensationAmount: r.LeaveCompensationAmount,
 			IncomeTotal:             r.IncomeTotal,
+			IncomeAccumPrev:         r.IncomeAccumPrev,
+			IncomeAccumTotal:        r.IncomeAccumTotal,
 			LeaveDaysQty:            r.LeaveDaysQty,
 			LeaveDaysDeduction:      r.LeaveDaysDeduction,
 			LateMinutesQty:          r.LateMinutesQty,

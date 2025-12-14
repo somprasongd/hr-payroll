@@ -106,6 +106,8 @@ export interface PayslipDetail {
   doctorFee: number;
   othersIncome: OtherIncomeItem[];
   incomeTotal: number;
+  incomeAccumPrev: number;
+  incomeAccumTotal: number;
   
   // Employee flags for field permissions
   ssoContribute: boolean;

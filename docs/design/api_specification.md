@@ -1139,6 +1139,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "totals": {
     "sso": 4500.0,
     "tax": 2500.0,
+    "income": 820000.0,
     "providentFund": 150000.0
   },
   "updatedAt": "2025-11-21T10:30:00Z"
@@ -1154,6 +1155,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 | `totals`               | วัตถุเก็บยอดรวม                                    | Object     | `{...}`      |
 | `totals.sso`           | ยอดประกันสังคมสะสม **รายปี**                       | Number     | `4500.00`    |
 | `totals.tax`           | ยอดภาษีหัก ณ ที่จ่ายสะสม **รายปี**                 | Number     | `2500.00`    |
+| `totals.income`        | ยอดรายได้สะสม **รายปี**                            | Number     | `820000.00`  |
 | `totals.providentFund` | ยอดกองทุนสำรองเลี้ยงชีพสะสม **ทั้งหมด (Lifetime)** | Number     | `150000.00`  |
 | `updatedAt`            | เวลาที่มีการแก้ไขยอดล่าสุด                         | String     | `"2025..."`  |
 
@@ -1188,9 +1190,9 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 | **ชื่อ (Name)** | **คำอธิบาย**                   | **ประเภท** | **Required** | **Constraint**                                 |
 | --------------- | ------------------------------ | ---------- | ------------ | ---------------------------------------------- |
-| `type`          | ประเภทเงินสะสม                 | Enum       | **Yes**      | `sso`, `tax`, `pf`                             |
+| `type`          | ประเภทเงินสะสม                 | Enum       | **Yes**      | `sso`, `tax`, `income`, `pf`                   |
 | `amount`        | ยอดเงินสะสมรวมใหม่ (Net Total) | Number     | **Yes**      | >= 0                                           |
-| `year`          | ปีปฏิทิน                       | Integer    | Cond         | จำเป็นสำหรับ `sso`, `tax` (ห้ามใส่สำหรับ `pf`) |
+| `year`          | ปีปฏิทิน                       | Integer    | Cond         | จำเป็นสำหรับ `sso`, `tax`, `income` (ห้ามใส่สำหรับ `pf`) |
 | `note`          | บันทึกช่วยจำ                   | String     | No           |                                                |
 
 **Success Response Example (200 OK):**
@@ -2914,6 +2916,8 @@ Logic (Database Trigger):
       "ptHourlyRate": 0,    // เฉพาะพนักงาน part_time (อื่นๆ = 0)
       "leaveCompensationAmount": 200.0,
       "incomeTotal": 35000.0,
+      "incomeAccumPrev": 320000.0, // รายได้สะสมก่อนงวดนี้ (รายปี)
+      "incomeAccumTotal": 355000.0, // รายได้สะสมหลังรวมงวดนี้ (รายปี)
       "deductionTotal": 1500.0,
       "netPay": 33500.0, // (Income - Deduction) - Calculated in DB
       "doctorFee": 800.0,
@@ -2973,6 +2977,8 @@ Logic (Database Trigger):
     ],
     "total": 35000.0
   },
+  "incomeAccumPrev": 320000.0,
+  "incomeAccumTotal": 355000.0,
   "deductions": {
     "tax": 500.0,
     "sso": 750.0,

@@ -2,10 +2,10 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'accum_type') THEN
-    -- sso | tax | pf
+    -- sso | tax | income | pf
     CREATE DOMAIN accum_type AS TEXT
       CONSTRAINT accum_type_chk
-      CHECK (VALUE IN ('tax', 'sso', 'sso_employer', 'pf', 'pf_employer', 'loan_outstanding'));
+      CHECK (VALUE IN ('tax', 'sso', 'sso_employer', 'income', 'pf', 'pf_employer', 'loan_outstanding'));
   END IF;
 END$$;
 
@@ -13,8 +13,8 @@ END$$;
 CREATE TABLE IF NOT EXISTS payroll_accumulation (
   id           UUID PRIMARY KEY DEFAULT uuidv7(),
   employee_id  UUID NOT NULL REFERENCES employees(id),
-  accum_type   accum_type NOT NULL,     -- sso | tax | pf
-  accum_year   INTEGER NULL,            -- มีค่า = รายปี (sso/tax), NULL = ตลอดชีพ (pf)
+  accum_type   accum_type NOT NULL,     -- sso | tax | income | pf
+  accum_year   INTEGER NULL,            -- มีค่า = รายปี (sso/tax/income), NULL = ตลอดชีพ (pf)
   amount       NUMERIC(14,2) NOT NULL DEFAULT 0.00,
 
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS payroll_accumulation (
 
   CONSTRAINT payroll_accum_year_ck
     CHECK (
-      (accum_type IN ('tax', 'sso', 'sso_employer') AND accum_year IS NOT NULL)
+      (accum_type IN ('tax', 'sso', 'sso_employer', 'income') AND accum_year IS NOT NULL)
       OR
       (accum_type IN ('pf', 'pf_employer', 'loan_outstanding') AND accum_year IS NULL)
     )

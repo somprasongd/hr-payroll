@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { format } from 'date-fns';
 import { ArrowLeft, Banknote, Search, Edit, Eye, Filter, RotateCcw, CheckCircle } from 'lucide-react';
 
@@ -33,6 +33,7 @@ export default function PayrollDetailPage() {
   const t = useTranslations('Payroll');
   const tCommon = useTranslations('Common');
   const tEmployees = useTranslations('Employees');
+  const locale = useLocale();
   const { user } = useAuthStore();
   
   const runId = params.id as string;
@@ -233,7 +234,7 @@ export default function PayrollDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-row items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/payroll')}>
+        <Button variant="ghost" size="icon" onClick={() => router.push(`/${locale}/payroll`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
