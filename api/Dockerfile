@@ -3,7 +3,7 @@ FROM golang:1.25-alpine AS builder
 WORKDIR /workspace
 
 # Cache dependencies
-RUN mkdir -p app modules/auth modules/user shared/common
+RUN mkdir -p app modules/auth modules/user modules/payrollorgprofile shared/common
 COPY app/go.mod app/go.sum app/
 COPY modules/auth/go.mod modules/auth/go.sum modules/auth/
 COPY modules/user/go.mod modules/user/go.sum modules/user/
@@ -19,6 +19,7 @@ COPY modules/salaryraise/go.mod modules/salaryraise/go.sum modules/salaryraise/
 COPY modules/bonus/go.mod modules/bonus/go.sum modules/bonus/
 COPY modules/debt/go.mod modules/debt/go.sum modules/debt/
 COPY modules/payrollrun/go.mod modules/payrollrun/go.sum modules/payrollrun/
+COPY modules/payrollorgprofile/go.mod modules/payrollorgprofile/go.sum modules/payrollorgprofile/
 COPY modules/masterdata/go.mod modules/masterdata/go.sum modules/masterdata/
 COPY modules/payoutpt/go.mod modules/payoutpt/go.sum modules/payoutpt/
 
