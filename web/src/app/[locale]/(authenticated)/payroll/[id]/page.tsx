@@ -405,6 +405,7 @@ export default function PayrollDetailPage() {
           onOpenChange={setEditDialogOpen}
           itemId={items[selectedItemIndex].id}
           employeeName={items[selectedItemIndex].employeeName}
+          employeeNumber={items[selectedItemIndex].employeeNumber}
           employeeTypeName={items[selectedItemIndex].employeeTypeName}
           canEdit={isPending}
           hasPrevious={selectedItemIndex > 0}

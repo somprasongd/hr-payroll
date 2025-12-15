@@ -14,6 +14,7 @@ type ListItem struct {
 	ID                  uuid.UUID `json:"id"`
 	EmployeeNumber      string    `json:"employeeNumber"`
 	FullNameTh          string    `json:"fullNameTh"`
+	TitleName           *string   `json:"titleName,omitempty"`
 	EmployeeTypeName    string    `json:"employeeTypeName"`
 	Phone               *string   `json:"phone,omitempty"`
 	Email               *string   `json:"email,omitempty"`
@@ -31,6 +32,7 @@ type Detail struct {
 	ID                        uuid.UUID  `json:"id"`
 	EmployeeNumber            string     `json:"employeeNumber"`
 	TitleID                   uuid.UUID  `json:"titleId"`
+	TitleName                 *string    `json:"titleName,omitempty"`
 	FirstName                 string     `json:"firstName"`
 	LastName                  string     `json:"lastName"`
 	IDDocumentTypeID          uuid.UUID  `json:"idDocumentTypeId"`
@@ -67,6 +69,7 @@ func FromListRecord(r repository.ListRecord) ListItem {
 		ID:                  r.ID,
 		EmployeeNumber:      r.EmployeeNumber,
 		FullNameTh:          r.FullNameTh,
+		TitleName:           r.TitleName,
 		EmployeeTypeName:    r.EmployeeTypeName,
 		Phone:               r.Phone,
 		Email:               r.Email,
@@ -92,6 +95,7 @@ func FromDetailRecord(r repository.DetailRecord) Detail {
 		IDDocumentNumber:          r.IDDocumentNumber,
 		Phone:                     r.Phone,
 		Email:                     r.Email,
+		TitleName:                 r.TitleName,
 		PhotoID:                   r.PhotoID,
 		EmployeeTypeID:            r.EmployeeTypeID,
 		DepartmentID:              r.DepartmentID,

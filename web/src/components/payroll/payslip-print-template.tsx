@@ -295,7 +295,7 @@ const SlipHalf = ({
         <div style={styles.slipTitle}>
           <div style={styles.slipTitleBox}>ใบจ่ายเงินเดือน</div>
           <div style={{ fontSize: '10px', ...styles.gray }}>PAY SLIP</div>
-          <div style={styles.slipType}>{isOriginal ? 'ต้นฉบับ' : 'สำเนา'}</div>
+          <div style={styles.slipType}>{isOriginal ? 'ต้นฉบับ မူရင်း' : 'สำเนา မိတ္တူ'}</div>
         </div>
       </div>
 
@@ -307,7 +307,7 @@ const SlipHalf = ({
         </div>
         <div>
           <div style={styles.label}><BiLabel th="ชื่อ-นามสกุล" my="သာမည်" /></div>
-          <div style={styles.value}>{payslip.employeeName}</div>
+          <div style={styles.value}>{payslip.titleName ? `${payslip.titleName} ` : ''}{payslip.employeeName}</div>
         </div>
         <div>
           <div style={styles.label}><BiLabel th="แผนก" my="ငှင်း" /></div>

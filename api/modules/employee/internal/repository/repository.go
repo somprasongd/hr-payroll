@@ -26,6 +26,7 @@ type ListRecord struct {
 	ID                  uuid.UUID `db:"id"`
 	EmployeeNumber      string    `db:"employee_number"`
 	FullNameTh          string    `db:"full_name_th"`
+	TitleName           *string   `db:"title_name"`
 	EmployeeTypeName    string    `db:"employee_type_name"`
 	Phone               *string   `db:"phone"`
 	Email               *string   `db:"email"`
@@ -37,6 +38,7 @@ type DetailRecord struct {
 	ID                        uuid.UUID  `db:"id"`
 	EmployeeNumber            string     `db:"employee_number"`
 	TitleID                   uuid.UUID  `db:"title_id"`
+	TitleName                 *string    `db:"title_name"`
 	FirstName                 string     `db:"first_name"`
 	LastName                  string     `db:"last_name"`
 	IDDocumentTypeID          uuid.UUID  `db:"id_document_type_id"`
@@ -138,6 +140,7 @@ SELECT
   e.id,
   e.employee_number,
   (pt.name_th || e.first_name || ' ' || e.last_name) AS full_name_th,
+  pt.name_th AS title_name,
   et.name_th AS employee_type_name,
   e.phone,
   e.email,
@@ -227,8 +230,10 @@ SELECT
   e.allow_doctor_fee,
   e.created_at,
   e.updated_at,
-  CASE WHEN e.employment_end_date IS NULL THEN 'active' ELSE 'terminated' END AS status
+  CASE WHEN e.employment_end_date IS NULL THEN 'active' ELSE 'terminated' END AS status,
+  pt.name_th AS title_name
 FROM employees e
+LEFT JOIN person_title pt ON pt.id = e.title_id
 WHERE e.id = $1 AND e.deleted_at IS NULL
 LIMIT 1`
 	var rec DetailRecord

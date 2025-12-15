@@ -5,6 +5,7 @@ export interface Employee {
   id: string;
   employeeNumber: string;
   titleId: string;
+  titleName?: string;
   firstName: string;
   lastName: string;
   idDocumentTypeId: string;

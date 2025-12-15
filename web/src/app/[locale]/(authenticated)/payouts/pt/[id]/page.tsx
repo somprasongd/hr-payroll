@@ -1,10 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Loader2, DollarSign, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, DollarSign, Trash2, Printer } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
 import {
   Table,
   TableBody,
@@ -15,11 +16,14 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { payoutPtService, PayoutPt } from '@/services/payout-pt.service';
 import { employeeService, Employee } from '@/services/employee.service';
+import { orgProfileService, OrgProfile } from '@/services/org-profile.service';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
+import { PtPayoutPrintTemplate } from '@/components/payroll/pt-payout-print-template';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,9 +60,48 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Print functionality
+  const printRef = useRef<HTMLDivElement>(null);
+  const [orgProfile, setOrgProfile] = useState<OrgProfile | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [printing, setPrinting] = useState(false);
+  const [printOriginal, setPrintOriginal] = useState(true);
+  const [printCopy, setPrintCopy] = useState(true);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `PTAdvance_${employee?.employeeNumber || ''}_${employee?.firstName || ''}${employee?.lastName || ''}`,
+    pageStyle: `
+      @page {
+        size: A4 portrait;
+        margin: 5mm;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    `,
+  });
+
   useEffect(() => {
     fetchPayout();
+    fetchOrgProfile();
   }, [id]);
+
+  const fetchOrgProfile = async () => {
+    try {
+      const data = await orgProfileService.getEffective();
+      setOrgProfile(data);
+      if (data.logoId) {
+        const url = await orgProfileService.fetchLogoWithCache(data.logoId);
+        setLogoUrl(url);
+      }
+    } catch (error) {
+      console.error('Failed to fetch org profile', error);
+    }
+  };
 
   const fetchPayout = async () => {
     setLoading(true);
@@ -215,6 +258,51 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
             </AlertDialog>
           </div>
         )}
+
+        {/* Print Button - Only when paid */}
+        {payout.status === 'paid' && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">พิมพ์:</span>
+            <div className="flex items-center gap-1">
+              <Checkbox
+                id="printOriginal"
+                checked={printOriginal}
+                onCheckedChange={(checked) => {
+                  if (!checked && !printCopy) return;
+                  setPrintOriginal(checked === true);
+                }}
+                className="h-4 w-4"
+              />
+              <label htmlFor="printOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
+            </div>
+            <div className="flex items-center gap-1">
+              <Checkbox
+                id="printCopy"
+                checked={printCopy}
+                onCheckedChange={(checked) => {
+                  if (!checked && !printOriginal) return;
+                  setPrintCopy(checked === true);
+                }}
+                className="h-4 w-4"
+              />
+              <label htmlFor="printCopy" className="text-sm cursor-pointer">สำเนา</label>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPrinting(true);
+                setTimeout(() => {
+                  handlePrint();
+                  setPrinting(false);
+                }, 100);
+              }}
+              disabled={printing || (!printOriginal && !printCopy)}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              พิมพ์สลิป
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -255,7 +343,7 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
               <div>
                 <label className="text-sm font-medium text-gray-500">{t('fields.employee')}</label>
                 <div className="font-medium text-lg">
-                  {employee ? `${employee.firstName || employee.FirstName} ${employee.lastName || employee.LastName}` : payout.employeeId}
+                  {employee ? `${employee.titleName || ''} ${employee.firstName || employee.FirstName || ''} ${employee.lastName || employee.LastName || ''}`.trim() : payout.employeeId}
                 </div>
                 <div className="text-sm text-gray-500">{employee?.employeeNumber || employee?.EmployeeNumber}</div>
               </div>
@@ -300,6 +388,20 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </div>
+
+      {/* Hidden Print Template */}
+      <div style={{ display: 'none' }}>
+        <div ref={printRef}>
+          <PtPayoutPrintTemplate
+            payout={payout}
+            employee={employee}
+            orgProfile={orgProfile}
+            logoUrl={logoUrl || undefined}
+            printOriginal={printOriginal}
+            printCopy={printCopy}
+          />
         </div>
       </div>
     </div>

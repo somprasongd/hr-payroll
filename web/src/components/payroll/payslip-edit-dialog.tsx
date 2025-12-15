@@ -46,6 +46,7 @@ interface PayslipEditDialogProps {
   onOpenChange: (open: boolean) => void;
   itemId: string;
   employeeName: string;
+  employeeNumber?: string;
   employeeTypeName?: string;
   canEdit: boolean;
   hasPrevious: boolean;
@@ -65,6 +66,7 @@ export function PayslipEditDialog({
   onOpenChange,
   itemId,
   employeeName,
+  employeeNumber,
   employeeTypeName,
   canEdit,
   hasPrevious,
@@ -123,7 +125,7 @@ export function PayslipEditDialog({
   
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `PaySlip-${employeeName}`,
+    documentTitle: `PaySlip_${payrollMonthDate ? payrollMonthDate.substring(0, 7) : ''}_${employeeNumber || ''}_${employeeName}`,
     pageStyle: `
       @page {
         size: A4 portrait;
@@ -1091,7 +1093,6 @@ export function PayslipEditDialog({
                       </div>
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={async () => {
                           setPrinting(true);
                           // Fetch logo if not already loaded

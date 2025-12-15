@@ -119,7 +119,7 @@ export function BatchPrintDialog({
   // Fetch payslip details for selected items and print
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `payslips_${payrollMonthDate}`,
+    documentTitle: `payslips_${payrollMonthDate.substring(0, 7)}`,
     onBeforePrint: async () => {
       setLoading(true);
       try {
