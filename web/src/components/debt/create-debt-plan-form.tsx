@@ -11,6 +11,8 @@ import { Plus, Trash2, Calculator, ArrowLeft } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from '@/store/auth-store';
+
 import {
   Form,
   FormControl,
@@ -92,6 +94,7 @@ export function CreateDebtPlanForm() {
   const router = useRouter();
   const locale = useLocale();
   const searchParams = useSearchParams();
+  const user = useAuthStore((state) => state.user);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [currentDebt, setCurrentDebt] = useState(0);
   
@@ -195,7 +198,7 @@ export function CreateDebtPlanForm() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      await debtService.createDebtPlan({
+      const result = await debtService.createDebtPlan({
         employeeId: data.employeeId,
         txnType: data.txnType,
         otherDesc: data.otherDesc,
@@ -205,7 +208,11 @@ export function CreateDebtPlanForm() {
         installments: data.hasInstallment && data.installments ? data.installments : []
       });
       
-      router.push(`/${locale}/debt?employeeId=${data.employeeId}`);
+      if (user?.role === 'admin') {
+        router.push(`/${locale}/debt/${result.id}`);
+      } else {
+        router.push(`/${locale}/debt?employeeId=${data.employeeId}`);
+      }
     } catch (error: any) {
       console.error(error);
       const errorMessage = error.response?.data?.message || tCommon('error');

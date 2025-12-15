@@ -307,7 +307,7 @@ const SlipHalf = ({
         </div>
         <div>
           <div style={styles.label}><BiLabel th="ชื่อ-นามสกุล" my="သာမည်" /></div>
-          <div style={styles.value}>{payslip.titleName ? `${payslip.titleName} ` : ''}{payslip.employeeName}</div>
+          <div style={styles.value}>{payslip.employeeName}</div>
         </div>
         <div>
           <div style={styles.label}><BiLabel th="แผนก" my="ငှင်း" /></div>

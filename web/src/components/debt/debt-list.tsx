@@ -262,9 +262,9 @@ export function DebtList() {
         </div>
       </div>
 
-      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 ${!showFilters ? 'hidden md:block' : ''} ${employeeFilter !== 'all' ? 'lg:relative' : ''}`}>
+      <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm ${!showFilters ? 'hidden md:block' : ''} ${employeeFilter !== 'all' ? 'lg:relative' : ''}`}>
         <div className="grid grid-cols-6 gap-4">
-          <div className="col-span-6 lg:col-span-2">
+          <div className="col-span-6 lg:col-span-3">
              <EmployeeSelector
               employees={employees}
               selectedEmployeeId={employeeFilter}
@@ -275,35 +275,35 @@ export function DebtList() {
             />
           </div>
 
-          <div className="col-span-6 lg:col-span-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('status.allStatuses')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('status.allStatuses')}</SelectItem>
-                <SelectItem value="pending">{t('status.pending')}</SelectItem>
-                <SelectItem value="approved">{t('status.approved')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="col-span-6 lg:col-span-3 flex flex-col sm:flex-row gap-2">
+            <div className="w-full sm:w-[180px]">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('status.allStatuses')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('status.allStatuses')}</SelectItem>
+                  <SelectItem value="pending">{t('status.pending')}</SelectItem>
+                  <SelectItem value="approved">{t('status.approved')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="col-span-6 lg:col-span-2">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('status.allTypes')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('status.allTypes')}</SelectItem>
-                <SelectItem value="loan">{t('types.loan')}</SelectItem>
-                <SelectItem value="other">{t('types.other')}</SelectItem>
-                <SelectItem value="repayment">{t('types.repayment')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="w-full sm:w-[180px]">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('status.allTypes')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('status.allTypes')}</SelectItem>
+                  <SelectItem value="loan">{t('types.loan')}</SelectItem>
+                  <SelectItem value="other">{t('types.other')}</SelectItem>
+                  <SelectItem value="repayment">{t('types.repayment')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {(statusFilter !== 'all' || typeFilter !== 'all' || employeeFilter !== 'all') && (
-            <div className="col-span-6 lg:absolute lg:top-4 lg:right-4 flex items-center justify-end">
+            {(statusFilter !== 'all' || typeFilter !== 'all' || employeeFilter !== 'all') && (
               <button
                 onClick={clearFilters}
                 className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -311,8 +311,8 @@ export function DebtList() {
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
