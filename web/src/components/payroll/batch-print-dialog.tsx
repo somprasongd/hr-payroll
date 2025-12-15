@@ -50,6 +50,10 @@ export function BatchPrintDialog({
   // Selected employee IDs (default: all selected)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
+  // Print options (default: both checked)
+  const [printOriginal, setPrintOriginal] = useState(true);
+  const [printCopy, setPrintCopy] = useState(true);
+  
   // Payslip details for print
   const [payslipsForPrint, setPayslipsForPrint] = useState<PayslipDetail[]>([]);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -136,9 +140,11 @@ export function BatchPrintDialog({
       setPrinting(false);
     },
   });
+  // Check if at least one print option is selected
+  const canPrint = selectedIds.size > 0 && (printOriginal || printCopy);
 
   const onPrintClick = async () => {
-    if (selectedIds.size === 0) return;
+    if (!canPrint) return;
     
     setPrinting(true);
     setLoading(true);
@@ -196,6 +202,35 @@ export function BatchPrintDialog({
             </Button>
             <div className="flex-1 text-right text-sm text-gray-500">
               {t('print.selectedCount', { count: selectedIds.size })}
+            </div>
+          </div>
+
+          {/* Print Options */}
+          <div className="flex items-center gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
+            <span className="text-sm text-gray-600">พิมพ์:</span>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="printOriginal"
+                checked={printOriginal}
+                onCheckedChange={(checked) => {
+                  // Only allow unchecking if copy is checked
+                  if (!checked && !printCopy) return;
+                  setPrintOriginal(checked === true);
+                }}
+              />
+              <label htmlFor="printOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="printCopy"
+                checked={printCopy}
+                onCheckedChange={(checked) => {
+                  // Only allow unchecking if original is checked
+                  if (!checked && !printOriginal) return;
+                  setPrintCopy(checked === true);
+                }}
+              />
+              <label htmlFor="printCopy" className="text-sm cursor-pointer">สำเนา</label>
             </div>
           </div>
 
@@ -268,6 +303,8 @@ export function BatchPrintDialog({
               bonusYear={bonusYear}
               payrollMonthDate={payrollMonthDate}
               periodStartDate={periodStartDate}
+              printOriginal={printOriginal}
+              printCopy={printCopy}
             />
           ))}
         </div>

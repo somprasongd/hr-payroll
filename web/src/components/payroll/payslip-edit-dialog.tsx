@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   payrollService,
   PayslipDetail,
@@ -117,6 +118,8 @@ export function PayslipEditDialog({
   const printRef = useRef<HTMLDivElement>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [printing, setPrinting] = useState(false);
+  const [printOriginal, setPrintOriginal] = useState(true);
+  const [printCopy, setPrintCopy] = useState(true);
   
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -1058,11 +1061,40 @@ export function PayslipEditDialog({
                   {/* Print Button - Only when approved */}
                   {isApproved && detail && payrollMonthDate && periodStartDate && (
                     <>
+                      {/* Print Options */}
+                      <div className="flex items-center gap-3 mr-2">
+                        <span className="text-sm text-gray-500">พิมพ์:</span>
+                        <div className="flex items-center gap-1">
+                          <Checkbox
+                            id="dialogPrintOriginal"
+                            checked={printOriginal}
+                            onCheckedChange={(checked) => {
+                              if (!checked && !printCopy) return;
+                              setPrintOriginal(checked === true);
+                            }}
+                            className="h-4 w-4"
+                          />
+                          <label htmlFor="dialogPrintOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Checkbox
+                            id="dialogPrintCopy"
+                            checked={printCopy}
+                            onCheckedChange={(checked) => {
+                              if (!checked && !printOriginal) return;
+                              setPrintCopy(checked === true);
+                            }}
+                            className="h-4 w-4"
+                          />
+                          <label htmlFor="dialogPrintCopy" className="text-sm cursor-pointer">สำเนา</label>
+                        </div>
+                      </div>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={async () => {
                           setPrinting(true);
-                          // Fetch logo first if exists
+                          // Fetch logo if not already loaded
                           if (orgProfile?.logo_id && !logoUrl) {
                             try {
                               const url = await orgProfileService.fetchLogoWithCache(orgProfile.logo_id);
@@ -1077,7 +1109,7 @@ export function PayslipEditDialog({
                             setPrinting(false);
                           }, 300);
                         }}
-                        disabled={printing}
+                        disabled={printing || (!printOriginal && !printCopy)}
                       >
                         <Printer className="h-4 w-4 mr-2" />
                         {t('print.button')}
@@ -1092,6 +1124,8 @@ export function PayslipEditDialog({
                             bonusYear={bonusYear}
                             payrollMonthDate={payrollMonthDate}
                             periodStartDate={periodStartDate}
+                            printOriginal={printOriginal}
+                            printCopy={printCopy}
                           />
                         </div>
                       </div>

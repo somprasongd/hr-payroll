@@ -15,6 +15,8 @@ interface PayslipPrintTemplateProps {
   bonusYear?: number | null;
   payrollMonthDate: string;
   periodStartDate: string;
+  printOriginal?: boolean;
+  printCopy?: boolean;
 }
 
 // Format number with Thai locale
@@ -440,6 +442,8 @@ const SlipHalf = ({
 // Main component
 export const PayslipPrintTemplate = forwardRef<HTMLDivElement, PayslipPrintTemplateProps>(
   function PayslipPrintTemplate(props, ref) {
+    const { printOriginal = true, printCopy = true, ...otherProps } = props;
+    
     return (
       <div
         ref={ref}
@@ -452,10 +456,10 @@ export const PayslipPrintTemplate = forwardRef<HTMLDivElement, PayslipPrintTempl
         }}
       >
         {/* Original - Full Page */}
-        <SlipHalf {...props} isOriginal={true} />
+        {printOriginal && <SlipHalf {...otherProps} isOriginal={true} />}
         
         {/* Copy - Full Page */}
-        <SlipHalf {...props} isOriginal={false} />
+        {printCopy && <SlipHalf {...otherProps} isOriginal={false} />}
       </div>
     );
   }
