@@ -41,25 +41,26 @@ type Stats struct {
 }
 
 type Item struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	CycleID        uuid.UUID `db:"cycle_id" json:"cycleId"`
-	EmployeeID     uuid.UUID `db:"employee_id" json:"employeeId"`
-	EmployeeName   string    `db:"employee_name" json:"employeeName"`
-	EmployeeNumber string    `db:"employee_number" json:"employeeNumber"`
-	TenureDays     int       `db:"tenure_days" json:"tenureDays"`
-	CurrentSalary  float64   `db:"current_salary" json:"currentSalary"`
-	CurrentSSOWage *float64  `db:"current_sso_wage" json:"currentSsoWage,omitempty"`
-	RaisePercent   float64   `db:"raise_percent" json:"raisePercent"`
-	RaiseAmount    float64   `db:"raise_amount" json:"raiseAmount"`
-	NewSalary      float64   `db:"new_salary" json:"newSalary"`
-	NewSSOWage     *float64  `db:"new_sso_wage" json:"newSsoWage,omitempty"`
-	UpdatedAt      time.Time `db:"updated_at" json:"updatedAt"`
-	LateMinutes    int       `db:"late_minutes" json:"-"`
-	LeaveDays      float64   `db:"leave_days" json:"-"`
-	LeaveDouble    float64   `db:"leave_double_days" json:"-"`
-	LeaveHours     float64   `db:"leave_hours" json:"-"`
-	OtHours        float64   `db:"ot_hours" json:"-"`
-	Stats          Stats     `db:"-" json:"stats"`
+	ID             uuid.UUID  `db:"id" json:"id"`
+	CycleID        uuid.UUID  `db:"cycle_id" json:"cycleId"`
+	EmployeeID     uuid.UUID  `db:"employee_id" json:"employeeId"`
+	EmployeeName   string     `db:"employee_name" json:"employeeName"`
+	EmployeeNumber string     `db:"employee_number" json:"employeeNumber"`
+	PhotoID        *uuid.UUID `db:"photo_id" json:"photoId,omitempty"`
+	TenureDays     int        `db:"tenure_days" json:"tenureDays"`
+	CurrentSalary  float64    `db:"current_salary" json:"currentSalary"`
+	CurrentSSOWage *float64   `db:"current_sso_wage" json:"currentSsoWage,omitempty"`
+	RaisePercent   float64    `db:"raise_percent" json:"raisePercent"`
+	RaiseAmount    float64    `db:"raise_amount" json:"raiseAmount"`
+	NewSalary      float64    `db:"new_salary" json:"newSalary"`
+	NewSSOWage     *float64   `db:"new_sso_wage" json:"newSsoWage,omitempty"`
+	UpdatedAt      time.Time  `db:"updated_at" json:"updatedAt"`
+	LateMinutes    int        `db:"late_minutes" json:"-"`
+	LeaveDays      float64    `db:"leave_days" json:"-"`
+	LeaveDouble    float64    `db:"leave_double_days" json:"-"`
+	LeaveHours     float64    `db:"leave_hours" json:"-"`
+	OtHours        float64    `db:"ot_hours" json:"-"`
+	Stats          Stats      `db:"-" json:"stats"`
 }
 
 func (i *Item) hydrateStats() {
@@ -206,6 +207,7 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, e
 	const qi = `SELECT sri.id, sri.cycle_id, sri.employee_id,
        concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name,
        e.employee_number AS employee_number,
+       e.photo_id AS photo_id,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
        sri.late_minutes, sri.leave_days, sri.leave_double_days, sri.leave_hours, sri.ot_hours,
@@ -250,6 +252,7 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
 	q := fmt.Sprintf(`SELECT sri.id, sri.cycle_id, sri.employee_id,
        %s AS employee_name,
        e.employee_number AS employee_number,
+       e.photo_id AS photo_id,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
        sri.late_minutes, sri.leave_days, sri.leave_double_days, sri.leave_hours, sri.ot_hours,
@@ -258,7 +261,7 @@ FROM salary_raise_item sri
 JOIN employees e ON e.id = sri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
 WHERE %s
-ORDER BY employee_name`, fullNameExpr, where)
+ORDER BY e.employee_number ASC, employee_name`, fullNameExpr, where)
 	var out []Item
 	if err := db.SelectContext(ctx, &out, q, args...); err != nil {
 		return nil, err
@@ -296,6 +299,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, percent, amoun
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE salary_raise_item SET %s WHERE id=$%d RETURNING id, cycle_id, employee_id,
        (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = salary_raise_item.employee_id) AS employee_name,
+       (SELECT photo_id FROM employees e WHERE e.id = salary_raise_item.employee_id) AS photo_id,
        tenure_days, current_salary, current_sso_wage,
        raise_percent, raise_amount, new_salary, new_sso_wage,
        late_minutes, leave_days, leave_double_days, leave_hours, ot_hours,

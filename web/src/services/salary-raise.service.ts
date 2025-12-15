@@ -18,6 +18,9 @@ export interface SalaryRaiseItem {
   employeeId: string;
   employeeNumber: string;
   employeeName: string;
+  firstName?: string;
+  lastName?: string;
+  photoId?: string;
   tenureDays: number;
   currentSalary: number;
   currentSsoWage?: number;

@@ -29,6 +29,7 @@ type Item struct {
 	EmployeeID     uuid.UUID `json:"employeeId"`
 	EmployeeName   string    `json:"employeeName,omitempty"`
 	EmployeeNumber string    `json:"employeeNumber,omitempty"`
+	PhotoID        *uuid.UUID `json:"photoId,omitempty"`
 	TenureDays     int       `json:"tenureDays"`
 	CurrentSalary  float64   `json:"currentSalary"`
 	BonusMonths    float64   `json:"bonusMonths"`
@@ -72,6 +73,7 @@ func FromItem(r repository.Item) Item {
 		EmployeeID:     r.EmployeeID,
 		EmployeeName:   r.EmployeeName,
 		EmployeeNumber: r.EmployeeNumber,
+		PhotoID:        r.PhotoID,
 		TenureDays:     r.TenureDays,
 		CurrentSalary:  r.CurrentSalary,
 		BonusMonths:    r.BonusMonths,

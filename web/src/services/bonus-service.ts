@@ -18,6 +18,9 @@ export interface BonusItem {
   cycleId: string;
   employeeId: string;
   employeeName: string;
+  firstName?: string;
+  lastName?: string;
+  photoId?: string;
   employeeNumber: string;
   currentSalary: number;
   tenureDays: number;

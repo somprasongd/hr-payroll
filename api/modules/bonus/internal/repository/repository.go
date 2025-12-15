@@ -42,6 +42,7 @@ type Item struct {
 	EmployeeID     uuid.UUID `db:"employee_id"`
 	EmployeeName   string    `db:"employee_name"`
 	EmployeeNumber string    `db:"employee_number"`
+	PhotoID        *uuid.UUID `db:"photo_id"`
 	TenureDays     int       `db:"tenure_days"`
 	CurrentSalary  float64   `db:"current_salary"`
 	LateMinutes    int       `db:"late_minutes"`
@@ -174,13 +175,14 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
 	q := fmt.Sprintf(`SELECT bi.id, bi.cycle_id, bi.employee_id,
        %s AS employee_name,
        e.employee_number AS employee_number,
+       e.photo_id AS photo_id,
        bi.tenure_days, bi.current_salary, bi.late_minutes, bi.leave_days, bi.leave_double_days, bi.leave_hours, bi.ot_hours,
        bi.bonus_months, bi.bonus_amount, bi.updated_at
 FROM bonus_item bi
 JOIN employees e ON e.id = bi.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
 WHERE %s
-ORDER BY employee_name`, fullNameExpr, where)
+ORDER BY e.employee_number ASC, employee_name`, fullNameExpr, where)
 	var out []Item
 	if err := db.SelectContext(ctx, &out, q, args...); err != nil {
 		return nil, err
@@ -193,6 +195,7 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, e
 	const q = `SELECT bi.id, bi.cycle_id, bi.employee_id,
        concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name,
        e.employee_number AS employee_number,
+       e.photo_id AS photo_id,
        bi.tenure_days, bi.current_salary, bi.late_minutes, bi.leave_days, bi.leave_double_days, bi.leave_hours, bi.ot_hours,
        bi.bonus_months, bi.bonus_amount, bi.updated_at
 FROM bonus_item bi

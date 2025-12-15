@@ -11,6 +11,7 @@ import { GenericDataTable } from '@/components/common/generic-data-table';
 import { FilterBar } from '@/components/common/filter-bar';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { ActionDropdown } from '@/components/common/action-dropdown';
+import { EmployeePhoto } from '@/components/common/employee-photo';
 
 export default function EmployeesPage() {
   const t = useTranslations('Employees');
@@ -101,8 +102,21 @@ export default function EmployeesPage() {
     {
       id: 'fullName',
       header: () => `${t('fields.firstName')} ${t('fields.lastName')}`,
-      accessorFn: (row: Employee) => row.fullNameTh,
-      cell: (info: any) => info.getValue(),
+      accessorFn: (row: Employee) => row,
+      cell: (info: any) => {
+        const employee = info.getValue() as Employee;
+        return (
+          <div className="flex items-center gap-3">
+            <EmployeePhoto 
+              photoId={employee.photoId} 
+              firstName={employee.firstName}
+              lastName={employee.lastName}
+              size="sm" 
+            />
+            <span>{employee.fullNameTh || '-'}</span>
+          </div>
+        );
+      },
     },
     {
       id: 'employeeType',

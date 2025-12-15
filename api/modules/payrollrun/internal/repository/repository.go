@@ -259,6 +259,7 @@ type Item struct {
 	EmployeeTypeName        *string   `db:"employee_type_name"`
 	EmployeeTypeCode        string    `db:"employee_type_code"`
 	EmployeeNumber          string    `db:"employee_number"`
+	PhotoID                 *uuid.UUID `db:"photo_id"`
 	DepartmentName          *string   `db:"department_name"`
 	PositionName            *string   `db:"position_name"`
 	BankName                *string   `db:"bank_name"`
@@ -320,6 +321,7 @@ func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit 
 	args = append(args, limit, offset)
 	q := fmt.Sprintf(`
 SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_number, et.code AS employee_type_code,
+       e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,
@@ -378,6 +380,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	q := fmt.Sprintf(`UPDATE payroll_run_item SET %s WHERE id=$%d RETURNING id, run_id, employee_id,
        (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
+       (SELECT photo_id FROM employees e WHERE e.id = payroll_run_item.employee_id) AS photo_id,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
        employee_type_name, department_name, position_name, bank_name, bank_account_no,
        salary_amount, pt_hours_worked, pt_hourly_rate, ot_hours, ot_amount, bonus_amount,
@@ -404,6 +407,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,
@@ -468,6 +472,7 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
        concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,

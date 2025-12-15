@@ -21,6 +21,7 @@ import { GenericDataTable } from '@/components/common/generic-data-table';
 import { PayslipEditDialog } from '@/components/payroll/payslip-edit-dialog';
 import { BatchPrintDialog } from '@/components/payroll/batch-print-dialog';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
+import { EmployeePhoto } from '@/components/common/employee-photo';
 import { useAuthStore } from '@/store/auth-store';
 import { 
   payrollService, 
@@ -178,6 +179,13 @@ export default function PayrollDetailPage() {
       cell: (info: any) => (
         <div className="flex items-center gap-2">
           {getEmployeeTypeBadge(info.row.original.employeeTypeCode)}
+          <EmployeePhoto 
+            photoId={info.row.original.photoId}
+            firstName={info.row.original.firstName}
+            lastName={info.row.original.lastName}
+            size="sm"
+            className="shrink-0"
+          />
           <span>{info.row.original.employeeNumber} - {info.getValue()}</span>
         </div>
       ),

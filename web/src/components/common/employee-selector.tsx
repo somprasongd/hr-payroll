@@ -18,6 +18,8 @@ import { Check, ChevronLeft, ChevronRight, ChevronsUpDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { EmployeePhoto } from "@/components/common/employee-photo";
+
 interface EmployeeSelectorProps {
   employees: Employee[];
   selectedEmployeeId: string;
@@ -83,6 +85,13 @@ export function EmployeeSelector({
             {prefix}
           </span>
         )}
+        <EmployeePhoto 
+          photoId={emp.photoId} 
+          firstName={emp.firstName}
+          lastName={emp.lastName}
+          size="sm"
+          className="shrink-0"
+        />
         <span className="truncate">
           {emp.employeeNumber} - {emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}
         </span>

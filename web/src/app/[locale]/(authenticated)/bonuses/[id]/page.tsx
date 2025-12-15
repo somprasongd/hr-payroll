@@ -38,6 +38,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 import { useAuthStore } from '@/store/auth-store';
+import { EmployeePhoto } from '@/components/common/employee-photo';
 
 export default function BonusDetailPage() {
   const t = useTranslations('Bonus');
@@ -354,7 +355,18 @@ export default function BonusDetailPage() {
             {items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium text-muted-foreground">{item.employeeNumber || '-'}</TableCell>
-                <TableCell className="font-medium">{item.employeeName}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <EmployeePhoto
+                      photoId={item.photoId}
+                      firstName={item.firstName}
+                      lastName={item.lastName}
+                      size="sm"
+                      className="shrink-0"
+                    />
+                    <span>{item.employeeName}</span>
+                  </div>
+                </TableCell>
                 <TableCell>{formatTenure(item.tenureDays || 0, t)}</TableCell>
                 <TableCell>{item.currentSalary?.toLocaleString() || '0'}</TableCell>
                 <TableCell>{item.bonusMonths || 0}</TableCell>

@@ -23,15 +23,16 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 }
 
 type ListRecord struct {
-	ID                  uuid.UUID `db:"id"`
-	EmployeeNumber      string    `db:"employee_number"`
-	FullNameTh          string    `db:"full_name_th"`
-	TitleName           *string   `db:"title_name"`
-	EmployeeTypeName    string    `db:"employee_type_name"`
-	Phone               *string   `db:"phone"`
-	Email               *string   `db:"email"`
-	EmploymentStartDate time.Time `db:"employment_start_date"`
-	Status              string    `db:"status"`
+	ID                  uuid.UUID  `db:"id"`
+	EmployeeNumber      string     `db:"employee_number"`
+	FullNameTh          string     `db:"full_name_th"`
+	TitleName           *string    `db:"title_name"`
+	EmployeeTypeName    string     `db:"employee_type_name"`
+	Phone               *string    `db:"phone"`
+	Email               *string    `db:"email"`
+	PhotoID             *uuid.UUID `db:"photo_id"`
+	EmploymentStartDate time.Time  `db:"employment_start_date"`
+	Status              string     `db:"status"`
 }
 
 type DetailRecord struct {
@@ -144,6 +145,7 @@ SELECT
   et.name_th AS employee_type_name,
   e.phone,
   e.email,
+  e.photo_id,
   e.employment_start_date,
   CASE WHEN e.employment_end_date IS NULL THEN 'active' ELSE 'terminated' END AS status
 FROM employees e

@@ -69,6 +69,9 @@ export interface PayrollItem {
   employeeId: string;
   employeeNumber: string;
   employeeName: string;
+  firstName?: string;
+  lastName?: string;
+  photoId?: string;
   employeeTypeCode: string;
   employeeTypeName?: string;
   salaryAmount: number;

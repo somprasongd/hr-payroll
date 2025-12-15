@@ -11,15 +11,16 @@ import (
 const dateLayout = "2006-01-02"
 
 type ListItem struct {
-	ID                  uuid.UUID `json:"id"`
-	EmployeeNumber      string    `json:"employeeNumber"`
-	FullNameTh          string    `json:"fullNameTh"`
-	TitleName           *string   `json:"titleName,omitempty"`
-	EmployeeTypeName    string    `json:"employeeTypeName"`
-	Phone               *string   `json:"phone,omitempty"`
-	Email               *string   `json:"email,omitempty"`
-	EmploymentStartDate string    `json:"employmentStartDate"`
-	Status              string    `json:"status"`
+	ID                  uuid.UUID  `json:"id"`
+	EmployeeNumber      string     `json:"employeeNumber"`
+	FullNameTh          string     `json:"fullNameTh"`
+	TitleName           *string    `json:"titleName,omitempty"`
+	EmployeeTypeName    string     `json:"employeeTypeName"`
+	Phone               *string    `json:"phone,omitempty"`
+	Email               *string    `json:"email,omitempty"`
+	PhotoID             *uuid.UUID `json:"photoId,omitempty"`
+	EmploymentStartDate string     `json:"employmentStartDate"`
+	Status              string     `json:"status"`
 }
 
 type Meta struct {
@@ -73,6 +74,7 @@ func FromListRecord(r repository.ListRecord) ListItem {
 		EmployeeTypeName:    r.EmployeeTypeName,
 		Phone:               r.Phone,
 		Email:               r.Email,
+		PhotoID:             r.PhotoID,
 		EmploymentStartDate: r.EmploymentStartDate.Format(dateLayout),
 		Status:              r.Status,
 	}

@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { EditRaiseItemDialog } from './edit-raise-item-dialog';
 import { SalaryRaiseItem } from '@/services/salary-raise.service';
 import { formatTenure } from '@/lib/format-tenure';
+import { EmployeePhoto } from '@/components/common/employee-photo';
 
 interface SalaryRaiseItemsTableProps {
   items: SalaryRaiseItem[];
@@ -64,7 +65,18 @@ export function SalaryRaiseItemsTable({ items, cycleStatus, onRefresh }: SalaryR
               items.map((item, index) => (
                 <TableRow key={item.id || index}>
                   <TableCell className="font-medium text-muted-foreground">{item.employeeNumber || '-'}</TableCell>
-                  <TableCell className="font-medium">{item.employeeName}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                       <EmployeePhoto
+                        photoId={item.photoId}
+                        firstName={item.firstName}
+                        lastName={item.lastName}
+                        size="sm"
+                        className="shrink-0"
+                      />
+                      <span>{item.employeeName}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">{formatTenure(item.tenureDays || 0, t)}</TableCell>
                   <TableCell className="text-right">
                     {(item.currentSalary || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}

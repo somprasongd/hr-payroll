@@ -13,6 +13,7 @@ type Item struct {
 	RunID                   uuid.UUID `json:"runId"`
 	EmployeeID              uuid.UUID `json:"employeeId"`
 	EmployeeNumber          string    `json:"employeeNumber,omitempty"`
+	PhotoID                 *uuid.UUID `json:"photoId,omitempty"`
 	EmployeeTypeName        *string   `json:"employeeTypeName,omitempty"`
 	EmployeeTypeCode        string    `json:"employeeTypeCode,omitempty"`
 	EmployeeName            string    `json:"employeeName,omitempty"`
@@ -56,6 +57,7 @@ func FromItem(r repository.Item) Item {
 		RunID:                   r.RunID,
 		EmployeeID:              r.EmployeeID,
 		EmployeeNumber:          r.EmployeeNumber,
+		PhotoID:                 r.PhotoID,
 		EmployeeTypeName:        r.EmployeeTypeName,
 		EmployeeTypeCode:        r.EmployeeTypeCode,
 		EmployeeName:            r.EmployeeName,

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Upload, X, User } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-import { Employee, CreateEmployeeRequest, UpdateEmployeeRequest } from '@/services/employee.service';
+import { Employee, CreateEmployeeRequest, UpdateEmployeeRequest, employeeService } from '@/services/employee.service';
 import { masterDataService, AllMasterData } from '@/services/master-data.service';
 import { AccumulationView } from './accumulation-view';
 
@@ -57,6 +57,19 @@ interface EmployeeFormProps {
   // Refs for auto-focus
   const employmentInputRef = React.useRef<HTMLInputElement>(null);
   const financialInputRef = React.useRef<HTMLInputElement>(null);
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Photo upload state
+  const [photoId, setPhotoId] = useState<string>(initialData?.photoId || '');
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  
+  // Load existing photo preview
+  React.useEffect(() => {
+    if (initialData?.photoId) {
+      employeeService.fetchPhotoWithCache(initialData.photoId).then(setPhotoPreview);
+    }
+  }, [initialData?.photoId]);
 
   const employeeSchema = z.object({
     // Personal Info
@@ -148,6 +161,52 @@ interface EmployeeFormProps {
     fetchMasterData();
   }, []);
 
+  // Photo upload handler
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      setSubmitError(t('photoUploadError') + ' (max 2MB)');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setSubmitError(t('photoUploadError') + ' (image only)');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setSubmitError(null);
+
+    try {
+      const response = await employeeService.uploadPhoto(file);
+      setPhotoId(response.id);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      const apiError = err as Error;
+      setSubmitError(apiError.message || t('photoUploadError'));
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoId('');
+    setPhotoPreview(null);
+    if (photoInputRef.current) {
+      photoInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (data: EmployeeFormValues) => {
     setLoading(true);
     setSubmitError(null);
@@ -155,6 +214,7 @@ interface EmployeeFormProps {
       // Transform data: convert percentage to decimal for API
       const transformedData = {
         ...data,
+        photoId: photoId || undefined,
         providentFundRateEmployee: data.providentFundRateEmployee ? data.providentFundRateEmployee / 100 : 0,
         providentFundRateEmployer: data.providentFundRateEmployer ? data.providentFundRateEmployer / 100 : 0,
       };
@@ -350,6 +410,66 @@ interface EmployeeFormProps {
                 <CardTitle>{t('personalInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Photo Upload Section */}
+                <div className="space-y-2">
+                  <Label>{t('fields.photo')}</Label>
+                  <div className="flex items-start gap-4">
+                    {photoPreview ? (
+                      <div className="relative">
+                        <img 
+                          src={photoPreview} 
+                          alt="Employee Photo" 
+                          className="h-24 w-24 object-cover border rounded-lg bg-white"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6"
+                          onClick={handleRemovePhoto}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="h-24 w-24 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted">
+                        <User className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                        id="photo-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={uploadingPhoto}
+                        onClick={() => photoInputRef.current?.click()}
+                      >
+                        {uploadingPhoto ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            {t('photoUploading')}
+                          </>
+                        ) : photoPreview ? (
+                          t('changePhoto')
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            {t('uploadPhoto')}
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">{t('photoHint')}</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                   <div className="md:col-span-2">
                     <FormField
