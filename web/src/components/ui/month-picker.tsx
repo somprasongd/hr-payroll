@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { format, addYears, subYears, setMonth, setYear, startOfMonth } from 'date-fns';
+import { format, addYears, subYears, setMonth, setYear, startOfMonth, isBefore } from 'date-fns';
 import { th, enUS } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -26,6 +26,7 @@ interface MonthPickerProps {
   className?: string;
   placeholder?: string;
   disabled?: boolean;
+  minDate?: Date;
 }
 
 export function MonthPicker({
@@ -34,6 +35,7 @@ export function MonthPicker({
   className,
   placeholder = "Select month",
   disabled = false,
+  minDate,
 }: MonthPickerProps) {
   const tCommon = useTranslations('Common');
   const locale = useLocale();
@@ -97,6 +99,13 @@ export function MonthPicker({
     return format(d, 'MMM', { locale: dateFnsLocale });
   });
 
+  const isMonthDisabled = (monthIndex: number) => {
+    if (!minDate) return false;
+    const checkDate = startOfMonth(setMonth(viewDate, monthIndex));
+    const minDateStart = startOfMonth(minDate);
+    return isBefore(checkDate, minDateStart);
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -134,20 +143,24 @@ export function MonthPicker({
           </Button>
         </div>
         <div className="grid grid-cols-3 gap-2 p-2">
-          {months.map((month, index) => (
-            <Button
-              key={month}
-              variant={
-                date.getMonth() === index && date.getFullYear() === viewDate.getFullYear()
-                  ? "default"
-                  : "ghost"
-              }
-              className="h-9 text-sm"
-              onClick={() => handleMonthSelect(index)}
-            >
-              {month}
-            </Button>
-          ))}
+          {months.map((month, index) => {
+            const isDisabled = isMonthDisabled(index);
+            return (
+              <Button
+                key={month}
+                variant={
+                  date.getMonth() === index && date.getFullYear() === viewDate.getFullYear()
+                    ? "default"
+                    : "ghost"
+                }
+                className="h-9 text-sm"
+                onClick={() => !isDisabled && handleMonthSelect(index)}
+                disabled={isDisabled}
+              >
+                {month}
+              </Button>
+            );
+          })}
         </div>
         <div className="p-2 border-t border-border">
           <Button

@@ -252,6 +252,7 @@ export function CreateSalaryAdvanceDialog({
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder={t('payrollMonth') || 'งวดที่หัก'}
+                      minDate={new Date()}
                     />
                   </FormControl>
                   <FormMessage />
