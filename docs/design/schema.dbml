@@ -107,6 +107,41 @@ Table "employee_type" {
   "name_th" text [not null]
 }
 
+Table "department" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "code" text [not null]
+  "name_th" text [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "created_by" uuid [not null]
+  "updated_at" timestamptz [not null, default: `now()`]
+  "updated_by" uuid [not null]
+  "deleted_at" timestamptz
+  "deleted_by" uuid
+}
+
+Table "employee_position" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "code" text [not null]
+  "name_th" text [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "created_by" uuid [not null]
+  "updated_at" timestamptz [not null, default: `now()`]
+  "updated_by" uuid [not null]
+  "deleted_at" timestamptz
+  "deleted_by" uuid
+}
+
+Table "employee_photo" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "file_name" text [not null]
+  "content_type" text [not null]
+  "file_size_bytes" int8 [not null]
+  "data" bytea [not null]
+  "checksum_md5" text [unique, not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "created_by" uuid [not null]
+}
+
 Table "employees" {
   "id" uuid [pk, not null, default: `uuidv7()`]
   "employee_number" text [not null]
@@ -117,7 +152,10 @@ Table "employees" {
   "id_document_number" text [not null]
   "phone" text
   "email" text
+  "photo_id" uuid
   "employee_type_id" uuid [not null]
+  "department_id" uuid
+  "position_id" uuid
   "base_pay_amount" numeric(12,2) [not null]
   "employment_start_date" date [not null]
   "employment_end_date" date
@@ -142,7 +180,9 @@ Table "employees" {
   "updated_by" uuid [not null]
 
   Indexes {
+    department_id [type: btree, name: "employees_department_idx"]
     (id_document_type_id, id_document_number) [type: btree, name: "employees_doc_idx"]
+    position_id [type: btree, name: "employees_position_idx"]
     employment_end_date [type: btree, name: "employees_work_status_idx"]
   }
 }
@@ -394,6 +434,8 @@ Table "payroll_run" {
   "deleted_by" uuid
   "approved_at" timestamptz
   "approved_by" uuid
+  "org_profile_id" uuid [not null]
+  "org_profile_snapshot" jsonb [not null, default: `{}`]
 
   Indexes {
     (payroll_month_date, status) [type: btree, name: "payroll_run_find_idx"]
@@ -405,6 +447,11 @@ Table "payroll_run_item" {
   "run_id" uuid [not null]
   "employee_id" uuid [not null]
   "employee_type_id" uuid [not null]
+  "employee_type_name" text
+  "department_name" text
+  "position_name" text
+  "bank_name" text
+  "bank_account_no" text
   "salary_amount" numeric(14,2) [not null, default: 0.00]
   "pt_hours_worked" numeric(10,2) [not null, default: 0.00]
   "pt_hourly_rate" numeric(12,2) [not null, default: 0.00]
@@ -465,6 +512,46 @@ Table "payroll_run_item" {
   }
 }
 
+Table "payroll_org_logo" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "file_name" text [not null]
+  "content_type" text [not null]
+  "file_size_bytes" int8 [not null]
+  "data" bytea [not null]
+  "checksum_md5" text [unique, not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "created_by" uuid [not null]
+}
+
+Table "payroll_org_profile" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "effective_daterange" daterange [not null]
+  "version_no" int8 [unique, not null, increment]
+  "company_name" text [not null]
+  "address_line1" text
+  "address_line2" text
+  "subdistrict" text
+  "district" text
+  "province" text
+  "postal_code" text
+  "phone_main" text
+  "phone_alt" text
+  "email" text
+  "tax_id" text
+  "slip_footer_note" text
+  "logo_id" uuid
+  "status" config_status [not null, default: 'active']
+  "created_at" timestamptz [not null, default: `now()`]
+  "created_by" uuid [not null]
+  "updated_at" timestamptz [not null, default: `now()`]
+  "updated_by" uuid [not null]
+
+  Indexes {
+    effective_daterange [type: gist, name: "payroll_org_profile_effective_idx"]
+    effective_daterange [type: gist, name: "payroll_org_profile_no_overlap"]
+  }
+}
+
 Ref "auth_refresh_tokens_user_id_fkey":"users"."id" < "auth_refresh_tokens"."user_id" [delete: cascade]
 
 Ref "bonus_cycle_created_by_fkey":"users"."id" < "bonus_cycle"."created_by"
@@ -491,13 +578,33 @@ Ref "debt_txn_parent_id_fkey":"debt_txn"."id" < "debt_txn"."parent_id" [delete: 
 
 Ref "debt_txn_updated_by_fkey":"users"."id" < "debt_txn"."updated_by"
 
+Ref "department_created_by_fkey":"users"."id" < "department"."created_by"
+
+Ref "department_deleted_by_fkey":"users"."id" < "department"."deleted_by"
+
+Ref "department_updated_by_fkey":"users"."id" < "department"."updated_by"
+
+Ref "employee_photo_created_by_fkey":"users"."id" < "employee_photo"."created_by"
+
+Ref "employee_position_created_by_fkey":"users"."id" < "employee_position"."created_by"
+
+Ref "employee_position_deleted_by_fkey":"users"."id" < "employee_position"."deleted_by"
+
+Ref "employee_position_updated_by_fkey":"users"."id" < "employee_position"."updated_by"
+
 Ref "employees_created_by_fkey":"users"."id" < "employees"."created_by"
 
 Ref "employees_deleted_by_fkey":"users"."id" < "employees"."deleted_by"
 
+Ref "employees_department_id_fkey":"department"."id" < "employees"."department_id" [delete: set null]
+
 Ref "employees_employee_type_id_fkey":"employee_type"."id" < "employees"."employee_type_id" [delete: restrict]
 
 Ref "employees_id_document_type_id_fkey":"id_document_type"."id" < "employees"."id_document_type_id" [delete: restrict]
+
+Ref "employees_photo_id_fkey":"employee_photo"."id" < "employees"."photo_id" [delete: set null]
+
+Ref "employees_position_id_fkey":"employee_position"."id" < "employees"."position_id" [delete: set null]
 
 Ref "employees_title_id_fkey":"person_title"."id" < "employees"."title_id" [delete: restrict]
 
@@ -526,6 +633,14 @@ Ref "payroll_accumulation_updated_by_fkey":"users"."id" < "payroll_accumulation"
 Ref "payroll_config_created_by_fkey":"users"."id" < "payroll_config"."created_by"
 
 Ref "payroll_config_updated_by_fkey":"users"."id" < "payroll_config"."updated_by"
+
+Ref "payroll_org_logo_created_by_fkey":"users"."id" < "payroll_org_logo"."created_by"
+
+Ref "payroll_org_profile_created_by_fkey":"users"."id" < "payroll_org_profile"."created_by"
+
+Ref "payroll_org_profile_logo_id_fkey":"payroll_org_logo"."id" < "payroll_org_profile"."logo_id" [delete: set null]
+
+Ref "payroll_org_profile_updated_by_fkey":"users"."id" < "payroll_org_profile"."updated_by"
 
 Ref "payroll_run_approved_by_fkey":"users"."id" < "payroll_run"."approved_by"
 

@@ -3093,8 +3093,13 @@ Logic (Database Trigger):
       "id": "019ff111-...",
       "employeeId": "019aa095-...",
       "employeeNumber": "EMP-001",
+      "employeeTypeName": "ประจำ",         // snapshot
       "employeeTypeCode": "full_time",
       "employeeName": "สมชาย ศรีสุข",
+      "departmentName": "ฝ่ายขาย",          // snapshot
+      "positionName": "พนักงานขาย",         // snapshot
+      "bankName": "SCB",                    // snapshot
+      "bankAccount": "123-4-56789-0",       // snapshot
       "salaryAmount": 30000.0,
       "ptHoursWorked": 0,   // เฉพาะพนักงาน part_time (อื่นๆ = 0)
       "ptHourlyRate": 0,    // เฉพาะพนักงาน part_time (อื่นๆ = 0)
@@ -3118,7 +3123,7 @@ Logic (Database Trigger):
 }
 ```
 
-**หมายเหตุ:** ระบบจะเรียงผลลัพธ์โดย `employeeTypeCode` (full_time ก่อน part_time) จากนั้นตาม `employeeNumber` แล้วชื่อพนักงาน
+**หมายเหตุ:** ระบบจะเรียงผลลัพธ์โดย `employeeTypeCode` (full_time ก่อน part_time) จากนั้นตาม `employeeNumber` แล้วชื่อพนักงาน; ฟิลด์ `employeeTypeName`, `departmentName`, `positionName`, `bankName`, `bankAccount` เป็น snapshot จาก `payroll_run_item` เพื่อใช้แสดงบนสลิป
 
 ---
 
@@ -3129,13 +3134,50 @@ Logic (Database Trigger):
 - **Endpoint:** `GET /payroll-items/{id}`
 - **Access:** Admin, HR (Admin/HR ดูของทุกคน, User ดูของตัวเองผ่าน API อื่น)
 - **Params:** `id` (UUIDv7 ของ Item)
-- **Fields:** ส่งกลับ `doctorFee` และ flags จาก `employees` (`ssoContribute`, `providentFundContribute`, `withholdTax`, `allowHousing`, `allowWater`, `allowElectric`, `allowInternet`, `allowDoctorFee`) สำหรับใช้ disable input ตามสิทธิ์พนักงาน
+- **Fields:** ส่งกลับข้อมูลแบบ flat จาก `payroll_run_item` (รวม snapshot `employeeTypeName`, `departmentName`, `positionName`, `bankName`, `bankAccount`) + flags จาก `employees` (`ssoContribute`, `providentFundContribute`, `withholdTax`, `allowHousing`, `allowWater`, `allowElectric`, `allowInternet`, `allowDoctorFee`) สำหรับใช้ disable input ตามสิทธิ์พนักงาน
 
 **Success Response (Full Payslip Detail):**
 
 ```json
 {
   "id": "019ff111-...",
+  "runId": "019ee123-...",
+  "employeeId": "019aa095-...",
+  "employeeNumber": "EMP-001",
+  "employeeTypeName": "ประจำ",
+  "employeeTypeCode": "full_time",
+  "employeeName": "สมชาย ศรีสุข",
+  "departmentName": "ฝ่ายขาย",
+  "positionName": "พนักงานขาย",
+  "bankName": "SCB",
+  "bankAccount": "123-4-56789-0",
+  "salaryAmount": 30000.0,
+  "ptHoursWorked": 0,
+  "ptHourlyRate": 0,
+  "otHours": 12.5,
+  "otAmount": 2500.0,
+  "bonusAmount": 0.0,
+  "housingAllowance": 1000.0,
+  "attendanceBonusNoLate": 500.0,
+  "attendanceBonusNoLeave": 500.0,
+  "leaveDaysQty": 0,
+  "leaveDaysDeduction": 0,
+  "leaveDoubleQty": 0,
+  "leaveDoubleDeduction": 0,
+  "leaveHoursQty": 0,
+  "leaveHoursDeduction": 0,
+  "leaveCompensationAmount": 200.0,
+  "lateMinutesQty": 5,
+  "lateMinutesDeduction": 25.0,
+  "othersIncome": [{ "description": "ค่าคอมมิชชั่น", "amount": 1000.0 }],
+  "incomeTotal": 35000.0,
+  "incomeAccumPrev": 320000.0,
+  "incomeAccumTotal": 355000.0,
+  "waterAmount": 0,
+  "electricAmount": 0,
+  "internetAmount": 0,
+  "waterRatePerUnit": 10.0,
+  "electricityRatePerUnit": 6.0,
   "doctorFee": 800.0,
   "ssoContribute": true,
   "providentFundContribute": true,
@@ -3145,35 +3187,29 @@ Logic (Database Trigger):
   "allowElectric": true,
   "allowInternet": true,
   "allowDoctorFee": true,
-  "employee": { "id": "...", "name": "สมชาย", "bankAccount": "..." },
-  "earnings": {
-    "salary": 30000.0,
-    "ot": 2500.0,
-    "bonus": 0.0,
-    "leaveCompensationAmount": 200.0,
-    "housingAllowance": 1000.0,
-    "attendanceBonus": 500.0,
-    "waterRatePerUnit": 10.0,
-    "electricityRatePerUnit": 6.0,
-    "others": [
-      // JSONB others_income
-      { "description": "ค่าคอมมิชชั่น", "amount": 1000.0 }
-    ],
-    "total": 35000.0
-  },
-  "incomeAccumPrev": 320000.0,
-  "incomeAccumTotal": 355000.0,
-  "deductions": {
-    "tax": 500.0,
-    "sso": 750.0,
-    "providentFund": 900.0,
-    "absence": 0.0, // late + leave deduction
-    "loan": 2000.0, // advance + loan repayment
-    "total": 4150.0
-  },
-  "netPay": 30850.0
+  "advanceAmount": 0,
+  "advanceRepayAmount": 0,
+  "advanceDiffAmount": 0,
+  "loanOutstandingPrev": 2000.0,
+  "loanOutstandingTotal": 0.0,
+  "loanRepayments": [{ "txn_id": "...", "amount": 2000.0 }],
+  "ssoDeclaredWage": 15000.0,
+  "ssoMonthAmount": 750.0,
+  "ssoAccumPrev": 5000.0,
+  "ssoAccumTotal": 5750.0,
+  "taxMonthAmount": 500.0,
+  "taxAccumPrev": 4500.0,
+  "taxAccumTotal": 5000.0,
+  "pfMonthAmount": 900.0,
+  "pfAccumPrev": 18000.0,
+  "pfAccumTotal": 18900.0,
+  "deductionTotal": 4150.0,
+  "netPay": 30850.0,
+  "status": "pending"
 }
 ```
+
+ฟิลด์ `employeeTypeName`, `departmentName`, `positionName`, `bankName`, `bankAccount` เป็น snapshot จาก `payroll_run_item` เพื่อใช้พิมพ์/แสดงบนสลิป; ค่าที่เป็น JSONB (`othersIncome`, `loanRepayments`) ถูกแปลงเป็น array of objects ใน response
 
 **หมายเหตุเพิ่มเติม (Part-time):**
 - `ptHoursWorked` และ `ptHourlyRate` ส่งกลับมาเฉพาะพนักงานประเภท `part_time` (พนักงานอื่นเป็น 0)

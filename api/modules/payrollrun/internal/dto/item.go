@@ -13,8 +13,13 @@ type Item struct {
 	RunID                   uuid.UUID `json:"runId"`
 	EmployeeID              uuid.UUID `json:"employeeId"`
 	EmployeeNumber          string    `json:"employeeNumber,omitempty"`
+	EmployeeTypeName        *string   `json:"employeeTypeName,omitempty"`
 	EmployeeTypeCode        string    `json:"employeeTypeCode,omitempty"`
 	EmployeeName            string    `json:"employeeName,omitempty"`
+	DepartmentName          *string   `json:"departmentName,omitempty"`
+	PositionName            *string   `json:"positionName,omitempty"`
+	BankName                *string   `json:"bankName,omitempty"`
+	BankAccount             *string   `json:"bankAccount,omitempty"`
 	SalaryAmount            float64   `json:"salaryAmount"`
 	PTHoursWorked           float64   `json:"ptHoursWorked"` // part-time only
 	PTHourlyRate            float64   `json:"ptHourlyRate"`  // part-time only
@@ -51,8 +56,13 @@ func FromItem(r repository.Item) Item {
 		RunID:                   r.RunID,
 		EmployeeID:              r.EmployeeID,
 		EmployeeNumber:          r.EmployeeNumber,
+		EmployeeTypeName:        r.EmployeeTypeName,
 		EmployeeTypeCode:        r.EmployeeTypeCode,
 		EmployeeName:            r.EmployeeName,
+		DepartmentName:          r.DepartmentName,
+		PositionName:            r.PositionName,
+		BankName:                r.BankName,
+		BankAccount:             r.BankAccount,
 		SalaryAmount:            r.SalaryAmount,
 		PTHoursWorked:           r.PTHoursWorked,
 		PTHourlyRate:            r.PTHourlyRate,
@@ -91,8 +101,13 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 			RunID:                   r.RunID,
 			EmployeeID:              r.EmployeeID,
 			EmployeeNumber:          r.EmployeeNumber,
+			EmployeeTypeName:        r.EmployeeTypeName,
 			EmployeeTypeCode:        r.EmployeeTypeCode,
 			EmployeeName:            r.EmployeeName,
+			DepartmentName:          r.DepartmentName,
+			PositionName:            r.PositionName,
+			BankName:                r.BankName,
+			BankAccount:             r.BankAccount,
 			SalaryAmount:            r.SalaryAmount,
 			PTHoursWorked:           r.PTHoursWorked,
 			PTHourlyRate:            r.PTHourlyRate,
@@ -154,7 +169,6 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 		ElectricMeterCurr:       r.ElectricMeterCurr,
 		WaterRatePerUnit:        r.WaterRatePerUnit,
 		ElectricityRatePerUnit:  r.ElectricityRatePerUnit,
-		BankAccount:             r.BankAccount,
 	}
 
 	if len(r.LoanRepayments) > 0 {
@@ -208,5 +222,4 @@ type ItemDetail struct {
 	ElectricMeterCurr       *float64                 `json:"electricMeterCurr,omitempty"`
 	WaterRatePerUnit        float64                  `json:"waterRatePerUnit"`
 	ElectricityRatePerUnit  float64                  `json:"electricityRatePerUnit"`
-	BankAccount             *string                  `json:"bankAccount,omitempty"`
 }

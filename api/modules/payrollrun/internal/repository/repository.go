@@ -243,8 +243,13 @@ type Item struct {
 	RunID                   uuid.UUID `db:"run_id"`
 	EmployeeID              uuid.UUID `db:"employee_id"`
 	EmployeeName            string    `db:"employee_name"`
+	EmployeeTypeName        *string   `db:"employee_type_name"`
 	EmployeeTypeCode        string    `db:"employee_type_code"`
 	EmployeeNumber          string    `db:"employee_number"`
+	DepartmentName          *string   `db:"department_name"`
+	PositionName            *string   `db:"position_name"`
+	BankName                *string   `db:"bank_name"`
+	BankAccount             *string   `db:"bank_account_no"`
 	SalaryAmount            float64   `db:"salary_amount"`
 	PTHoursWorked           float64   `db:"pt_hours_worked"`
 	PTHourlyRate            float64   `db:"pt_hourly_rate"`
@@ -302,6 +307,7 @@ func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit 
 	args = append(args, limit, offset)
 	q := fmt.Sprintf(`
 SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_number, et.code AS employee_type_code,
+       pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,
        pri.leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
@@ -359,6 +365,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
        (SELECT concat_ws(' ', e.first_name, e.last_name) FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
+       employee_type_name, department_name, position_name, bank_name, bank_account_no,
        salary_amount, pt_hours_worked, pt_hourly_rate, ot_hours, ot_amount, bonus_amount,
        income_total, income_accum_prev, income_accum_total,
        COALESCE(leave_compensation_amount,0) AS leave_compensation_amount, leave_days_qty, leave_days_deduction, late_minutes_qty, late_minutes_deduction,
@@ -383,6 +390,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,
        COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
@@ -438,13 +446,13 @@ type ItemDetail struct {
 	ElectricMeterCurr       *float64  `db:"electric_meter_curr"`
 	WaterRatePerUnit        float64   `db:"water_rate_per_unit"`
 	ElectricityRatePerUnit  float64   `db:"electricity_rate_per_unit"`
-	BankAccount             *string   `db:"bank_account"`
 }
 
 func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetail, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
        concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,
        COALESCE(pri.leave_compensation_amount,0) AS leave_compensation_amount, pri.leave_days_qty, pri.leave_days_deduction, pri.late_minutes_qty, pri.late_minutes_deduction,
@@ -463,8 +471,7 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
        pri.water_meter_prev, pri.water_meter_curr, pri.electric_meter_prev, pri.electric_meter_curr,
        pri.water_rate_per_unit, pri.electricity_rate_per_unit, pri.doctor_fee,
        e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
-       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee,
-       e.bank_account_no AS bank_account
+       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 JOIN employee_type et ON et.id = e.employee_type_id
