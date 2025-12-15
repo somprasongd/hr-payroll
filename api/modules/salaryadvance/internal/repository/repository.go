@@ -68,7 +68,7 @@ func (r Repository) List(ctx context.Context, page, limit int, empID *uuid.UUID,
 
 	q := fmt.Sprintf(`
 SELECT sa.*,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
+  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
 FROM salary_advance sa
 WHERE %s
 ORDER BY sa.advance_date DESC, sa.created_at DESC
@@ -102,7 +102,7 @@ func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT sa.*,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
+  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
 FROM salary_advance sa
 WHERE sa.id=$1 AND sa.deleted_at IS NULL
 LIMIT 1`

@@ -204,7 +204,7 @@ RETURNING id, period_start_date, period_end_date, status, created_at, updated_at
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, error) {
 	db := r.dbCtx(ctx)
 	const qi = `SELECT sri.id, sri.cycle_id, sri.employee_id,
-       (e.first_name || ' ' || e.last_name) AS employee_name,
+       concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name,
        e.employee_number AS employee_number,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
@@ -212,6 +212,7 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, e
        sri.updated_at
 FROM salary_raise_item sri
 JOIN employees e ON e.id = sri.employee_id
+LEFT JOIN person_title pt ON pt.id = e.title_id
 WHERE sri.id=$1 LIMIT 1`
 	var it Item
 	if err := db.GetContext(ctx, &it, qi, id); err != nil {
@@ -241,12 +242,13 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
 	db := r.dbCtx(ctx)
 	where := "sri.cycle_id = $1"
 	args := []interface{}{cycleID}
+	fullNameExpr := "concat_ws(' ', pt.name_th, e.first_name, e.last_name)"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
-		where += fmt.Sprintf(" AND (LOWER(e.first_name) LIKE $%d OR LOWER(e.last_name) LIKE $%d)", len(args), len(args))
+		where += fmt.Sprintf(" AND (%s ILIKE $%d)", fullNameExpr, len(args))
 	}
 	q := fmt.Sprintf(`SELECT sri.id, sri.cycle_id, sri.employee_id,
-       (e.first_name || ' ' || e.last_name) AS employee_name,
+       %s AS employee_name,
        e.employee_number AS employee_number,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
        sri.raise_percent, sri.raise_amount, sri.new_salary, sri.new_sso_wage,
@@ -254,8 +256,9 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
        sri.updated_at
 FROM salary_raise_item sri
 JOIN employees e ON e.id = sri.employee_id
+LEFT JOIN person_title pt ON pt.id = e.title_id
 WHERE %s
-ORDER BY employee_name`, where)
+ORDER BY employee_name`, fullNameExpr, where)
 	var out []Item
 	if err := db.SelectContext(ctx, &out, q, args...); err != nil {
 		return nil, err
@@ -292,7 +295,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, percent, amoun
 	args = append(args, id)
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE salary_raise_item SET %s WHERE id=$%d RETURNING id, cycle_id, employee_id,
-       (SELECT (first_name || ' ' || last_name) FROM employees e WHERE e.id = salary_raise_item.employee_id) AS employee_name,
+       (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = salary_raise_item.employee_id) AS employee_name,
        tenure_days, current_salary, current_sso_wage,
        raise_percent, raise_amount, new_salary, new_sso_wage,
        late_minutes, leave_days, leave_double_days, leave_hours, ot_hours,

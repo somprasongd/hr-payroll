@@ -152,6 +152,17 @@
       "removeItem": "ဖယ်ရန်",
       "itemName": "အမည်",
       "itemValue": "ပမာဏ"
+    },
+    "print": {
+      "title": "လစာစာရွက်",
+      "original": "မူရင်း",
+      "copy": "မိတ္တူ",
+      "button": "စာရွက် ပရင့်ထုတ်ရန်",
+      "batchButton": "စာရွက်အားလုံး ပရင့်ထုတ်ရန်",
+      "selectEmployees": "ပရင့်ထုတ်မည့် ဝန်ထမ်းများ ရွေးချယ်ပါ",
+      "selectAll": "အားလုံး ရွေးချယ်ပါ",
+      "deselectAll": "ရွေးချယ်မှု ဖယ်ရန်",
+      "selectedCount": "{count} ရွေးချယ်ထား"
     }
   },
   "Settings": {

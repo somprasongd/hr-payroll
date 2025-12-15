@@ -3022,6 +3022,26 @@ Logic (Database Trigger):
   "periodStartDate": "2025-10-01",
   "payDate": "2025-11-30",
   "status": "pending",
+  "bonusYear": 2025, // จาก bonus_cycle ที่ payrollMonthDate ตรงกัน (ไม่มี = null)
+  "orgProfileSnapshot": {
+    "email": null,
+    "tax_id": null,
+    "logo_id": "019b1db0-5e55-7933-9128-3f6534d87f93",
+    "district": null,
+    "province": null,
+    "phone_alt": null,
+    "phone_main": null,
+    "profile_id": "019b1db4-f533-7719-98d8-aac32d1bd69e",
+    "version_no": 3,
+    "postal_code": null,
+    "subdistrict": null,
+    "company_name": "Default Organization",
+    "address_line1": "Address line 1",
+    "address_line2": null,
+    "effective_end": null,
+    "effective_start": "2025-12-01",
+    "slip_footer_note": null
+  },
   "approvedAt": null,
   "totals": {
     "totalIncome": 5000000.0,
@@ -3033,6 +3053,11 @@ Logic (Database Trigger):
   }
 }
 ```
+
+- `totals` รวมจาก `payroll_run_item`
+- `approvedAt` = `null` ถ้ายังไม่อนุมัติ
+- `bonusYear` = `bonus_cycle.bonus_year` ที่ `payrollMonthDate` ตรงกันและไม่ถูกลบ (เลือก approved > pending > rejected ตามลำดับล่าสุด)
+- `orgProfileSnapshot` คือ snapshot หัวสลิปที่เก็บบน `payroll_run` ตอนสร้าง/อัปเดตโปรไฟล์
 
 ---
 

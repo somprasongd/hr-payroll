@@ -152,6 +152,17 @@
       "removeItem": "Remove",
       "itemName": "Name",
       "itemValue": "Amount"
+    },
+    "print": {
+      "title": "Pay Slip",
+      "original": "Original",
+      "copy": "Copy",
+      "button": "Print Slip",
+      "batchButton": "Print All Slips",
+      "selectEmployees": "Select Employees to Print",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "selectedCount": "Selected {count}"
     }
   },
   "Settings": {

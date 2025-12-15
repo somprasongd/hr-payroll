@@ -12,7 +12,29 @@ export interface PayrollRun {
   updatedAt: string;
 }
 
+export interface OrgProfileSnapshot {
+  email?: string | null;
+  tax_id?: string | null;
+  logo_id?: string | null;
+  district?: string | null;
+  province?: string | null;
+  phone_alt?: string | null;
+  phone_main?: string | null;
+  profile_id?: string;
+  version_no?: number;
+  postal_code?: string | null;
+  subdistrict?: string | null;
+  company_name?: string;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  effective_end?: string | null;
+  effective_start?: string;
+  slip_footer_note?: string | null;
+}
+
 export interface PayrollRunDetail extends PayrollRun {
+  bonusYear?: number | null;
+  orgProfileSnapshot?: OrgProfileSnapshot;
   totals?: {
     totalIncome: number;
     totalDeduction: number;
@@ -93,6 +115,10 @@ export interface PayslipDetail {
   employeeName: string;
   employeeNumber: string;
   employeeTypeCode: string;
+  employeeTypeName?: string;
+  departmentName?: string;
+  positionName?: string;
+  bankName?: string;
   bankAccount?: string;
   
   // Income

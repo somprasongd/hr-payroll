@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,20 +10,22 @@ import (
 )
 
 type Run struct {
-	ID              uuid.UUID  `json:"id"`
-	PayrollMonth    string     `json:"payrollMonthDate"`
-	PeriodStart     string     `json:"periodStartDate"`
-	PayDate         string     `json:"payDate"`
-	Status          string     `json:"status"`
-	ApprovedAt      *time.Time `json:"approvedAt,omitempty"`
-	ApprovedBy      *uuid.UUID `json:"approvedBy,omitempty"`
-	SSORateEmp      float64    `json:"socialSecurityRateEmployee"`
-	SSORateEmployer float64    `json:"socialSecurityRateEmployer"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	UpdatedAt       time.Time  `json:"updatedAt"`
-	TotalEmployees  int        `json:"totalEmployees,omitempty"`
-	TotalNetPay     float64    `json:"totalNetPay,omitempty"`
-	Totals          *RunTotals `json:"totals,omitempty"`
+	ID              uuid.UUID              `json:"id"`
+	PayrollMonth    string                 `json:"payrollMonthDate"`
+	PeriodStart     string                 `json:"periodStartDate"`
+	PayDate         string                 `json:"payDate"`
+	Status          string                 `json:"status"`
+	ApprovedAt      *time.Time             `json:"approvedAt,omitempty"`
+	ApprovedBy      *uuid.UUID             `json:"approvedBy,omitempty"`
+	SSORateEmp      float64                `json:"socialSecurityRateEmployee"`
+	SSORateEmployer float64                `json:"socialSecurityRateEmployer"`
+	OrgProfile      map[string]interface{} `json:"orgProfileSnapshot,omitempty"`
+	BonusYear       *int                   `json:"bonusYear,omitempty"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	UpdatedAt       time.Time              `json:"updatedAt"`
+	TotalEmployees  int                    `json:"totalEmployees,omitempty"`
+	TotalNetPay     float64                `json:"totalNetPay,omitempty"`
+	Totals          *RunTotals             `json:"totals,omitempty"`
 }
 
 type Meta struct {
@@ -53,6 +56,13 @@ func FromRun(r repository.Run) Run {
 			TotalProvidentFund:  r.TotalProvidentFund,
 		}
 	}
+	var snapshot map[string]interface{}
+	if len(r.OrgProfileSnapshot) > 0 {
+		var m map[string]interface{}
+		if err := json.Unmarshal(r.OrgProfileSnapshot, &m); err == nil && len(m) > 0 {
+			snapshot = m
+		}
+	}
 	return Run{
 		ID:              r.ID,
 		PayrollMonth:    dateOnly(r.PayrollMonth),
@@ -63,6 +73,8 @@ func FromRun(r repository.Run) Run {
 		ApprovedBy:      r.ApprovedBy,
 		SSORateEmp:      r.SSORateEmp,
 		SSORateEmployer: r.SSORateEmployer,
+		OrgProfile:      snapshot,
+		BonusYear:       r.BonusYear,
 		CreatedAt:       r.CreatedAt,
 		UpdatedAt:       r.UpdatedAt,
 		TotalEmployees:  r.TotalEmployees,

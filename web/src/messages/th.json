@@ -152,6 +152,17 @@
       "removeItem": "ลบ",
       "itemName": "ชื่อรายการ",
       "itemValue": "จำนวนเงิน"
+    },
+    "print": {
+      "title": "ใบจ่ายเงินเดือน",
+      "original": "ต้นฉบับ",
+      "copy": "สำเนา",
+      "button": "พิมพ์สลิป",
+      "batchButton": "พิมพ์สลิปทั้งหมด",
+      "selectEmployees": "เลือกพนักงานที่ต้องการพิมพ์",
+      "selectAll": "เลือกทั้งหมด",
+      "deselectAll": "ยกเลิกเลือกทั้งหมด",
+      "selectedCount": "เลือก {count} คน"
     }
   },
   "Settings": {

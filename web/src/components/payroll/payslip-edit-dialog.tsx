@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, Plus, Trash2, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, RotateCcw, Printer } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
 
 import {
   Dialog,
@@ -32,9 +33,12 @@ import {
   OtherIncomeItem,
   OtherDeductionItem,
   LoanRepaymentItem,
+  OrgProfileSnapshot,
 } from '@/services/payroll.service';
 import { payrollConfigService, PayrollConfig } from '@/services/payroll-config.service';
 import { calculateWithholdingTax } from '@/lib/tax-calculator';
+import { PayslipPrintTemplate } from './payslip-print-template';
+import { orgProfileService } from '@/services/org-profile.service';
 
 interface PayslipEditDialogProps {
   open: boolean;
@@ -47,6 +51,12 @@ interface PayslipEditDialogProps {
   hasNext: boolean;
   onNavigate: (direction: 'prev' | 'next') => void;
   onSuccess?: () => void;
+  // Print-related props
+  orgProfile?: OrgProfileSnapshot;
+  bonusYear?: number | null;
+  payrollMonthDate?: string;
+  periodStartDate?: string;
+  isApproved?: boolean;
 }
 
 export function PayslipEditDialog({
@@ -60,6 +70,11 @@ export function PayslipEditDialog({
   hasNext,
   onNavigate,
   onSuccess,
+  orgProfile,
+  bonusYear,
+  payrollMonthDate,
+  periodStartDate,
+  isApproved,
 }: PayslipEditDialogProps) {
   const t = useTranslations('Payroll');
   const tCommon = useTranslations('Common');
@@ -97,6 +112,28 @@ export function PayslipEditDialog({
   // Unsaved changes confirmation
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<'cancel' | 'prev' | 'next' | null>(null);
+
+  // Print functionality
+  const printRef = useRef<HTMLDivElement>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [printing, setPrinting] = useState(false);
+  
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `PaySlip-${employeeName}`,
+    pageStyle: `
+      @page {
+        size: A4 portrait;
+        margin: 5mm;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    `,
+  });
 
   // Original values for dirty checking
   const [originalValues, setOriginalValues] = useState<{
@@ -1018,6 +1055,48 @@ export function PayslipEditDialog({
                   </span>
                 </div>
                 <div className="flex gap-2">
+                  {/* Print Button - Only when approved */}
+                  {isApproved && detail && payrollMonthDate && periodStartDate && (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          setPrinting(true);
+                          // Fetch logo first if exists
+                          if (orgProfile?.logo_id && !logoUrl) {
+                            try {
+                              const url = await orgProfileService.fetchLogoWithCache(orgProfile.logo_id);
+                              setLogoUrl(url);
+                            } catch {
+                              setLogoUrl(null);
+                            }
+                          }
+                          // Small delay to let logo load, then trigger print
+                          setTimeout(() => {
+                            handlePrint();
+                            setPrinting(false);
+                          }, 300);
+                        }}
+                        disabled={printing}
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        {t('print.button')}
+                      </Button>
+                      {/* Hidden Print Template */}
+                      <div style={{ display: 'none' }}>
+                        <div ref={printRef}>
+                          <PayslipPrintTemplate
+                            payslip={detail}
+                            orgProfile={orgProfile}
+                            logoUrl={logoUrl || undefined}
+                            bonusYear={bonusYear}
+                            payrollMonthDate={payrollMonthDate}
+                            periodStartDate={periodStartDate}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                   {canEdit ? (
                     <>
                       <Button variant="outline" onClick={() => handleActionWithDirtyCheck('cancel')}>

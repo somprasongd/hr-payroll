@@ -300,10 +300,15 @@ definitions:
         type: string
       approvedBy:
         type: string
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
         type: string
+      orgProfileSnapshot:
+        additionalProperties: true
+        type: object
       payDate:
         type: string
       payrollMonthDate:
@@ -499,6 +504,8 @@ definitions:
     type: object
   hrms_modules_bonus_internal_dto.Cycle:
     properties:
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
@@ -569,6 +576,8 @@ definitions:
     type: object
   hrms_modules_bonus_internal_feature_approve.Response:
     properties:
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
@@ -598,6 +607,8 @@ definitions:
     properties:
       actorID:
         type: string
+      bonusYear:
+        type: integer
       payrollMonthDate:
         type: string
       periodEndDate:
@@ -610,6 +621,8 @@ definitions:
     type: object
   hrms_modules_bonus_internal_feature_create.Response:
     properties:
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
@@ -635,6 +648,8 @@ definitions:
     type: object
   hrms_modules_bonus_internal_feature_get.Response:
     properties:
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
@@ -1452,10 +1467,16 @@ definitions:
         type: boolean
       allowWater:
         type: boolean
+      bankAccount:
+        type: string
+      bankName:
+        type: string
       bonusAmount:
         type: number
       deductionTotal:
         type: number
+      departmentName:
+        type: string
       doctorFee:
         type: number
       employeeId:
@@ -1465,6 +1486,8 @@ definitions:
       employeeNumber:
         type: string
       employeeTypeCode:
+        type: string
+      employeeTypeName:
         type: string
       id:
         type: string
@@ -1490,6 +1513,8 @@ definitions:
         type: number
       otHours:
         type: number
+      positionName:
+        type: string
       providentFundContribute:
         type: boolean
       ptHourlyRate:
@@ -1541,12 +1566,17 @@ definitions:
         type: string
       approvedBy:
         type: string
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
         type: string
       message:
         type: string
+      orgProfileSnapshot:
+        additionalProperties: true
+        type: object
       payDate:
         type: string
       payrollMonthDate:
@@ -1574,10 +1604,15 @@ definitions:
         type: string
       approvedBy:
         type: string
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
         type: string
+      orgProfileSnapshot:
+        additionalProperties: true
+        type: object
       payDate:
         type: string
       payrollMonthDate:
@@ -1620,10 +1655,16 @@ definitions:
         type: boolean
       allowWater:
         type: boolean
+      bankAccount:
+        type: string
+      bankName:
+        type: string
       bonusAmount:
         type: number
       deductionTotal:
         type: number
+      departmentName:
+        type: string
       doctorFee:
         type: number
       employeeId:
@@ -1633,6 +1674,8 @@ definitions:
       employeeNumber:
         type: string
       employeeTypeCode:
+        type: string
+      employeeTypeName:
         type: string
       id:
         type: string
@@ -1658,6 +1701,8 @@ definitions:
         type: number
       otHours:
         type: number
+      positionName:
+        type: string
       providentFundContribute:
         type: boolean
       ptHourlyRate:
@@ -1712,12 +1757,17 @@ definitions:
         type: string
       approvedBy:
         type: string
+      bonusYear:
+        type: integer
       createdAt:
         type: string
       id:
         type: string
       message:
         type: string
+      orgProfileSnapshot:
+        additionalProperties: true
+        type: object
       payDate:
         type: string
       payrollMonthDate:
@@ -2100,10 +2150,14 @@ definitions:
         type: number
       bankAccount:
         type: string
+      bankName:
+        type: string
       bonusAmount:
         type: number
       deductionTotal:
         type: number
+      departmentName:
+        type: string
       doctorFee:
         type: number
       electricAmount:
@@ -2121,6 +2175,8 @@ definitions:
       employeeNumber:
         type: string
       employeeTypeCode:
+        type: string
+      employeeTypeName:
         type: string
       housingAllowance:
         type: number
@@ -2167,6 +2223,11 @@ definitions:
         type: number
       otHours:
         type: number
+      othersDeduction:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
       othersIncome:
         items:
           additionalProperties: true
@@ -2178,6 +2239,8 @@ definitions:
         type: number
       pfMonthAmount:
         type: number
+      positionName:
+        type: string
       providentFundContribute:
         type: boolean
       ptHourlyRate:
@@ -2250,6 +2313,11 @@ definitions:
         type: number
       otHours:
         type: number
+      othersDeduction:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
       othersIncome:
         items:
           additionalProperties: true

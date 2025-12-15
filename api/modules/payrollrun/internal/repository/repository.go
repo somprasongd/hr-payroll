@@ -34,6 +34,8 @@ type Run struct {
 	ApprovedBy         *uuid.UUID `db:"approved_by"`
 	SSORateEmp         float64    `db:"social_security_rate_employee"`
 	SSORateEmployer    float64    `db:"social_security_rate_employer"`
+	OrgProfileSnapshot []byte     `db:"org_profile_snapshot"`
+	BonusYear          *int       `db:"bonus_year"`
 	TotalEmployees     int        `db:"total_employees"`
 	TotalNetPay        float64    `db:"total_net_pay"`
 	TotalIncome        float64    `db:"total_income"`
@@ -131,6 +133,16 @@ func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Run, error) {
 SELECT id, payroll_month_date, period_start_date, pay_date, status,
        created_at, updated_at, deleted_at, approved_at, approved_by,
        social_security_rate_employee, social_security_rate_employer,
+       org_profile_snapshot,
+       (
+         SELECT bc.bonus_year
+         FROM bonus_cycle bc
+         WHERE bc.payroll_month_date = payroll_run.payroll_month_date
+           AND bc.deleted_at IS NULL
+         ORDER BY CASE bc.status WHEN 'approved' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END,
+                  bc.created_at DESC
+         LIMIT 1
+       ) AS bonus_year,
        COALESCE((SELECT COUNT(1) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_employees,
        COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_net_pay,
        COALESCE((SELECT SUM(income_total) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_income,
@@ -295,7 +307,7 @@ func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit 
 	var args []interface{}
 	where = append(where, "run_id = $1")
 	args = append(args, runID)
-	fullNameExpr := "concat_ws(' ', e.first_name, e.last_name)"
+	fullNameExpr := "concat_ws(' ', pt.name_th, e.first_name, e.last_name)"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where = append(where, fmt.Sprintf("(%s ILIKE $%d OR e.employee_number ILIKE $%d)", fullNameExpr, len(args), len(args)))
@@ -319,6 +331,7 @@ SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_numb
        e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
+LEFT JOIN person_title pt ON pt.id = e.title_id
 JOIN employee_type et ON et.id = e.employee_type_id
 WHERE %s
 ORDER BY CASE et.code WHEN 'full_time' THEN 0 WHEN 'part_time' THEN 1 ELSE 2 END,
@@ -339,7 +352,7 @@ LIMIT $%d OFFSET $%d`, fullNameExpr, netPayExpr, deductionExpr, whereClause, ful
 		list = append(list, it)
 	}
 	countArgs := args[:len(args)-2]
-	countQ := fmt.Sprintf("SELECT COUNT(1) FROM payroll_run_item pri JOIN employees e ON e.id = pri.employee_id JOIN employee_type et ON et.id = e.employee_type_id WHERE %s", whereClause)
+	countQ := fmt.Sprintf("SELECT COUNT(1) FROM payroll_run_item pri JOIN employees e ON e.id = pri.employee_id LEFT JOIN person_title pt ON pt.id = e.title_id JOIN employee_type et ON et.id = e.employee_type_id WHERE %s", whereClause)
 	var total int
 	if err := db.GetContext(ctx, &total, countQ, countArgs...); err != nil {
 		return ItemListResult{}, err
@@ -363,7 +376,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	args = append(args, id)
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE payroll_run_item SET %s WHERE id=$%d RETURNING id, run_id, employee_id,
-       (SELECT concat_ws(' ', e.first_name, e.last_name) FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_name,
+       (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
        employee_type_name, department_name, position_name, bank_name, bank_account_no,
@@ -390,7 +403,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
-	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,
@@ -403,6 +416,7 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
        e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
+LEFT JOIN person_title pt ON pt.id = e.title_id
 JOIN employee_type et ON et.id = e.employee_type_id
 WHERE pri.id=$1 LIMIT 1`, netPayExpr, deductionExpr)
 	var it Item
@@ -453,7 +467,7 @@ type ItemDetail struct {
 func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetail, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
-       concat_ws(' ', e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
        pri.income_total, pri.income_accum_prev, pri.income_accum_total,
@@ -469,13 +483,16 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
        pri.pf_accum_prev, pri.pf_month_amount, pri.pf_accum_total,
        pri.advance_amount, pri.advance_repay_amount, pri.advance_diff_amount,
        pri.loan_outstanding_prev, pri.loan_outstanding_total, pri.loan_repayments,
-       pri.others_income, pri.others_deduction, pri.water_amount, pri.electric_amount, pri.internet_amount,
+       COALESCE(pri.others_income, '[]'::jsonb) AS others_income,
+       COALESCE(pri.others_deduction, '[]'::jsonb) AS others_deduction,
+       pri.water_amount, pri.electric_amount, pri.internet_amount,
        pri.water_meter_prev, pri.water_meter_curr, pri.electric_meter_prev, pri.electric_meter_curr,
        pri.water_rate_per_unit, pri.electricity_rate_per_unit, pri.doctor_fee,
        e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
        e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
+LEFT JOIN person_title pt ON pt.id = e.title_id
 JOIN employee_type et ON et.id = e.employee_type_id
 WHERE pri.id = $1`, netPayExpr, deductionExpr)
 	var it ItemDetail

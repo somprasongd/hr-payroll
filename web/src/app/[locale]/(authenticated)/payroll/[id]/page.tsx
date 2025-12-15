@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { format } from 'date-fns';
-import { ArrowLeft, Banknote, Search, Edit, Eye, Filter, RotateCcw, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Banknote, Search, Edit, Eye, Filter, RotateCcw, CheckCircle, Printer } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { GenericDataTable } from '@/components/common/generic-data-table';
 import { PayslipEditDialog } from '@/components/payroll/payslip-edit-dialog';
+import { BatchPrintDialog } from '@/components/payroll/batch-print-dialog';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { useAuthStore } from '@/store/auth-store';
 import { 
@@ -56,6 +57,9 @@ export default function PayrollDetailPage() {
   // Approve dialog state
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [approving, setApproving] = useState(false);
+
+  // Batch print dialog state
+  const [batchPrintDialogOpen, setBatchPrintDialogOpen] = useState(false);
 
   const fetchRunDetail = useCallback(async () => {
     try {
@@ -162,6 +166,7 @@ export default function PayrollDetailPage() {
   };
 
   const isPending = run?.status === 'pending';
+  const isApproved = run?.status === 'approved';
   const isAdmin = user?.role === 'admin';
   const canApprove = isPending && isAdmin;
 
@@ -262,6 +267,13 @@ export default function PayrollDetailPage() {
           <Button onClick={() => setApproveDialogOpen(true)}>
             <CheckCircle className="h-4 w-4 mr-2" />
             {t('actions.approve')}
+          </Button>
+        )}
+        {/* Batch Print Button - Only when approved */}
+        {isApproved && (
+          <Button variant="outline" onClick={() => setBatchPrintDialogOpen(true)}>
+            <Printer className="h-4 w-4 mr-2" />
+            {t('print.batchButton')}
           </Button>
         )}
       </div>
@@ -387,7 +399,7 @@ export default function PayrollDetailPage() {
       />
 
       {/* Edit Dialog */}
-      {selectedItemIndex >= 0 && items[selectedItemIndex] && (
+      {selectedItemIndex >= 0 && items[selectedItemIndex] && run && (
         <PayslipEditDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
@@ -399,6 +411,11 @@ export default function PayrollDetailPage() {
           hasNext={selectedItemIndex < items.length - 1}
           onNavigate={handleNavigateItem}
           onSuccess={handleEditSuccess}
+          orgProfile={run.orgProfileSnapshot}
+          bonusYear={run.bonusYear}
+          payrollMonthDate={run.payrollMonthDate}
+          periodStartDate={run.periodStartDate}
+          isApproved={isApproved}
         />
       )}
 
@@ -412,6 +429,20 @@ export default function PayrollDetailPage() {
         onConfirm={handleApprove}
         loading={approving}
       />
+
+      {/* Batch Print Dialog */}
+      {run && (
+        <BatchPrintDialog
+          open={batchPrintDialogOpen}
+          onOpenChange={setBatchPrintDialogOpen}
+          runId={runId}
+          items={items}
+          orgProfile={run.orgProfileSnapshot}
+          bonusYear={run.bonusYear}
+          payrollMonthDate={run.payrollMonthDate}
+          periodStartDate={run.periodStartDate}
+        />
+      )}
     </div>
   );
 }
