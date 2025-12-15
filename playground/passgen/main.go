@@ -10,7 +10,7 @@ func main() {
 	argon := argon2.DefaultConfig()
 
 	// Waaahht??! It includes magic salt generation for me ! Yasss...
-	encoded, err := argon.HashEncoded([]byte("changme"))
+	encoded, err := argon.HashEncoded([]byte("changeme"))
 	if err != nil {
 		panic(err) // 💥
 	}
@@ -18,7 +18,7 @@ func main() {
 	fmt.Println(string(encoded))
 	// > $argon2id$v=19$m=65536,t=1,p=4$WXJGqwIB2qd+pRmxMOw9Dg$X4gvR0ZB2DtQoN8vOnJPR2SeFdUhH9TyVzfV98sfWeE
 
-	ok, err := argon2.VerifyEncoded([]byte("changme"), encoded)
+	ok, err := argon2.VerifyEncoded([]byte("changeme"), encoded)
 	if err != nil {
 		panic(err) // 💥
 	}

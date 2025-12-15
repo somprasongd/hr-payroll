@@ -4,11 +4,11 @@
 export const testUsers = {
   admin: {
     username: process.env.TEST_ADMIN_USERNAME || 'admin',
-    password: process.env.TEST_ADMIN_PASSWORD || 'Admin@123456',
+    password: process.env.TEST_ADMIN_PASSWORD || 'changeme',
   },
   hr: {
     username: process.env.TEST_HR_USERNAME || 'test_hr',
-    password: process.env.TEST_HR_PASSWORD || 'Hr@123456',
+    password: process.env.TEST_HR_PASSWORD || 'changeme',
   },
 };
 
