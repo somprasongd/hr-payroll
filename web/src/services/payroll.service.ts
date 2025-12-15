@@ -58,7 +58,7 @@ export interface PayrollRunsResponse {
 export interface PayrollRunsQueryParams {
   page?: number;
   limit?: number;
-  payrollMonthDate?: string;
+  monthDate?: string;
   status?: string;
   year?: number;
 }
@@ -246,7 +246,7 @@ export const payrollService = {
 
   async validatePayrollMonth(payrollMonthDate: string): Promise<{ exists: boolean; approved: boolean }> {
     try {
-      const response = await this.getPayrollRuns({ payrollMonthDate, limit: 1 });
+      const response = await this.getPayrollRuns({ monthDate: payrollMonthDate, limit: 1 });
       if (!response?.data || response.data.length === 0) {
         return { exists: false, approved: false };
       }
