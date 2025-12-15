@@ -281,7 +281,10 @@
       "electric": "Electricity",
       "internet": "Internet",
       "doctorFee": "Doctor Fee",
-      "status": "Status"
+      "status": "Status",
+      "photo": "Employee Photo",
+      "department": "Department",
+      "position": "Position"
     },
     "status": {
       "active": "Active",
@@ -316,8 +319,13 @@
     "clearFilters": "Clear Filters",
     "placeholders": {
       "selectTitle": "Select title",
-      "selectType": "Select type"
+      "selectType": "Select type",
+      "selectDepartment": "Select department",
+      "selectPosition": "Select position"
     },
+    "photoUploadSuccess": "Photo uploaded successfully",
+    "photoUploadError": "Failed to upload photo",
+    "photoHint": "Upload employee photo (image file, max 2MB)",
     "cancel": "Cancel",
     "next": "Next",
     "back": "Back",
@@ -644,11 +652,13 @@
     "error": "Error",
     "success": "Success",
     "loading": "Loading...",
+    "saving": "Saving...",
     "all": "All",
     "clearFilter": "Clear Filter",
     "noData": "No data",
     "confirmDeleteTitle": "Confirm Delete",
-    "confirmDeleteDescription": "Are you sure you want to delete this item? This action cannot be undone."
+    "confirmDeleteDescription": "Are you sure you want to delete this item? This action cannot be undone.",
+    "actions": "Actions"
   },
   "Payouts": {
     "PT": {
@@ -1008,7 +1018,63 @@
     }
   },
   "Nav": {
-    "orgProfile": "Org Profile"
+    "orgProfile": "Org Profile",
+    "departments": "Departments",
+    "positions": "Positions"
+  },
+  "Departments": {
+    "title": "Department Management",
+    "description": "Manage organization departments",
+    "createTitle": "Create Department",
+    "createDescription": "Enter details for the new department",
+    "editTitle": "Edit Department",
+    "editDescription": "Update department details",
+    "fields": {
+      "code": "Code",
+      "name": "Name"
+    },
+    "placeholders": {
+      "code": "e.g. HR, IT, FIN",
+      "name": "e.g. Human Resources"
+    },
+    "noData": "No departments found",
+    "success": {
+      "created": "Department created successfully",
+      "updated": "Department updated successfully",
+      "deleted": "Department deleted successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to load departments",
+      "saveFailed": "Failed to save",
+      "deleteFailed": "Failed to delete"
+    }
+  },
+  "Positions": {
+    "title": "Position Management",
+    "description": "Manage organization positions",
+    "createTitle": "Create Position",
+    "createDescription": "Enter details for the new position",
+    "editTitle": "Edit Position",
+    "editDescription": "Update position details",
+    "fields": {
+      "code": "Code",
+      "name": "Name"
+    },
+    "placeholders": {
+      "code": "e.g. MGR, STAFF, ENG",
+      "name": "e.g. Manager"
+    },
+    "noData": "No positions found",
+    "success": {
+      "created": "Position created successfully",
+      "updated": "Position updated successfully",
+      "deleted": "Position deleted successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to load positions",
+      "saveFailed": "Failed to save",
+      "deleteFailed": "Failed to delete"
+    }
   },
   "OrgProfile": {
     "title": "Organization Profile (Slip Header)",

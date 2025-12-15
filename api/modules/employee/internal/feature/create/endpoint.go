@@ -43,7 +43,10 @@ type RequestBody struct {
 	IDDocumentNumber          string     `json:"idDocumentNumber"`
 	Phone                     *string    `json:"phone"`
 	Email                     *string    `json:"email"`
+	PhotoID                   *uuid.UUID `json:"photoId"`
 	EmployeeTypeID            uuid.UUID  `json:"employeeTypeId"`
+	DepartmentID              *uuid.UUID `json:"departmentId"`
+	PositionID                *uuid.UUID `json:"positionId"`
 	BasePayAmount             float64    `json:"basePayAmount"`
 	EmploymentStartDate       string     `json:"employmentStartDate"`
 	EmploymentEndDate         *string    `json:"employmentEndDate"`
@@ -75,7 +78,10 @@ func (p RequestBody) ToDetailRecord() repository.DetailRecord {
 		IDDocumentNumber:          p.IDDocumentNumber,
 		Phone:                     p.Phone,
 		Email:                     p.Email,
+		PhotoID:                   p.PhotoID,
 		EmployeeTypeID:            p.EmployeeTypeID,
+		DepartmentID:              p.DepartmentID,
+		PositionID:                p.PositionID,
 		BasePayAmount:             p.BasePayAmount,
 		EmploymentStartDate:       p.ParsedEmploymentStartDate,
 		EmploymentEndDate:         p.ParsedEmploymentEndDate,

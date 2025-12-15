@@ -96,6 +96,31 @@ definitions:
       updatedAt:
         type: string
     type: object
+  department.CreateCommand:
+    properties:
+      actorID:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  department.Response:
+    properties:
+      record:
+        $ref: '#/definitions/repository.MasterRecord'
+    type: object
+  department.UpdateCommand:
+    properties:
+      actorID:
+        type: string
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   dto.Config:
     properties:
       attendanceBonusNoLate:
@@ -328,8 +353,41 @@ definitions:
       username:
         type: string
     type: object
+  employeeposition.CreateCommand:
+    properties:
+      actorID:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  employeeposition.Response:
+    properties:
+      record:
+        $ref: '#/definitions/repository.MasterRecord'
+    type: object
+  employeeposition.UpdateCommand:
+    properties:
+      actorID:
+        type: string
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   feature.Response:
     properties:
+      departments:
+        items:
+          $ref: '#/definitions/repository.MasterRecord'
+        type: array
+      employeePositions:
+        items:
+          $ref: '#/definitions/repository.MasterRecord'
+        type: array
       employeeTypes:
         items:
           $ref: '#/definitions/repository.MasterRecord'
@@ -807,6 +865,8 @@ definitions:
         type: string
       basePayAmount:
         type: number
+      departmentId:
+        type: string
       email:
         type: string
       employeeNumber:
@@ -826,6 +886,10 @@ definitions:
       lastName:
         type: string
       phone:
+        type: string
+      photoId:
+        type: string
+      positionId:
         type: string
       providentFundContribute:
         type: boolean
@@ -862,6 +926,8 @@ definitions:
         type: number
       createdAt:
         type: string
+      departmentId:
+        type: string
       email:
         type: string
       employeeNumber:
@@ -883,6 +949,10 @@ definitions:
       lastName:
         type: string
       phone:
+        type: string
+      photoId:
+        type: string
+      positionId:
         type: string
       providentFundContribute:
         type: boolean
@@ -923,6 +993,8 @@ definitions:
         type: number
       createdAt:
         type: string
+      departmentId:
+        type: string
       email:
         type: string
       employeeNumber:
@@ -944,6 +1016,10 @@ definitions:
       lastName:
         type: string
       phone:
+        type: string
+      photoId:
+        type: string
+      positionId:
         type: string
       providentFundContribute:
         type: boolean
@@ -993,6 +1069,8 @@ definitions:
         type: number
       createdAt:
         type: string
+      departmentId:
+        type: string
       email:
         type: string
       employeeNumber:
@@ -1014,6 +1092,10 @@ definitions:
       lastName:
         type: string
       phone:
+        type: string
+      photoId:
+        type: string
+      positionId:
         type: string
       providentFundContribute:
         type: boolean
@@ -2651,6 +2733,19 @@ definitions:
       role:
         type: string
     type: object
+  upload.Response:
+    properties:
+      checksumMd5:
+        type: string
+      contentType:
+        type: string
+      fileName:
+        type: string
+      fileSizeBytes:
+        type: integer
+      id:
+        type: string
+    type: object
   uploadlogo.Response:
     properties:
       checksumMd5:
@@ -3855,6 +3950,64 @@ paths:
       summary: Delete accumulation
       tags:
       - Employees
+  /employees/photos:
+    post:
+      consumes:
+      - multipart/form-data
+      description: อัปโหลดรูปพนักงานเพื่อเก็บลง employee_photo (<=2MB)
+      parameters:
+      - description: photo file (<=2MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/upload.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Upload employee photo
+      tags:
+      - Employees
+  /employees/photos/{id}:
+    get:
+      parameters:
+      - description: photo id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/png
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Download employee photo by ID
+      tags:
+      - Employees
   /master/all:
     get:
       produces:
@@ -3866,7 +4019,212 @@ paths:
             $ref: '#/definitions/feature.Response'
       security:
       - BearerAuth: []
-      summary: Get master data (person titles, employee types, id document types)
+      summary: Get master data (person titles, employee types, id document types,
+        departments, positions)
+      tags:
+      - Master
+  /master/departments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.Response'
+      security:
+      - BearerAuth: []
+      summary: Get master data (person titles, employee types, id document types,
+        departments, positions)
+      tags:
+      - Master
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: department payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/department.CreateCommand'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/department.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create department
+      tags:
+      - Master
+  /master/departments/{id}:
+    delete:
+      parameters:
+      - description: department id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Soft delete department
+      tags:
+      - Master
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: department id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: department payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/department.UpdateCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/department.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update department
+      tags:
+      - Master
+  /master/employee-positions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.Response'
+      security:
+      - BearerAuth: []
+      summary: Get master data (person titles, employee types, id document types,
+        departments, positions)
+      tags:
+      - Master
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: position payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/employeeposition.CreateCommand'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/employeeposition.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create employee position
+      tags:
+      - Master
+  /master/employee-positions/{id}:
+    delete:
+      parameters:
+      - description: position id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Soft delete employee position
+      tags:
+      - Master
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: position id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: position payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/employeeposition.UpdateCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/employeeposition.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update employee position
       tags:
       - Master
   /master/employee-types:
@@ -3880,7 +4238,8 @@ paths:
             $ref: '#/definitions/feature.Response'
       security:
       - BearerAuth: []
-      summary: Get master data (person titles, employee types, id document types)
+      summary: Get master data (person titles, employee types, id document types,
+        departments, positions)
       tags:
       - Master
   /master/id-document-types:
@@ -3894,7 +4253,8 @@ paths:
             $ref: '#/definitions/feature.Response'
       security:
       - BearerAuth: []
-      summary: Get master data (person titles, employee types, id document types)
+      summary: Get master data (person titles, employee types, id document types,
+        departments, positions)
       tags:
       - Master
   /master/person-titles:
@@ -3908,7 +4268,8 @@ paths:
             $ref: '#/definitions/feature.Response'
       security:
       - BearerAuth: []
-      summary: Get master data (person titles, employee types, id document types)
+      summary: Get master data (person titles, employee types, id document types,
+        departments, positions)
       tags:
       - Master
   /me:

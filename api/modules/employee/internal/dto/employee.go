@@ -28,35 +28,38 @@ type Meta struct {
 }
 
 type Detail struct {
-	ID                        uuid.UUID `json:"id"`
-	EmployeeNumber            string    `json:"employeeNumber"`
-	TitleID                   uuid.UUID `json:"titleId"`
-	FirstName                 string    `json:"firstName"`
-	LastName                  string    `json:"lastName"`
-	IDDocumentTypeID          uuid.UUID `json:"idDocumentTypeId"`
-	IDDocumentNumber          string    `json:"idDocumentNumber"`
-	Phone                     *string   `json:"phone,omitempty"`
-	Email                     *string   `json:"email,omitempty"`
-	EmployeeTypeID            uuid.UUID `json:"employeeTypeId"`
-	BasePayAmount             float64   `json:"basePayAmount"`
-	EmploymentStartDate       string    `json:"employmentStartDate"`
-	EmploymentEndDate         *string   `json:"employmentEndDate,omitempty"`
-	BankName                  *string   `json:"bankName,omitempty"`
-	BankAccountNo             *string   `json:"bankAccountNo,omitempty"`
-	SSOContribute             bool      `json:"ssoContribute"`
-	SSODeclaredWage           *float64  `json:"ssoDeclaredWage,omitempty"`
-	ProvidentFundContribute   bool      `json:"providentFundContribute"`
-	ProvidentFundRateEmployee float64   `json:"providentFundRateEmployee"`
-	ProvidentFundRateEmployer float64   `json:"providentFundRateEmployer"`
-	WithholdTax               bool      `json:"withholdTax"`
-	AllowHousing              bool      `json:"allowHousing"`
-	AllowWater                bool      `json:"allowWater"`
-	AllowElectric             bool      `json:"allowElectric"`
-	AllowInternet             bool      `json:"allowInternet"`
-	AllowDoctorFee            bool      `json:"allowDoctorFee"`
-	CreatedAt                 time.Time `json:"createdAt"`
-	UpdatedAt                 time.Time `json:"updatedAt"`
-	Status                    string    `json:"status"`
+	ID                        uuid.UUID  `json:"id"`
+	EmployeeNumber            string     `json:"employeeNumber"`
+	TitleID                   uuid.UUID  `json:"titleId"`
+	FirstName                 string     `json:"firstName"`
+	LastName                  string     `json:"lastName"`
+	IDDocumentTypeID          uuid.UUID  `json:"idDocumentTypeId"`
+	IDDocumentNumber          string     `json:"idDocumentNumber"`
+	Phone                     *string    `json:"phone,omitempty"`
+	Email                     *string    `json:"email,omitempty"`
+	PhotoID                   *uuid.UUID `json:"photoId,omitempty"`
+	EmployeeTypeID            uuid.UUID  `json:"employeeTypeId"`
+	DepartmentID              *uuid.UUID `json:"departmentId,omitempty"`
+	PositionID                *uuid.UUID `json:"positionId,omitempty"`
+	BasePayAmount             float64    `json:"basePayAmount"`
+	EmploymentStartDate       string     `json:"employmentStartDate"`
+	EmploymentEndDate         *string    `json:"employmentEndDate,omitempty"`
+	BankName                  *string    `json:"bankName,omitempty"`
+	BankAccountNo             *string    `json:"bankAccountNo,omitempty"`
+	SSOContribute             bool       `json:"ssoContribute"`
+	SSODeclaredWage           *float64   `json:"ssoDeclaredWage,omitempty"`
+	ProvidentFundContribute   bool       `json:"providentFundContribute"`
+	ProvidentFundRateEmployee float64    `json:"providentFundRateEmployee"`
+	ProvidentFundRateEmployer float64    `json:"providentFundRateEmployer"`
+	WithholdTax               bool       `json:"withholdTax"`
+	AllowHousing              bool       `json:"allowHousing"`
+	AllowWater                bool       `json:"allowWater"`
+	AllowElectric             bool       `json:"allowElectric"`
+	AllowInternet             bool       `json:"allowInternet"`
+	AllowDoctorFee            bool       `json:"allowDoctorFee"`
+	CreatedAt                 time.Time  `json:"createdAt"`
+	UpdatedAt                 time.Time  `json:"updatedAt"`
+	Status                    string     `json:"status"`
 }
 
 func FromListRecord(r repository.ListRecord) ListItem {
@@ -89,7 +92,10 @@ func FromDetailRecord(r repository.DetailRecord) Detail {
 		IDDocumentNumber:          r.IDDocumentNumber,
 		Phone:                     r.Phone,
 		Email:                     r.Email,
+		PhotoID:                   r.PhotoID,
 		EmployeeTypeID:            r.EmployeeTypeID,
+		DepartmentID:              r.DepartmentID,
+		PositionID:                r.PositionID,
 		BasePayAmount:             r.BasePayAmount,
 		EmploymentStartDate:       r.EmploymentStartDate.Format(dateLayout),
 		EmploymentEndDate:         endDateStr,

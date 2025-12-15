@@ -43,7 +43,10 @@ type DetailRecord struct {
 	IDDocumentNumber          string     `db:"id_document_number"`
 	Phone                     *string    `db:"phone"`
 	Email                     *string    `db:"email"`
+	PhotoID                   *uuid.UUID `db:"photo_id"`
 	EmployeeTypeID            uuid.UUID  `db:"employee_type_id"`
+	DepartmentID              *uuid.UUID `db:"department_id"`
+	PositionID                *uuid.UUID `db:"position_id"`
 	BasePayAmount             float64    `db:"base_pay_amount"`
 	EmploymentStartDate       time.Time  `db:"employment_start_date"`
 	EmploymentEndDate         *time.Time `db:"employment_end_date"`
@@ -72,6 +75,17 @@ type DetailRecord struct {
 type ListResult struct {
 	Rows  []ListRecord
 	Total int
+}
+
+type PhotoRecord struct {
+	ID            uuid.UUID `db:"id"`
+	FileName      string    `db:"file_name"`
+	ContentType   string    `db:"content_type"`
+	FileSizeBytes int64     `db:"file_size_bytes"`
+	Data          []byte    `db:"data"`
+	ChecksumMD5   string    `db:"checksum_md5"`
+	CreatedAt     time.Time `db:"created_at"`
+	CreatedBy     uuid.UUID `db:"created_by"`
 }
 
 type AccumRecord struct {
@@ -191,7 +205,10 @@ SELECT
   e.id_document_number,
   e.phone,
   e.email,
+  e.photo_id,
   e.employee_type_id,
+  e.department_id,
+  e.position_id,
   e.base_pay_amount,
   e.employment_start_date,
   e.employment_end_date,
@@ -264,7 +281,7 @@ func (r Repository) Create(ctx context.Context, payload DetailRecord, actor uuid
 INSERT INTO employees (
   employee_number, title_id, first_name, last_name,
   id_document_type_id, id_document_number,
-  phone, email, employee_type_id, base_pay_amount,
+  phone, email, photo_id, employee_type_id, department_id, position_id, base_pay_amount,
   employment_start_date, employment_end_date,
   bank_name, bank_account_no,
   sso_contribute, sso_declared_wage,
@@ -275,7 +292,7 @@ INSERT INTO employees (
 ) VALUES (
   :employee_number, :title_id, :first_name, :last_name,
   :id_document_type_id, :id_document_number,
-  :phone, :email, :employee_type_id, :base_pay_amount,
+  :phone, :email, :photo_id, :employee_type_id, :department_id, :position_id, :base_pay_amount,
   :employment_start_date, :employment_end_date,
   :bank_name, :bank_account_no,
   :sso_contribute, :sso_declared_wage,
@@ -304,7 +321,10 @@ INSERT INTO employees (
 		"id_document_number":           payload.IDDocumentNumber,
 		"phone":                        payload.Phone,
 		"email":                        payload.Email,
+		"photo_id":                     payload.PhotoID,
 		"employee_type_id":             payload.EmployeeTypeID,
+		"department_id":                payload.DepartmentID,
+		"position_id":                  payload.PositionID,
 		"base_pay_amount":              payload.BasePayAmount,
 		"employment_start_date":        payload.EmploymentStartDate,
 		"employment_end_date":          payload.EmploymentEndDate,
@@ -344,7 +364,10 @@ UPDATE employees SET
   id_document_number=:id_document_number,
   phone=:phone,
   email=:email,
+  photo_id=:photo_id,
   employee_type_id=:employee_type_id,
+  department_id=:department_id,
+  position_id=:position_id,
   base_pay_amount=:base_pay_amount,
   employment_start_date=:employment_start_date,
   employment_end_date=:employment_end_date,
@@ -381,7 +404,10 @@ RETURNING *`
 		"id_document_number":           payload.IDDocumentNumber,
 		"phone":                        payload.Phone,
 		"email":                        payload.Email,
+		"photo_id":                     payload.PhotoID,
 		"employee_type_id":             payload.EmployeeTypeID,
+		"department_id":                payload.DepartmentID,
+		"position_id":                  payload.PositionID,
 		"base_pay_amount":              payload.BasePayAmount,
 		"employment_start_date":        payload.EmploymentStartDate,
 		"employment_end_date":          payload.EmploymentEndDate,
@@ -419,6 +445,42 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+func (r Repository) InsertPhoto(ctx context.Context, input PhotoRecord) (*PhotoRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+INSERT INTO employee_photo (file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by`
+
+	var rec PhotoRecord
+	if err := db.GetContext(ctx, &rec,
+		q,
+		input.FileName,
+		input.ContentType,
+		input.FileSizeBytes,
+		input.Data,
+		input.ChecksumMD5,
+		input.CreatedBy,
+	); err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+func (r Repository) GetPhoto(ctx context.Context, id uuid.UUID) (*PhotoRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+SELECT id, file_name, content_type, file_size_bytes, data, checksum_md5, created_at, created_by
+FROM employee_photo
+WHERE id = $1
+LIMIT 1`
+	var rec PhotoRecord
+	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+		return nil, err
+	}
+	return &rec, nil
 }
 
 func IsUniqueViolation(err error) bool {

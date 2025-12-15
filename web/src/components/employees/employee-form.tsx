@@ -71,6 +71,8 @@ interface EmployeeFormProps {
     // Employment Info
     employeeNumber: z.string().min(1, t('validation.required')),
     employeeTypeId: z.string().min(1, t('validation.required')),
+    departmentId: z.string().optional(),
+    positionId: z.string().optional(),
     employmentStartDate: z.string().min(1, t('validation.required')),
     employmentEndDate: z.string().optional().nullable(),
     
@@ -109,6 +111,8 @@ interface EmployeeFormProps {
       email: initialData?.email || '',
       employeeNumber: initialData?.employeeNumber || '',
       employeeTypeId: initialData?.employeeTypeId || '',
+      departmentId: initialData?.departmentId || '',
+      positionId: initialData?.positionId || '',
       employmentStartDate: initialData?.employmentStartDate || new Date().toISOString().split('T')[0],
       employmentEndDate: initialData?.employmentEndDate || null,
       basePayAmount: initialData?.basePayAmount || 0,
@@ -486,6 +490,30 @@ interface EmployeeFormProps {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
+                    name="employeeTypeId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('fields.employeeType')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t('placeholders.selectType')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {masterData.employeeTypes?.map((item, index) => (
+                              <SelectItem key={`${item.id}-${index}`} value={item.id}>
+                                {item.name || item.Name || item.code || item.Code || item.id || item.ID || 'Unknown'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="employeeNumber"
                     render={({ field }) => (
                       <FormItem>
@@ -503,22 +531,49 @@ interface EmployeeFormProps {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
-                    name="employeeTypeId"
+                    name="departmentId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('fields.employeeType')}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel>{t('fields.department')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={t('placeholders.selectType')} />
+                              <SelectValue placeholder={t('placeholders.selectDepartment')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {masterData.employeeTypes?.map((item, index) => (
+                            {masterData?.departments?.map((item, index) => (
                               <SelectItem key={`${item.id}-${index}`} value={item.id}>
-                                {item.name || item.Name || item.code || item.Code || item.id || item.ID || 'Unknown'}
+                                {item.name || item.Name || item.code || item.Code || 'Unknown'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="positionId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('fields.position')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t('placeholders.selectPosition')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {masterData?.employeePositions?.map((item, index) => (
+                              <SelectItem key={`${item.id}-${index}`} value={item.id}>
+                                {item.name || item.Name || item.code || item.Code || 'Unknown'}
                               </SelectItem>
                             ))}
                           </SelectContent>

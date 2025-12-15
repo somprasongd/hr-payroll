@@ -883,7 +883,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "idDocumentNumber": "1103701234567",
   "phone": "0812345678",
   "email": "somchai@example.com",
+  "photoId": "019b0001-aaaa-bbbb-cccc-000000000001",
   "employeeTypeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
+  "departmentId": "019b0001-aaaa-bbbb-cccc-0000000000d1",
+  "positionId": "019b0001-aaaa-bbbb-cccc-0000000000f1",
   "basePayAmount": 30500.0,
   "employmentStartDate": "2024-06-01",
   "employmentEndDate": null,
@@ -918,7 +921,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 | `idDocumentNumber`          | String            | `"1103701234567"`       | เลขที่บัตรประชาชน หรือเลขที่พาสปอร์ต                               |
 | `phone`                     | String            | `"0812345678"`          | เบอร์โทรศัพท์ติดต่อ (อาจเป็น null)                                 |
 | `email`                     | String            | `"somchai@example.com"` | อีเมล (อาจเป็น null)                                               |
+| `photoId`                   | UUID              | `"019b..."`             | รหัสรูปพนักงานในตาราง `employee_photo` (อาจเป็น null)             |
 | `employeeTypeId`            | UUID              | `"019aa..."`            | รหัสประเภทพนักงาน (FK เชื่อม `employee_type` เช่น ประจำ/พาร์ทไทม์) |
+| `departmentId`              | UUID              | `"019b..."`             | รหัสแผนก (FK เชื่อม `department`, อาจเป็น null)                    |
+| `positionId`                | UUID              | `"019b..."`             | รหัสตำแหน่งงาน (FK เชื่อม `employee_position`, อาจเป็น null)      |
 | `basePayAmount`             | Number            | `30500.00`              | ฐานเงินเดือน (พนักงานประจำ) หรือค่าแรงต่อชั่วโมง (พาร์ทไทม์)       |
 | `employmentStartDate`       | String (Date)     | `"2024-06-01"`          | วันที่เริ่มงาน (Format: YYYY-MM-DD)                                |
 | `employmentEndDate`         | String (Date)     | `null`                  | วันที่สิ้นสุดงาน/ลาออก (เป็น `null` ถ้ายังทำงานอยู่)               |
@@ -971,7 +977,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
   "idDocumentNumber": "1234567890123",
   "phone": "0899998888",
   "email": "wichai@email.com",
+  "photoId": "019b0001-aaaa-bbbb-cccc-000000000001",
   "employeeTypeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
+  "departmentId": "019b0001-aaaa-bbbb-cccc-0000000000d1",
+  "positionId": "019b0001-aaaa-bbbb-cccc-0000000000f1",
   "basePayAmount": 25000.0,
   "employmentStartDate": "2025-12-01",
   "bankName": "SCB",
@@ -995,7 +1004,10 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 | `lastName`                  | นามสกุล          | String     | **Yes**      |                                   |
 | `idDocumentTypeId`          | ID ประเภทบัตร    | UUID       | **Yes**      |                                   |
 | `idDocumentNumber`          | เลขที่บัตร       | String     | **Yes**      |                                   |
+| `photoId`                   | ID รูปพนักงาน    | UUID       | No           | ใช้ ID จาก API อัปโหลดรูป (`/employees/photos`) |
 | `employeeTypeId`            | ID ประเภทพนักงาน | UUID       | **Yes**      |                                   |
+| `departmentId`              | ID แผนก          | UUID       | No           | FK ตาราง `department`             |
+| `positionId`                | ID ตำแหน่ง       | UUID       | No           | FK ตาราง `employee_position`      |
 | `basePayAmount`             | เงินเดือน/ค่าแรง | Number     | **Yes**      | ต้อง > 0                          |
 | `employmentStartDate`       | วันเริ่มงาน      | Date       | **Yes**      | YYYY-MM-DD                        |
 | `bankName`                  | ชื่อธนาคาร       | String     | No           | ต้องมาคู่กับ AccountNo            |
@@ -1090,7 +1102,61 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 ---
 
-### 6.5 Delete Employee (Soft Delete)
+### 6.5 Upload Employee Photo
+
+อัปโหลดไฟล์รูปพนักงานเพื่อเก็บลงตาราง `employee_photo` แล้วนำ `photoId` ไปใช้ใน Create/Update
+
+- **Endpoint:** `POST /employees/photos`
+- **Access:** Admin, HR
+- **Content-Type:** `multipart/form-data`
+- **Constraints:** เฉพาะไฟล์ภาพ (`image/*`), ขนาดไม่เกิน **2MB**
+
+**Request:**
+
+- Form field `file`: binary image
+
+**Success Response Example (201 Created):**
+
+```json
+{
+  "id": "019b0001-aaaa-bbbb-cccc-000000000001",
+  "fileName": "avatar.png",
+  "contentType": "image/png",
+  "fileSizeBytes": 102400,
+  "checksumMd5": "0cc175b9c0f1b6a831c399e269772661"
+}
+```
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description**                                      |
+| --------------- | ----------- | ---------------------------------------------------- |
+| **400**         | Bad Request | ไม่พบไฟล์, ไม่ใช่ `image/*`, หรือไฟล์ใหญ่เกิน 2MB     |
+
+---
+
+### 6.6 Download Employee Photo
+
+ดาวน์โหลดไฟล์รูปพนักงานตาม `photoId` (ใช้แสดงผลใน UI)
+
+- **Endpoint:** `GET /employees/photos/{id}`
+- **Access:** Authenticated (Admin, HR)
+- **Response Headers:** `Content-Type` = `image/*`, `ETag` = `W/"md5:<checksum>"`
+
+**Success Response:**
+
+- **Status:** `200 OK`
+- **Body:** Binary image bytes
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description**      |
+| --------------- | ----------- | -------------------- |
+| **404**         | Not Found   | ไม่พบรูปพนักงาน      |
+
+---
+
+### 6.7 Delete Employee (Soft Delete)
 
 ลบพนักงาน (สงวนสิทธิ์ให้ Admin เท่านั้น เพื่อความปลอดภัยของข้อมูล)
 
@@ -2633,7 +2699,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 ## 15. Master Data
 
-ข้อมูลอ้างอิงสำหรับใช้ในฟอร์มสร้างพนักงานและธุรกรรมต่างๆ (ดึงจากตาราง person_title, employee_type, id_document_type)
+ข้อมูลอ้างอิงสำหรับใช้ในฟอร์มสร้างพนักงานและธุรกรรมต่างๆ (ดึงจากตาราง person_title, employee_type, id_document_type, department, employee_position)
 
 **Access Control:** Authenticated (`admin`, `hr`)
 
@@ -2641,7 +2707,7 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 
 - **Endpoint:** `GET /master/all`
 - **Access:** Admin, HR
-- **Data Source:** ดึงข้อมูลจากตาราง `person_title`, `employee_type`, `id_document_type`
+- **Data Source:** ดึงข้อมูลจากตาราง `person_title`, `employee_type`, `id_document_type`, `department`, `employee_position`
 
 **Success Response Example (200 OK):**
 
@@ -2655,6 +2721,12 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
   "employeeTypes": [
     { "id": "019a4...", "code": "full_time", "name": "พนักงานประจำ" },
     { "id": "019a5...", "code": "part_time", "name": "พนักงานชั่วคราว" }
+  ],
+  "departments": [
+    { "id": "019a8...", "code": "cs", "name": "Customer Service" }
+  ],
+  "employeePositions": [
+    { "id": "019a9...", "code": "manager", "name": "ผู้จัดการ" }
   ],
   "idDocumentTypes": [
     { "id": "019a6...", "code": "citizen_id", "name": "บัตรประชาชน" },
@@ -2670,6 +2742,8 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
 | `personTitles[]`    | Array             | คำนำหน้า (นาย/นาง/นางสาว)      |
 | `employeeTypes[]`   | Array             | ประเภทพนักงาน (ประจำ/ชั่วคราว) |
 | `idDocumentTypes[]` | Array             | ประเภทเอกสารยืนยันตัวตน        |
+| `departments[]`     | Array             | แผนก                              |
+| `employeePositions[]` | Array           | ตำแหน่งงาน                       |
 | `*.id`              | UUID              | ไอดีของ master record          |
 | `*.code`            | String            | รหัสย่อของรายการ               |
 | `*.name`            | String            | ชื่อภาษาไทย                    |
@@ -2722,6 +2796,116 @@ Workflow: **สร้างรอบ -> ระบบดึงคนและส�
   { "id": "019a7...", "code": "passport", "name": "หนังสือเดินทาง" }
 ]
 ```
+
+---
+
+### 15.5 List Departments
+
+- **Endpoint:** `GET /master/departments`
+- **Access:** Admin, HR
+
+**Success Response Example (200 OK):**
+
+```json
+[
+  { "id": "019a8...", "code": "hr", "name": "HR" },
+  { "id": "019a9...", "code": "it", "name": "IT" }
+]
+```
+
+---
+
+### 15.6 List Employee Positions
+
+- **Endpoint:** `GET /master/employee-positions`
+- **Access:** Admin, HR
+
+**Success Response Example (200 OK):**
+
+```json
+[
+  { "id": "019aa...", "code": "staff", "name": "พนักงาน" },
+  { "id": "019ab...", "code": "manager", "name": "ผู้จัดการ" }
+]
+```
+
+---
+
+### 15.7 Create Department (Admin)
+
+- **Endpoint:** `POST /master/departments`
+- **Access:** Admin
+- **Body:** `{ "code": "hr", "name": "HR" }`
+- **Validation:** `code`, `name` ห้ามว่าง; รหัสห้ามซ้ำ (ไม่สนตัวพิมพ์ใหญ่/เล็ก); ขนาดไฟล์ไม่มี
+
+**Success (201 Created):**
+
+```json
+{ "id": "019b1...", "code": "hr", "name": "HR" }
+```
+
+---
+
+### 15.8 Update Department (Admin)
+
+- **Endpoint:** `PATCH /master/departments/{id}`
+- **Access:** Admin
+- **Body:** `{ "code": "hr", "name": "ฝ่ายบุคคล" }`
+- **Behavior:** อัปเดตเฉพาะแถวที่ไม่ถูกลบ (`deleted_at IS NULL`)
+
+**Success (200 OK):**
+
+```json
+{ "id": "019b1...", "code": "hr", "name": "ฝ่ายบุคคล" }
+```
+
+---
+
+### 15.9 Delete Department (Soft Delete, Admin)
+
+- **Endpoint:** `DELETE /master/departments/{id}`
+- **Access:** Admin
+- **Behavior:** ตั้ง `deleted_at` / `deleted_by`; รายการจะหายจากรายการ list และอนุญาตให้สร้างรหัสซ้ำใหม่ได้
+- **Success:** `204 No Content`
+
+---
+
+### 15.10 Create Employee Position (Admin)
+
+- **Endpoint:** `POST /master/employee-positions`
+- **Access:** Admin
+- **Body:** `{ "code": "manager", "name": "ผู้จัดการ" }`
+- **Validation:** `code`, `name` ห้ามว่าง; รหัสห้ามซ้ำ (ไม่สนตัวพิมพ์ใหญ่/เล็ก)
+
+**Success (201 Created):**
+
+```json
+{ "id": "019b2...", "code": "manager", "name": "ผู้จัดการ" }
+```
+
+---
+
+### 15.11 Update Employee Position (Admin)
+
+- **Endpoint:** `PATCH /master/employee-positions/{id}`
+- **Access:** Admin
+- **Body:** `{ "code": "manager", "name": "ผู้จัดการอาวุโส" }`
+- **Behavior:** อัปเดตเฉพาะแถวที่ไม่ถูกลบ (`deleted_at IS NULL`)
+
+**Success (200 OK):**
+
+```json
+{ "id": "019b2...", "code": "manager", "name": "ผู้จัดการอาวุโส" }
+```
+
+---
+
+### 15.12 Delete Employee Position (Soft Delete, Admin)
+
+- **Endpoint:** `DELETE /master/employee-positions/{id}`
+- **Access:** Admin
+- **Behavior:** ตั้ง `deleted_at` / `deleted_by`; รายการจะหายจากรายการ list และอนุญาตให้สร้างรหัสซ้ำใหม่ได้
+- **Success:** `204 No Content`
 
 ---
 

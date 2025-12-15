@@ -8,6 +8,8 @@ import (
 	"hrms/modules/employee/internal/feature/delete"
 	"hrms/modules/employee/internal/feature/get"
 	"hrms/modules/employee/internal/feature/list"
+	photodownload "hrms/modules/employee/internal/feature/photo/download"
+	photoupload "hrms/modules/employee/internal/feature/photo/upload"
 	"hrms/modules/employee/internal/feature/update"
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/eventbus"
@@ -45,6 +47,8 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	mediator.Register[*acclist.Query, *acclist.Response](acclist.NewHandler(m.repo))
 	mediator.Register[*accupsert.Command, *accupsert.Response](accupsert.NewHandler(m.repo))
 	mediator.Register[*accdelete.Command, mediator.NoResponse](accdelete.NewHandler(m.repo))
+	mediator.Register[*photoupload.Command, *photoupload.Response](photoupload.NewHandler(m.repo))
+	mediator.Register[*photodownload.Query, *photodownload.Response](photodownload.NewHandler(m.repo))
 	return nil
 }
 
@@ -55,10 +59,14 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	create.NewEndpoint(group)
 	get.NewEndpoint(group)
 	update.NewEndpoint(group)
+
+	photos := group.Group("/photos")
 	// Admin & HR
 	adminOrHR := group.Group("", middleware.RequireRoles("admin", "hr"))
 	delete.NewEndpoint(adminOrHR)
 	acclist.NewEndpoint(adminOrHR)
+	photodownload.NewEndpoint(photos)
+	photoupload.NewEndpoint(photos.Group("", middleware.RequireRoles("admin", "hr")))
 	// Admin only (mutations)
 	admin := group.Group("", middleware.RequireRoles("admin"))
 	accupsert.NewEndpoint(admin)

@@ -21,6 +21,55 @@ CREATE TABLE IF NOT EXISTS employee_type (
   name_th TEXT NOT NULL
 );
 
+-- แผนก
+CREATE TABLE IF NOT EXISTS department (
+  id   UUID PRIMARY KEY DEFAULT uuidv7(),
+  code TEXT NOT NULL,
+  name_th TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_by UUID NOT NULL REFERENCES users(id),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_by UUID NOT NULL REFERENCES users(id),
+  deleted_at TIMESTAMPTZ NULL,
+  deleted_by UUID NULL REFERENCES users(id)
+);
+
+-- ตำแหน่งงาน
+CREATE TABLE IF NOT EXISTS employee_position (
+  id   UUID PRIMARY KEY DEFAULT uuidv7(),
+  code TEXT NOT NULL,
+  name_th TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_by UUID NOT NULL REFERENCES users(id),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_by UUID NOT NULL REFERENCES users(id),
+  deleted_at TIMESTAMPTZ NULL,
+  deleted_by UUID NULL REFERENCES users(id)
+);
+
+-- รูปพนักงาน (เก็บแยกตารางเหมือน logo)
+CREATE TABLE IF NOT EXISTS employee_photo (
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+  file_name TEXT NOT NULL,
+  content_type TEXT NOT NULL,
+  file_size_bytes BIGINT NOT NULL CHECK (file_size_bytes BETWEEN 1 AND 2097152),
+  data BYTEA NOT NULL,
+  checksum_md5 TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_by UUID NOT NULL REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS employee_photo_checksum_uk
+  ON employee_photo(checksum_md5);
+
+CREATE UNIQUE INDEX IF NOT EXISTS department_code_active_uk
+  ON department (lower(code))
+  WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS employee_position_code_active_uk
+  ON employee_position (lower(code))
+  WHERE deleted_at IS NULL;
+
 -- seed ค่าพื้นฐาน (รันครั้งเดียว)
 INSERT INTO person_title(code, name_th) VALUES
   ('mr','นาย'),('mrs','นาง'),('ms','นางสาว')
@@ -50,7 +99,11 @@ CREATE TABLE employees (
   phone TEXT NULL,
   email TEXT NULL,
 
+  photo_id UUID NULL REFERENCES employee_photo(id) ON DELETE SET NULL,
+
   employee_type_id UUID NOT NULL REFERENCES employee_type(id) ON DELETE RESTRICT,
+  department_id UUID NULL REFERENCES department(id) ON DELETE SET NULL,
+  position_id   UUID NULL REFERENCES employee_position(id) ON DELETE SET NULL,
 
   -- ค่าจ้างคอลัมน์เดียว: full_time = เงินเดือน/เดือน, part_time = ค่าจ้าง/ชั่วโมง
   base_pay_amount NUMERIC(12,2) NOT NULL,
@@ -103,6 +156,8 @@ WHERE employment_end_date IS NULL AND deleted_at IS NULL;
 -- สะดวกค้นหา
 CREATE INDEX employees_doc_idx ON employees (id_document_type_id, id_document_number);
 CREATE INDEX employees_work_status_idx ON employees (employment_end_date);
+CREATE INDEX employees_department_idx ON employees (department_id);
+CREATE INDEX employees_position_idx ON employees (position_id);
 CREATE INDEX employees_not_deleted_idx ON employees ((deleted_at IS NULL));
 
 -- updated_at อัตโนมัติ
@@ -169,7 +224,10 @@ SELECT
   idt.code AS id_document_type_code, idt.name_th AS id_document_type_name_th,
   e.id_document_number,
   e.phone, e.email,
+  e.photo_id,
   et.code AS employee_type_code, et.name_th AS employee_type_name_th,
+  d.id AS department_id, d.code AS department_code, d.name_th AS department_name_th,
+  ep.id AS position_id, ep.code AS position_code, ep.name_th AS position_name_th,
   e.base_pay_amount,
   CASE et.code
     WHEN 'full_time' THEN 'monthly'
@@ -192,5 +250,7 @@ FROM employees e
 JOIN person_title      pt  ON pt.id  = e.title_id
 JOIN id_document_type  idt ON idt.id = e.id_document_type_id
 JOIN employee_type     et  ON et.id  = e.employee_type_id
+LEFT JOIN department   d   ON d.id   = e.department_id
+LEFT JOIN employee_position ep ON ep.id = e.position_id
 WHERE e.employment_end_date IS NULL
   AND e.deleted_at IS NULL;

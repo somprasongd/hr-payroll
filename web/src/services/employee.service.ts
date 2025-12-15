@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client';
+import { axiosInstance } from '@/lib/axios';
 
 export interface Employee {
   id: string;
@@ -10,7 +11,10 @@ export interface Employee {
   idDocumentNumber: string;
   phone?: string;
   email?: string;
+  photoId?: string;
   employeeTypeId: string;
+  departmentId?: string;
+  positionId?: string;
   basePayAmount: number;
   employmentStartDate: string;
   employmentEndDate?: string;
@@ -51,7 +55,10 @@ export interface CreateEmployeeRequest {
   idDocumentNumber: string;
   phone?: string;
   email?: string;
+  photoId?: string;
   employeeTypeId: string;
+  departmentId?: string;
+  positionId?: string;
   basePayAmount: number;
   employmentStartDate: string;
   bankName?: string;
@@ -75,7 +82,6 @@ export interface UpdateEmployeeRequest {
   providentFundContribute?: boolean;
   providentFundRateEmployee?: number;
   providentFundRateEmployer?: number;
-  // Add other updatable fields as needed based on API spec or requirements
   titleId?: string;
   firstName?: string;
   lastName?: string;
@@ -83,7 +89,10 @@ export interface UpdateEmployeeRequest {
   idDocumentNumber?: string;
   phone?: string;
   email?: string;
+  photoId?: string;
   employeeTypeId?: string;
+  departmentId?: string;
+  positionId?: string;
   employmentStartDate?: string;
   employmentEndDate?: string;
   bankName?: string;
@@ -96,6 +105,17 @@ export interface UpdateEmployeeRequest {
   allowElectric?: boolean;
   allowInternet?: boolean;
 }
+
+export interface PhotoUploadResponse {
+  id: string;
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+  checksumMd5: string;
+}
+
+// Cache for photo ETag and data URLs
+const photoCache = new Map<string, { etag: string; dataUrl: string }>();
 
 export interface EmployeeListResponse {
   data: Employee[];
@@ -143,5 +163,54 @@ export const employeeService = {
 
   deleteEmployee: async (id: string) => {
     return apiClient.delete(`/employees/${id}`);
+  },
+
+  // Photo upload/download
+  uploadPhoto: async (file: File): Promise<PhotoUploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosInstance.post<PhotoUploadResponse>('/employees/photos', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  fetchPhotoWithCache: async (photoId: string): Promise<string | null> => {
+    if (!photoId) return null;
+
+    const cached = photoCache.get(photoId);
+    const headers: Record<string, string> = {};
+    if (cached?.etag) {
+      headers['If-None-Match'] = cached.etag;
+    }
+
+    try {
+      const response = await axiosInstance.get(`/employees/photos/${photoId}`, {
+        responseType: 'blob',
+        headers,
+        validateStatus: (status) => status === 200 || status === 304,
+      });
+
+      if (response.status === 304 && cached) {
+        return cached.dataUrl;
+      }
+
+      const blob = response.data as Blob;
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      const etag = response.headers['etag'];
+      if (etag) {
+        photoCache.set(photoId, { etag, dataUrl });
+      }
+
+      return dataUrl;
+    } catch (error) {
+      console.error('Failed to fetch photo:', error);
+      return null;
+    }
   },
 };

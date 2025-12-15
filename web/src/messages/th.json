@@ -281,7 +281,10 @@
       "electric": "ค่าไฟ",
       "internet": "ค่าอินเทอร์เน็ต",
       "doctorFee": "ค่าแพทย์",
-      "status": "สถานะ"
+      "status": "สถานะ",
+      "photo": "รูปพนักงาน",
+      "department": "แผนก",
+      "position": "ตำแหน่ง"
     },
     "status": {
       "active": "ทำงานอยู่",
@@ -316,8 +319,13 @@
     "clearFilters": "ล้างตัวกรอง",
     "placeholders": {
       "selectTitle": "เลือกคำนำหน้า",
-      "selectType": "เลือกประเภท"
+      "selectType": "เลือกประเภท",
+      "selectDepartment": "เลือกแผนก",
+      "selectPosition": "เลือกตำแหน่ง"
     },
+    "photoUploadSuccess": "อัปโหลดรูปสำเร็จ",
+    "photoUploadError": "อัปโหลดรูปไม่สำเร็จ",
+    "photoHint": "อัปโหลดรูปพนักงาน (ไฟล์รูปภาพ ขนาดไม่เกิน 2MB)",
     "cancel": "ยกเลิก",
     "next": "ถัดไป",
     "back": "ย้อนกลับ",
@@ -643,7 +651,8 @@
     "previous": "ก่อนหน้า",
     "filter": "ตัวกรอง",
     "confirmDeleteTitle": "ยืนยันการลบ",
-    "confirmDeleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    "confirmDeleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "actions": "การกระทำ"
   },
   "Payouts": {
     "PT": {
@@ -1011,7 +1020,63 @@
     }
   },
   "Nav": {
-    "orgProfile": "ข้อมูลองค์กร"
+    "orgProfile": "ข้อมูลองค์กร",
+    "departments": "แผนก",
+    "positions": "ตำแหน่ง"
+  },
+  "Departments": {
+    "title": "จัดการแผนก",
+    "description": "จัดการข้อมูลแผนกขององค์กร",
+    "createTitle": "สร้างแผนกใหม่",
+    "createDescription": "กรอกข้อมูลแผนกที่ต้องการสร้าง",
+    "editTitle": "แก้ไขแผนก",
+    "editDescription": "แก้ไขข้อมูลแผนก",
+    "fields": {
+      "code": "รหัสแผนก",
+      "name": "ชื่อแผนก"
+    },
+    "placeholders": {
+      "code": "เช่น HR, IT, FIN",
+      "name": "เช่น ฝ่ายบุคคล"
+    },
+    "noData": "ไม่พบข้อมูลแผนก",
+    "success": {
+      "created": "สร้างแผนกสำเร็จ",
+      "updated": "แก้ไขแผนกสำเร็จ",
+      "deleted": "ลบแผนกสำเร็จ"
+    },
+    "errors": {
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลแผนกได้",
+      "saveFailed": "บันทึกไม่สำเร็จ",
+      "deleteFailed": "ลบไม่สำเร็จ"
+    }
+  },
+  "Positions": {
+    "title": "จัดการตำแหน่ง",
+    "description": "จัดการข้อมูลตำแหน่งงานขององค์กร",
+    "createTitle": "สร้างตำแหน่งใหม่",
+    "createDescription": "กรอกข้อมูลตำแหน่งที่ต้องการสร้าง",
+    "editTitle": "แก้ไขตำแหน่ง",
+    "editDescription": "แก้ไขข้อมูลตำแหน่ง",
+    "fields": {
+      "code": "รหัสตำแหน่ง",
+      "name": "ชื่อตำแหน่ง"
+    },
+    "placeholders": {
+      "code": "เช่น MGR, STAFF, ENG",
+      "name": "เช่น ผู้จัดการ"
+    },
+    "noData": "ไม่พบข้อมูลตำแหน่ง",
+    "success": {
+      "created": "สร้างตำแหน่งสำเร็จ",
+      "updated": "แก้ไขตำแหน่งสำเร็จ",
+      "deleted": "ลบตำแหน่งสำเร็จ"
+    },
+    "errors": {
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลตำแหน่งได้",
+      "saveFailed": "บันทึกไม่สำเร็จ",
+      "deleteFailed": "ลบไม่สำเร็จ"
+    }
   },
   "OrgProfile": {
     "title": "ข้อมูลองค์กร (หัวสลิป)",

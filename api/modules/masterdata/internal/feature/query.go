@@ -14,9 +14,11 @@ type Query struct {
 }
 
 type Response struct {
-	PersonTitles    []repository.MasterRecord `json:"personTitles,omitempty"`
-	EmployeeTypes   []repository.MasterRecord `json:"employeeTypes,omitempty"`
-	IDDocumentTypes []repository.MasterRecord `json:"idDocumentTypes,omitempty"`
+	PersonTitles      []repository.MasterRecord `json:"personTitles,omitempty"`
+	EmployeeTypes     []repository.MasterRecord `json:"employeeTypes,omitempty"`
+	IDDocumentTypes   []repository.MasterRecord `json:"idDocumentTypes,omitempty"`
+	Departments       []repository.MasterRecord `json:"departments,omitempty"`
+	EmployeePositions []repository.MasterRecord `json:"employeePositions,omitempty"`
 }
 
 type Handler struct {
@@ -56,6 +58,22 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 			return nil, err
 		}
 		resp.IDDocumentTypes = data
+	}
+	if loadAll || q.Only == "departments" {
+		data, err := h.repo.Departments(ctx)
+		if err != nil {
+			logger.FromContext(ctx).Error("failed to load departments", zap.Error(err))
+			return nil, err
+		}
+		resp.Departments = data
+	}
+	if loadAll || q.Only == "employee_positions" {
+		data, err := h.repo.EmployeePositions(ctx)
+		if err != nil {
+			logger.FromContext(ctx).Error("failed to load employee positions", zap.Error(err))
+			return nil, err
+		}
+		resp.EmployeePositions = data
 	}
 	return resp, nil
 }

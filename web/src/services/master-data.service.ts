@@ -14,11 +14,57 @@ export interface AllMasterData {
   personTitles: MasterData[];
   employeeTypes: MasterData[];
   idDocumentTypes: MasterData[];
+  departments: MasterData[];
+  employeePositions: MasterData[];
+}
+
+export interface CreateMasterDataRequest {
+  code: string;
+  name: string;
+}
+
+export interface UpdateMasterDataRequest {
+  code?: string;
+  name?: string;
 }
 
 export const masterDataService = {
-  getAll: async () => {
-    const response = await apiClient.get<any>('/master/all');
-    return response.data || response;
+  getAll: async (): Promise<AllMasterData> => {
+    return apiClient.get<AllMasterData>('/master/all');
+  },
+
+  // Departments CRUD
+  getDepartments: async (): Promise<MasterData[]> => {
+    return apiClient.get<MasterData[]>('/master/departments');
+  },
+
+  createDepartment: async (data: CreateMasterDataRequest): Promise<MasterData> => {
+    return apiClient.post<MasterData>('/master/departments', data);
+  },
+
+  updateDepartment: async (id: string, data: UpdateMasterDataRequest): Promise<MasterData> => {
+    return apiClient.patch<MasterData>(`/master/departments/${id}`, data);
+  },
+
+  deleteDepartment: async (id: string): Promise<void> => {
+    await apiClient.delete(`/master/departments/${id}`);
+  },
+
+  // Employee Positions CRUD
+  getPositions: async (): Promise<MasterData[]> => {
+    return apiClient.get<MasterData[]>('/master/employee-positions');
+  },
+
+  createPosition: async (data: CreateMasterDataRequest): Promise<MasterData> => {
+    return apiClient.post<MasterData>('/master/employee-positions', data);
+  },
+
+  updatePosition: async (id: string, data: UpdateMasterDataRequest): Promise<MasterData> => {
+    return apiClient.patch<MasterData>(`/master/employee-positions/${id}`, data);
+  },
+
+  deletePosition: async (id: string): Promise<void> => {
+    await apiClient.delete(`/master/employee-positions/${id}`);
   },
 };
+

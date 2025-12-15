@@ -17,9 +17,14 @@ DROP FUNCTION IF EXISTS employees_wage_validate() CASCADE;
 DROP INDEX IF EXISTS employees_empno_active_uk;
 DROP INDEX IF EXISTS employees_doc_idx;
 DROP INDEX IF EXISTS employees_work_status_idx;
+DROP INDEX IF EXISTS employees_department_idx;
+DROP INDEX IF EXISTS employees_position_idx;
 DROP INDEX IF EXISTS employees_not_deleted_idx;
 
 /* 5. Drop lookup tables */
+DROP TABLE IF EXISTS employee_photo CASCADE;
+DROP TABLE IF EXISTS employee_position CASCADE;
+DROP TABLE IF EXISTS department CASCADE;
 DROP TABLE IF EXISTS employee_type CASCADE;
 DROP TABLE IF EXISTS id_document_type CASCADE;
 DROP TABLE IF EXISTS person_title CASCADE;
