@@ -61,6 +61,7 @@ COALESCE(income_total,0)
   - COALESCE(electric_amount,0)
   - COALESCE(internet_amount,0)
   - COALESCE(advance_repay_amount,0)
+  - COALESCE(jsonb_sum_value(others_deduction),0)
   - COALESCE(jsonb_sum_value(loan_repayments),0)
 `
 
@@ -437,6 +438,7 @@ type ItemDetail struct {
 	LoanOutstandingTotal    float64   `db:"loan_outstanding_total"`
 	LoanRepayments          []byte    `db:"loan_repayments"`
 	OthersIncome            []byte    `db:"others_income"`
+	OthersDeduction         []byte    `db:"others_deduction"`
 	WaterAmount             float64   `db:"water_amount"`
 	ElectricAmount          float64   `db:"electric_amount"`
 	InternetAmount          float64   `db:"internet_amount"`
@@ -467,7 +469,7 @@ func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetai
        pri.pf_accum_prev, pri.pf_month_amount, pri.pf_accum_total,
        pri.advance_amount, pri.advance_repay_amount, pri.advance_diff_amount,
        pri.loan_outstanding_prev, pri.loan_outstanding_total, pri.loan_repayments,
-       pri.others_income, pri.water_amount, pri.electric_amount, pri.internet_amount,
+       pri.others_income, pri.others_deduction, pri.water_amount, pri.electric_amount, pri.internet_amount,
        pri.water_meter_prev, pri.water_meter_curr, pri.electric_meter_prev, pri.electric_meter_curr,
        pri.water_rate_per_unit, pri.electricity_rate_per_unit, pri.doctor_fee,
        e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,

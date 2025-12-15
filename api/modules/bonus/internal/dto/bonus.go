@@ -13,6 +13,7 @@ const dateLayout = "2006-01-02"
 type Cycle struct {
 	ID               uuid.UUID `json:"id"`
 	PayrollMonth     string    `json:"payrollMonthDate"`
+	BonusYear        int       `json:"bonusYear"`
 	PeriodStart      string    `json:"periodStartDate"`
 	PeriodEnd        string    `json:"periodEndDate"`
 	Status           string    `json:"status"`
@@ -54,6 +55,7 @@ func FromCycle(r repository.Cycle) Cycle {
 	return Cycle{
 		ID:               r.ID,
 		PayrollMonth:     r.PayrollMonth.Format(dateLayout),
+		BonusYear:        r.BonusYear,
 		PeriodStart:      r.PeriodStart.Format(dateLayout),
 		PeriodEnd:        r.PeriodEnd.Format(dateLayout),
 		Status:           r.Status,

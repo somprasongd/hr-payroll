@@ -114,6 +114,12 @@ export default function BonusListPage() {
       cell: (info: any) => info.getValue(),
     },
     {
+      id: 'bonusYear',
+      header: () => t('fields.bonusYear'),
+      accessorFn: (row: BonusCycle) => row.bonusYear || new Date(row.payrollMonthDate).getFullYear(),
+      cell: (info: any) => info.getValue(),
+    },
+    {
       id: 'period',
       header: () => t('fields.period'),
       accessorFn: (row: BonusCycle) =>

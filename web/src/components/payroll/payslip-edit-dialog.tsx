@@ -30,6 +30,7 @@ import {
   PayslipDetail,
   UpdatePayslipRequest,
   OtherIncomeItem,
+  OtherDeductionItem,
   LoanRepaymentItem,
 } from '@/services/payroll.service';
 import { payrollConfigService, PayrollConfig } from '@/services/payroll-config.service';
@@ -72,6 +73,7 @@ export function PayslipEditDialog({
   const [leaveCompensation, setLeaveCompensation] = useState(0);
   const [doctorFee, setDoctorFee] = useState(0);
   const [othersIncome, setOthersIncome] = useState<OtherIncomeItem[]>([]);
+  const [othersDeduction, setOthersDeduction] = useState<OtherDeductionItem[]>([]);
   const [taxAmount, setTaxAmount] = useState(0);
   const [pfAmount, setPfAmount] = useState(0);
   const [waterMeterPrev, setWaterMeterPrev] = useState<number | null>(null);
@@ -101,6 +103,7 @@ export function PayslipEditDialog({
     leaveCompensation: number;
     doctorFee: number;
     othersIncome: OtherIncomeItem[];
+    othersDeduction: OtherDeductionItem[];
     taxAmount: number;
     pfAmount: number;
     waterMeterPrev: number | null;
@@ -124,6 +127,7 @@ export function PayslipEditDialog({
       const leaveComp = data?.leaveCompensationAmount ?? 0;
       const drFee = data?.doctorFee ?? 0;
       const others = data?.othersIncome ?? [];
+      const othersDed = data?.othersDeduction ?? [];
       const tax = data?.taxMonthAmount ?? 0;
       const pf = data?.pfMonthAmount ?? 0;
       const waterPrev = data?.waterMeterPrev ?? null;
@@ -139,6 +143,7 @@ export function PayslipEditDialog({
       setLeaveCompensation(leaveComp);
       setDoctorFee(drFee);
       setOthersIncome(others);
+      setOthersDeduction(othersDed);
       setTaxAmount(tax);
       setPfAmount(pf);
       setWaterMeterPrev(waterPrev);
@@ -156,6 +161,7 @@ export function PayslipEditDialog({
         leaveCompensation: leaveComp,
         doctorFee: drFee,
         othersIncome: JSON.parse(JSON.stringify(others)),
+        othersDeduction: JSON.parse(JSON.stringify(othersDed)),
         taxAmount: tax,
         pfAmount: pf,
         waterMeterPrev: waterPrev,
@@ -277,6 +283,7 @@ export function PayslipEditDialog({
         leaveCompensationAmount: leaveCompensation,
         doctorFee: detail?.allowDoctorFee ? doctorFee : undefined,
         othersIncome,
+        othersDeduction,
         taxMonthAmount: detail?.withholdTax ? taxAmount : undefined,
         pfMonthAmount: detail?.providentFundContribute ? pfAmount : undefined,
         waterMeterPrev: detail?.allowWater ? (waterMeterPrev ?? 0) : undefined,
@@ -317,6 +324,20 @@ export function PayslipEditDialog({
     setOthersIncome(updated);
   };
 
+  const addOtherDeduction = () => {
+    setOthersDeduction([...othersDeduction, { name: '', value: 0 }]);
+  };
+
+  const removeOtherDeduction = (index: number) => {
+    setOthersDeduction(othersDeduction.filter((_, i) => i !== index));
+  };
+
+  const updateOtherDeduction = (index: number, field: 'name' | 'value', value: string | number) => {
+    const updated = [...othersDeduction];
+    updated[index] = { ...updated[index], [field]: value };
+    setOthersDeduction(updated);
+  };
+
   const addLoanRepayment = () => {
     setLoanRepayments([...loanRepayments, { name: '', value: 0 }]);
   };
@@ -350,6 +371,7 @@ export function PayslipEditDialog({
     
     // Check arrays
     if (JSON.stringify(othersIncome) !== JSON.stringify(originalValues.othersIncome)) return true;
+    if (JSON.stringify(othersDeduction) !== JSON.stringify(originalValues.othersDeduction)) return true;
     if (JSON.stringify(loanRepayments) !== JSON.stringify(originalValues.loanRepayments)) return true;
     
     return false;
@@ -357,7 +379,7 @@ export function PayslipEditDialog({
     originalValues, canEdit, leaveCompensation, doctorFee, taxAmount, pfAmount,
     waterMeterPrev, waterMeterCurr, waterAmount,
     electricMeterPrev, electricMeterCurr, electricAmount,
-    internetAmount, advanceRepay, othersIncome, loanRepayments
+    internetAmount, advanceRepay, othersIncome, othersDeduction, loanRepayments
   ]);
 
   // Handle actions with dirty check
@@ -861,6 +883,50 @@ export function PayslipEditDialog({
                           disabled={!canEdit || !detail.allowInternet}
                         />
                       </div>
+                    </div>
+
+                    {/* Others Deduction Array */}
+                    <div className="border-t pt-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label>{t('payslip.fields.othersDeduction')}</Label>
+                        {canEdit && (
+                          <Button type="button" variant="outline" size="sm" onClick={addOtherDeduction}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            {t('payslip.addItem')}
+                          </Button>
+                        )}
+                      </div>
+                      {othersDeduction.map((item, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                          <Input
+                            placeholder={t('payslip.itemName')}
+                            value={item.name ?? ''}
+                            onChange={(e) => updateOtherDeduction(index, 'name', e.target.value)}
+                            disabled={!canEdit}
+                            className="flex-1"
+                          />
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder={t('payslip.itemValue')}
+                            value={item.value ?? 0}
+                            onChange={(e) => updateOtherDeduction(index, 'value', parseFloat(e.target.value) || 0)}
+                            disabled={!canEdit}
+                            className="w-32"
+                          />
+                          {canEdit && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeOtherDeduction(index)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>

@@ -78,6 +78,9 @@ export interface OtherIncomeItem {
   value: number;
 }
 
+// Alias for othersDeduction - same structure as OtherIncomeItem
+export type OtherDeductionItem = OtherIncomeItem;
+
 export interface LoanRepaymentItem {
   name: string;
   value: number;
@@ -105,6 +108,7 @@ export interface PayslipDetail {
   leaveCompensationAmount: number;
   doctorFee: number;
   othersIncome: OtherIncomeItem[];
+  othersDeduction: OtherDeductionItem[];
   incomeTotal: number;
   incomeAccumPrev: number;
   incomeAccumTotal: number;
@@ -170,6 +174,7 @@ export interface UpdatePayslipRequest {
   leaveCompensationAmount?: number;
   doctorFee?: number;
   othersIncome?: OtherIncomeItem[];
+  othersDeduction?: OtherDeductionItem[];
   taxMonthAmount?: number;
   pfMonthAmount?: number;
   waterMeterPrev?: number | null;

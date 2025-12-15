@@ -177,6 +177,9 @@ func FromItemDetail(r repository.ItemDetail) ItemDetail {
 	if len(r.OthersIncome) > 0 {
 		detail.OthersIncome = decodeJSONMapArray(r.OthersIncome)
 	}
+	if len(r.OthersDeduction) > 0 {
+		detail.OthersDeduction = decodeJSONMapArray(r.OthersDeduction)
+	}
 	return detail
 }
 
@@ -213,6 +216,7 @@ type ItemDetail struct {
 	LoanOutstandingTotal    float64                  `json:"loanOutstandingTotal"`
 	LoanRepayments          []map[string]interface{} `json:"loanRepayments,omitempty"`
 	OthersIncome            []map[string]interface{} `json:"othersIncome,omitempty"`
+	OthersDeduction         []map[string]interface{} `json:"othersDeduction,omitempty"`
 	WaterAmount             float64                  `json:"waterAmount"`
 	ElectricAmount          float64                  `json:"electricAmount"`
 	InternetAmount          float64                  `json:"internetAmount"`

@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/api-client";
 export interface BonusCycle {
   id: string;
   payrollMonthDate: string;
+  bonusYear?: number;
   periodStartDate: string;
   periodEndDate: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -33,6 +34,7 @@ export interface BonusItem {
 
 export interface CreateBonusCycleRequest {
   payrollMonthDate: string;
+  bonusYear?: number;
   periodStartDate: string;
   periodEndDate: string;
 }

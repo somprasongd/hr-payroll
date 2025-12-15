@@ -17,6 +17,7 @@ import (
 
 type Command struct {
 	PayrollMonth string `json:"payrollMonthDate"`
+	BonusYear    *int   `json:"bonusYear,omitempty"`
 	PeriodStart  string `json:"periodStartDate"`
 	PeriodEnd    string `json:"periodEndDate"`
 	ActorID      uuid.UUID
@@ -26,6 +27,7 @@ type Command struct {
 	ParsedPayrollMonth time.Time `json:"-"`
 	ParsedPeriodStart  time.Time `json:"-"`
 	ParsedPeriodEnd    time.Time `json:"-"`
+	ParsedBonusYear    int       `json:"-"`
 }
 
 type Response struct {
@@ -52,6 +54,14 @@ func (c *Command) ParseDates() error {
 	c.ParsedPayrollMonth = payrollMonth
 	c.ParsedPeriodStart = start
 	c.ParsedPeriodEnd = end
+	if c.BonusYear != nil {
+		if *c.BonusYear < 1 {
+			return errs.BadRequest("bonusYear must be a positive year")
+		}
+		c.ParsedBonusYear = *c.BonusYear
+	} else {
+		c.ParsedBonusYear = payrollMonth.Year()
+	}
 	return nil
 }
 
@@ -73,7 +83,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var cycle *repository.Cycle
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.ActorID)
+		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedBonusYear, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.ActorID)
 		return err
 	}); err != nil {
 		switch {

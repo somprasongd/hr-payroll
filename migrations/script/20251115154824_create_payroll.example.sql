@@ -122,6 +122,7 @@ INSERT INTO payroll_run_item (
   bonus_amount,
   leave_compensation_amount,
   others_income,
+  others_deduction,
 
   leave_days_qty,      leave_days_deduction,
   leave_double_qty,    leave_double_deduction,
@@ -163,6 +164,7 @@ VALUES (
   5000.00,
   0.00,
   '[{"name":"เบี้ยเลี้ยงปฏิบัติงานพิเศษ","value":2000.00}]'::jsonb,
+  '[{"name":"ค่าปรับความเสียหาย","value":500.00}]'::jsonb,
 
   1.0, 1000.00,
   0.0, 0.00,

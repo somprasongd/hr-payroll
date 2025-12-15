@@ -331,6 +331,7 @@ Table "bonus_cycle" {
   "updated_at" timestamptz [not null, default: `now()`]
   "updated_by" uuid [not null]
   "payroll_month_date" date [unique, not null]
+  "bonus_year" int4 [not null, default: `date_part('year', current_date)::integer`]
   "period_start_date" date [not null]
   "period_end_date" date [not null]
   "status" text [not null, default: 'pending']
@@ -464,6 +465,7 @@ Table "payroll_run_item" {
   "leave_compensation_amount" numeric(14,2) [not null, default: 0.00]
   "doctor_fee" numeric(14,2) [not null, default: 0.00]
   "others_income" jsonb
+  "others_deduction" jsonb
   "income_total" numeric(14,2) [not null, default: 0.00]
   "income_accum_prev" numeric(14,2) [not null, default: 0.00]
   "income_accum_total" numeric(14,2) [not null, default: 0.00]

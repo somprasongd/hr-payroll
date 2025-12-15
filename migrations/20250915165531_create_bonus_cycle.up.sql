@@ -51,6 +51,9 @@ CREATE TABLE bonus_cycle (
   CONSTRAINT bonus_cycle_period_ck
     CHECK (period_end_date >= period_start_date),
 
+  -- ปี ค.ศ. ของโบนัส (เช่น 2025) ค่าเริ่มต้น = ปีปัจจุบัน
+  bonus_year    INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM current_date)::int,
+
   status       bonus_status NOT NULL DEFAULT 'pending',
 
   -- soft delete

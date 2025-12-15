@@ -42,6 +42,7 @@ type UpdateRequest struct {
 	BonusAmount             *float64                  `json:"bonusAmount"`
 	LeaveCompensationAmount *float64                  `json:"leaveCompensationAmount"`
 	OthersIncome            *[]map[string]interface{} `json:"othersIncome"`
+	OthersDeduction         *[]map[string]interface{} `json:"othersDeduction"`
 	LoanRepayments          *[]map[string]interface{} `json:"loanRepayments"`
 	LateMinutesQty          *int                      `json:"lateMinutesQty"`
 	LateMinutesDeduction    *float64                  `json:"lateMinutesDeduction"`
@@ -128,6 +129,10 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	if cmd.Payload.OthersIncome != nil {
 		bytes, _ := json.Marshal(cmd.Payload.OthersIncome)
 		fields["others_income"] = bytes
+	}
+	if cmd.Payload.OthersDeduction != nil {
+		bytes, _ := json.Marshal(cmd.Payload.OthersDeduction)
+		fields["others_deduction"] = bytes
 	}
 	if cmd.Payload.LoanRepayments != nil {
 		bytes, _ := json.Marshal(cmd.Payload.LoanRepayments)

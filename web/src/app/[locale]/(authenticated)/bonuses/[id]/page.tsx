@@ -312,6 +312,12 @@ export default function BonusDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-4 border rounded-lg bg-white shadow-sm">
+          <div className="text-sm text-muted-foreground">{t('fields.bonusYear')}</div>
+          <div className="font-medium">
+            {cycle.bonusYear || new Date(cycle.payrollMonthDate).getFullYear()}
+          </div>
+        </div>
+        <div className="p-4 border rounded-lg bg-white shadow-sm">
           <div className="text-sm text-muted-foreground">{t('fields.period')}</div>
           <div className="font-medium">
             {format(new Date(cycle.periodStartDate), 'dd/MM/yyyy')} -{' '}
@@ -326,12 +332,6 @@ export default function BonusDetailPage() {
           <div className="text-sm text-muted-foreground">{t('fields.totalAmount')}</div>
           <div className="text-2xl font-bold text-green-600">
             {totalBonusAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </div>
-        </div>
-        <div className="p-4 border rounded-lg bg-white shadow-sm">
-          <div className="text-sm text-muted-foreground">{t('fields.createdAt')}</div>
-          <div className="font-medium">
-            {format(new Date(cycle.createdAt), 'dd/MM/yyyy HH:mm')}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -39,6 +39,7 @@ import { MonthPicker } from "@/components/ui/month-picker";
 
 const createCycleSchema = z.object({
   payrollMonthDate: z.string().min(1, 'Required'),
+  bonusYear: z.number().min(1900).max(2100),
   periodStartDate: z.string().min(1, 'Required'),
   periodEndDate: z.string().min(1, 'Required'),
 });
@@ -50,21 +51,45 @@ interface CreateCycleDialogProps {
   trigger?: React.ReactNode;
 }
 
+// Helper function to convert Gregorian year to Thai Buddhist Era year
+function toBuddhistYear(gregorianYear: number): number {
+  return gregorianYear + 543;
+}
+
+// Generate year options (5 years before and 5 years after current year)
+function generateYearOptions(locale: string): { value: number; label: string }[] {
+  const currentYear = new Date().getFullYear();
+  const years: { value: number; label: string }[] = [];
+  
+  for (let year = currentYear - 2; year <= currentYear + 5; year++) {
+    years.push({
+      value: year, // Always Gregorian for API
+      label: locale === 'th' ? toBuddhistYear(year).toString() : year.toString(),
+    });
+  }
+  
+  return years;
+}
+
 export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps) {
   const t = useTranslations('Bonus.create');
   const tCommon = useTranslations('Common');
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const currentDate = new Date();
   const currentMonth = (currentDate.getMonth() + 1).toString();
-  const currentYear = currentDate.getFullYear().toString();
+  const currentYear = currentDate.getFullYear();
+
+  const yearOptions = generateYearOptions(locale);
 
   const form = useForm<CreateCycleFormValues>({
     resolver: zodResolver(createCycleSchema),
     defaultValues: {
       payrollMonthDate: `${currentYear}-${currentMonth.padStart(2, '0')}-01`,
+      bonusYear: currentYear,
       periodStartDate: `${currentYear}-01-01`,
       periodEndDate: `${currentYear}-12-31`,
     },
@@ -83,6 +108,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
           const latestApproved = cycles && cycles.length > 0 ? cycles[0] : null;
 
           let defaultPayrollMonthDate = `${currentYear}-${currentMonth.padStart(2, '0')}-01`;
+          let defaultBonusYear = currentYear;
           let defaultStartDate = `${currentYear}-01-01`;
           let defaultEndDate = `${currentYear}-12-31`;
 
@@ -101,6 +127,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
             }
             
             defaultPayrollMonthDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+            defaultBonusYear = year;
 
             // Default period start = Latest Approved End Date + 1 day
             const latestEndDate = new Date(latestApproved.periodEndDate);
@@ -114,6 +141,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
 
           form.reset({
             payrollMonthDate: defaultPayrollMonthDate,
+            bonusYear: defaultBonusYear,
             periodStartDate: defaultStartDate,
             periodEndDate: defaultEndDate,
           });
@@ -128,9 +156,14 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
     }
   }, [open, form, currentMonth, currentYear]);
 
-  // Update end date when start date changes
+  // Update bonusYear and end date when payrollMonthDate changes
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
+      if (name === 'payrollMonthDate' && value.payrollMonthDate) {
+        const [yearStr] = value.payrollMonthDate.split('-');
+        const payrollYear = parseInt(yearStr);
+        form.setValue('bonusYear', payrollYear);
+      }
       if (name === 'periodStartDate' && value.periodStartDate) {
         const startDate = new Date(value.periodStartDate);
         const startYear = startDate.getFullYear();
@@ -150,6 +183,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       
       await bonusService.createCycle({
         payrollMonthDate,
+        bonusYear: data.bonusYear, // Send Gregorian year to API
         periodStartDate: data.periodStartDate,
         periodEndDate: data.periodEndDate,
       });
@@ -161,6 +195,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       setOpen(false);
       form.reset({
         payrollMonthDate: `${currentYear}-${currentMonth.padStart(2, '0')}-01`,
+        bonusYear: currentYear,
         periodStartDate: `${currentYear}-01-01`, // Reset to current year's start
         periodEndDate: `${currentYear}-12-31`,   // Reset to current year's end
       });
@@ -203,7 +238,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
               </Alert>
             )}
             
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="payrollMonthDate"
@@ -217,6 +252,33 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
                       placeholder={t('payrollMonth')}
                     />
                   </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bonusYear"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('bonusYear')}</FormLabel>
+                    <Select
+                      value={field.value?.toString()}
+                      onValueChange={(val) => field.onChange(parseInt(val))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('bonusYear')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {yearOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value.toString()}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -267,3 +329,4 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
     </Dialog>
   );
 }
+

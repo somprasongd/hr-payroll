@@ -25,6 +25,7 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 type Cycle struct {
 	ID             uuid.UUID  `db:"id"`
 	PayrollMonth   time.Time  `db:"payroll_month_date"`
+	BonusYear      int        `db:"bonus_year"`
 	PeriodStart    time.Time  `db:"period_start_date"`
 	PeriodEnd      time.Time  `db:"period_end_date"`
 	Status         string     `db:"status"`
@@ -73,13 +74,13 @@ func (r Repository) List(ctx context.Context, page, limit int, status string, ye
 	}
 	if year != nil {
 		args = append(args, *year)
-		where += fmt.Sprintf(" AND EXTRACT(YEAR FROM payroll_month_date) = $%d", len(args))
+		where += fmt.Sprintf(" AND bonus_year = $%d", len(args))
 	}
 
 	// list query uses filter args + limit/offset at the end
 	argsWithPage := append(append([]interface{}{}, args...), limit, offset)
 	q := fmt.Sprintf(`
-SELECT id, payroll_month_date, period_start_date, period_end_date, status, created_at, updated_at, deleted_at,
+SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at,
   COALESCE((SELECT COUNT(1) FROM bonus_item bi WHERE bi.cycle_id = bc.id),0) AS total_employees,
   COALESCE((SELECT SUM(bonus_amount) FROM bonus_item bi WHERE bi.cycle_id = bc.id),0) AS total_bonus_amount
 FROM bonus_cycle bc
@@ -110,7 +111,7 @@ LIMIT $%d OFFSET $%d`, where, len(args)+1, len(args)+2)
 
 func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Cycle, []Item, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT id, payroll_month_date, period_start_date, period_end_date, status, created_at, updated_at, deleted_at FROM bonus_cycle WHERE id=$1 AND deleted_at IS NULL LIMIT 1`
+	const q = `SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at FROM bonus_cycle WHERE id=$1 AND deleted_at IS NULL LIMIT 1`
 	var c Cycle
 	if err := db.GetContext(ctx, &c, q, id); err != nil {
 		return nil, nil, err
@@ -122,14 +123,14 @@ func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Cycle, []Item, erro
 	return &c, items, nil
 }
 
-func (r Repository) Create(ctx context.Context, payrollMonth, start, end time.Time, actor uuid.UUID) (*Cycle, error) {
+func (r Repository) Create(ctx context.Context, payrollMonth time.Time, bonusYear int, start, end time.Time, actor uuid.UUID) (*Cycle, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-INSERT INTO bonus_cycle (payroll_month_date, period_start_date, period_end_date, status, created_by, updated_by)
-VALUES ($1,$2,$3,'pending',$4,$4)
-RETURNING id, payroll_month_date, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
+INSERT INTO bonus_cycle (payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_by, updated_by)
+VALUES ($1, $2, $3, $4,'pending',$5,$5)
+RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
 	var c Cycle
-	if err := db.GetContext(ctx, &c, q, payrollMonth, start, end, actor); err != nil {
+	if err := db.GetContext(ctx, &c, q, payrollMonth, bonusYear, start, end, actor); err != nil {
 		return nil, err
 	}
 	return &c, nil
@@ -141,7 +142,7 @@ func (r Repository) UpdateStatus(ctx context.Context, id uuid.UUID, status strin
 UPDATE bonus_cycle
 SET status=$1, updated_by=$2
 WHERE id=$3 AND deleted_at IS NULL
-RETURNING id, payroll_month_date, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
+RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
 	var c Cycle
 	if err := db.GetContext(ctx, &c, q, status, actor, id); err != nil {
 		return nil, err

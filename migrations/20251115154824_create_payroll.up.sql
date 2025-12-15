@@ -245,6 +245,7 @@ CREATE TABLE IF NOT EXISTS payroll_run_item (
   leave_compensation_amount  NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   doctor_fee                 NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   others_income              JSONB NULL, -- [{name,value}]
+  others_deduction           JSONB NULL, -- [{name,value}]
   income_total               NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   income_accum_prev          NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   income_accum_total         NUMERIC(14,2) NOT NULL DEFAULT 0.00,
@@ -403,6 +404,7 @@ DECLARE
   v_loan_repay_json JSONB;
   v_loan_total NUMERIC(14,2);
   v_others_income JSONB := '[]'::jsonb;
+  v_others_deduction JSONB := '[]'::jsonb;
   v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
   v_sso_cap NUMERIC(14,2) := 15000.00;
@@ -453,7 +455,7 @@ BEGIN
     v_leave_hours := 0; v_leave_hours_deduct := 0;
     v_bonus_amt := 0; v_adv := 0; 
     v_loan_repay_json := '[]'::jsonb; v_loan_total := 0;
-    v_pt_hours := 0; v_others_income := '[]'::jsonb; v_doctor_fee := 0;
+    v_pt_hours := 0; v_others_income := '[]'::jsonb; v_others_deduction := '[]'::jsonb; v_doctor_fee := 0;
     v_sso_prev := 0; v_sso_base := 0; v_sso_amount := 0;
     v_tax_prev := 0; v_income_prev := 0; v_pf_prev := 0; v_pf_amount := 0;
     v_water_prev := NULL; v_electric_prev := NULL;
@@ -655,7 +657,7 @@ BEGIN
       advance_amount, loan_repayments, loan_outstanding_prev, income_accum_prev,
       sso_declared_wage, sso_month_amount, sso_accum_prev,
       tax_accum_prev, tax_month_amount, pf_accum_prev, pf_month_amount,
-      doctor_fee, others_income,
+      doctor_fee, others_income, others_deduction,
       water_meter_prev, water_meter_curr, water_rate_per_unit, water_amount,
       electric_meter_prev, electric_meter_curr, electricity_rate_per_unit, electric_amount,
       internet_amount,
@@ -696,7 +698,7 @@ BEGIN
       v_sso_base, v_sso_amount,
       COALESCE(v_sso_prev,0),
       COALESCE(v_tax_prev,0), v_tax_month, COALESCE(v_pf_prev,0), v_pf_amount,
-      v_doctor_fee, v_others_income,
+      v_doctor_fee, v_others_income, v_others_deduction,
       v_water_prev, NULL, v_config.water_rate_per_unit, 0,
       v_electric_prev, NULL, v_config.electricity_rate_per_unit, 0,
       CASE WHEN v_emp.allow_internet THEN v_config.internet_fee_monthly ELSE 0 END,
@@ -901,6 +903,7 @@ DECLARE
   v_loan_repay_json JSONB;
   v_loan_total NUMERIC(14,2) := 0;
   v_others_income JSONB := '[]'::jsonb;
+  v_others_deduction JSONB := '[]'::jsonb;
   v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
   v_sso_cap NUMERIC(14,2) := 15000.00;
@@ -1165,6 +1168,7 @@ BEGIN
     loan_repayments = v_loan_repay_json,
     doctor_fee = v_doctor_fee,
     others_income = v_others_income,
+    others_deduction = v_others_deduction,
     
     sso_declared_wage = v_sso_base,
     sso_month_amount = v_sso_amount,
