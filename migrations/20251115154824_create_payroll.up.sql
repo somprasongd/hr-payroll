@@ -226,6 +226,11 @@ CREATE TABLE IF NOT EXISTS payroll_run_item (
   run_id             UUID NOT NULL REFERENCES payroll_run(id) ON DELETE CASCADE,
   employee_id        UUID NOT NULL REFERENCES employees(id),
   employee_type_id   UUID NOT NULL REFERENCES employee_type(id),
+  employee_type_name TEXT NULL,
+  department_name    TEXT NULL,
+  position_name      TEXT NULL,
+  bank_name          TEXT NULL,
+  bank_account_no    TEXT NULL,
 
   -- รายได้
   salary_amount              NUMERIC(14,2) NOT NULL DEFAULT 0.00,
@@ -430,9 +435,12 @@ BEGIN
 
   -- 2. วนลูปพนักงานทุกคนที่ Active
   FOR v_emp IN 
-    SELECT e.*, t.code as type_code
+    SELECT e.*, t.code as type_code, t.name_th AS employee_type_name,
+           d.name_th AS department_name, ep.name_th AS position_name
     FROM employees e
     JOIN employee_type t ON t.id = e.employee_type_id
+    LEFT JOIN department d ON d.id = e.department_id
+    LEFT JOIN employee_position ep ON ep.id = e.position_id
     WHERE e.deleted_at IS NULL
       AND (e.employment_end_date IS NULL OR e.employment_end_date >= NEW.period_start_date)
   LOOP
@@ -634,7 +642,8 @@ BEGIN
     -- 3. INSERT ลงตาราง payroll_run_item
     -- ============================================================
   INSERT INTO payroll_run_item (
-      run_id, employee_id, employee_type_id,
+      run_id, employee_id, employee_type_id, employee_type_name,
+      department_name, position_name, bank_name, bank_account_no,
       salary_amount, pt_hours_worked, pt_hourly_rate, ot_hours, ot_amount, bonus_amount,
       housing_allowance, attendance_bonus_nolate, attendance_bonus_noleave,
       
@@ -653,7 +662,8 @@ BEGIN
       created_by, updated_by
     )
     VALUES (
-      NEW.id, v_emp.id, v_emp.employee_type_id,
+      NEW.id, v_emp.id, v_emp.employee_type_id, v_emp.employee_type_name,
+      v_emp.department_name, v_emp.position_name, v_emp.bank_name, v_emp.bank_account_no,
       v_ft_salary,
       CASE WHEN v_emp.type_code = 'part_time' THEN v_pt_hours ELSE 0 END,
       CASE WHEN v_emp.type_code = 'part_time' THEN v_emp.base_pay_amount ELSE 0 END,
@@ -919,10 +929,13 @@ BEGIN
   v_sso_cap := LEAST(COALESCE(v_config.social_security_wage_cap, 15000.00), 15000.00);
 
   -- 2. ดึงข้อมูลพนักงาน
-  SELECT e.*, t.code as type_code
+  SELECT e.*, t.code as type_code, t.name_th AS employee_type_name,
+         d.name_th AS department_name, ep.name_th AS position_name
   INTO v_emp
   FROM employees e
   JOIN employee_type t ON t.id = e.employee_type_id
+  LEFT JOIN department d ON d.id = e.department_id
+  LEFT JOIN employee_position ep ON ep.id = e.position_id
   WHERE e.id = p_employee_id;
 
   IF v_emp IS NULL THEN RETURN; END IF;
@@ -1113,6 +1126,12 @@ BEGIN
   -- 5. UPDATE ลงตาราง
   UPDATE payroll_run_item
   SET 
+    employee_type_id = v_emp.employee_type_id,
+    employee_type_name = v_emp.employee_type_name,
+    department_name = v_emp.department_name,
+    position_name = v_emp.position_name,
+    bank_name = v_emp.bank_name,
+    bank_account_no = v_emp.bank_account_no,
     salary_amount = v_ft_salary,
     pt_hours_worked = CASE WHEN v_emp.type_code='part_time' THEN v_pt_hours ELSE 0 END,
     pt_hourly_rate = CASE WHEN v_emp.type_code='part_time' THEN v_emp.base_pay_amount ELSE 0 END,
@@ -1186,8 +1205,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tg_sync_payroll_emp
-AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage, allow_housing, allow_internet,
-  provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer
+AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage,
+  allow_housing, allow_internet,
+  provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
+  department_id, position_id, bank_name, bank_account_no, employee_type_id
 ON employees
 FOR EACH ROW
 EXECUTE FUNCTION sync_payroll_on_employee_change();
