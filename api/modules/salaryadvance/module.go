@@ -21,6 +21,7 @@ type Module struct {
 	ctx      *module.ModuleContext
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -33,12 +34,13 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
-	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo))
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, eb))
 	return nil
 }
 

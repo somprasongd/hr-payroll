@@ -6,7 +6,7 @@ import { masterDataService, type MasterData } from '@/services/master-data.servi
 import { ApiError } from '@/lib/api-client';
 import { 
   Plus, 
-  Pencil, 
+  SquarePen, 
   Trash2,
   Loader2,
   AlertCircle,
@@ -230,7 +230,7 @@ export default function DepartmentsPage() {
                         size="icon"
                         onClick={() => handleOpenEdit(item)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <SquarePen className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -13,9 +14,11 @@ import (
 	"hrms/modules/employee/internal/dto"
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -31,14 +34,16 @@ type Response struct {
 type Handler struct {
 	repo repository.Repository
 	tx   transactor.Transactor
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
 	return &Handler{
 		repo: repo,
 		tx:   tx,
+		eb:   eb,
 	}
 }
 
@@ -50,10 +55,48 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	recPayload := cmd.Payload.ToDetailRecord()
 
 	var updated *repository.DetailRecord
-	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, _ func(transactor.PostCommitHook)) error {
+	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
 		var err error
 		updated, err = h.repo.Update(ctxWithTx, cmd.ID, recPayload, cmd.ActorID)
-		return err
+		if err != nil {
+			return err
+		}
+
+		hook(func(ctx context.Context) error {
+			h.eb.Publish(events.LogEvent{
+				ActorID:    cmd.ActorID,
+				Action:     "UPDATE",
+				EntityName: "EMPLOYEE",
+				EntityID:   cmd.ID.String(),
+				Details: map[string]interface{}{
+					"code":                    updated.EmployeeNumber,
+					"firstName":               updated.FirstName,
+					"lastName":                updated.LastName,
+					"idDocumentNumber":        updated.IDDocumentNumber,
+					"phone":                   updated.Phone,
+					"email":                   updated.Email,
+					"employeeTypeId":          updated.EmployeeTypeID,
+					"departmentId":            updated.DepartmentID,
+					"positionId":              updated.PositionID,
+					"basePayAmount":           updated.BasePayAmount,
+					"employmentStartDate":     updated.EmploymentStartDate,
+					"ssoContribute":           updated.SSOContribute,
+					"providentFundContribute": updated.ProvidentFundContribute,
+					"status":                  updated.Status,
+					"bankName":                updated.BankName,
+					"bankAccountNo":           updated.BankAccountNo,
+					"allowHousing":            updated.AllowHousing,
+					"allowWater":              updated.AllowWater,
+					"allowElectric":           updated.AllowElectric,
+					"allowInternet":           updated.AllowInternet,
+					"allowDoctorFee":          updated.AllowDoctorFee,
+				},
+				Timestamp: time.Now(),
+			})
+			return nil
+		})
+
+		return nil
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

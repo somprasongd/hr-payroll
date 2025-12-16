@@ -7,6 +7,7 @@ import (
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -31,7 +32,7 @@ type RequestBody struct {
 // @Failure 403
 // @Failure 404
 // @Router /salary-raise-cycles/{id} [patch]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -63,6 +64,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 			ActorID:   user.ID,
 			ActorRole: user.Role,
 			Repo:      repo,
+			Eb:        eb,
 		})
 		if err != nil {
 			return err

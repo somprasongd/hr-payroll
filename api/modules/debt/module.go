@@ -35,13 +35,13 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
-	mediator.Register[*createplan.Command, *createplan.Response](createplan.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*approve.Command, *approve.Response](approve.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*repayment.Command, *repayment.Response](repayment.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo))
+	mediator.Register[*createplan.Command, *createplan.Response](createplan.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*approve.Command, *approve.Response](approve.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*repayment.Command, *repayment.Response](repayment.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, eb))
 	mediator.Register[*outstanding.Query, *outstanding.Response](outstanding.NewHandler(m.repo))
 	return nil
 }

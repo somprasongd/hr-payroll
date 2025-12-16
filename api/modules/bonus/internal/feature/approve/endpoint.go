@@ -7,6 +7,7 @@ import (
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -30,7 +31,7 @@ type Request struct {
 // @Failure 403
 // @Failure 404
 // @Router /bonus-cycles/{id} [patch]
-func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor) {
+func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -52,6 +53,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 			ActorRole: user.Role,
 			Repo:      repo,
 			Tx:        tx,
+			Eb:        eb,
 		})
 		if err != nil {
 			return err

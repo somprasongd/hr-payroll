@@ -22,6 +22,7 @@ type Module struct {
 	ctx      *module.ModuleContext
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -34,7 +35,8 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	mediator.Register[*list.Query, *list.Response](list.NewHandler())
 	mediator.Register[*get.Query, *get.Response](get.NewHandler())
 	mediator.Register[*create.Command, *create.Response](create.NewHandler())
@@ -49,11 +51,11 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	runGroup := r.Group("/payroll-runs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
 	list.NewEndpoint(runGroup, m.repo)
-	create.NewEndpoint(runGroup, m.repo, m.ctx.Transactor)
+	create.NewEndpoint(runGroup, m.repo, m.ctx.Transactor, m.eb)
 	get.NewEndpoint(runGroup, m.repo)
-	update.NewEndpoint(runGroup, m.repo, m.ctx.Transactor)
+	update.NewEndpoint(runGroup, m.repo, m.ctx.Transactor, m.eb)
 	// delete run = admin only
-	delete.NewEndpoint(runGroup.Group("", middleware.RequireRoles("admin")), m.repo)
+	delete.NewEndpoint(runGroup.Group("", middleware.RequireRoles("admin")), m.repo, m.eb)
 
 	items.Register(runGroup, r.Group("/payroll-items", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr")), m.repo, m.ctx.Transactor)
 }

@@ -3,12 +3,15 @@ package create
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -24,12 +27,13 @@ type Response struct {
 
 type Handler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -57,5 +61,19 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		}
 		return nil, err
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "DOCUMENT_TYPE",
+		EntityID:   rec.ID.String(),
+		Details: map[string]interface{}{
+			"code":    rec.Code,
+			"name_th": rec.NameTh,
+			"name_en": rec.NameEn,
+		},
+		Timestamp: time.Now(),
+	})
+
 	return &Response{DocumentTypeRecord: *rec}, nil
 }

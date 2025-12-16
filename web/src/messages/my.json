@@ -61,7 +61,8 @@
     "worklog": "အလုပ်မှတ်တမ်း",
     "compensation": "လျော်ကြေး",
     "collapse": "ခေါက်သိမ်းရန်",
-    "payroll": "လစာ"
+    "payroll": "လစာ",
+    "activityLogs": "Activity Logs"
   },
   "Payroll": {
     "title": "လစာ",
@@ -1221,5 +1222,30 @@
       "title": "ဖျက်ရန် အတည်ပြုပါ",
       "description": "{name} ကို ဖျက်ရန် သေချာပါသလား? ဤလုပ်ဆောင်ချက်ကို ပြန်လုပ်၍ မရပါ။"
     }
+  },
+  "ActivityLog": {
+    "title": "Activity Logs",
+    "description": "View history of user actions and system changes",
+    "fields": {
+      "timestamp": "Timestamp",
+      "user": "User",
+      "action": "Action",
+      "entity": "Entity",
+      "entityId": "Entity ID"
+    },
+    "filters": {
+      "dateRange": "Date Range",
+      "user": "User",
+      "userPlaceholder": "Search username...",
+      "action": "Action",
+      "entity": "Type",
+      "all": "All"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "search": "Search"
+    },
+    "detailsTitle": "Change Details",
+    "noData": "No activity logs found"
   }
 }

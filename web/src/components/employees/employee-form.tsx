@@ -93,7 +93,7 @@ interface EmployeeFormProps {
     employmentEndDate: z.string().optional().nullable(),
     
     // Financial Info
-    basePayAmount: z.coerce.number().min(0, t('validation.positive')),
+    basePayAmount: z.coerce.number().gt(0, t('validation.positive')),
     bankName: z.string().optional(),
     bankAccountNo: z.string().optional(),
     

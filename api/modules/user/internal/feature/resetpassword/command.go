@@ -6,14 +6,18 @@ import (
 	"errors"
 	"strings"
 
+	"time"
+
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/user/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -28,12 +32,16 @@ type Response struct {
 
 type Handler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{
+		repo: repo,
+		eb:   eb,
+	}
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -54,6 +62,17 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to reset password", zap.Error(err))
 		return nil, errs.Internal("failed to reset password")
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "RESET_PASSWORD",
+		EntityName: "USER",
+		EntityID:   cmd.ID.String(),
+		Details: map[string]interface{}{
+			"target_user_id": cmd.ID,
+		},
+		Timestamp: time.Now(),
+	})
 
 	return &Response{Message: "Password has been reset successfully."}, nil
 }

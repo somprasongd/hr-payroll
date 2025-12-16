@@ -10,9 +10,11 @@ import (
 	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -23,6 +25,7 @@ type Command struct {
 	ActorID      uuid.UUID
 	Repo         repository.Repository
 	Tx           transactor.Transactor
+	Eb           eventbus.EventBus
 
 	ParsedPayrollMonth time.Time `json:"-"`
 	ParsedPeriodStart  time.Time `json:"-"`
@@ -96,6 +99,18 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 			return nil, errs.Internal("failed to create bonus cycle")
 		}
 	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "BONUS_CYCLE",
+		EntityID:   cycle.ID.String(),
+		Details: map[string]interface{}{
+			"payrollMonth": cmd.ParsedPayrollMonth,
+			"bonusYear":    cmd.ParsedBonusYear,
+		},
+		Timestamp: time.Now(),
+	})
 
 	return &Response{Cycle: dto.FromCycle(*cycle)}, nil
 }

@@ -25,6 +25,7 @@ type Module struct {
 	ctx      *module.ModuleContext
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -37,12 +38,13 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
 	mediator.Register[*effective.Query, *effective.Response](effective.NewHandler(m.repo))
-	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*uploadlogo.Command, *uploadlogo.Response](uploadlogo.NewHandler(m.repo))
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*uploadlogo.Command, *uploadlogo.Response](uploadlogo.NewHandler(m.repo, eb))
 	mediator.Register[*downloadlogo.Query, *downloadlogo.Response](downloadlogo.NewHandler(m.repo))
 	mediator.Register[*metalogo.Query, *metalogo.Response](metalogo.NewHandler(m.repo))
 	// Public branding endpoints (no auth required)

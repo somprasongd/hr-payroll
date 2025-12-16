@@ -3,14 +3,17 @@ package upsert
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -27,12 +30,13 @@ type Response struct {
 
 type Handler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -64,5 +68,23 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to upsert accumulation", zap.Error(err))
 		return nil, errs.Internal("failed to upsert accumulation")
 	}
+
+	details := map[string]interface{}{
+		"accum_type": out.AccumType,
+		"amount":     out.Amount,
+	}
+	if out.AccumYear != nil {
+		details["accum_year"] = *out.AccumYear
+	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "UPSERT",
+		EntityName: "EMPLOYEE_ACCUM",
+		EntityID:   cmd.EmployeeID.String(),
+		Details:    details,
+		Timestamp:  time.Now(),
+	})
+
 	return &Response{AccumRecord: *out}, nil
 }

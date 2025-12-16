@@ -1,11 +1,14 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useAuthStore } from '@/store/auth-store';
 import { ExpiringDocumentsWidget } from '@/components/dashboard/expiring-documents-widget';
+import { LatestActivityWidget } from '@/components/dashboard/latest-activity-widget';
 
 export default function DashboardPage() {
   const tMenu = useTranslations('Menu');
   const tDashboard = useTranslations('Dashboard');
+  const { user } = useAuthStore();
 
   return (
     <>
@@ -17,17 +20,8 @@ export default function DashboardPage() {
         {/* Expiring Documents Widget */}
         <ExpiringDocumentsWidget />
         
-        {/* Placeholder for more widgets */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-center space-y-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              {tDashboard('mainContentArea')}
-            </h2>
-            <p className="text-sm text-gray-600 max-w-2xl mx-auto">
-              {tDashboard('mainContentDescription')}
-            </p>
-          </div>
-        </div>
+        {/* Latest Activity Widget - Admin Only */}
+        {user?.role === 'admin' && <LatestActivityWidget />}
       </div>
     </>
   );

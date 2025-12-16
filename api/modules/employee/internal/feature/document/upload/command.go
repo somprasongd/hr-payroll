@@ -12,8 +12,10 @@ import (
 
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 const maxDocSizeBytes = 10 * 1024 * 1024 // 10MB
@@ -52,12 +54,13 @@ type Response struct {
 
 type Handler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -101,6 +104,20 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to insert employee document", zap.Error(err))
 		return nil, errs.Internal("failed to upload document")
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "UPLOAD",
+		EntityName: "EMPLOYEE_DOCUMENT",
+		EntityID:   rec.ID.String(),
+		Details: map[string]interface{}{
+			"employee_id":  rec.EmployeeID,
+			"doc_type_id":  rec.DocumentTypeID,
+			"file_name":    rec.FileName,
+			"document_num": rec.DocumentNumber,
+		},
+		Timestamp: time.Now(),
+	})
 
 	return &Response{
 		ID:             rec.ID,

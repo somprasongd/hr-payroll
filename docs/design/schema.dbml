@@ -331,9 +331,9 @@ Table "bonus_cycle" {
   "updated_at" timestamptz [not null, default: `now()`]
   "updated_by" uuid [not null]
   "payroll_month_date" date [unique, not null]
-  "bonus_year" int4 [not null, default: `date_part('year', current_date)::integer`]
   "period_start_date" date [not null]
   "period_end_date" date [not null]
+  "bonus_year" int4 [not null, default: `(EXTRACT(year FROM CURRENT_DATE))::integer`]
   "status" text [not null, default: 'pending']
   "deleted_at" timestamptz
   "deleted_by" uuid
@@ -554,6 +554,47 @@ Table "payroll_org_profile" {
   }
 }
 
+Table "employee_document_type" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "code" text [not null]
+  "name_th" text [not null]
+  "name_en" text [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+  "created_by" uuid [not null]
+  "updated_at" timestamptz [not null, default: `now()`]
+  "updated_by" uuid [not null]
+  "deleted_at" timestamptz
+  "deleted_by" uuid
+}
+
+Table "employee_document" {
+  "id" uuid [pk, not null, default: `uuidv7()`]
+  "employee_id" uuid [not null]
+  "document_type_id" uuid [not null]
+  "file_name" text [not null]
+  "content_type" text [not null]
+  "file_size_bytes" int8 [not null]
+  "data" bytea [not null]
+  "checksum_md5" text [not null]
+  "document_number" text
+  "issue_date" date
+  "expiry_date" date
+  "notes" text
+  "created_at" timestamptz [not null, default: `now()`]
+  "created_by" uuid [not null]
+  "updated_at" timestamptz [not null, default: `now()`]
+  "updated_by" uuid [not null]
+  "deleted_at" timestamptz
+  "deleted_by" uuid
+
+  Indexes {
+    (employee_id, checksum_md5) [type: btree, name: "employee_document_checksum_uk"]
+    employee_id [type: btree, name: "employee_document_employee_idx"]
+    expiry_date [type: btree, name: "employee_document_expiry_idx"]
+    document_type_id [type: btree, name: "employee_document_type_idx"]
+  }
+}
+
 Ref "auth_refresh_tokens_user_id_fkey":"users"."id" < "auth_refresh_tokens"."user_id" [delete: cascade]
 
 Ref "bonus_cycle_created_by_fkey":"users"."id" < "bonus_cycle"."created_by"
@@ -585,6 +626,22 @@ Ref "department_created_by_fkey":"users"."id" < "department"."created_by"
 Ref "department_deleted_by_fkey":"users"."id" < "department"."deleted_by"
 
 Ref "department_updated_by_fkey":"users"."id" < "department"."updated_by"
+
+Ref "employee_document_created_by_fkey":"users"."id" < "employee_document"."created_by"
+
+Ref "employee_document_deleted_by_fkey":"users"."id" < "employee_document"."deleted_by"
+
+Ref "employee_document_document_type_id_fkey":"employee_document_type"."id" < "employee_document"."document_type_id"
+
+Ref "employee_document_employee_id_fkey":"employees"."id" < "employee_document"."employee_id" [delete: cascade]
+
+Ref "employee_document_updated_by_fkey":"users"."id" < "employee_document"."updated_by"
+
+Ref "employee_document_type_created_by_fkey":"users"."id" < "employee_document_type"."created_by"
+
+Ref "employee_document_type_deleted_by_fkey":"users"."id" < "employee_document_type"."deleted_by"
+
+Ref "employee_document_type_updated_by_fkey":"users"."id" < "employee_document_type"."updated_by"
 
 Ref "employee_photo_created_by_fkey":"users"."id" < "employee_photo"."created_by"
 

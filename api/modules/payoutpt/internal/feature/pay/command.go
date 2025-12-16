@@ -4,15 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -20,6 +23,7 @@ type Command struct {
 	Actor uuid.UUID
 	Repo  repository.Repository
 	Tx    transactor.Transactor
+	Eb    eventbus.EventBus
 }
 
 type Response struct {
@@ -46,5 +50,16 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to mark payout paid", zap.Error(err))
 		return nil, errs.Internal("failed to mark payout paid")
 	}
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "UPDATE_STATUS",
+		EntityName: "PAYOUT_PT",
+		EntityID:   payout.ID.String(),
+		Details: map[string]interface{}{
+			"status": "paid",
+		},
+		Timestamp: time.Now(),
+	})
+
 	return &Response{Payout: payout}, nil
 }

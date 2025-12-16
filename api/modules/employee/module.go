@@ -48,30 +48,30 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
-	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.ctx.Transactor))
-	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo))
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eventBus))
+	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.ctx.Transactor, eventBus))
+	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, eventBus))
 	mediator.Register[*acclist.Query, *acclist.Response](acclist.NewHandler(m.repo))
-	mediator.Register[*accupsert.Command, *accupsert.Response](accupsert.NewHandler(m.repo))
-	mediator.Register[*accdelete.Command, mediator.NoResponse](accdelete.NewHandler(m.repo))
-	mediator.Register[*photoupload.Command, *photoupload.Response](photoupload.NewHandler(m.repo))
+	mediator.Register[*accupsert.Command, *accupsert.Response](accupsert.NewHandler(m.repo, eventBus))
+	mediator.Register[*accdelete.Command, mediator.NoResponse](accdelete.NewHandler(m.repo, eventBus))
+	mediator.Register[*photoupload.Command, *photoupload.Response](photoupload.NewHandler(m.repo, eventBus))
 	mediator.Register[*photodownload.Query, *photodownload.Response](photodownload.NewHandler(m.repo))
 
 	// Document Type handlers
 	mediator.Register[*doctypelist.Query, *doctypelist.Response](doctypelist.NewHandler(m.repo))
-	mediator.Register[*doctypecreate.Command, *doctypecreate.Response](doctypecreate.NewHandler(m.repo))
-	mediator.Register[*doctypeupdate.Command, *doctypeupdate.Response](doctypeupdate.NewHandler(m.repo))
-	mediator.Register[*doctypedelete.Command, mediator.NoResponse](doctypedelete.NewHandler(m.repo))
+	mediator.Register[*doctypecreate.Command, *doctypecreate.Response](doctypecreate.NewHandler(m.repo, eventBus))
+	mediator.Register[*doctypeupdate.Command, *doctypeupdate.Response](doctypeupdate.NewHandler(m.repo, eventBus))
+	mediator.Register[*doctypedelete.Command, mediator.NoResponse](doctypedelete.NewHandler(m.repo, eventBus))
 
 	// Document handlers
 	mediator.Register[*doclist.Query, *doclist.Response](doclist.NewHandler(m.repo))
-	mediator.Register[*docupload.Command, *docupload.Response](docupload.NewHandler(m.repo))
+	mediator.Register[*docupload.Command, *docupload.Response](docupload.NewHandler(m.repo, eventBus))
 	mediator.Register[*docdownload.Query, *docdownload.Response](docdownload.NewHandler(m.repo))
-	mediator.Register[*docupdate.Command, *docupdate.Response](docupdate.NewHandler(m.repo))
-	mediator.Register[*docdelete.Command, mediator.NoResponse](docdelete.NewHandler(m.repo))
+	mediator.Register[*docupdate.Command, *docupdate.Response](docupdate.NewHandler(m.repo, eventBus))
+	mediator.Register[*docdelete.Command, mediator.NoResponse](docdelete.NewHandler(m.repo, eventBus))
 	mediator.Register[*docexpiring.Query, *docexpiring.Response](docexpiring.NewHandler(m.repo))
 
 	return nil

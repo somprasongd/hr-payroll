@@ -14,10 +14,12 @@ import (
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type CreateCommand struct {
@@ -25,6 +27,7 @@ type CreateCommand struct {
 	ActorID uuid.UUID
 	Repo    repository.FTRepository
 	Tx      transactor.Transactor
+	Eb      eventbus.EventBus
 }
 
 type CreateResponse struct {
@@ -81,6 +84,20 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		return nil, errs.Internal("failed to create worklog")
 	}
 
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "WORKLOG_FT",
+		EntityID:   created.ID.String(),
+		Details: map[string]interface{}{
+			"employee_id": created.EmployeeID.String(),
+			"work_date":   created.WorkDate.Format("2006-01-02"),
+			"entry_type":  created.EntryType,
+			"quantity":    created.Quantity,
+		},
+		Timestamp: time.Now(),
+	})
+
 	return &CreateResponse{FTItem: dto.FromFT(*created)}, nil
 }
 
@@ -128,7 +145,7 @@ func validateFTPayload(p *CreateRequest) (time.Time, error) {
 // @Failure 403
 // @Failure 409
 // @Router /worklogs/ft [post]
-func registerCreate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor) {
+func registerCreate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Post("/", func(c fiber.Ctx) error {
 		var req CreateRequest
 		if err := c.Bind().Body(&req); err != nil {
@@ -144,6 +161,7 @@ func registerCreate(router fiber.Router, repo repository.FTRepository, tx transa
 			ActorID: user.ID,
 			Repo:    repo,
 			Tx:      tx,
+			Eb:      eb,
 		})
 		if err != nil {
 			return err

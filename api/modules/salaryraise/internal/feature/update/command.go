@@ -13,8 +13,10 @@ import (
 	"hrms/modules/salaryraise/internal/dto"
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 const dateLayout = "2006-01-02"
@@ -27,6 +29,7 @@ type Command struct {
 	ActorID   uuid.UUID
 	ActorRole string
 	Repo      repository.Repository
+	Eb        eventbus.EventBus
 }
 
 type Response struct {
@@ -71,6 +74,26 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to update salary raise cycle", zap.Error(err))
 		return nil, errs.Internal("failed to update cycle")
 	}
+
+	details := map[string]interface{}{}
+	if cmd.Status != nil {
+		details["status"] = *cmd.Status
+	}
+	if cmd.StartDate != nil {
+		details["start_date"] = cmd.StartDate.Format("2006-01-02")
+	}
+	if cmd.EndDate != nil {
+		details["end_date"] = cmd.EndDate.Format("2006-01-02")
+	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "UPDATE",
+		EntityName: "SALARY_RAISE_CYCLE",
+		EntityID:   updated.ID.String(),
+		Details:    details,
+		Timestamp:  time.Now(),
+	})
 
 	return &Response{Cycle: dto.FromCycle(*updated)}, nil
 }

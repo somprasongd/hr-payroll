@@ -19,6 +19,7 @@ type Module struct {
 	ctx      *module.ModuleContext
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -31,14 +32,15 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	mediator.Register[*feature.Query, *feature.Response](feature.NewHandler(m.repo))
-	mediator.Register[*department.CreateCommand, *department.Response](department.NewCreateHandler(m.repo))
-	mediator.Register[*department.UpdateCommand, *department.Response](department.NewUpdateHandler(m.repo))
-	mediator.Register[*department.DeleteCommand, mediator.NoResponse](department.NewDeleteHandler(m.repo))
-	mediator.Register[*employeeposition.CreateCommand, *employeeposition.Response](employeeposition.NewCreateHandler(m.repo))
-	mediator.Register[*employeeposition.UpdateCommand, *employeeposition.Response](employeeposition.NewUpdateHandler(m.repo))
-	mediator.Register[*employeeposition.DeleteCommand, mediator.NoResponse](employeeposition.NewDeleteHandler(m.repo))
+	mediator.Register[*department.CreateCommand, *department.Response](department.NewCreateHandler(m.repo, eb))
+	mediator.Register[*department.UpdateCommand, *department.Response](department.NewUpdateHandler(m.repo, eb))
+	mediator.Register[*department.DeleteCommand, mediator.NoResponse](department.NewDeleteHandler(m.repo, eb))
+	mediator.Register[*employeeposition.CreateCommand, *employeeposition.Response](employeeposition.NewCreateHandler(m.repo, eb))
+	mediator.Register[*employeeposition.UpdateCommand, *employeeposition.Response](employeeposition.NewUpdateHandler(m.repo, eb))
+	mediator.Register[*employeeposition.DeleteCommand, mediator.NoResponse](employeeposition.NewDeleteHandler(m.repo, eb))
 	return nil
 }
 

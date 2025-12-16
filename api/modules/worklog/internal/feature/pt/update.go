@@ -15,10 +15,12 @@ import (
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type UpdateCommand struct {
@@ -27,6 +29,7 @@ type UpdateCommand struct {
 	ActorID uuid.UUID
 	Repo    repository.PTRepository
 	Tx      transactor.Transactor
+	Eb      eventbus.EventBus
 }
 
 type UpdateResponse struct {
@@ -88,6 +91,35 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		logger.FromContext(ctx).Error("failed to update worklog", zap.Error(err))
 		return nil, errs.Internal("failed to update worklog")
 	}
+
+	details := map[string]interface{}{}
+	if !parsedDate.Equal(current.WorkDate) {
+		details["work_date"] = parsedDate.Format("2006-01-02")
+	}
+	if morningIn != current.MorningIn {
+		details["morning_in"] = morningIn
+	}
+	if morningOut != current.MorningOut {
+		details["morning_out"] = morningOut
+	}
+	if eveningIn != current.EveningIn {
+		details["evening_in"] = eveningIn
+	}
+	if eveningOut != current.EveningOut {
+		details["evening_out"] = eveningOut
+	}
+	if status != current.Status {
+		details["status"] = status
+	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "UPDATE",
+		EntityName: "WORKLOG_PT",
+		EntityID:   updated.ID.String(),
+		Details:    details,
+		Timestamp:  time.Now(),
+	})
 
 	return &UpdateResponse{PTItem: dto.FromPT(*updated)}, nil
 }
@@ -162,7 +194,7 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.PTRecord) (tim
 // @Failure 403
 // @Failure 404
 // @Router /worklogs/pt/{id} [patch]
-func registerUpdate(router fiber.Router, repo repository.PTRepository, tx transactor.Transactor) {
+func registerUpdate(router fiber.Router, repo repository.PTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -183,6 +215,7 @@ func registerUpdate(router fiber.Router, repo repository.PTRepository, tx transa
 			ActorID: user.ID,
 			Repo:    repo,
 			Tx:      tx,
+			Eb:      eb,
 		})
 		if err != nil {
 			return err

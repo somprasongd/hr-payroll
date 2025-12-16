@@ -12,9 +12,11 @@ import (
 	"hrms/modules/employee/internal/dto"
 	"hrms/modules/employee/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -29,14 +31,16 @@ type Response struct {
 type Handler struct {
 	repo repository.Repository
 	tx   transactor.Transactor
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
 	return &Handler{
 		repo: repo,
 		tx:   tx,
+		eb:   eb,
 	}
 }
 
@@ -48,10 +52,41 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	recPayload := cmd.Payload.ToDetailRecord()
 
 	var created *repository.DetailRecord
-	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, _ func(transactor.PostCommitHook)) error {
+	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
 		var err error
 		created, err = h.repo.Create(ctxWithTx, recPayload, cmd.ActorID)
-		return err
+		if err != nil {
+			return err
+		}
+
+		hook(func(ctx context.Context) error {
+			h.eb.Publish(events.LogEvent{
+				ActorID:    cmd.ActorID,
+				Action:     "CREATE",
+				EntityName: "EMPLOYEE",
+				EntityID:   created.ID.String(),
+				Details: map[string]interface{}{
+					"code":                    created.EmployeeNumber,
+					"firstName":               created.FirstName,
+					"lastName":                created.LastName,
+					"idDocumentNumber":        created.IDDocumentNumber,
+					"phone":                   created.Phone,
+					"email":                   created.Email,
+					"employeeTypeId":          created.EmployeeTypeID,
+					"departmentId":            created.DepartmentID,
+					"positionId":              created.PositionID,
+					"basePayAmount":           created.BasePayAmount,
+					"employmentStartDate":     created.EmploymentStartDate,
+					"ssoContribute":           created.SSOContribute,
+					"providentFundContribute": created.ProvidentFundContribute,
+					"status":                  created.Status,
+				},
+				Timestamp: created.CreatedAt,
+			})
+			return nil
+		})
+
+		return nil
 	})
 	if err != nil {
 		var pqErr *pq.Error

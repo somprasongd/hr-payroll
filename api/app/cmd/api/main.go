@@ -10,6 +10,7 @@ import (
 
 	"hrms/application"
 	"hrms/config"
+	"hrms/modules/activitylog"
 	"hrms/modules/auth"
 	"hrms/modules/bonus"
 	"hrms/modules/debt"
@@ -88,6 +89,7 @@ func main() {
 		payrollrun.NewModule(mCtx, tokenSvc),
 		worklog.NewModule(mCtx, tokenSvc),
 		payrollorgprofile.NewModule(mCtx, tokenSvc),
+		activitylog.NewModule(mCtx, tokenSvc),
 	)
 
 	app.Run()

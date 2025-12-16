@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -11,9 +12,11 @@ import (
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -29,14 +32,16 @@ type Response struct {
 type Handler struct {
 	repo repository.Repository
 	tx   transactor.Transactor
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
 	return &Handler{
 		repo: repo,
 		tx:   tx,
+		eb:   eb,
 	}
 }
 
@@ -69,6 +74,15 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to approve debt transaction", zap.Error(err))
 		return nil, errs.Internal("failed to approve debt transaction")
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "APPROVE",
+		EntityName: "DEBT_PLAN",
+		EntityID:   cmd.ID.String(),
+		Details:    map[string]interface{}{},
+		Timestamp:  time.Now(),
+	})
 
 	return &Response{
 		Item:    dto.FromRecord(*updated),

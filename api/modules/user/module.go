@@ -38,13 +38,13 @@ func (m *Module) APIVersion() string {
 	return "v1"
 }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
-	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor))
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eventBus))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
-	mediator.Register[*updaterole.Command, *updaterole.Response](updaterole.NewHandler(m.repo))
-	mediator.Register[*resetpassword.Command, *resetpassword.Response](resetpassword.NewHandler(m.repo))
-	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo))
+	mediator.Register[*updaterole.Command, *updaterole.Response](updaterole.NewHandler(m.repo, eventBus))
+	mediator.Register[*resetpassword.Command, *resetpassword.Response](resetpassword.NewHandler(m.repo, eventBus))
+	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, eventBus))
 	mediator.Register[*me.Query, *me.Response](me.NewHandler(m.repo))
 	mediator.Register[*changepassword.Command, *changepassword.Response](changepassword.NewHandler(m.repo))
 	return nil

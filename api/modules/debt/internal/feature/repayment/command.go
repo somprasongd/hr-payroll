@@ -11,9 +11,11 @@ import (
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -31,14 +33,16 @@ type Response struct {
 type Handler struct {
 	repo repository.Repository
 	tx   transactor.Transactor
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
 	return &Handler{
 		repo: repo,
 		tx:   tx,
+		eb:   eb,
 	}
 }
 
@@ -74,6 +78,17 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to create repayment", zap.Error(err))
 		return nil, errs.Internal("failed to create repayment")
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "DEBT_REPAYMENT",
+		EntityID:   created.ID.String(),
+		Details: map[string]interface{}{
+			"amount": cmd.Amount,
+		},
+		Timestamp: time.Now(),
+	})
 
 	return &Response{Item: dto.FromRecord(*created)}, nil
 }

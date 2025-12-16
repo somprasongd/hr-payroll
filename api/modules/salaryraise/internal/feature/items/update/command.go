@@ -4,14 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -21,6 +24,7 @@ type Command struct {
 	NewSSOWage   *float64 `json:"newSsoWage"`
 	ActorID      uuid.UUID
 	Repo         repository.Repository
+	Eb           eventbus.EventBus
 }
 
 type Response struct {
@@ -53,5 +57,28 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to update raise item", zap.Error(err))
 		return nil, errs.Internal("failed to update raise item")
 	}
+
+	details := map[string]interface{}{
+		"raise_item_id": updated.ID.String(),
+	}
+	if cmd.RaisePercent != nil {
+		details["raise_percent"] = *cmd.RaisePercent
+	}
+	if cmd.RaiseAmount != nil {
+		details["raise_amount"] = *cmd.RaiseAmount
+	}
+	if cmd.NewSSOWage != nil {
+		details["new_sso_wage"] = *cmd.NewSSOWage
+	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "UPDATE_ITEM",
+		EntityName: "SALARY_RAISE_ITEM",
+		EntityID:   updated.ID.String(),
+		Details:    details,
+		Timestamp:  time.Now(),
+	})
+
 	return &Response{Item: *updated}, nil
 }

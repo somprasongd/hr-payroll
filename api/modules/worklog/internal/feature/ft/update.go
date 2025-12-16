@@ -15,10 +15,12 @@ import (
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type UpdateCommand struct {
@@ -27,6 +29,7 @@ type UpdateCommand struct {
 	ActorID uuid.UUID
 	Repo    repository.FTRepository
 	Tx      transactor.Transactor
+	Eb      eventbus.EventBus
 }
 
 type UpdateResponse struct {
@@ -107,6 +110,29 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		return nil, errs.Internal("failed to update worklog")
 	}
 
+	details := map[string]interface{}{}
+	if entryType != current.EntryType {
+		details["entry_type"] = entryType
+	}
+	if !workDate.Equal(current.WorkDate) {
+		details["work_date"] = workDate.Format("2006-01-02")
+	}
+	if quantity != current.Quantity {
+		details["quantity"] = quantity
+	}
+	if status != current.Status {
+		details["status"] = status
+	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "UPDATE",
+		EntityName: "WORKLOG_FT",
+		EntityID:   updated.ID.String(),
+		Details:    details,
+		Timestamp:  time.Now(),
+	})
+
 	return &UpdateResponse{FTItem: dto.FromFT(*updated)}, nil
 }
 
@@ -169,7 +195,7 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.FTRecord) (str
 // @Failure 404
 // @Failure 409
 // @Router /worklogs/ft/{id} [patch]
-func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor) {
+func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -190,6 +216,7 @@ func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transa
 			ActorID: user.ID,
 			Repo:    repo,
 			Tx:      tx,
+			Eb:      eb,
 		})
 		if err != nil {
 			return err

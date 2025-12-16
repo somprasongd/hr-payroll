@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -12,8 +13,10 @@ import (
 
 	"hrms/modules/masterdata/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 type CreateCommand struct {
@@ -40,14 +43,17 @@ type Response struct {
 
 type CreateHandler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 type UpdateHandler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 type DeleteHandler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 var (
@@ -56,16 +62,16 @@ var (
 	_ mediator.RequestHandler[*DeleteCommand, mediator.NoResponse] = (*DeleteHandler)(nil)
 )
 
-func NewCreateHandler(repo repository.Repository) *CreateHandler {
-	return &CreateHandler{repo: repo}
+func NewCreateHandler(repo repository.Repository, eb eventbus.EventBus) *CreateHandler {
+	return &CreateHandler{repo: repo, eb: eb}
 }
 
-func NewUpdateHandler(repo repository.Repository) *UpdateHandler {
-	return &UpdateHandler{repo: repo}
+func NewUpdateHandler(repo repository.Repository, eb eventbus.EventBus) *UpdateHandler {
+	return &UpdateHandler{repo: repo, eb: eb}
 }
 
-func NewDeleteHandler(repo repository.Repository) *DeleteHandler {
-	return &DeleteHandler{repo: repo}
+func NewDeleteHandler(repo repository.Repository, eb eventbus.EventBus) *DeleteHandler {
+	return &DeleteHandler{repo: repo, eb: eb}
 }
 
 func (h *CreateHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Response, error) {
@@ -115,6 +121,16 @@ func (h *DeleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		logger.FromContext(ctx).Error("failed to delete department", zap.Error(err), zap.String("id", cmd.ID.String()))
 		return mediator.NoResponse{}, errs.Internal("failed to delete department")
 	}
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "DELETE",
+		EntityName: "DEPARTMENT",
+		EntityID:   cmd.ID.String(),
+		Details: map[string]interface{}{
+			"deleted_dept_id": cmd.ID.String(),
+		},
+		Timestamp: time.Now(),
+	})
 	return mediator.NoResponse{}, nil
 }
 

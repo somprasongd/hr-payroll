@@ -12,10 +12,12 @@ import (
 	"hrms/modules/user/internal/dto"
 	"hrms/modules/user/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -32,14 +34,16 @@ type Response struct {
 type Handler struct {
 	repo repository.Repository
 	tx   transactor.Transactor
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
 	return &Handler{
 		repo: repo,
 		tx:   tx,
+		eb:   eb,
 	}
 }
 
@@ -60,10 +64,29 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	var created *repository.UserRecord
-	err = h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	err = h.tx.WithinTransaction(ctx, func(ctxTx context.Context, hook func(transactor.PostCommitHook)) error {
 		var err error
 		created, err = h.repo.CreateUser(ctxTx, cmd.Username, hash, cmd.Role, cmd.ActorID)
-		return err
+		if err != nil {
+			return err
+		}
+
+		hook(func(ctx context.Context) error {
+			h.eb.Publish(events.LogEvent{
+				ActorID:    cmd.ActorID,
+				Action:     "CREATE",
+				EntityName: "USER",
+				EntityID:   created.ID.String(),
+				Details: map[string]interface{}{
+					"username": created.Username,
+					"role":     created.Role,
+				},
+				Timestamp: created.CreatedAt,
+			})
+			return nil
+		})
+
+		return nil
 	})
 	if err != nil {
 		var pqErr *pq.Error

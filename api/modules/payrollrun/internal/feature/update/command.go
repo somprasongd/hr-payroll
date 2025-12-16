@@ -13,9 +13,11 @@ import (
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -26,6 +28,7 @@ type Command struct {
 	ActorRole string
 	Repo      repository.Repository
 	Tx        transactor.Transactor
+	Eb        eventbus.EventBus
 }
 
 type Response struct {
@@ -91,6 +94,25 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		}
 		logger.FromContext(ctx).Error("failed to update payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to update payroll run")
+	}
+
+	details := map[string]interface{}{}
+	if cmd.Status != "" {
+		details["status"] = cmd.Status
+	}
+	if payDate != nil {
+		details["pay_date"] = payDate.Format("2006-01-02")
+	}
+
+	if len(details) > 0 {
+		cmd.Eb.Publish(events.LogEvent{
+			ActorID:    cmd.ActorID,
+			Action:     "UPDATE",
+			EntityName: "PAYROLL_RUN",
+			EntityID:   updated.ID.String(),
+			Details:    details,
+			Timestamp:  time.Now(),
+		})
 	}
 
 	resp := &Response{Run: dto.FromRun(*updated)}

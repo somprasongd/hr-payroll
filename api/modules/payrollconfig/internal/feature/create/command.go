@@ -3,6 +3,7 @@ package create
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -10,9 +11,11 @@ import (
 	"hrms/modules/payrollconfig/internal/dto"
 	"hrms/modules/payrollconfig/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -27,14 +30,16 @@ type Response struct {
 type Handler struct {
 	repo repository.Repository
 	tx   transactor.Transactor
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
 	return &Handler{
 		repo: repo,
 		tx:   tx,
+		eb:   eb,
 	}
 }
 
@@ -57,6 +62,36 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to create payroll config", zap.Error(err))
 		return nil, errs.Internal("failed to create payroll config")
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "PAYROLL_CONFIG",
+		EntityID:   created.ID.String(),
+		Details: map[string]interface{}{
+			"effective_date":                created.StartDate.Format("2006-01-02"),
+			"status":                        created.Status,
+			"hourly_rate":                   created.HourlyRate,
+			"ot_hourly_rate":                created.OtHourlyRate,
+			"attendance_bonus_no_late":      created.AttendanceBonusNoLate,
+			"attendance_bonus_no_leave":     created.AttendanceBonusNoLeave,
+			"housing_allowance":             created.HousingAllowance,
+			"water_rate_per_unit":           created.WaterRatePerUnit,
+			"electricity_rate_per_unit":     created.ElectricityRatePerUnit,
+			"internet_fee_monthly":          created.InternetFeeMonthly,
+			"social_security_rate_employee": created.SocialSecurityRateEmployee,
+			"social_security_rate_employer": created.SocialSecurityRateEmployer,
+			"social_security_wage_cap":      created.SocialSecurityWageCap,
+			"note":                          created.Note,
+			"tax_apply_standard_expense":    created.TaxApplyStandardExpense,
+			"tax_standard_expense_rate":     created.TaxStandardExpenseRate,
+			"tax_standard_expense_cap":      created.TaxStandardExpenseCap,
+			"tax_apply_personal_allowance":  created.TaxApplyPersonalAllowance,
+			"tax_personal_allowance_amount": created.TaxPersonalAllowanceAmount,
+			"withholding_tax_rate_service":  created.WithholdingTaxRateService,
+		},
+		Timestamp: time.Now(),
+	})
 
 	return &Response{Config: dto.FromRecord(*created)}, nil
 }
@@ -127,11 +162,11 @@ var defaultTaxProgressiveBrackets = repository.TaxBrackets{
 }
 
 const (
-defaultTaxStandardExpenseRate     = 0.50
-defaultTaxStandardExpenseCap      = 100000.00
-defaultTaxPersonalAllowanceAmount = 60000.00
-defaultWithholdingTaxRateService  = 0.03
-defaultSocialSecurityWageCap      = 15000.00
+	defaultTaxStandardExpenseRate     = 0.50
+	defaultTaxStandardExpenseCap      = 100000.00
+	defaultTaxPersonalAllowanceAmount = 60000.00
+	defaultWithholdingTaxRateService  = 0.03
+	defaultSocialSecurityWageCap      = 15000.00
 )
 
 func applyDefaults(p *RequestBody) {

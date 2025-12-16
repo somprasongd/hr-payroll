@@ -18,6 +18,7 @@ type Module struct {
 	ctx      *module.ModuleContext
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -30,7 +31,8 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	// FT
 	mediator.Register[*ft.ListQuery, *ft.ListResponse](ft.NewListHandler())
 	mediator.Register[*ft.GetQuery, *ft.GetResponse](ft.NewGetHandler())
@@ -52,8 +54,8 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/worklogs", middleware.Auth(m.tokenSvc))
 	// FT
 	ftGroup := group.Group("/ft")
-	ft.Register(ftGroup, m.repo.FTRepo, m.ctx.Transactor)
+	ft.Register(ftGroup, m.repo.FTRepo, m.ctx.Transactor, m.eb)
 	// PT
 	ptGroup := group.Group("/pt")
-	pt.Register(ptGroup, m.repo.PTRepo, m.ctx.Transactor)
+	pt.Register(ptGroup, m.repo.PTRepo, m.ctx.Transactor, m.eb)
 }

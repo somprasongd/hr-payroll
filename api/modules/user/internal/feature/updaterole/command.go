@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -11,8 +12,10 @@ import (
 	"hrms/modules/user/internal/dto"
 	"hrms/modules/user/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -27,12 +30,13 @@ type Response struct {
 
 type Handler struct {
 	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler(repo repository.Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -47,6 +51,15 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to update user role", zap.Error(err))
 		return nil, errs.Internal("failed to update role")
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "UPDATE",
+		EntityName: "USER",
+		EntityID:   cmd.ID.String(),
+		Details:    map[string]interface{}{"role": cmd.Role},
+		Timestamp:  time.Now(),
+	})
 
 	user, err := h.repo.GetUser(ctx, cmd.ID)
 	if err != nil {

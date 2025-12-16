@@ -4,20 +4,24 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 type Command struct {
 	ID    uuid.UUID
 	Actor uuid.UUID
 	Repo  repository.Repository
+	Eb    eventbus.EventBus
 }
 
 type Handler struct{}
@@ -45,5 +49,15 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		logger.FromContext(ctx).Error("failed to cancel payout", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to cancel payout")
 	}
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "DELETE", // Or STATUS_CHANGE? Delete implies removal. Soft delete is delete action.
+		EntityName: "PAYOUT_PT",
+		EntityID:   cmd.ID.String(),
+		Details: map[string]interface{}{
+			"cancelled_payout_id": cmd.ID.String(),
+		},
+		Timestamp: time.Now(),
+	})
 	return mediator.NoResponse{}, nil
 }

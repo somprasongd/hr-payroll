@@ -61,7 +61,8 @@
     "worklog": "Work Logs",
     "compensation": "Compensation",
     "collapse": "Collapse",
-    "payroll": "Payroll"
+    "payroll": "Payroll",
+    "activityLogs": "Activity Logs"
   },
   "Payroll": {
     "title": "Payroll",
@@ -1232,6 +1233,32 @@
     "deleteDialog": {
       "title": "Confirm Delete",
       "description": "Are you sure you want to delete {name}? This action cannot be undone."
+    }
+  },
+  "ActivityLog": {
+    "title": "Activity Logs",
+    "description": "View history of user actions and system changes",
+    "fields": {
+      "timestamp": "Timestamp",
+      "user": "User",
+      "action": "Action",
+      "entity": "Entity",
+      "entityId": "Entity ID"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "search": "Search"
+    },
+    "detailsTitle": "Change Details",
+    "noData": "No activity logs found",
+    "filters": {
+      "title": "Filters",
+      "dateRange": "Date Range",
+      "user": "User",
+      "userPlaceholder": "Search username...",
+      "action": "Action",
+      "entity": "Type",
+      "all": "All"
     }
   }
 }

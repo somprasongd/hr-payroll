@@ -14,10 +14,12 @@ import (
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type CreateCommand struct {
@@ -25,6 +27,7 @@ type CreateCommand struct {
 	ActorID uuid.UUID
 	Repo    repository.PTRepository
 	Tx      transactor.Transactor
+	Eb      eventbus.EventBus
 }
 
 type CreateResponse struct {
@@ -91,6 +94,22 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		return nil, errs.Internal("failed to create worklog")
 	}
 
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "WORKLOG_PT",
+		EntityID:   created.ID.String(),
+		Details: map[string]interface{}{
+			"employee_id": created.EmployeeID.String(),
+			"work_date":   created.WorkDate.Format("2006-01-02"),
+			"morning_in":  created.MorningIn,
+			"morning_out": created.MorningOut,
+			"evening_in":  created.EveningIn,
+			"evening_out": created.EveningOut,
+		},
+		Timestamp: time.Now(),
+	})
+
 	return &CreateResponse{PTItem: dto.FromPT(*created)}, nil
 }
 
@@ -136,7 +155,7 @@ func validatePayload(p *CreateRequest) (time.Time, error) {
 // @Failure 401
 // @Failure 403
 // @Router /worklogs/pt [post]
-func registerCreate(router fiber.Router, repo repository.PTRepository, tx transactor.Transactor) {
+func registerCreate(router fiber.Router, repo repository.PTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Post("/", func(c fiber.Ctx) error {
 		var req CreateRequest
 		if err := c.Bind().Body(&req); err != nil {
@@ -152,6 +171,7 @@ func registerCreate(router fiber.Router, repo repository.PTRepository, tx transa
 			ActorID: user.ID,
 			Repo:    repo,
 			Tx:      tx,
+			Eb:      eb,
 		})
 		if err != nil {
 			return err

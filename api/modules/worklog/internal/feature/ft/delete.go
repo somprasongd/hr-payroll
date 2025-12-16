@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -12,14 +13,17 @@ import (
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/events"
 )
 
 type DeleteCommand struct {
 	ID    uuid.UUID
 	Actor uuid.UUID
 	Repo  repository.FTRepository
+	Eb    eventbus.EventBus
 }
 
 type deleteHandler struct{}
@@ -45,6 +49,18 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		logger.FromContext(ctx).Error("failed to delete worklog", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete worklog")
 	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "DELETE",
+		EntityName: "WORKLOG_FT",
+		EntityID:   cmd.ID.String(),
+		Details: map[string]interface{}{
+			"deleted_worklog_id": cmd.ID.String(),
+		},
+		Timestamp: time.Now(),
+	})
+
 	return mediator.NoResponse{}, nil
 }
 
@@ -59,7 +75,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 // @Failure 403
 // @Failure 404
 // @Router /worklogs/ft/{id} [delete]
-func registerDelete(router fiber.Router, repo repository.FTRepository) {
+func registerDelete(router fiber.Router, repo repository.FTRepository, eb eventbus.EventBus) {
 	router.Delete("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -73,6 +89,7 @@ func registerDelete(router fiber.Router, repo repository.FTRepository) {
 			ID:    id,
 			Actor: user.ID,
 			Repo:  repo,
+			Eb:    eb,
 		}); err != nil {
 			return err
 		}

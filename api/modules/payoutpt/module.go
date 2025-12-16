@@ -21,6 +21,7 @@ type Module struct {
 	ctx      *module.ModuleContext
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -33,7 +34,8 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	mediator.Register[*create.Command, *create.Response](create.NewHandler())
 	mediator.Register[*list.Query, *list.Response](list.NewHandler())
 	mediator.Register[*get.Query, *get.Response](get.NewHandler())
@@ -44,11 +46,11 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/payouts/pt", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
-	create.NewEndpoint(group, m.repo, m.ctx.Transactor)
+	create.NewEndpoint(group, m.repo, m.ctx.Transactor, m.eb)
 	list.NewEndpoint(group, m.repo)
 	get.NewEndpoint(group, m.repo)
-	cancel.NewEndpoint(group, m.repo)
+	cancel.NewEndpoint(group, m.repo, m.eb)
 	// pay admin only
 	admin := group.Group("", middleware.RequireRoles("admin"))
-	pay.NewEndpoint(admin, m.repo, m.ctx.Transactor)
+	pay.NewEndpoint(admin, m.repo, m.ctx.Transactor, m.eb)
 }

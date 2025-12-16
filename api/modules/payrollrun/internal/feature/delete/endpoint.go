@@ -7,6 +7,7 @@ import (
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 )
 
@@ -21,7 +22,7 @@ import (
 // @Failure 403
 // @Failure 404
 // @Router /payroll-runs/{id} [delete]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
 	router.Delete("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -35,6 +36,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 			ID:    id,
 			Actor: user.ID,
 			Repo:  repo,
+			Eb:    eb,
 		}); err != nil {
 			return err
 		}

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -12,9 +13,11 @@ import (
 	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -24,6 +27,7 @@ type Command struct {
 	ActorRole string
 	Repo      repository.Repository
 	Tx        transactor.Transactor
+	Eb        eventbus.EventBus
 }
 
 type Response struct {
@@ -55,6 +59,17 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to update bonus cycle status", zap.Error(err), zap.String("status", cmd.Status))
 		return nil, errs.Internal("failed to update status")
 	}
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.Actor,
+		Action:     "UPDATE_STATUS",
+		EntityName: "BONUS_CYCLE",
+		EntityID:   cmd.ID.String(),
+		Details: map[string]interface{}{
+			"status": cmd.Status,
+		},
+		Timestamp: time.Now(),
+	})
+
 	return &Response{
 		Cycle:   dto.FromCycle(*updated),
 		Message: "Bonus cycle status updated.",

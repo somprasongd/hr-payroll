@@ -13,6 +13,7 @@ import (
 	"hrms/modules/worklog/internal/dto"
 	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -91,7 +92,8 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 // @Failure 401
 // @Failure 403
 // @Router /worklogs/ft [get]
-func Register(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor) {
+// @Router /worklogs/ft [get]
+func Register(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	handler := func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
@@ -143,7 +145,7 @@ func Register(router fiber.Router, repo repository.FTRepository, tx transactor.T
 
 	// register detail/create/update/delete
 	registerGet(router, repo)
-	registerCreate(router, repo, tx)
-	registerUpdate(router, repo, tx)
-	registerDelete(router, repo)
+	registerCreate(router, repo, tx, eb)
+	registerUpdate(router, repo, tx, eb)
+	registerDelete(router, repo, eb)
 }

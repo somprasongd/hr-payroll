@@ -23,6 +23,7 @@ type Module struct {
 	ctx      *module.ModuleContext
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -35,7 +36,8 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	mediator.Register[*list.Query, *list.Response](list.NewHandler())
 	mediator.Register[*get.Query, *get.Response](get.NewHandler())
 	mediator.Register[*create.Command, *create.Response](create.NewHandler())
@@ -50,11 +52,11 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/salary-raise-cycles", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
 	list.NewEndpoint(group, m.repo)
 	get.NewEndpoint(group, m.repo)
-	create.NewEndpoint(group, m.repo, m.ctx.Transactor)
-	update.NewEndpoint(group, m.repo)
+	create.NewEndpoint(group, m.repo, m.ctx.Transactor, m.eb)
+	update.NewEndpoint(group, m.repo, m.eb)
 	itemslist.NewEndpoint(group, m.repo)
 	// items update (hr/admin)
 	itemGroup := r.Group("/salary-raise-items", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
-	itemsupdate.NewEndpoint(itemGroup, m.repo)
-	delete.NewEndpoint(group, m.repo)
+	itemsupdate.NewEndpoint(itemGroup, m.repo, m.ctx.Transactor, m.eb)
+	delete.NewEndpoint(group, m.repo, m.eb)
 }

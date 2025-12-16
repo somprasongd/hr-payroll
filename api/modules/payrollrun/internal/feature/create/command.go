@@ -13,9 +13,11 @@ import (
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
@@ -27,6 +29,7 @@ type Command struct {
 	ActorID         uuid.UUID             `json:"-"`
 	Repo            repository.Repository `json:"-"`
 	Tx              transactor.Transactor `json:"-"`
+	Eb              eventbus.EventBus     `json:"-"`
 }
 
 type Response struct {
@@ -82,6 +85,17 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		}
 		return nil, errs.Internal("failed to create payroll run")
 	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "PAYROLL_RUN",
+		EntityID:   created.ID.String(),
+		Details: map[string]interface{}{
+			"payroll_month": created.PayrollMonth.Format("2006-01-02"),
+		},
+		Timestamp: time.Now(),
+	})
 
 	return &Response{
 		Run:     dto.FromRun(*created),

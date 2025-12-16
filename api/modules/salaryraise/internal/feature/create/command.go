@@ -10,17 +10,20 @@ import (
 	"hrms/modules/salaryraise/internal/dto"
 	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type Command struct {
-	PeriodStart string `json:"periodStartDate"`
-	PeriodEnd   string `json:"periodEndDate"`
-	ActorID     uuid.UUID
-	Repo        repository.Repository
-	Tx          transactor.Transactor
+	PeriodStart string                `json:"periodStartDate"`
+	PeriodEnd   string                `json:"periodEndDate"`
+	ActorID     uuid.UUID             `json:"-"`
+	Repo        repository.Repository `json:"-"`
+	Tx          transactor.Transactor `json:"-"`
+	Eb          eventbus.EventBus     `json:"-"`
 
 	ParsedPeriodStart time.Time `json:"-"`
 	ParsedPeriodEnd   time.Time `json:"-"`
@@ -69,6 +72,18 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to create salary raise cycle", zap.Error(err))
 		return nil, errs.Internal("failed to create cycle (ensure only one pending cycle exists)")
 	}
+
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "CREATE",
+		EntityName: "SALARY_RAISE_CYCLE",
+		EntityID:   cycle.ID.String(),
+		Details: map[string]interface{}{
+			"period_start": cycle.PeriodStart.Format("2006-01-02"),
+			"period_end":   cycle.PeriodEnd.Format("2006-01-02"),
+		},
+		Timestamp: time.Now(),
+	})
 
 	return &Response{Cycle: dto.FromCycle(*cycle)}, nil
 }
