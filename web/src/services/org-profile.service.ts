@@ -251,4 +251,30 @@ export const orgProfileService = {
   clearLogoCache(logoId: string): void {
     removeCachedLogo(logoId);
   },
+
+  // ============================================================================
+  // Public Branding (no auth required)
+  // ============================================================================
+
+  /**
+   * Get public branding info for login page (no auth required)
+   */
+  async getPublicBranding(): Promise<{ companyName: string; logoUrl: string | null }> {
+    try {
+      const response = await fetch(`${API_CONFIG.baseURL}/public/branding`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch branding');
+      }
+      return response.json();
+    } catch {
+      return { companyName: '', logoUrl: null };
+    }
+  },
+
+  /**
+   * Get public logo URL for login page
+   */
+  getPublicLogoUrl(): string {
+    return `${API_CONFIG.baseURL}/public/branding/logo`;
+  },
 };

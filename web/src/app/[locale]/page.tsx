@@ -22,6 +22,7 @@ import { User, Lock, Eye, EyeOff, Users, AlertCircle } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRouter, usePathname } from "@/i18n/routing";
 import { authService } from "@/services/auth.service";
+import { orgProfileService } from "@/services/org-profile.service";
 import { ApiError } from "@/lib/api-client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -36,6 +37,20 @@ export default function LoginPage() {
   const router = useRouter();
   const pathname = usePathname();
   const hasVerified = useRef(false);
+  const [branding, setBranding] = useState<{ companyName: string; logoUrl: string | null } | null>(null);
+
+  // Fetch branding on mount (no auth required)
+  useEffect(() => {
+    orgProfileService.getPublicBranding().then((data) => {
+      // Convert relative logoUrl to absolute URL from API config
+      setBranding({
+        ...data,
+        logoUrl: data.logoUrl ? orgProfileService.getPublicLogoUrl() : null,
+      });
+    }).catch(() => {
+      setBranding({ companyName: '', logoUrl: null });
+    });
+  }, []);
 
   useEffect(() => {
     // Wait for hydration to complete
@@ -217,7 +232,19 @@ export default function LoginPage() {
       
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+          {branding?.logoUrl ? (
+            <img 
+              src={branding.logoUrl} 
+              alt="Company Logo" 
+              className="mx-auto w-16 h-16 rounded-full object-contain bg-white shadow-md"
+              onError={(e) => {
+                // Fallback to icon if logo fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center ${branding?.logoUrl ? 'hidden' : ''}`}>
             <Users className="w-8 h-8 text-white" />
           </div>
           <div>
@@ -317,7 +344,7 @@ export default function LoginPage() {
             </form>
           </Form>
           <div className="mt-6 text-center text-xs text-gray-500">
-            {t('copyright')}
+            © {new Date().getFullYear()} {branding?.companyName || t('copyright')}
           </div>
         </CardContent>
       </Card>

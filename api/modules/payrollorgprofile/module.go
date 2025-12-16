@@ -7,6 +7,8 @@ import (
 	"hrms/modules/payrollorgprofile/internal/feature/get"
 	"hrms/modules/payrollorgprofile/internal/feature/list"
 	"hrms/modules/payrollorgprofile/internal/feature/metalogo"
+	"hrms/modules/payrollorgprofile/internal/feature/publicbranding"
+	"hrms/modules/payrollorgprofile/internal/feature/publiclogo"
 	"hrms/modules/payrollorgprofile/internal/feature/uploadlogo"
 	"hrms/modules/payrollorgprofile/internal/repository"
 	"hrms/shared/common/eventbus"
@@ -43,6 +45,9 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	mediator.Register[*uploadlogo.Command, *uploadlogo.Response](uploadlogo.NewHandler(m.repo))
 	mediator.Register[*downloadlogo.Query, *downloadlogo.Response](downloadlogo.NewHandler(m.repo))
 	mediator.Register[*metalogo.Query, *metalogo.Response](metalogo.NewHandler(m.repo))
+	// Public branding endpoints (no auth required)
+	mediator.Register[*publicbranding.Query, *publicbranding.Response](publicbranding.NewHandler(m.repo))
+	mediator.Register[*publiclogo.Query, *publiclogo.Response](publiclogo.NewHandler(m.repo))
 	return nil
 }
 
@@ -57,4 +62,10 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	uploadlogo.NewEndpoint(logo)
 	downloadlogo.NewEndpoint(logo)
 	metalogo.NewEndpoint(logo)
+
+	// Public branding routes (no auth required)
+	public := r.Group("/public/branding")
+	publicbranding.NewEndpoint(public)
+	publiclogo.NewEndpoint(public)
+
 }

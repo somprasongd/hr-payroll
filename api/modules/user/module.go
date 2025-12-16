@@ -51,9 +51,8 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	protected := r.Group("", middleware.Auth(m.tokenSvc))
-
-	admin := protected.Group("/admin", middleware.RequireRoles("admin"))
+	// Admin user management routes
+	admin := r.Group("/admin", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
 	list.NewEndpoint(admin)
 	create.NewEndpoint(admin)
 	get.NewEndpoint(admin)
@@ -61,7 +60,8 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	resetpassword.NewEndpoint(admin)
 	delete.NewEndpoint(admin)
 
-	meGroup := protected.Group("/me")
+	// User self-service routes
+	meGroup := r.Group("/me", middleware.Auth(m.tokenSvc))
 	me.NewEndpoint(meGroup)
 	changepassword.NewEndpoint(meGroup)
 }
