@@ -55,10 +55,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		Action:     "DELETE",
 		EntityName: "WORKLOG_PT",
 		EntityID:   cmd.ID.String(),
-		Details: map[string]interface{}{
-			"deleted_worklog_id": cmd.ID.String(),
-		},
-		Timestamp: time.Now(),
+		Timestamp:  time.Now(),
 	})
 
 	return mediator.NoResponse{}, nil

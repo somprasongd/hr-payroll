@@ -47,10 +47,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		Action:     "DELETE",
 		EntityName: "USER",
 		EntityID:   cmd.ID.String(),
-		Details: map[string]interface{}{
-			"deleted_user_id": cmd.ID.String(),
-		},
-		Timestamp: time.Now(),
+		Timestamp:  time.Now(),
 	})
 
 	return mediator.NoResponse{}, nil
