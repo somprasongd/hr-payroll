@@ -79,7 +79,8 @@ export default function DepartmentsPage() {
     setError(null);
     try {
       const data = await masterDataService.getDepartments();
-      setDepartments(data);
+      // Handle null response from API (Go returns null for empty slices)
+      setDepartments(data ?? []);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || t('errors.fetchFailed'));

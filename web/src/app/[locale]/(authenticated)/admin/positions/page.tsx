@@ -79,7 +79,8 @@ export default function PositionsPage() {
     setError(null);
     try {
       const data = await masterDataService.getPositions();
-      setPositions(data);
+      // Handle null response from API (Go returns null for empty slices)
+      setPositions(data ?? []);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || t('errors.fetchFailed'));
