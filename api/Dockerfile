@@ -22,6 +22,9 @@ COPY modules/payrollrun/go.mod modules/payrollrun/go.sum modules/payrollrun/
 COPY modules/payrollorgprofile/go.mod modules/payrollorgprofile/go.sum modules/payrollorgprofile/
 COPY modules/masterdata/go.mod modules/masterdata/go.sum modules/masterdata/
 COPY modules/payoutpt/go.mod modules/payoutpt/go.sum modules/payoutpt/
+COPY modules/activitylog/go.mod modules/activitylog/go.sum modules/activitylog/
+COPY modules/dashboard/go.mod modules/dashboard/go.sum modules/dashboard/
+COPY shared/events/go.mod shared/events/go.sum shared/events/
 
 RUN cd app && go mod download
 
