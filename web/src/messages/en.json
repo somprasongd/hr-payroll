@@ -37,6 +37,56 @@
       "expired": "Expired",
       "days": "{days} days left",
       "viewAll": "View all ({count} items)"
+    },
+    "employeeStats": {
+      "title": "Employee Summary",
+      "activeEmployees": "Active Employees",
+      "fullTime": "Full-Time",
+      "partTime": "Part-Time",
+      "newThisMonth": "New This Month",
+      "terminated": "Terminated This Month",
+      "error": "Failed to load employee data",
+      "noData": "No employee data"
+    },
+    "attendance": {
+      "title": "Attendance Statistics",
+      "yearlyOverview": "Year {year} Overview",
+      "late": "Late",
+      "leaveDay": "Leave (Days)",
+      "leaveDouble": "Leave (Double)",
+      "leaveHours": "Leave (Hours)",
+      "ot": "Overtime",
+      "count": "times",
+      "minutes": "min",
+      "hours": "hrs",
+      "days": "days",
+      "error": "Failed to load data",
+      "noData": "No data available"
+    },
+    "payroll": {
+      "title": "Payroll Summary",
+      "yearly": "Year {year} Total",
+      "latestRun": "Latest Run",
+      "totalNetPay": "Net Pay",
+      "totalTax": "Withholding Tax",
+      "totalSso": "Social Security",
+      "totalPf": "Provident Fund",
+      "employees": "Employees",
+      "people": "people",
+      "error": "Failed to load data",
+      "noData": "No data available"
+    },
+    "pending": {
+      "title": "Pending Items",
+      "description": "Financial items awaiting approval or processing",
+      "items": "items",
+      "advances": "Salary Advances",
+      "loans": "Pending Loans",
+      "installments": "Outstanding Installments",
+      "bonusCycles": "Pending Bonus Cycles",
+      "salaryRaise": "Pending Salary Raises",
+      "error": "Failed to load data",
+      "noData": "No data available"
     }
   },
   "Menu": {

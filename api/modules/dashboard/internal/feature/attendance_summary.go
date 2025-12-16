@@ -1,0 +1,202 @@
+package feature
+
+import (
+	"context"
+	"time"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+
+	"hrms/modules/dashboard/internal/repository"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
+	"hrms/shared/common/mediator"
+	"hrms/shared/common/response"
+)
+
+// AttendanceSummaryQuery is the query for attendance summary
+type AttendanceSummaryQuery struct {
+	StartDate    time.Time
+	EndDate      time.Time
+	GroupBy      string // "month" or "day"
+	DepartmentID *uuid.UUID
+	Repo         *repository.Repository
+}
+
+// AttendanceTotals contains totals for all entry types
+type AttendanceTotals struct {
+	LateCount        int     `json:"lateCount"`
+	LateMinutes      float64 `json:"lateMinutes"`
+	LeaveDayCount    int     `json:"leaveDayCount"`
+	LeaveDays        float64 `json:"leaveDays"`
+	LeaveHoursCount  int     `json:"leaveHoursCount"`
+	LeaveHours       float64 `json:"leaveHours"`
+	LeaveDoubleCount int     `json:"leaveDoubleCount"`
+	LeaveDoubleDays  float64 `json:"leaveDoubleDays"`
+	OtCount          int     `json:"otCount"`
+	OtHours          float64 `json:"otHours"`
+}
+
+// AttendanceBreakdown contains breakdown by period
+type AttendanceBreakdown struct {
+	Period           string  `json:"period"`
+	LateCount        int     `json:"lateCount"`
+	LateMinutes      float64 `json:"lateMinutes"`
+	LeaveDayCount    int     `json:"leaveDayCount"`
+	LeaveDays        float64 `json:"leaveDays"`
+	LeaveHoursCount  int     `json:"leaveHoursCount"`
+	LeaveHours       float64 `json:"leaveHours"`
+	LeaveDoubleCount int     `json:"leaveDoubleCount"`
+	LeaveDoubleDays  float64 `json:"leaveDoubleDays"`
+	OtCount          int     `json:"otCount"`
+	OtHours          float64 `json:"otHours"`
+}
+
+// AttendanceSummaryResponse is the response for attendance summary
+type AttendanceSummaryResponse struct {
+	Period struct {
+		StartDate string `json:"startDate"`
+		EndDate   string `json:"endDate"`
+	} `json:"period"`
+	Totals    AttendanceTotals      `json:"totals"`
+	Breakdown []AttendanceBreakdown `json:"breakdown"`
+}
+
+type attendanceSummaryHandler struct{}
+
+func NewAttendanceSummaryHandler() *attendanceSummaryHandler {
+	return &attendanceSummaryHandler{}
+}
+
+func (h *attendanceSummaryHandler) Handle(ctx context.Context, q *AttendanceSummaryQuery) (*AttendanceSummaryResponse, error) {
+	entries, err := q.Repo.GetAttendanceSummary(ctx, q.StartDate, q.EndDate, q.GroupBy, q.DepartmentID)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to get attendance summary", zap.Error(err))
+		return nil, errs.Internal("failed to get attendance summary")
+	}
+
+	// Aggregate by period
+	periodMap := make(map[string]*AttendanceBreakdown)
+	totals := AttendanceTotals{}
+
+	for _, entry := range entries {
+		if _, ok := periodMap[entry.Period]; !ok {
+			periodMap[entry.Period] = &AttendanceBreakdown{Period: entry.Period}
+		}
+		bd := periodMap[entry.Period]
+
+		switch entry.EntryType {
+		case "late":
+			bd.LateCount = entry.TotalCount
+			bd.LateMinutes = entry.TotalQty
+			totals.LateCount += entry.TotalCount
+			totals.LateMinutes += entry.TotalQty
+		case "leave_day":
+			bd.LeaveDayCount = entry.TotalCount
+			bd.LeaveDays = entry.TotalQty
+			totals.LeaveDayCount += entry.TotalCount
+			totals.LeaveDays += entry.TotalQty
+		case "leave_hours":
+			bd.LeaveHoursCount = entry.TotalCount
+			bd.LeaveHours = entry.TotalQty
+			totals.LeaveHoursCount += entry.TotalCount
+			totals.LeaveHours += entry.TotalQty
+		case "leave_double":
+			bd.LeaveDoubleCount = entry.TotalCount
+			bd.LeaveDoubleDays = entry.TotalQty
+			totals.LeaveDoubleCount += entry.TotalCount
+			totals.LeaveDoubleDays += entry.TotalQty
+		case "ot":
+			bd.OtCount = entry.TotalCount
+			bd.OtHours = entry.TotalQty
+			totals.OtCount += entry.TotalCount
+			totals.OtHours += entry.TotalQty
+		}
+	}
+
+	// Convert map to sorted slice
+	breakdown := make([]AttendanceBreakdown, 0, len(periodMap))
+	for _, bd := range periodMap {
+		breakdown = append(breakdown, *bd)
+	}
+	// Sort by period
+	for i := 0; i < len(breakdown); i++ {
+		for j := i + 1; j < len(breakdown); j++ {
+			if breakdown[i].Period > breakdown[j].Period {
+				breakdown[i], breakdown[j] = breakdown[j], breakdown[i]
+			}
+		}
+	}
+
+	resp := &AttendanceSummaryResponse{
+		Totals:    totals,
+		Breakdown: breakdown,
+	}
+	resp.Period.StartDate = q.StartDate.Format("2006-01-02")
+	resp.Period.EndDate = q.EndDate.Format("2006-01-02")
+
+	return resp, nil
+}
+
+// RegisterAttendanceSummary registers the attendance summary endpoint
+// @Summary Get attendance summary
+// @Description Get attendance statistics with optional grouping and filtering
+// @Tags Dashboard
+// @Produce json
+// @Param startDate query string true "Start date (YYYY-MM-DD)"
+// @Param endDate query string true "End date (YYYY-MM-DD)"
+// @Param groupBy query string false "Group by: month or day (default: month)"
+// @Param departmentId query string false "Filter by department ID"
+// @Security BearerAuth
+// @Success 200 {object} AttendanceSummaryResponse
+// @Failure 400
+// @Failure 401
+// @Failure 500
+// @Router /dashboard/attendance-summary [get]
+func RegisterAttendanceSummary(router fiber.Router, repo *repository.Repository) {
+	router.Get("/attendance-summary", func(c fiber.Ctx) error {
+		startDateStr := c.Query("startDate")
+		endDateStr := c.Query("endDate")
+
+		if startDateStr == "" || endDateStr == "" {
+			return errs.BadRequest("startDate and endDate are required")
+		}
+
+		startDate, err := time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			return errs.BadRequest("invalid startDate format, use YYYY-MM-DD")
+		}
+
+		endDate, err := time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			return errs.BadRequest("invalid endDate format, use YYYY-MM-DD")
+		}
+
+		groupBy := c.Query("groupBy", "month")
+		if groupBy != "month" && groupBy != "day" {
+			groupBy = "month"
+		}
+
+		var departmentID *uuid.UUID
+		if deptStr := c.Query("departmentId"); deptStr != "" {
+			id, err := uuid.Parse(deptStr)
+			if err != nil {
+				return errs.BadRequest("invalid departmentId")
+			}
+			departmentID = &id
+		}
+
+		resp, err := mediator.Send[*AttendanceSummaryQuery, *AttendanceSummaryResponse](c.Context(), &AttendanceSummaryQuery{
+			StartDate:    startDate,
+			EndDate:      endDate,
+			GroupBy:      groupBy,
+			DepartmentID: departmentID,
+			Repo:         repo,
+		})
+		if err != nil {
+			return err
+		}
+		return response.JSON(c, fiber.StatusOK, resp)
+	})
+}

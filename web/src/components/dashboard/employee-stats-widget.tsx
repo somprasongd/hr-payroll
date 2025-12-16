@@ -1,0 +1,122 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
+import { Users, UserPlus, UserMinus, Briefcase, Clock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { dashboardService, EmployeeSummaryResponse } from '@/services/dashboard.service';
+
+export function EmployeeStatsWidget() {
+  const t = useTranslations('Dashboard');
+  const [data, setData] = useState<EmployeeSummaryResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await dashboardService.getEmployeeSummary();
+      setData(response);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch employee summary:', err);
+      setError(t('employeeStats.error'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="col-span-full">
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground text-center">{error || t('employeeStats.noData')}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const stats = [
+    {
+      title: t('employeeStats.activeEmployees'),
+      value: data.activeEmployees,
+      icon: Users,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
+    {
+      title: t('employeeStats.fullTime'),
+      value: data.fullTimeCount,
+      icon: Briefcase,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+    },
+    {
+      title: t('employeeStats.partTime'),
+      value: data.partTimeCount,
+      icon: Clock,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+    },
+    {
+      title: t('employeeStats.newThisMonth'),
+      value: data.newThisMonth,
+      icon: UserPlus,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100',
+      subtitle: data.terminatedThisMonth > 0 ? `(-${data.terminatedThisMonth})` : undefined,
+      subtitleIcon: UserMinus,
+    },
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {stats.map((stat, index) => (
+        <Card key={index} className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
+                  {stat.subtitle && (
+                    <span className="text-sm text-red-500 flex items-center gap-1">
+                      {stat.subtitleIcon && <stat.subtitleIcon className="h-3 w-3" />}
+                      {stat.subtitle}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className={`rounded-full p-3 ${stat.bgColor}`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}

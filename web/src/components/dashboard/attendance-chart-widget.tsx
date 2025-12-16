@@ -1,0 +1,234 @@
+'use client';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { TrendingUp, Clock, Calendar, AlertTriangle, Loader2, Clock3 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from 'recharts';
+import { dashboardService, AttendanceSummaryResponse } from '@/services/dashboard.service';
+
+export function AttendanceChartWidget() {
+  const t = useTranslations('Dashboard');
+  const locale = useLocale();
+  const [data, setData] = useState<AttendanceSummaryResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'late' | 'leave' | 'ot'>('late');
+
+  // Get date range for current year
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), 0, 1); // Jan 1
+    const endDate = new Date(now.getFullYear(), 11, 31); // Dec 31
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+    };
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await dashboardService.getAttendanceSummary({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        groupBy: 'month',
+      });
+      setData(response);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch attendance summary:', err);
+      setError(t('attendance.error'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t, dateRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const formatMonth = (period: string) => {
+    const [year, month] = period.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    return date.toLocaleDateString(locale, { month: 'short' });
+  };
+
+  const chartData = useMemo(() => {
+    if (!data) return [];
+    return data.breakdown.map(item => ({
+      period: formatMonth(item.period),
+      lateCount: item.lateCount,
+      lateMinutes: item.lateMinutes,
+      leaveDays: item.leaveDays,
+      leaveDoubleDays: item.leaveDoubleDays,
+      leaveHours: item.leaveHours,
+      otCount: item.otCount,
+      otHours: item.otHours,
+    }));
+  }, [data, locale]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-500" />
+            {t('attendance.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-500" />
+            {t('attendance.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-8">{error || t('attendance.noData')}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-blue-500" />
+          {t('attendance.title')}
+        </CardTitle>
+        <CardDescription>
+          {t('attendance.yearlyOverview', { year: new Date().getFullYear() })}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/* Summary Cards - 5 cards now */}
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-5 mb-6">
+          {/* Late */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-100">
+            <Clock className="h-6 w-6 text-red-500 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t('attendance.late')}</p>
+              <p className="text-sm font-bold text-red-600">{data.totals.lateCount} {t('attendance.count')}</p>
+              <p className="text-xs text-muted-foreground">{data.totals.lateMinutes.toFixed(0)} {t('attendance.minutes')}</p>
+            </div>
+          </div>
+          {/* Leave Day */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 border border-yellow-100">
+            <Calendar className="h-6 w-6 text-yellow-600 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t('attendance.leaveDay')}</p>
+              <p className="text-sm font-bold text-yellow-700">{data.totals.leaveDays.toFixed(1)} {t('attendance.days')}</p>
+              <p className="text-xs text-muted-foreground">{data.totals.leaveDayCount} {t('attendance.count')}</p>
+            </div>
+          </div>
+          {/* Leave Double */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-orange-50 border border-orange-100">
+            <Calendar className="h-6 w-6 text-orange-600 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t('attendance.leaveDouble')}</p>
+              <p className="text-sm font-bold text-orange-700">{data.totals.leaveDoubleDays.toFixed(1)} {t('attendance.days')}</p>
+              <p className="text-xs text-muted-foreground">{data.totals.leaveDoubleCount} {t('attendance.count')}</p>
+            </div>
+          </div>
+          {/* Leave Hours */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
+            <Clock3 className="h-6 w-6 text-amber-600 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t('attendance.leaveHours')}</p>
+              <p className="text-sm font-bold text-amber-700">{data.totals.leaveHours.toFixed(1)} {t('attendance.hours')}</p>
+              <p className="text-xs text-muted-foreground">{data.totals.leaveHoursCount} {t('attendance.count')}</p>
+            </div>
+          </div>
+          {/* OT */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-100">
+            <AlertTriangle className="h-6 w-6 text-blue-500 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t('attendance.ot')}</p>
+              <p className="text-sm font-bold text-blue-600">{data.totals.otHours.toFixed(1)} {t('attendance.hours')}</p>
+              <p className="text-xs text-muted-foreground">{data.totals.otCount} {t('attendance.count')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'late' | 'leave' | 'ot')}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="late">{t('attendance.late')}</TabsTrigger>
+            <TabsTrigger value="leave">{t('attendance.leaveDay')}</TabsTrigger>
+            <TabsTrigger value="ot">{t('attendance.ot')}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="late">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="period" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="lateCount" name={t('attendance.count')} fill="#ef4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="leave">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="period" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="leaveDays" name={t('attendance.leaveDay')} fill="#eab308" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="leaveDoubleDays" name={t('attendance.leaveDouble')} fill="#f97316" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="leaveHours" name={t('attendance.leaveHours')} fill="#d97706" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ot">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="period" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="otHours" name={t('attendance.hours')} fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}

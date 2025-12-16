@@ -32,6 +32,8 @@ replace hrms/modules/payrollorgprofile v0.0.0 => ../modules/payrollorgprofile
 
 replace hrms/modules/activitylog v0.0.0 => ../modules/activitylog
 
+replace hrms/modules/dashboard v0.0.0 => ../modules/dashboard
+
 replace hrms/shared/events v0.0.0 => ../shared/events
 
 require (
@@ -42,6 +44,7 @@ require (
 	hrms/modules/activitylog v0.0.0
 	hrms/modules/auth v0.0.0
 	hrms/modules/bonus v0.0.0
+	hrms/modules/dashboard v0.0.0
 	hrms/modules/debt v0.0.0
 	hrms/modules/employee v0.0.0
 	hrms/modules/masterdata v0.0.0
