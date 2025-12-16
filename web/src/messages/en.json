@@ -28,7 +28,16 @@
     "loggedInAs": "You are logged in as {role}",
     "logout": "Log out",
     "profile": "My Profile",
-    "searchPlaceholder": "Search employees..."
+    "searchPlaceholder": "Search employees...",
+    "expiringDocuments": {
+      "title": "Expiring Documents",
+      "description": "Employee documents expiring within 30 days",
+      "noExpiring": "No documents expiring soon",
+      "error": "Failed to load documents",
+      "expired": "Expired",
+      "days": "{days} days left",
+      "viewAll": "View all ({count} items)"
+    }
   },
   "Menu": {
     "dashboard": "Dashboard",
@@ -1037,7 +1046,40 @@
   "Nav": {
     "orgProfile": "Org Profile",
     "departments": "Departments",
-    "positions": "Positions"
+    "positions": "Positions",
+    "documentTypes": "Document Types"
+  },
+  "DocumentTypes": {
+    "title": "Document Type Management",
+    "description": "Manage employee document types",
+    "listTitle": "Document Types",
+    "listDescription": "Document types used for employee document storage",
+    "createTitle": "Create Document Type",
+    "createDescription": "Enter details for the new document type",
+    "editTitle": "Edit Document Type",
+    "editDescription": "Update document type details",
+    "deleteDescription": "Are you sure you want to delete {name}? This will prevent new uploads with this type.",
+    "fields": {
+      "code": "Code",
+      "nameTh": "Name (Thai)",
+      "nameEn": "Name (English)"
+    },
+    "placeholders": {
+      "code": "e.g. PASSPORT, VISA",
+      "nameTh": "e.g. หนังสือเดินทาง",
+      "nameEn": "e.g. Passport"
+    },
+    "noData": "No document types found",
+    "success": {
+      "created": "Document type created successfully",
+      "updated": "Document type updated successfully",
+      "deleted": "Document type deleted successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to load document types",
+      "saveFailed": "Failed to save",
+      "deleteFailed": "Failed to delete"
+    }
   },
   "Departments": {
     "title": "Department Management",
@@ -1151,5 +1193,45 @@
     "next": "Next",
     "error": "Error",
     "success": "Success"
+  },
+  "Documents": {
+    "tabTitle": "Documents",
+    "title": "Employee Documents",
+    "description": "Manage employee documents such as ID cards, passports, work permits",
+    "upload": "Upload",
+    "download": "Download",
+    "preview": "Preview",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "uploading": "Uploading...",
+    "noDocuments": "No documents uploaded",
+    "fetchError": "Failed to load documents",
+    "uploadError": "Failed to upload document",
+    "previewError": "Unable to preview",
+    "expiryLabel": "Expires",
+    "expired": "Expired",
+    "expiringDays": "Expires in {days} days",
+    "validation": {
+      "fileAndTypeRequired": "Please select a file and document type",
+      "fileTooLarge": "File is too large (maximum 10MB)"
+    },
+    "uploadDialog": {
+      "title": "Upload Document",
+      "description": "Select a file and fill in document details",
+      "file": "File",
+      "fileHint": "PDF, JPG, PNG up to 10MB",
+      "type": "Document Type",
+      "selectType": "Select type",
+      "documentNumber": "Document Number",
+      "documentNumberPlaceholder": "e.g. Passport number",
+      "issueDate": "Issue Date",
+      "expiryDate": "Expiry Date",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional notes..."
+    },
+    "deleteDialog": {
+      "title": "Confirm Delete",
+      "description": "Are you sure you want to delete {name}? This action cannot be undone."
+    }
   }
 }

@@ -37,7 +37,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
   const handleSubmit = async (data: UpdateEmployeeRequest | CreateEmployeeRequest) => {
     try {
       await employeeService.updateEmployee(id, data as UpdateEmployeeRequest);
-      router.push('/employees');
+      // Stay on current page after save - do not redirect
     } catch (error) {
       console.error('Failed to update employee', error);
       throw error;

@@ -28,7 +28,16 @@
     "loggedInAs": "คุณเข้าสู่ระบบในฐานะ {role}",
     "logout": "ออกจากระบบ",
     "profile": "ข้อมูลส่วนตัว",
-    "searchPlaceholder": "ค้นหาพนักงาน..."
+    "searchPlaceholder": "ค้นหาพนักงาน...",
+    "expiringDocuments": {
+      "title": "เอกสารใกล้หมดอายุ",
+      "description": "เอกสารพนักงานที่จะหมดอายุภายใน 30 วัน",
+      "noExpiring": "ไม่มีเอกสารใกล้หมดอายุ",
+      "error": "ไม่สามารถโหลดข้อมูลเอกสารได้",
+      "expired": "หมดอายุแล้ว",
+      "days": "อีก {days} วัน",
+      "viewAll": "ดูทั้งหมด ({count} รายการ)"
+    }
   },
   "Menu": {
     "dashboard": "แดชบอร์ดหลัก",
@@ -1039,7 +1048,40 @@
   "Nav": {
     "orgProfile": "ข้อมูลองค์กร",
     "departments": "แผนก",
-    "positions": "ตำแหน่ง"
+    "positions": "ตำแหน่ง",
+    "documentTypes": "ประเภทเอกสาร"
+  },
+  "DocumentTypes": {
+    "title": "จัดการประเภทเอกสาร",
+    "description": "จัดการประเภทเอกสารสำหรับพนักงาน",
+    "listTitle": "รายการประเภทเอกสาร",
+    "listDescription": "ประเภทเอกสารที่ใช้ในการจัดเก็บเอกสารพนักงาน",
+    "createTitle": "สร้างประเภทเอกสารใหม่",
+    "createDescription": "กรอกข้อมูลประเภทเอกสารที่ต้องการสร้าง",
+    "editTitle": "แก้ไขประเภทเอกสาร",
+    "editDescription": "แก้ไขข้อมูลประเภทเอกสาร",
+    "deleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบ {name}? การลบจะทำให้ไม่สามารถใช้ประเภทนี้ในการอัปโหลดเอกสารใหม่ได้",
+    "fields": {
+      "code": "รหัส",
+      "nameTh": "ชื่อ (ไทย)",
+      "nameEn": "ชื่อ (อังกฤษ)"
+    },
+    "placeholders": {
+      "code": "เช่น PASSPORT, VISA",
+      "nameTh": "เช่น หนังสือเดินทาง",
+      "nameEn": "เช่น Passport"
+    },
+    "noData": "ไม่พบประเภทเอกสาร",
+    "success": {
+      "created": "สร้างประเภทเอกสารสำเร็จ",
+      "updated": "แก้ไขประเภทเอกสารสำเร็จ",
+      "deleted": "ลบประเภทเอกสารสำเร็จ"
+    },
+    "errors": {
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลประเภทเอกสารได้",
+      "saveFailed": "บันทึกไม่สำเร็จ",
+      "deleteFailed": "ลบไม่สำเร็จ"
+    }
   },
   "Departments": {
     "title": "จัดการแผนก",
@@ -1153,5 +1195,45 @@
     "next": "ถัดไป",
     "error": "เกิดข้อผิดพลาด",
     "success": "สำเร็จ"
+  },
+  "Documents": {
+    "tabTitle": "เอกสาร",
+    "title": "เอกสารพนักงาน",
+    "description": "จัดการเอกสารที่เกี่ยวข้องกับพนักงาน เช่น บัตรประชาชน หนังสือเดินทาง ใบอนุญาตทำงาน",
+    "upload": "อัปโหลด",
+    "download": "ดาวน์โหลด",
+    "preview": "ดูตัวอย่าง",
+    "delete": "ลบ",
+    "cancel": "ยกเลิก",
+    "uploading": "กำลังอัปโหลด...",
+    "noDocuments": "ยังไม่มีเอกสาร",
+    "fetchError": "ไม่สามารถโหลดข้อมูลเอกสารได้",
+    "uploadError": "อัปโหลดเอกสารไม่สำเร็จ",
+    "previewError": "ไม่สามารถแสดงตัวอย่างได้",
+    "expiryLabel": "หมดอายุ",
+    "expired": "หมดอายุแล้ว",
+    "expiringDays": "หมดอายุใน {days} วัน",
+    "validation": {
+      "fileAndTypeRequired": "กรุณาเลือกไฟล์และประเภทเอกสาร",
+      "fileTooLarge": "ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 10MB)"
+    },
+    "uploadDialog": {
+      "title": "อัปโหลดเอกสาร",
+      "description": "เลือกไฟล์และกรอกข้อมูลเอกสาร",
+      "file": "ไฟล์",
+      "fileHint": "รองรับ PDF, JPG, PNG ขนาดไม่เกิน 10MB",
+      "type": "ประเภทเอกสาร",
+      "selectType": "เลือกประเภท",
+      "documentNumber": "เลขที่เอกสาร",
+      "documentNumberPlaceholder": "เช่น เลขที่หนังสือเดินทาง",
+      "issueDate": "วันที่ออก",
+      "expiryDate": "วันหมดอายุ",
+      "notes": "หมายเหตุ",
+      "notesPlaceholder": "บันทึกเพิ่มเติม..."
+    },
+    "deleteDialog": {
+      "title": "ยืนยันการลบเอกสาร",
+      "description": "คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร {name}? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+    }
   }
 }

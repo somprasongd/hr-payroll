@@ -250,6 +250,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/admin/document-types')}>
+                          <Link href="/admin/document-types">
+                            <span>{tNav('documentTypes')}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild isActive={isActive('/settings')}>
                           <Link href="/settings">
                             <span>{tMenu('settings')}</span>

@@ -6,6 +6,16 @@ import (
 	accupsert "hrms/modules/employee/internal/feature/accum/upsert"
 	"hrms/modules/employee/internal/feature/create"
 	"hrms/modules/employee/internal/feature/delete"
+	doctypecreate "hrms/modules/employee/internal/feature/doctype/create"
+	doctypedelete "hrms/modules/employee/internal/feature/doctype/delete"
+	doctypelist "hrms/modules/employee/internal/feature/doctype/list"
+	doctypeupdate "hrms/modules/employee/internal/feature/doctype/update"
+	docdelete "hrms/modules/employee/internal/feature/document/delete"
+	docdownload "hrms/modules/employee/internal/feature/document/download"
+	docexpiring "hrms/modules/employee/internal/feature/document/expiring"
+	doclist "hrms/modules/employee/internal/feature/document/list"
+	docupdate "hrms/modules/employee/internal/feature/document/update"
+	docupload "hrms/modules/employee/internal/feature/document/upload"
 	"hrms/modules/employee/internal/feature/get"
 	"hrms/modules/employee/internal/feature/list"
 	photodownload "hrms/modules/employee/internal/feature/photo/download"
@@ -49,6 +59,21 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	mediator.Register[*accdelete.Command, mediator.NoResponse](accdelete.NewHandler(m.repo))
 	mediator.Register[*photoupload.Command, *photoupload.Response](photoupload.NewHandler(m.repo))
 	mediator.Register[*photodownload.Query, *photodownload.Response](photodownload.NewHandler(m.repo))
+
+	// Document Type handlers
+	mediator.Register[*doctypelist.Query, *doctypelist.Response](doctypelist.NewHandler(m.repo))
+	mediator.Register[*doctypecreate.Command, *doctypecreate.Response](doctypecreate.NewHandler(m.repo))
+	mediator.Register[*doctypeupdate.Command, *doctypeupdate.Response](doctypeupdate.NewHandler(m.repo))
+	mediator.Register[*doctypedelete.Command, mediator.NoResponse](doctypedelete.NewHandler(m.repo))
+
+	// Document handlers
+	mediator.Register[*doclist.Query, *doclist.Response](doclist.NewHandler(m.repo))
+	mediator.Register[*docupload.Command, *docupload.Response](docupload.NewHandler(m.repo))
+	mediator.Register[*docdownload.Query, *docdownload.Response](docdownload.NewHandler(m.repo))
+	mediator.Register[*docupdate.Command, *docupdate.Response](docupdate.NewHandler(m.repo))
+	mediator.Register[*docdelete.Command, mediator.NoResponse](docdelete.NewHandler(m.repo))
+	mediator.Register[*docexpiring.Query, *docexpiring.Response](docexpiring.NewHandler(m.repo))
+
 	return nil
 }
 
@@ -67,8 +92,29 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	acclist.NewEndpoint(adminOrHR)
 	photodownload.NewEndpoint(photos)
 	photoupload.NewEndpoint(photos.Group("", middleware.RequireRoles("admin", "hr")))
+
+	// Employee Documents - under /:id/documents
+	docs := group.Group("/:id/documents", middleware.RequireRoles("admin", "hr"))
+	doclist.NewEndpoint(docs)
+	docupload.NewEndpoint(docs)
+	docdownload.NewEndpoint(docs)
+	docupdate.NewEndpoint(docs)
+	docdelete.NewEndpoint(docs)
+
 	// Admin only (mutations)
 	admin := group.Group("", middleware.RequireRoles("admin"))
 	accupsert.NewEndpoint(admin)
 	accdelete.NewEndpoint(admin)
+
+	// Document Types - separate top-level route
+	docTypes := r.Group("/employee-document-types", middleware.Auth(m.tokenSvc))
+	doctypelist.NewEndpoint(docTypes)
+	adminDocTypes := docTypes.Group("", middleware.RequireRoles("admin"))
+	doctypecreate.NewEndpoint(adminDocTypes)
+	doctypeupdate.NewEndpoint(adminDocTypes)
+	doctypedelete.NewEndpoint(adminDocTypes)
+
+	// Expiring documents - separate route for dashboard
+	docsAdmin := r.Group("/documents", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
+	docexpiring.NewEndpoint(docsAdmin)
 }

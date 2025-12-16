@@ -35,6 +35,7 @@ import {
 import { Employee, CreateEmployeeRequest, UpdateEmployeeRequest, employeeService } from '@/services/employee.service';
 import { masterDataService, AllMasterData } from '@/services/master-data.service';
 import { AccumulationView } from './accumulation-view';
+import { DocumentTab } from './document-tab';
 
 
 
@@ -48,6 +49,8 @@ interface EmployeeFormProps {
     export function EmployeeForm({ initialData, onSubmit, isEditing = false, defaultTab = 'personal' }: EmployeeFormProps) {
   const t = useTranslations('Employees');
   const tAccum = useTranslations('Accumulation');
+  const tDocs = useTranslations('Documents');
+  const tCommon = useTranslations('Common');
   const router = useRouter();
   const [masterData, setMasterData] = useState<AllMasterData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -343,13 +346,16 @@ interface EmployeeFormProps {
         }, 100);
       } else if (activeTab === 'financial' && isEditing) {
         setActiveTab('accumulation');
+      } else if (activeTab === 'accumulation' && isEditing) {
+        setActiveTab('documents');
       }
     }
   };
 
   const handleBack = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    if (activeTab === 'accumulation') setActiveTab('financial');
+    if (activeTab === 'documents') setActiveTab('accumulation');
+    else if (activeTab === 'accumulation') setActiveTab('financial');
     else if (activeTab === 'financial') setActiveTab('employment');
     else if (activeTab === 'employment') setActiveTab('personal');
   };
@@ -397,11 +403,12 @@ interface EmployeeFormProps {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full h-auto grid-cols-2 ${isEditing ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+          <TabsList className={`grid w-full h-auto grid-cols-2 ${isEditing ? 'md:grid-cols-5' : 'md:grid-cols-3'}`}>
             <TabsTrigger value="personal">{t('personalInfo')}</TabsTrigger>
             <TabsTrigger value="employment">{t('employmentInfo')}</TabsTrigger>
             <TabsTrigger value="financial">{t('financialInfo')}</TabsTrigger>
             {isEditing && <TabsTrigger value="accumulation">{tAccum('title')}</TabsTrigger>}
+            {isEditing && <TabsTrigger value="documents">{tDocs('tabTitle')}</TabsTrigger>}
           </TabsList>
           
           <TabsContent value="personal">
@@ -990,6 +997,12 @@ interface EmployeeFormProps {
               <AccumulationView employeeId={initialData.id} />
             </TabsContent>
           )}
+
+          {isEditing && initialData?.id && (
+            <TabsContent value="documents">
+              <DocumentTab employeeId={initialData.id} />
+            </TabsContent>
+          )}
         </Tabs>
 
         <div className="flex justify-end space-x-4">
@@ -1019,15 +1032,34 @@ interface EmployeeFormProps {
               <Button type="button" onClick={handleNext}>
                 {t('next')}
               </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {tCommon('save')}
+              </Button>
             </>
-          ) : activeTab === 'accumulation' ? (
+          ) : activeTab === 'financial' ? (
             <>
               <Button type="button" variant="outline" onClick={handleBack}>
                 {t('back')}
               </Button>
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? t('messages.updateSuccess') : t('createButton')}
+                {tCommon('save')}
+              </Button>
+            </>
+          ) : activeTab === 'accumulation' ? (
+            <>
+              <Button type="button" variant="outline" onClick={handleBack}>
+                {t('back')}
+              </Button>
+              <Button type="button" onClick={handleNext}>
+                {t('next')}
+              </Button>
+            </>
+          ) : activeTab === 'documents' ? (
+            <>
+              <Button type="button" variant="outline" onClick={handleBack}>
+                {t('back')}
               </Button>
             </>
           ) : (
@@ -1037,7 +1069,7 @@ interface EmployeeFormProps {
               </Button>
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? t('messages.updateSuccess') : t('createButton')}
+                {tCommon('save')}
               </Button>
             </>
           )}
