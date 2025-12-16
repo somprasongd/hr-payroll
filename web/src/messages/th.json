@@ -1159,6 +1159,10 @@
       "fetchFailed": "ไม่สามารถโหลดข้อมูลแผนกได้",
       "saveFailed": "บันทึกไม่สำเร็จ",
       "deleteFailed": "ลบไม่สำเร็จ"
+    },
+    "validation": {
+      "codeRequired": "กรุณากรอกรหัสแผนก",
+      "nameRequired": "กรุณากรอกชื่อแผนก"
     }
   },
   "Positions": {
@@ -1186,6 +1190,10 @@
       "fetchFailed": "ไม่สามารถโหลดข้อมูลตำแหน่งได้",
       "saveFailed": "บันทึกไม่สำเร็จ",
       "deleteFailed": "ลบไม่สำเร็จ"
+    },
+    "validation": {
+      "codeRequired": "กรุณากรอกรหัสตำแหน่ง",
+      "nameRequired": "กรุณากรอกชื่อตำแหน่ง"
     }
   },
   "OrgProfile": {

@@ -1157,6 +1157,10 @@
       "fetchFailed": "Failed to load departments",
       "saveFailed": "Failed to save",
       "deleteFailed": "Failed to delete"
+    },
+    "validation": {
+      "codeRequired": "Please enter department code",
+      "nameRequired": "Please enter department name"
     }
   },
   "Positions": {
@@ -1184,6 +1188,10 @@
       "fetchFailed": "Failed to load positions",
       "saveFailed": "Failed to save",
       "deleteFailed": "Failed to delete"
+    },
+    "validation": {
+      "codeRequired": "Please enter position code",
+      "nameRequired": "Please enter position name"
     }
   },
   "OrgProfile": {
