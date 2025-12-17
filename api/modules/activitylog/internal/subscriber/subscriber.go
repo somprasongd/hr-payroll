@@ -28,8 +28,11 @@ func (s *LogSubscriber) HandleLogActivity(ev eventbus.Event) {
 	if !ok {
 		return
 	}
-	// Convert details map to json byte array
-	details, _ := json.Marshal(e.Details)
+	// Convert details map to json byte array, or nil if empty
+	var details []byte
+	if e.Details != nil && len(e.Details) > 0 {
+		details, _ = json.Marshal(e.Details)
+	}
 	s.createLog(e.ActorID, e.Action, e.EntityName, e.EntityID, details, e.Timestamp)
 }
 

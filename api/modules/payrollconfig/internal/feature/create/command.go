@@ -88,6 +88,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 			"tax_standard_expense_cap":      created.TaxStandardExpenseCap,
 			"tax_apply_personal_allowance":  created.TaxApplyPersonalAllowance,
 			"tax_personal_allowance_amount": created.TaxPersonalAllowanceAmount,
+			"tax_progressive_brackets":      created.TaxProgressiveBrackets,
 			"withholding_tax_rate_service":  created.WithholdingTaxRateService,
 		},
 		Timestamp: time.Now(),

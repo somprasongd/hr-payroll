@@ -46,3 +46,13 @@ func (h *Handler) ListLogs(c fiber.Ctx) error {
 		},
 	})
 }
+
+func (h *Handler) GetFilterOptions(c fiber.Ctx) error {
+	options, err := h.repo.GetDistinctFilters(c.Context())
+	if err != nil {
+		logger.FromContext(c.Context()).Error("failed to get filter options", zap.Error(err))
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(options)
+}

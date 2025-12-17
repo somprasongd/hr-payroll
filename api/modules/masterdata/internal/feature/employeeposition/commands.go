@@ -121,6 +121,19 @@ func (h *UpdateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Respon
 		logger.FromContext(ctx).Error("failed to update employee position", zap.Error(err), zap.String("id", cmd.ID.String()))
 		return nil, errs.Internal("failed to update employee position")
 	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		Action:     "UPDATE",
+		EntityName: "EMPLOYEE_POSITION",
+		EntityID:   rec.ID.String(),
+		Details: map[string]interface{}{
+			"code": rec.Code,
+			"name": rec.Name,
+		},
+		Timestamp: time.Now(),
+	})
+
 	return &Response{Record: *rec}, nil
 }
 
@@ -137,10 +150,7 @@ func (h *DeleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		Action:     "DELETE",
 		EntityName: "EMPLOYEE_POSITION",
 		EntityID:   cmd.ID.String(),
-		Details: map[string]interface{}{
-			"deleted_position_id": cmd.ID.String(),
-		},
-		Timestamp: time.Now(),
+		Timestamp:  time.Now(),
 	})
 	return mediator.NoResponse{}, nil
 }

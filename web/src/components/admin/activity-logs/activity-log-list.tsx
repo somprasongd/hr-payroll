@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { GenericDataTable } from '@/components/common/generic-data-table';
-import { activityLogService, ActivityLog } from '@/services/activity-log.service';
+import { activityLogService, ActivityLog, FilterOptions } from '@/services/activity-log.service';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { subDays } from 'date-fns';
-import { Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ActivityLogListProps {
@@ -36,6 +35,9 @@ export function ActivityLogList({ showFilters = false }: ActivityLogListProps) {
   const [totalPages, setTotalPages] = useState(1);
   const LIMIT = 10;
   
+  // Filter options from API
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({ actions: [], entities: [] });
+  
   // Filter State
   const [filters, setFilters] = useState({
     fromDate: format(subDays(new Date(), 3), 'yyyy-MM-dd'),
@@ -46,6 +48,19 @@ export function ActivityLogList({ showFilters = false }: ActivityLogListProps) {
   });
 
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
+
+  const fetchFilterOptions = async () => {
+    try {
+      const options = await activityLogService.getFilterOptions();
+      setFilterOptions(options);
+    } catch (error) {
+      console.error('Failed to fetch filter options:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
 
   const fetchLogs = async () => {
     try {
@@ -178,15 +193,14 @@ export function ActivityLogList({ showFilters = false }: ActivityLogListProps) {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="ALL">{t('filters.all')}</SelectItem>
-                    <SelectItem value="CREATE">CREATE</SelectItem>
-                    <SelectItem value="UPDATE">UPDATE</SelectItem>
-                    <SelectItem value="DELETE">DELETE</SelectItem>
-                    <SelectItem value="RESET_PASSWORD">RESET PASSWORD</SelectItem>
+                    {filterOptions.actions.map((action) => (
+                      <SelectItem key={action} value={action}>{action}</SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
         </div>
 
-        <div className="grid w-full max-w-[150px] items-center gap-1.5">
+        <div className="grid w-full max-w-[200px] items-center gap-1.5">
             <label className="text-sm font-medium">{t('filters.entity')}</label>
              <Select value={filters.entity} onValueChange={(val) => setFilters({...filters, entity: val})}>
                 <SelectTrigger>
@@ -194,30 +208,9 @@ export function ActivityLogList({ showFilters = false }: ActivityLogListProps) {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="ALL">{t('filters.all')}</SelectItem>
-                    <SelectItem value="BONUS">Bonus</SelectItem>
-                    <SelectItem value="DEBT_CONFIG">Debt Config</SelectItem>
-                    <SelectItem value="DEBT_PAYMENT">Debt Payment</SelectItem>
-                    <SelectItem value="DEBT_RECORD">Debt Record</SelectItem>
-                    <SelectItem value="DOCUMENT_TYPE">Document Type</SelectItem>
-                    <SelectItem value="EMPLOYEE">Employee</SelectItem>
-                    <SelectItem value="EMPLOYEE_ACCUM">Employee Accumulation</SelectItem>
-                    <SelectItem value="EMPLOYEE_DOCUMENT">Employee Document</SelectItem>
-                    <SelectItem value="EMPLOYEE_PHOTO">Employee Photo</SelectItem>
-                    <SelectItem value="MASTER_DATA_BANK">Master Data - Bank</SelectItem>
-                    <SelectItem value="MASTER_DATA_DEPARTMENT">Master Data - Department</SelectItem>
-                    <SelectItem value="MASTER_DATA_EMPLOYEE_TYPE">Master Data - Employee Type</SelectItem>
-                    <SelectItem value="MASTER_DATA_ID_DOC_TYPE">Master Data - ID Doc Type</SelectItem>
-                    <SelectItem value="MASTER_DATA_POSITION">Master Data - Position</SelectItem>
-                    <SelectItem value="MASTER_DATA_TITLE">Master Data - Title</SelectItem>
-                    <SelectItem value="PAYOUT_PT">Payout PT</SelectItem>
-                    <SelectItem value="PAYROLL_CONFIG">Payroll Config</SelectItem>
-                    <SelectItem value="PAYROLL_ORG_PROFILE">Payroll Org Profile</SelectItem>
-                    <SelectItem value="PAYROLL_RUN">Payroll Run</SelectItem>
-                    <SelectItem value="SALARY_ADVANCE">Salary Advance</SelectItem>
-                    <SelectItem value="SALARY_RAISE_CYCLE">Salary Raise Cycle</SelectItem>
-                    <SelectItem value="USER">User</SelectItem>
-                    <SelectItem value="WORKLOG_FT">Worklog FT</SelectItem>
-                    <SelectItem value="WORKLOG_PT">Worklog PT</SelectItem>
+                    {filterOptions.entities.map((entity) => (
+                      <SelectItem key={entity} value={entity}>{entity}</SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
         </div>

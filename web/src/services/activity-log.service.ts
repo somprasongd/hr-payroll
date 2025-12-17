@@ -30,6 +30,11 @@ export interface GetActivityLogsParams {
   userName?: string;
 }
 
+export interface FilterOptions {
+  actions: string[];
+  entities: string[];
+}
+
 export const activityLogService = {
   getLogs: async (params?: GetActivityLogsParams): Promise<ActivityLogListResponse> => {
     const queryParams = new URLSearchParams();
@@ -46,5 +51,9 @@ export const activityLogService = {
 
   getLatestLogs: async (limit: number = 5): Promise<ActivityLogListResponse> => {
     return apiClient.get<ActivityLogListResponse>(`/admin/activity-logs/latest?limit=${limit}`);
+  },
+
+  getFilterOptions: async (): Promise<FilterOptions> => {
+    return apiClient.get<FilterOptions>('/admin/activity-logs/filter-options');
   },
 };

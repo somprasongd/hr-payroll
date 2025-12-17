@@ -46,4 +46,5 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	g := r.Group("/admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
 	g.Get("/", handler.ListLogs)
 	g.Get("/latest", handler.ListLogs)
+	g.Get("/filter-options", handler.GetFilterOptions)
 }

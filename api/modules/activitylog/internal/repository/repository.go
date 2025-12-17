@@ -129,3 +129,33 @@ func (r *Repository) ListLogs(ctx context.Context, filter ListFilter, page, limi
 
 	return logs, total, nil
 }
+
+type FilterOptions struct {
+	Actions  []string `json:"actions"`
+	Entities []string `json:"entities"`
+}
+
+func (r *Repository) GetDistinctFilters(ctx context.Context) (*FilterOptions, error) {
+	db := r.dbCtx(ctx)
+
+	var actions []string
+	actionsQuery := `SELECT DISTINCT action FROM activity_logs ORDER BY action`
+	if err := db.SelectContext(ctx, &actions, actionsQuery); err != nil {
+		return nil, err
+	}
+
+	var entities []string
+	entitiesQuery := `SELECT DISTINCT entity FROM activity_logs ORDER BY entity`
+	if err := db.SelectContext(ctx, &entities, entitiesQuery); err != nil {
+		return nil, err
+	}
+
+	if actions == nil {
+		actions = []string{}
+	}
+	if entities == nil {
+		entities = []string{}
+	}
+
+	return &FilterOptions{Actions: actions, Entities: entities}, nil
+}

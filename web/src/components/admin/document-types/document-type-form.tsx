@@ -80,7 +80,6 @@ export function DocumentTypeForm({ initialData, onSuccess, onSubmit }: DocumentT
                 <Input 
                   placeholder={t('placeholders.code')} 
                   {...field} 
-                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                   disabled={!!initialData}
                 />
               </FormControl>

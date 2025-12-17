@@ -68,10 +68,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		Action:     "RESET_PASSWORD",
 		EntityName: "USER",
 		EntityID:   cmd.ID.String(),
-		Details: map[string]interface{}{
-			"target_user_id": cmd.ID,
-		},
-		Timestamp: time.Now(),
+		Timestamp:  time.Now(),
 	})
 
 	return &Response{Message: "Password has been reset successfully."}, nil
