@@ -137,8 +137,13 @@ export function DocumentTab({ employeeId }: DocumentTabProps) {
       fetchData();
     } catch (err: any) {
       console.error('Upload failed:', err);
-      const message = err?.response?.data?.message || err?.message || t('uploadError');
-      setUploadError(message);
+      // Check for 409 Conflict (duplicate document)
+      if (err?.response?.status === 409) {
+        setUploadError(t('duplicateDocumentError'));
+      } else {
+        const message = err?.response?.data?.message || err?.message || t('uploadError');
+        setUploadError(message);
+      }
     } finally {
       setUploading(false);
     }

@@ -70,6 +70,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		CreatedBy:     cmd.ActorID,
 	})
 	if err != nil {
+		if repository.IsUniqueViolation(err) {
+			return nil, errs.Conflict("duplicate photo (same image already uploaded)")
+		}
 		logger.FromContext(ctx).Error("failed to insert employee photo", zap.Error(err))
 		return nil, errs.Internal("failed to upload photo")
 	}

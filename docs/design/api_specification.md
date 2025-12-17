@@ -1045,7 +1045,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 แก้ไขข้อมูลพนักงาน
 
-- **Endpoint:** `PATCH /employees/{id}`
+- **Endpoint:** `PUT /employees/{id}`
 - **Access:** Admin, HR
 - **Params:** `id` (UUIDv7)
 
@@ -1053,13 +1053,41 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 ```json
 {
+  "employeeNumber": "EMP-001",
+  "titleId": "019aa095-7c42-7f6a-afcb-489e6689e22d",
+  "firstName": "สมชาย",
+  "lastName": "ศรีสุข",
+  "idDocumentTypeId": "019aa095-7c43-71dc-9955-eca529c5cc4e",
+  "idDocumentNumber": "1103701234567",
+  "phone": "0812345678",
+  "email": "somchai@example.com",
+  "photoId": "019b0001-aaaa-bbbb-cccc-000000000001",
+  "employeeTypeId": "019aa095-7c43-7388-be88-f24681d5a3f3",
+  "departmentId": "019b0001-aaaa-bbbb-cccc-0000000000d1",
+  "positionId": "019b0001-aaaa-bbbb-cccc-0000000000f1",
   "basePayAmount": 28000.0,
-  "allowDoctorFee": true,
+  "employmentStartDate": "2024-06-01",
+  "employmentEndDate": null,
+  "bankName": "KBank",
+  "bankAccountNo": "123-4-56789-0",
+  "ssoContribute": true,
+  "ssoDeclaredWage": 15000.0,
   "providentFundContribute": true,
   "providentFundRateEmployee": 0.05,
-  "providentFundRateEmployer": 0.05
+  "providentFundRateEmployer": 0.05,
+  "withholdTax": true,
+  "allowHousing": true,
+  "allowWater": false,
+  "allowElectric": false,
+  "allowInternet": true,
+  "allowDoctorFee": true
 }
 ```
+
+**Notes:**
+
+- ต้องส่ง payload ครบเหมือน Create Employee (ไม่ใช่ PATCH partial)
+- ถ้าตั้ง `photoId` เป็น `null` หรือ `""` ระบบจะเคลียร์รูปพนักงาน (เทียบเท่า Delete Photo)
 
 **Success Response (200 OK):**
 
@@ -1135,6 +1163,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 | **HTTP Status** | **Title**   | **Description**                                   |
 | --------------- | ----------- | ------------------------------------------------- |
 | **400**         | Bad Request | ไม่พบไฟล์, ไม่ใช่ `image/*`, หรือไฟล์ใหญ่เกิน 2MB |
+| **409**         | Conflict    | อัปโหลดรูปซ้ำ (checksum เดิมมีอยู่แล้ว)           |
 
 ---
 
@@ -1159,7 +1188,32 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 ---
 
-### 6.7 Delete Employee (Soft Delete)
+### 6.7 Delete Employee Photo
+
+ลบรูปพนักงาน (เคลียร์ `photoId` ของ employee และลบไฟล์รูปเดิมออกจาก `employee_photo`)
+
+- **Endpoint:** `DELETE /employees/{id}/photo`
+- **Access:** Admin, HR
+- **Params:** `id` (UUIDv7)
+
+**Success Response:**
+
+- **Status:** `204 No Content`
+
+**Notes:**
+
+- เรียกซ้ำได้ (idempotent) — ถ้า employee ไม่มีรูปอยู่แล้วจะได้ `204` เช่นกัน
+- ระบบจะลบแถวใน `employee_photo` เฉพาะกรณีที่ไม่มี employee อื่นอ้างอิงรูปนั้นอยู่
+
+**Error Responses:**
+
+| **HTTP Status** | **Title** | **Description** |
+| --------------- | --------- | --------------- |
+| **404**         | Not Found | ไม่พบพนักงาน     |
+
+---
+
+### 6.8 Delete Employee (Soft Delete)
 
 ลบพนักงาน (สงวนสิทธิ์ให้ Admin เท่านั้น เพื่อความปลอดภัยของข้อมูล)
 
@@ -3413,6 +3467,7 @@ Logic (Database Trigger):
 ```
 
 - **การใช้งาน:** อัปโหลดโลโก้ → นำ `id` ไปใส่ `logoId` ตอน `POST /admin/payroll-org-profiles`
+- **Behavior:** ถ้าอัปโหลดไฟล์เดิมซ้ำ (checksum ซ้ำ) ระบบจะคืน `id` เดิมกลับมา (ไม่ error)
 - **400:** ไฟล์ใหญ่เกิน, ไม่ใช่ image หรือว่างเปล่า
 
 ### 17.6 Download Logo

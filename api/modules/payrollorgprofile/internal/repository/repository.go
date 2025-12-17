@@ -361,9 +361,19 @@ RETURNING
 func (r Repository) InsertLogo(ctx context.Context, input LogoRecord) (*LogoRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-INSERT INTO payroll_org_logo (file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by`
+WITH ins AS (
+  INSERT INTO payroll_org_logo (file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
+  VALUES ($1, $2, $3, $4, $5, $6)
+  ON CONFLICT (checksum_md5) DO NOTHING
+  RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+)
+SELECT id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+FROM ins
+UNION ALL
+SELECT id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+FROM payroll_org_logo
+WHERE checksum_md5 = $5
+LIMIT 1`
 
 	var rec LogoRecord
 	if err := db.GetContext(ctx, &rec, q,

@@ -56,10 +56,20 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	var updated *repository.DetailRecord
 	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
-		var err error
+		prev, err := h.repo.Get(ctxWithTx, cmd.ID)
+		if err != nil {
+			return err
+		}
+
 		updated, err = h.repo.Update(ctxWithTx, cmd.ID, recPayload, cmd.ActorID)
 		if err != nil {
 			return err
+		}
+
+		if prev.PhotoID != nil && !uuidPtrEqual(prev.PhotoID, updated.PhotoID) {
+			if err := h.repo.DeletePhoto(ctxWithTx, *prev.PhotoID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return err
+			}
 		}
 
 		hook(func(ctx context.Context) error {
@@ -120,6 +130,16 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	return &Response{Detail: dto.FromDetailRecord(*updated)}, nil
+}
+
+func uuidPtrEqual(a, b *uuid.UUID) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
 }
 
 func validatePayload(p RequestBody) error {

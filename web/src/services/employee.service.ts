@@ -214,4 +214,12 @@ export const employeeService = {
       return null;
     }
   },
+
+  deletePhoto: async (employeeId: string): Promise<void> => {
+    await axiosInstance.delete(`/employees/${employeeId}/photo`);
+    // Clear cache for this employee's photo if any
+    photoCache.forEach((_, key) => {
+      photoCache.delete(key);
+    });
+  },
 };

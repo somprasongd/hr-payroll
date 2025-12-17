@@ -18,6 +18,7 @@ import (
 	docupload "hrms/modules/employee/internal/feature/document/upload"
 	"hrms/modules/employee/internal/feature/get"
 	"hrms/modules/employee/internal/feature/list"
+	photodelete "hrms/modules/employee/internal/feature/photo/delete"
 	photodownload "hrms/modules/employee/internal/feature/photo/download"
 	photoupload "hrms/modules/employee/internal/feature/photo/upload"
 	"hrms/modules/employee/internal/feature/update"
@@ -59,6 +60,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 	mediator.Register[*accdelete.Command, mediator.NoResponse](accdelete.NewHandler(m.repo, eventBus))
 	mediator.Register[*photoupload.Command, *photoupload.Response](photoupload.NewHandler(m.repo, eventBus))
 	mediator.Register[*photodownload.Query, *photodownload.Response](photodownload.NewHandler(m.repo))
+	mediator.Register[*photodelete.Command, mediator.NoResponse](photodelete.NewHandler(m.repo, m.ctx.Transactor, eventBus))
 
 	// Document Type handlers
 	mediator.Register[*doctypelist.Query, *doctypelist.Response](doctypelist.NewHandler(m.repo))
@@ -92,6 +94,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	acclist.NewEndpoint(adminOrHR)
 	photodownload.NewEndpoint(photos)
 	photoupload.NewEndpoint(photos.Group("", middleware.RequireRoles("admin", "hr")))
+	photodelete.NewEndpoint(group.Group("/:id/photo", middleware.RequireRoles("admin", "hr")))
 
 	// Employee Documents - under /:id/documents
 	docs := group.Group("/:id/documents", middleware.RequireRoles("admin", "hr"))

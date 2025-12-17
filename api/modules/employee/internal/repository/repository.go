@@ -490,6 +490,46 @@ LIMIT 1`
 	return &rec, nil
 }
 
+func (r Repository) ClearEmployeePhoto(ctx context.Context, employeeID uuid.UUID, actor uuid.UUID) (*uuid.UUID, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+WITH prev AS (
+  SELECT id, photo_id
+  FROM employees
+  WHERE id = $2 AND deleted_at IS NULL
+)
+UPDATE employees e
+SET
+  photo_id = NULL,
+  updated_by = $1
+FROM prev
+WHERE e.id = prev.id
+RETURNING prev.photo_id`
+
+	var prevPhotoID *uuid.UUID
+	if err := db.GetContext(ctx, &prevPhotoID, q, actor, employeeID); err != nil {
+		return nil, err
+	}
+	return prevPhotoID, nil
+}
+
+func (r Repository) DeletePhoto(ctx context.Context, id uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `
+DELETE FROM employee_photo ep
+WHERE ep.id = $1
+  AND NOT EXISTS (SELECT 1 FROM employees e WHERE e.photo_id = ep.id)`
+
+	res, err := db.ExecContext(ctx, q, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
 func IsUniqueViolation(err error) bool {
 	var pqErr *pq.Error
 	if errors.As(err, &pqErr) {

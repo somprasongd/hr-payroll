@@ -23,6 +23,16 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Form,
   FormControl,
   FormDescription,
@@ -66,6 +76,8 @@ interface EmployeeFormProps {
   const [photoId, setPhotoId] = useState<string>(initialData?.photoId || '');
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [deletePhotoDialogOpen, setDeletePhotoDialogOpen] = useState(false);
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
   
   // Load existing photo preview
   React.useEffect(() => {
@@ -195,18 +207,51 @@ interface EmployeeFormProps {
       };
       reader.readAsDataURL(file);
     } catch (err) {
-      const apiError = err as Error;
-      setSubmitError(apiError.message || t('photoUploadError'));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const axiosError = err as any;
+      // Check for 409 Conflict (duplicate photo)
+      if (axiosError?.response?.status === 409) {
+        setSubmitError(t('photoDuplicateError'));
+      } else {
+        const apiError = err as Error;
+        setSubmitError(apiError.message || t('photoUploadError'));
+      }
     } finally {
       setUploadingPhoto(false);
     }
   };
 
   const handleRemovePhoto = () => {
-    setPhotoId('');
-    setPhotoPreview(null);
-    if (photoInputRef.current) {
-      photoInputRef.current.value = '';
+    // Open confirmation dialog if we're editing an existing employee with a photo
+    if (isEditing && initialData?.id && (photoId || initialData?.photoId)) {
+      setDeletePhotoDialogOpen(true);
+    } else {
+      // For new employees or locally uploaded photos not yet saved, just clear the state
+      setPhotoId('');
+      setPhotoPreview(null);
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDeletePhotoConfirm = async () => {
+    if (!initialData?.id) return;
+    
+    setDeletingPhoto(true);
+    try {
+      await employeeService.deletePhoto(initialData.id);
+      setPhotoId('');
+      setPhotoPreview(null);
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
+      setDeletePhotoDialogOpen(false);
+    } catch (err) {
+      console.error('Failed to delete photo:', err);
+      setSubmitError(t('photoDeleteError'));
+    } finally {
+      setDeletingPhoto(false);
     }
   };
 
@@ -365,6 +410,7 @@ interface EmployeeFormProps {
   }
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         {submitError && (
@@ -1077,5 +1123,32 @@ interface EmployeeFormProps {
         </div>
       </form>
     </Form>
+
+      {/* Photo Delete Confirmation Dialog */}
+      <AlertDialog open={deletePhotoDialogOpen} onOpenChange={setDeletePhotoDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('photoDeleteConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('photoDeleteConfirmDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingPhoto} type="button">
+              {tCommon('cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeletePhotoConfirm} 
+              disabled={deletingPhoto} 
+              className="bg-destructive hover:bg-destructive/90"
+              type="button"
+            >
+              {deletingPhoto && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {tCommon('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
