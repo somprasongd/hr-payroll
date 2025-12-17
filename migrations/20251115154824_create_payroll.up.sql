@@ -527,7 +527,7 @@ BEGIN
       FROM salary_advance
       WHERE employee_id = v_emp.id AND payroll_month_date = NEW.payroll_month_date AND status = 'pending' AND deleted_at IS NULL;
 
-      SELECT jsonb_agg(jsonb_build_object('txn_id', id, 'amount', amount, 'reason', 'Installment')), COALESCE(SUM(amount), 0)
+      SELECT jsonb_agg(jsonb_build_object('txn_id', id, 'value', amount, 'name', 'ผ่อนชำระงวด ' || TO_CHAR(payroll_month_date, 'MM/YYYY'))), COALESCE(SUM(amount), 0)
       INTO v_loan_repay_json, v_loan_total
       FROM debt_txn
       WHERE employee_id = v_emp.id AND txn_type = 'installment' AND payroll_month_date = NEW.payroll_month_date AND status = 'pending' AND deleted_at IS NULL;
@@ -780,8 +780,22 @@ BEGIN
     -- =================================================================
     -- 3. อัปเดต Debt Transaction -> Approved
     -- =================================================================
-    -- Logic: อนุมัติทั้ง installment (งวดผ่อน) และ repayment (หักโปะผ่านหน้าจอ)
-    -- หมายเหตุ: การ Update นี้จะไป Trigger 'tg_sync_loan_balance' ให้ทำงานต่อเอง
+    -- Logic 3.1: อัปเดท installment จาก loan_repayments JSON (ใช้ txn_id)
+    -- loan_repayments เก็บ [{txn_id, value, name}, ...]
+    -- หมายเหตุ: รายการที่บันทึกผ่าน web UI จะไม่มี txn_id จึงถูกข้ามโดย condition ด้านล่าง
+    UPDATE debt_txn dt
+    SET status = 'approved',
+        updated_at = now(),
+        updated_by = NEW.updated_by
+    FROM payroll_run_item pri,
+         jsonb_array_elements(pri.loan_repayments) AS elem
+    WHERE pri.run_id = NEW.id
+      AND elem->>'txn_id' IS NOT NULL
+      AND dt.id = (elem->>'txn_id')::uuid
+      AND dt.status = 'pending'
+      AND dt.deleted_at IS NULL;
+
+    -- Logic 3.2: อัปเดท repayment ที่สร้างผ่านหน้าจอ (ไม่มี txn_id ใน JSON)
     UPDATE debt_txn dt
     SET status = 'approved',
         updated_at = now(),
@@ -790,7 +804,7 @@ BEGIN
     WHERE pri.run_id = NEW.id
       AND dt.employee_id = pri.employee_id
       AND dt.payroll_month_date = NEW.payroll_month_date
-      AND dt.txn_type IN ('installment', 'repayment')
+      AND dt.txn_type = 'repayment'
       AND dt.status = 'pending'
       AND dt.deleted_at IS NULL;
 
@@ -1036,7 +1050,7 @@ BEGIN
     AND status = 'pending' AND deleted_at IS NULL;
 
   -- Debt Installments
-  SELECT jsonb_agg(jsonb_build_object('txn_id', id, 'amount', amount, 'reason', 'Installment')), COALESCE(SUM(amount), 0)
+  SELECT jsonb_agg(jsonb_build_object('txn_id', id, 'value', amount, 'name', 'ผ่อนชำระงวด ' || TO_CHAR(payroll_month_date, 'MM/YYYY'))), COALESCE(SUM(amount), 0)
   INTO v_loan_repay_json, v_loan_total
   FROM debt_txn
   WHERE employee_id = v_emp.id AND txn_type = 'installment' 

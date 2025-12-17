@@ -296,6 +296,42 @@ export function PayslipEditDialog({
     }
   }, [calculatedTax, isAutoTax, canEdit, detail?.withholdTax]);
 
+  // Calculate deduction total in real-time
+  const calculatedDeductionTotal = useMemo(() => {
+    if (!detail) return 0;
+    const othersDeductionSum = othersDeduction.reduce((sum, item) => sum + (item.value || 0), 0);
+    const loanRepaymentsSum = loanRepayments.reduce((sum, item) => sum + (item.value || 0), 0);
+    
+    return (
+      // Attendance deductions (from server)
+      detail.lateMinutesDeduction +
+      detail.leaveDaysDeduction +
+      detail.leaveDoubleDeduction +
+      detail.leaveHoursDeduction +
+      // Tax (from input state)
+      taxAmount +
+      // SSO (from server)
+      detail.ssoMonthAmount +
+      // PF (from input state)
+      pfAmount +
+      // Utilities (from input state)
+      waterAmount +
+      electricAmount +
+      internetAmount +
+      // Others deduction (from input state)
+      othersDeductionSum +
+      // Advance repay (from input state)
+      advanceRepay +
+      // Loan repayments (from input state)
+      loanRepaymentsSum
+    );
+  }, [detail, taxAmount, pfAmount, waterAmount, electricAmount, internetAmount, othersDeduction, advanceRepay, loanRepayments]);
+
+  // Calculate net pay in real-time
+  const calculatedNetPay = useMemo(() => {
+    return calculatedIncomeTotal - calculatedDeductionTotal;
+  }, [calculatedIncomeTotal, calculatedDeductionTotal]);
+
   // Reset auto tax when dialog opens
   useEffect(() => {
     if (open) {
@@ -982,15 +1018,20 @@ export function PayslipEditDialog({
                     <div>
                       <Label htmlFor="advanceRepay">{t('payslip.fields.advanceRepay')}</Label>
                       <div className="text-xs text-gray-400 mb-1">
-                        ยอดเบิก: {formatNumber(detail.advanceAmount)} | คงเหลือ: {formatNumber(detail.advanceDiffAmount)} (ยกไปเป็นยอดหนี้)
+                        ยอดเบิก: {formatNumber(detail.advanceAmount)} | คงเหลือ: {formatNumber(Math.max(0, (detail.advanceAmount || 0) - advanceRepay))} (ยกไปเป็นยอดหนี้)
                       </div>
                       <Input
                         id="advanceRepay"
                         type="number"
                         min="0"
+                        max={detail.advanceAmount || 0}
                         step="0.01"
                         value={advanceRepay}
-                        onChange={(e) => setAdvanceRepay(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          // Limit to not exceed advance amount
+                          setAdvanceRepay(Math.min(value, detail.advanceAmount || 0));
+                        }}
                         disabled={!canEdit || !detail.advanceAmount}
                         className="max-w-xs"
                       />
@@ -1002,7 +1043,11 @@ export function PayslipEditDialog({
                         <div>
                           <Label>{t('payslip.fields.loanRepayments')}</Label>
                           <div className="text-xs text-gray-400">
-                            หนี้คงค้าง: {formatNumber(detail.loanOutstandingPrev)} → {formatNumber(detail.loanOutstandingTotal)}
+                            หนี้คงค้าง: {formatNumber(detail.loanOutstandingPrev)} → {formatNumber(Math.max(0, 
+                              (detail.loanOutstandingPrev || 0) 
+                              + Math.max(0, (detail.advanceAmount || 0) - advanceRepay) // Add remaining advance
+                              - loanRepayments.reduce((sum, item) => sum + (item.value || 0), 0)
+                            ))}
                           </div>
                         </div>
                         {canEdit && !!detail.loanOutstandingPrev && (
@@ -1054,9 +1099,9 @@ export function PayslipEditDialog({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xl font-bold">{t('payslip.fields.netPay')}: </span>
-                  <span className="text-xl font-bold text-green-600">{formatNumber(detail.netPay)}</span>
+                  <span className="text-xl font-bold text-green-600">{formatNumber(calculatedNetPay)}</span>
                   <span className="text-sm ml-2">
-                    (<span className="text-green-600">{formatNumber(detail.incomeTotal)}</span> - <span className="text-red-600">{formatNumber(detail.deductionTotal)}</span>)
+                    (<span className="text-green-600">{formatNumber(calculatedIncomeTotal)}</span> - <span className="text-red-600">{formatNumber(calculatedDeductionTotal)}</span>)
                   </span>
                 </div>
                 <div className="flex gap-2">

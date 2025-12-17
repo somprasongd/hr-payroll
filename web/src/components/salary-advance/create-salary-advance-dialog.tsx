@@ -38,10 +38,10 @@ import { payrollService } from '@/services/payroll.service';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 
 const formSchema = z.object({
-  employeeId: z.string().min(1, { message: "Required" }),
-  amount: z.coerce.number().min(1, { message: "Amount must be greater than 0" }),
-  advanceDate: z.string().min(1, { message: "Required" }),
-  payrollMonthDate: z.string().min(1, { message: "Required" }),
+  employeeId: z.string().min(1, { message: "required" }),
+  amount: z.coerce.number().min(1, { message: "amountMinError" }),
+  advanceDate: z.string().min(1, { message: "required" }),
+  payrollMonthDate: z.string().min(1, { message: "required" }),
 });
 
 interface CreateSalaryAdvanceDialogProps {
@@ -154,7 +154,7 @@ export function CreateSalaryAdvanceDialog({
         title: tCommon('success'),
         description: t('createSuccess'),
       });
-      onOpenChange(false);
+      handleDialogClose(false);
       onSuccess();
     } catch (error: any) {
       console.error(error);
@@ -220,13 +220,21 @@ export function CreateSalaryAdvanceDialog({
             <FormField
               control={form.control}
               name="amount"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>{t('amount')}</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} value={field.value as number} />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <p className="text-sm font-medium text-destructive">
+                      {fieldState.error.message === 'amountMinError' 
+                        ? t('errors.amountMinError') 
+                        : fieldState.error.message === 'required'
+                        ? tCommon('required')
+                        : fieldState.error.message}
+                    </p>
+                  )}
                 </FormItem>
               )}
             />

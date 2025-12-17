@@ -64,8 +64,12 @@ export default function PayrollPage() {
     setCurrentPage(page);
   };
 
-  const handleCreateSuccess = () => {
-    fetchRuns();
+  const handleCreateSuccess = (cycleId?: string) => {
+    if (cycleId) {
+      router.push(`/payroll/${cycleId}`);
+    } else {
+      fetchRuns();
+    }
   };
 
   const clearFilters = () => {

@@ -44,7 +44,6 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
   const [isUpdating, setIsUpdating] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleStatusChange = async (status: 'approved' | 'rejected') => {
     try {
@@ -126,7 +125,7 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
                         </DropdownMenuItem>
                       </>
                     )}
-                    <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-red-600">
+                    <DropdownMenuItem onClick={onDelete} className="text-red-600">
                       <Trash2 className="mr-2 h-4 w-4" />
                       {t('actions.delete')}
                     </DropdownMenuItem>
@@ -161,7 +160,7 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
                 <Button
                   variant="destructive"
                   size="icon"
-                  onClick={() => setShowDeleteDialog(true)}
+                  onClick={onDelete}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -173,7 +172,7 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
             <Button
               variant="destructive"
               size="icon"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={onDelete}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -212,21 +211,7 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete confirmation dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('delete.description')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={onDelete} className="bg-red-600 hover:bg-red-700">
-              {t('actions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border bg-card text-card-foreground shadow p-6">

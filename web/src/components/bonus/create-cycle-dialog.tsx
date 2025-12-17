@@ -48,7 +48,7 @@ const createCycleSchema = z.object({
 type CreateCycleFormValues = z.infer<typeof createCycleSchema>;
 
 interface CreateCycleDialogProps {
-  onSuccess: () => void;
+  onSuccess: (cycleId: string) => void;
   trigger?: React.ReactNode;
 }
 
@@ -182,7 +182,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       // Convert month/year to payrollMonthDate (first day of the month)
       const payrollMonthDate = data.payrollMonthDate;
       
-      await bonusService.createCycle({
+      const createdCycle = await bonusService.createCycle({
         payrollMonthDate,
         bonusYear: data.bonusYear, // Send Gregorian year to API
         periodStartDate: data.periodStartDate,
@@ -200,7 +200,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
         periodStartDate: `${currentYear}-01-01`, // Reset to current year's start
         periodEndDate: `${currentYear}-12-31`,   // Reset to current year's end
       });
-      onSuccess();
+      onSuccess(createdCycle.id);
     } catch (error: any) {
       if (error.response?.status === 409) {
         const detail = error.response?.data?.detail || error.response?.data?.title || '';

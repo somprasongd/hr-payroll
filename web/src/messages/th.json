@@ -920,7 +920,8 @@
     "noEmployeeFound": "ไม่พบพนักงาน",
     "selectEmployeeToView": "กรุณาเลือกพนักงานเพื่อดูข้อมูล",
     "errors": {
-      "invalidPayrollMonth": "งวดเงินเดือนที่เลือกได้รับการอนุมัติแล้ว ไม่สามารถเลือกงวดนี้ได้"
+      "invalidPayrollMonth": "งวดเงินเดือนที่เลือกได้รับการอนุมัติแล้ว ไม่สามารถเลือกงวดนี้ได้",
+      "amountMinError": "จำนวนเงินต้องมากกว่า 0"
     }
   },
   "Bonus": {
@@ -1041,7 +1042,8 @@
       "installments": "งวดการผ่อนชำระ",
       "outstandingBalance": "ยอดคงเหลือ",
       "currentOutstanding": "ยอดหนี้สะสม",
-      "newOutstanding": "หนี้คงเหลือ"
+      "newOutstanding": "หนี้คงเหลือ",
+      "month": "เดือน"
     },
     "types": {
       "loan": "เงินกู้",

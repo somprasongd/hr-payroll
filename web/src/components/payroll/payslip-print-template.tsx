@@ -379,7 +379,7 @@ const SlipHalf = ({
             <div style={styles.textCenter}>ชม./นาที <span style={{ color: '#6b7280', fontSize: '7px' }}>နာရီ/မိနစ်</span></div>
             <div style={styles.textRight}>บาท <span style={{ color: '#6b7280', fontSize: '7px' }}>ဘတ်</span></div>
           </div>
-          <div style={styles.gridRow}><RowLabel th="ขาดงาน" my="အလုပ်ပျက်" /><div style={styles.textCenter}>{payslip.leaveDaysQty > 0 ? payslip.leaveDaysQty : '-'}</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.leaveDaysDeduction)}</div></div>
+          <div style={styles.gridRow}><RowLabel th="ขาดงาน" my="အလုပ်ပျက်" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>0.00</div></div>
           <div style={styles.gridRow}><RowLabel th="หักลาหยุด" my="လုပ်ခချိန်ခွဲခြင်း" /><div style={styles.textCenter}>{payslip.leaveDaysQty > 0 ? payslip.leaveDaysQty : '-'}</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.leaveDaysDeduction)}</div></div>
           <div style={styles.gridRow}><RowLabel th="หักลาหยุด 2" my="လစ်ဒိတ်ဝေခွေခြင်း" /><div style={styles.textCenter}>{payslip.leaveDoubleQty > 0 ? payslip.leaveDoubleQty : '-'}</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.leaveDoubleDeduction)}</div></div>
           <div style={styles.gridRow}><RowLabel th="ลาชั่วโมง" my="နှုတ်ခိုင်းနာရီခြင်း" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>{payslip.leaveHoursQty > 0 ? payslip.leaveHoursQty : '-'}</div><div style={styles.textRight}>{formatNumber(payslip.leaveHoursDeduction)}</div></div>

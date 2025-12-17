@@ -102,8 +102,8 @@ export default function BonusListPage() {
     }
   };
 
-  const handleCreateSuccess = () => {
-    fetchCycles();
+  const handleCreateSuccess = (cycleId: string) => {
+    router.push(`/bonuses/${cycleId}`);
   };
 
   const columns = [

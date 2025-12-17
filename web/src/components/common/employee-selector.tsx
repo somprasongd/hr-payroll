@@ -120,6 +120,7 @@ export function EmployeeSelector({
   return (
     <div className="flex items-center gap-2 w-full">
       <Button
+        type="button"
         variant="outline"
         size="icon"
         onClick={handlePrevious}
@@ -204,6 +205,7 @@ export function EmployeeSelector({
       </div>
 
       <Button
+        type="button"
         variant="outline"
         size="icon"
         onClick={handleNext}

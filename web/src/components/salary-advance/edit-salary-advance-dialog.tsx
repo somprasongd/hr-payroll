@@ -36,9 +36,9 @@ import {
 import { MonthPicker } from "@/components/ui/month-picker";
 
 const formSchema = z.object({
-  amount: z.coerce.number().min(1, { message: "Amount must be greater than 0" }),
-  advanceDate: z.string().min(1, { message: "Required" }),
-  payrollMonthDate: z.string().min(1, { message: "Required" }),
+  amount: z.coerce.number().min(1, { message: "amountMinError" }),
+  advanceDate: z.string().min(1, { message: "required" }),
+  payrollMonthDate: z.string().min(1, { message: "required" }),
 });
 
 interface EditSalaryAdvanceDialogProps {
@@ -164,13 +164,21 @@ export function EditSalaryAdvanceDialog({
             <FormField
               control={form.control}
               name="amount"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>{t('amount')}</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} value={field.value as number} />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.error && (
+                    <p className="text-sm font-medium text-destructive">
+                      {fieldState.error.message === 'amountMinError' 
+                        ? t('errors.amountMinError') 
+                        : fieldState.error.message === 'required'
+                        ? tCommon('required')
+                        : fieldState.error.message}
+                    </p>
+                  )}
                 </FormItem>
               )}
             />

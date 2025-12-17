@@ -924,7 +924,8 @@
     "noEmployeeFound": "No employee found",
     "selectEmployeeToView": "Please select an employee to view data",
     "errors": {
-      "invalidPayrollMonth": "The selected payroll cycle does not exist or has not been approved yet. Please select a different cycle."
+      "invalidPayrollMonth": "The selected payroll cycle does not exist or has not been approved yet. Please select a different cycle.",
+      "amountMinError": "Amount must be greater than 0"
     }
   },
   "Bonus": {
@@ -1044,7 +1045,8 @@
       "installments": "Installments",
       "outstandingBalance": "Outstanding Balance",
       "currentOutstanding": "Current Outstanding",
-      "newOutstanding": "New Outstanding"
+      "newOutstanding": "New Outstanding",
+      "month": "Month"
     },
     "types": {
       "loan": "Loan",
