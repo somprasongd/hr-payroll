@@ -5,31 +5,31 @@ test.describe('Filters and Navigation', () => {
 
   test('ควรเข้าถึง Dashboard ได้', async ({ page }) => {
     await page.goto('/th/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByRole('heading').first()).toBeVisible();
   });
 
   test('ควรเข้าถึง Employees ได้', async ({ page }) => {
     await page.goto('/th/employees');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('table')).toBeVisible();
   });
 
   test('ควรเข้าถึง Payroll ได้', async ({ page }) => {
     await page.goto('/th/payroll');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByRole('heading').first()).toBeVisible();
   });
 
   test('ควรเข้าถึง Debt ได้', async ({ page }) => {
     await page.goto('/th/debt');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByRole('heading').first()).toBeVisible();
   });
 
   test('ควรเข้าถึง Settings ได้', async ({ page }) => {
     await page.goto('/th/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByRole('heading').first()).toBeVisible();
   });
 });
