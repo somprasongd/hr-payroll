@@ -181,9 +181,9 @@ export function AttendanceChartWidget() {
             <TabsTrigger value="ot">{t('attendance.ot')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="late">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[300px] w-full">
+            {activeTab === 'late' && (
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="period" />
@@ -193,12 +193,10 @@ export function AttendanceChartWidget() {
                   <Bar dataKey="lateCount" name={t('attendance.count')} fill="#ef4444" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          </TabsContent>
+            )}
 
-          <TabsContent value="leave">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+            {activeTab === 'leave' && (
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="period" />
@@ -210,12 +208,10 @@ export function AttendanceChartWidget() {
                   <Bar dataKey="leaveHours" name={t('attendance.leaveHours')} fill="#d97706" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          </TabsContent>
+            )}
 
-          <TabsContent value="ot">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+            {activeTab === 'ot' && (
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="period" />
@@ -225,8 +221,8 @@ export function AttendanceChartWidget() {
                   <Bar dataKey="otHours" name={t('attendance.hours')} fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          </TabsContent>
+            )}
+          </div>
         </Tabs>
       </CardContent>
     </Card>

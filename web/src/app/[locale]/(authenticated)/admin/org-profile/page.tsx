@@ -128,7 +128,7 @@ export default function OrgProfilePage() {
       setActiveProfile(profile);
       // Populate form with current data
       setFormData({
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: profile.startDate || new Date().toISOString().split('T')[0],
         companyName: profile.companyName || '',
         addressLine1: profile.addressLine1 || '',
         addressLine2: profile.addressLine2 || '',
