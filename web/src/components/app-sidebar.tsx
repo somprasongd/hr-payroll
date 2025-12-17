@@ -210,7 +210,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarMenu>
-              <Collapsible asChild defaultOpen={isActive('/admin') || isActive('/settings')} className="group/collapsible">
+              <Collapsible asChild defaultOpen={isActive('/admin')} className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton tooltip="Admin">
@@ -221,20 +221,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/users')}>
-                          <Link href="/admin/users">
-                            <span>{tMenu('users')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/activity-logs')}>
-                          <Link href="/admin/activity-logs">
-                            <span>{tMenu('activityLogs')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild isActive={isActive('/admin/org-profile')}>
                           <Link href="/admin/org-profile">
@@ -264,8 +250,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/settings')}>
-                          <Link href="/settings">
+                        <SidebarMenuSubButton asChild isActive={isActive('/admin/users')}>
+                          <Link href="/admin/users">
+                            <span>{tMenu('users')}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/admin/activity-logs')}>
+                          <Link href="/admin/activity-logs">
+                            <span>{tMenu('activityLogs')}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/admin/settings')}>
+                          <Link href="/admin/settings">
                             <span>{tMenu('settings')}</span>
                           </Link>
                         </SidebarMenuSubButton>
