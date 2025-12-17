@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -233,9 +233,15 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
           </DialogHeader>
 
           {submitError && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertDescription>{submitError}</AlertDescription>
-            </Alert>
+            <DismissibleAlert
+              variant="error"
+              className="mt-4"
+              onDismiss={() => setSubmitError(null)}
+              autoDismiss={false}
+              showCloseButton={true}
+            >
+              {submitError}
+            </DismissibleAlert>
           )}
 
           <div className="grid gap-4 py-4">

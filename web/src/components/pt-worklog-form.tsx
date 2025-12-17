@@ -9,8 +9,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { DateInput } from '@/components/ui/date-input';
 import { TimeInput } from '@/components/ui/time-input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import { Employee } from '@/services/employee.service';
 import { CreatePTWorklogRequest, UpdatePTWorklogRequest, PTWorklog } from '@/services/pt-worklog.service';
 import { format } from 'date-fns';
@@ -209,10 +208,14 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
 
           <div className="grid gap-4 py-4">
             {submitError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{submitError}</AlertDescription>
-              </Alert>
+              <DismissibleAlert
+                variant="error"
+                onDismiss={() => setSubmitError(null)}
+                autoDismiss={false}
+                showCloseButton={true}
+              >
+                {submitError}
+              </DismissibleAlert>
             )}
             {mode === 'create' && (
               <div className="grid gap-2">

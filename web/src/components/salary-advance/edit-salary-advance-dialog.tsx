@@ -22,8 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 import { useToast } from "@/hooks/use-toast";
 import { salaryAdvanceService, SalaryAdvance } from '@/services/salary-advance-service';
 import { payrollService } from '@/services/payroll.service';
@@ -145,11 +144,14 @@ export function EditSalaryAdvanceDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>{tCommon('error')}</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <DismissibleAlert
+                variant="error"
+                title={tCommon('error')}
+                onDismiss={() => setError('')}
+                autoDismiss={false}
+              >
+                {error}
+              </DismissibleAlert>
             )}
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">

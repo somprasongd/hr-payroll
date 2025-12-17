@@ -30,8 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 import { useToast } from "@/hooks/use-toast";
 import { salaryAdvanceService } from '@/services/salary-advance-service';
 import { employeeService } from '@/services/employee.service';
@@ -191,11 +190,14 @@ export function CreateSalaryAdvanceDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>{tCommon('error')}</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <DismissibleAlert
+                variant="error"
+                title={tCommon('error')}
+                onDismiss={() => setError('')}
+                autoDismiss={false}
+              >
+                {error}
+              </DismissibleAlert>
             )}
             <FormField
               control={form.control}

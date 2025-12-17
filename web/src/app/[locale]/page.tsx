@@ -18,13 +18,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuthStore } from "@/store/auth-store"
 import { useState, useEffect, useRef } from "react"
 import { useTranslations, useLocale } from 'next-intl';
-import { User, Lock, Eye, EyeOff, Users, AlertCircle } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Users } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRouter, usePathname } from "@/i18n/routing";
 import { authService } from "@/services/auth.service";
 import { orgProfileService } from "@/services/org-profile.service";
 import { ApiError } from "@/lib/api-client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 
 export default function LoginPage() {
   const t = useTranslations('Index');
@@ -256,10 +256,14 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <DismissibleAlert
+              variant="error"
+              className="mb-4"
+              onDismiss={() => setError('')}
+              autoDismiss={false}
+            >
+              {error}
+            </DismissibleAlert>
           )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

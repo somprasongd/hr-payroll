@@ -36,7 +36,7 @@ export default function DocumentTypesPage() {
           <FileText className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground hidden sm:block">
               {t('description')}
             </p>
           </div>

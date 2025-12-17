@@ -6,9 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
-import { Loader2, AlertCircle, Upload, X, User } from 'lucide-react';
+import { Loader2, Upload, X, User } from 'lucide-react';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -368,13 +368,14 @@ interface EmployeeFormProps {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         {submitError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              {submitError}
-            </AlertDescription>
-          </Alert>
+          <DismissibleAlert
+            variant="error"
+            title="Error"
+            onDismiss={() => setSubmitError(null)}
+            autoDismiss={false}
+          >
+            {submitError}
+          </DismissibleAlert>
         )}
         
         {/* Dynamic Header Info */}

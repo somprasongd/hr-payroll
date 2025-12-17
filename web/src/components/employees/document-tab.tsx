@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Upload, Download, Trash2, FileText, Image, AlertCircle, Loader2, Eye, Calendar } from 'lucide-react';
+import { Upload, Download, Trash2, FileText, Image, Loader2, Eye, Calendar } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -258,10 +258,13 @@ export function DocumentTab({ employeeId }: DocumentTabProps) {
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <DismissibleAlert
+        variant="error"
+        onDismiss={() => setError(null)}
+        autoDismiss={false}
+      >
+        {error}
+      </DismissibleAlert>
     );
   }
 
@@ -374,10 +377,13 @@ export function DocumentTab({ employeeId }: DocumentTabProps) {
           </DialogHeader>
 
           {uploadError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{uploadError}</AlertDescription>
-            </Alert>
+            <DismissibleAlert
+              variant="error"
+              onDismiss={() => setUploadError(null)}
+              autoDismiss={false}
+            >
+              {uploadError}
+            </DismissibleAlert>
           )}
 
           <div className="space-y-4">

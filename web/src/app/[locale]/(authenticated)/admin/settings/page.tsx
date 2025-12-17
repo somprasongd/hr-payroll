@@ -8,9 +8,7 @@ import {
   Save, 
   Plus, 
   History, 
-  AlertCircle,
   Loader2,
-  CheckCircle,
   Info,
   Trash2
 } from "lucide-react";
@@ -39,6 +37,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert";
+import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 import {
   Dialog,
   DialogContent,
@@ -281,8 +280,7 @@ export default function SettingsPage() {
       await fetchEffectiveConfig();
       await fetchConfigHistory();
       
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // Clear success message after 3 seconds (handled by auto-dismiss)
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Failed to save configuration');
@@ -372,7 +370,7 @@ export default function SettingsPage() {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             {t('title')}
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-600 mt-1 hidden sm:block">
             {t('description')}
           </p>
         </div>
@@ -424,19 +422,24 @@ export default function SettingsPage() {
 
       {/* Alerts */}
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t('error')}</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <DismissibleAlert
+          variant="error"
+          title={t('error')}
+          onDismiss={() => setError(null)}
+          autoDismiss={false}
+        >
+          {error}
+        </DismissibleAlert>
       )}
 
       {success && (
-        <Alert className="bg-green-50 border-green-200 text-green-900">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-900">{t('success')}</AlertTitle>
-          <AlertDescription className="text-green-800">{success}</AlertDescription>
-        </Alert>
+        <DismissibleAlert
+          variant="success"
+          title={t('success')}
+          onDismiss={() => setSuccess(null)}
+        >
+          {success}
+        </DismissibleAlert>
       )}
 
       {/* Current Active Config Info */}

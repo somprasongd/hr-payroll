@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import { format, addDays, startOfYear, endOfYear } from 'date-fns';
-import { CalendarIcon, Loader2, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +29,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { salaryRaiseService } from '@/services/salary-raise.service';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 
 const createCycleSchema = z.object({
   periodStartDate: z.string().min(1, 'Start date is required'),
@@ -132,10 +132,14 @@ export function CreateCycleDialog({ onSuccess, latestCycleEndDate, trigger }: Cr
         </DialogHeader>
         <Form {...form}>
           {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <DismissibleAlert
+              variant="error"
+              className="mb-4"
+              onDismiss={() => setError(null)}
+              autoDismiss={false}
+            >
+              {error}
+            </DismissibleAlert>
           )}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField

@@ -7,9 +7,7 @@ import { ApiError } from '@/lib/api-client';
 import { 
   Save, 
   History, 
-  AlertCircle,
   Loader2,
-  CheckCircle,
   Info,
   Upload,
   X,
@@ -39,6 +37,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from '@/components/ui/alert';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import {
   Dialog,
   DialogContent,
@@ -322,19 +321,19 @@ export default function OrgProfilePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Building2 className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-            <p className="text-muted-foreground">{t('description')}</p>
+            <p className="text-muted-foreground hidden sm:block">{t('description')}</p>
           </div>
         </div>
         <Dialog open={showHistory} onOpenChange={setShowHistory}>
           <DialogTrigger asChild>
-            <Button variant="outline" onClick={() => fetchProfileHistory()}>
-              <History className="h-4 w-4 mr-2" />
-              {t('viewHistory')}
+            <Button variant="outline" className="gap-2" onClick={() => fetchProfileHistory()}>
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('viewHistory')}</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -395,19 +394,24 @@ export default function OrgProfilePage() {
 
       {/* Error/Success alerts */}
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t('error')}</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <DismissibleAlert
+          variant="error"
+          title={t('error')}
+          onDismiss={() => setError(null)}
+          autoDismiss={false}
+        >
+          {error}
+        </DismissibleAlert>
       )}
 
       {success && (
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-600">{t('success')}</AlertTitle>
-          <AlertDescription className="text-green-600">{success}</AlertDescription>
-        </Alert>
+        <DismissibleAlert
+          variant="success"
+          title={t('success')}
+          onDismiss={() => setSuccess(null)}
+        >
+          {success}
+        </DismissibleAlert>
       )}
 
       {/* Tabs */}

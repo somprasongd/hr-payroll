@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import { bonusService } from '@/services/bonus-service';
 import { useToast } from '@/hooks/use-toast';
 import { MonthPicker } from "@/components/ui/month-picker";
@@ -232,10 +233,13 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {errorMessage && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{errorMessage}</AlertDescription>
-              </Alert>
+              <DismissibleAlert
+                variant="error"
+                onDismiss={() => setErrorMessage(null)}
+                autoDismiss={false}
+              >
+                {errorMessage}
+              </DismissibleAlert>
             )}
             
             <div className="grid grid-cols-2 gap-4">

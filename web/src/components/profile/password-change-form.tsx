@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authService } from '@/services/auth.service';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 
 export function PasswordChangeForm() {
   const t = useTranslations('Profile.password');
@@ -75,17 +75,26 @@ export function PasswordChangeForm() {
       </CardHeader>
       <CardContent>
         {successMessage && (
-          <Alert className="mb-4 bg-green-50 text-green-900 border-green-200">
-            <AlertTitle>{t('successTitle')}</AlertTitle>
-            <AlertDescription>{successMessage}</AlertDescription>
-          </Alert>
+          <DismissibleAlert
+            variant="success"
+            title={t('successTitle')}
+            className="mb-4"
+            onDismiss={() => setSuccessMessage(null)}
+          >
+            {successMessage}
+          </DismissibleAlert>
         )}
         
         {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>{t('errorTitle')}</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <DismissibleAlert
+            variant="error"
+            title={t('errorTitle')}
+            className="mb-4"
+            onDismiss={() => setError(null)}
+            autoDismiss={false}
+          >
+            {error}
+          </DismissibleAlert>
         )}
 
         <Form {...form}>
