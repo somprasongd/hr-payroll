@@ -12,6 +12,8 @@
 # Cache and temp
 .cache/
 .tmp/
+.gocache
+.gomodcache
 
 # Dependencies
 node_modules/
