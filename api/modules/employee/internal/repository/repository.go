@@ -87,6 +87,7 @@ type ListResult struct {
 
 type PhotoRecord struct {
 	ID            uuid.UUID `db:"id"`
+	CompanyID     uuid.UUID `db:"company_id"`
 	FileName      string    `db:"file_name"`
 	ContentType   string    `db:"content_type"`
 	FileSizeBytes int64     `db:"file_size_bytes"`
@@ -306,7 +307,7 @@ func (r Repository) DeleteAccum(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r Repository) Create(ctx context.Context, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
+func (r Repository) Create(ctx context.Context, payload DetailRecord, companyID, branchID, actor uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO employees (
@@ -320,6 +321,7 @@ INSERT INTO employees (
   withhold_tax,
   allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
   allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
+	company_id, branch_id,
   created_by, updated_by
 ) VALUES (
   :employee_number, :title_id, :first_name, :last_name, :nickname,
@@ -332,6 +334,7 @@ INSERT INTO employees (
   :withhold_tax,
   :allow_housing, :allow_water, :allow_electric, :allow_internet, :allow_doctor_fee,
   :allow_attendance_bonus_nolate, :allow_attendance_bonus_noleave,
+  :company_id, :branch_id,
   :created_by, :updated_by
 ) RETURNING *`
 
@@ -379,6 +382,8 @@ INSERT INTO employees (
 		"allow_doctor_fee":               payload.AllowDoctorFee,
 		"allow_attendance_bonus_nolate":  payload.AllowAttendanceBonusNoLate,
 		"allow_attendance_bonus_noleave": payload.AllowAttendanceBonusNoLeave,
+		"company_id":                     companyID,
+		"branch_id":                      branchID,
 		"created_by":                     actor,
 		"updated_by":                     actor,
 	}
@@ -498,13 +503,24 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 func (r Repository) InsertPhoto(ctx context.Context, input PhotoRecord) (*PhotoRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-INSERT INTO employee_photo (file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by`
+WITH ins AS (
+  INSERT INTO employee_photo (company_id, file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
+  ON CONFLICT (company_id, checksum_md5) DO NOTHING
+  RETURNING id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+)
+SELECT id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+FROM ins
+UNION ALL
+SELECT id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+FROM employee_photo
+WHERE company_id = $1 AND checksum_md5 = $6
+LIMIT 1`
 
 	var rec PhotoRecord
 	if err := db.GetContext(ctx, &rec,
 		q,
+		input.CompanyID,
 		input.FileName,
 		input.ContentType,
 		input.FileSizeBytes,
@@ -517,15 +533,15 @@ RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at
 	return &rec, nil
 }
 
-func (r Repository) GetPhoto(ctx context.Context, id uuid.UUID) (*PhotoRecord, error) {
+func (r Repository) GetPhoto(ctx context.Context, id, companyID uuid.UUID) (*PhotoRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-SELECT id, file_name, content_type, file_size_bytes, data, checksum_md5, created_at, created_by
+SELECT id, company_id, file_name, content_type, file_size_bytes, data, checksum_md5, created_at, created_by
 FROM employee_photo
-WHERE id = $1
+WHERE id = $1 AND company_id = $2
 LIMIT 1`
 	var rec PhotoRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, id, companyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil

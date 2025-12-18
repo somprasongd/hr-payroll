@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 )
@@ -30,7 +31,16 @@ func NewEndpoint(router fiber.Router) {
 		if err != nil {
 			return errs.BadRequest("invalid id")
 		}
-		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{ID: id})
+
+		tenant, ok := contextx.TenantFromContext(c.Context())
+		if !ok {
+			return errs.Unauthorized("missing tenant context")
+		}
+
+		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
+			ID:        id,
+			CompanyID: tenant.CompanyID,
+		})
 		if err != nil {
 			return err
 		}

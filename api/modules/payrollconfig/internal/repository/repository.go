@@ -164,7 +164,7 @@ LIMIT 1`
 	return &rec, nil
 }
 
-func (r Repository) Create(ctx context.Context, payload Record, actor uuid.UUID) (*Record, error) {
+func (r Repository) Create(ctx context.Context, payload Record, companyID, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO payroll_config (
@@ -191,11 +191,12 @@ INSERT INTO payroll_config (
   late_rate_per_minute,
   late_grace_minutes,
   note,
+  company_id,
   created_by,
   updated_by
 ) VALUES (
   daterange($1, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$22,$23,$24,$25,$26
 )
 RETURNING
   id,
@@ -225,6 +226,7 @@ RETURNING
   late_rate_per_minute,
   late_grace_minutes,
   note,
+  company_id,
   created_at,
   updated_at`
 
@@ -253,7 +255,7 @@ RETURNING
 		payload.LateRatePerMinute,
 		payload.LateGraceMinutes,
 		payload.Note,
-		actor,
+		companyID,
 		actor,
 	)
 	if err != nil {

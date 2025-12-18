@@ -21,8 +21,10 @@ import (
 )
 
 type Command struct {
-	Payload RequestBody
-	ActorID uuid.UUID
+	Payload   RequestBody
+	CompanyID uuid.UUID
+	BranchID  uuid.UUID
+	ActorID   uuid.UUID
 }
 
 type Response struct {
@@ -71,7 +73,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var created *repository.DetailRecord
 	err = h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = h.repo.Create(ctxWithTx, recPayload, cmd.ActorID)
+		created, err = h.repo.Create(ctxWithTx, recPayload, cmd.CompanyID, cmd.BranchID, cmd.ActorID)
 		if err != nil {
 			return err
 		}

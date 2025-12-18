@@ -411,7 +411,7 @@ func (r Repository) InsertLogo(ctx context.Context, input LogoRecord) (*LogoReco
 WITH ins AS (
   INSERT INTO payroll_org_logo (company_id, file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
   VALUES ($1, $2, $3, $4, $5, $6, $7)
-  ON CONFLICT (checksum_md5) DO NOTHING
+  ON CONFLICT (company_id, checksum_md5) DO NOTHING
   RETURNING id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
 )
 SELECT id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by

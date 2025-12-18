@@ -124,14 +124,14 @@ func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Cycle, []Item, erro
 	return &c, items, nil
 }
 
-func (r Repository) Create(ctx context.Context, payrollMonth time.Time, bonusYear int, start, end time.Time, actor uuid.UUID) (*Cycle, error) {
+func (r Repository) Create(ctx context.Context, payrollMonth time.Time, bonusYear int, start, end time.Time, companyID, branchID, actor uuid.UUID) (*Cycle, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-INSERT INTO bonus_cycle (payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_by, updated_by)
-VALUES ($1, $2, $3, $4,'pending',$5,$5)
+INSERT INTO bonus_cycle (payroll_month_date, bonus_year, period_start_date, period_end_date, status, company_id, branch_id, created_by, updated_by)
+VALUES ($1, $2, $3, $4,'pending',$5,$6,$7,$7)
 RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
 	var c Cycle
-	if err := db.GetContext(ctx, &c, q, payrollMonth, bonusYear, start, end, actor); err != nil {
+	if err := db.GetContext(ctx, &c, q, payrollMonth, bonusYear, start, end, companyID, branchID, actor); err != nil {
 		return nil, err
 	}
 	return &c, nil

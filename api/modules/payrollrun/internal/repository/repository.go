@@ -160,14 +160,14 @@ LIMIT 1`, netPayExpr, deductionExpr)
 	return &run, nil
 }
 
-func (r Repository) Create(ctx context.Context, run Run, actor uuid.UUID) (*Run, error) {
+func (r Repository) Create(ctx context.Context, run Run, companyID, branchID, actor uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO payroll_run (
   payroll_month_date, period_start_date, pay_date,
   social_security_rate_employee, social_security_rate_employer,
-  status, created_by, updated_by
-) VALUES ($1,$2,$3,$4,$5,'pending',$6,$6)
+  status, company_id, branch_id, created_by, updated_by
+) VALUES ($1,$2,$3,$4,$5,'pending',$6,$7,$8,$8)
 RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
@@ -177,7 +177,7 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
 	if err := db.GetContext(ctx, &out, q,
 		run.PayrollMonth, run.PeriodStart, run.PayDate,
 		run.SSORateEmp, run.SSORateEmployer,
-		actor,
+		companyID, branchID, actor,
 	); err != nil {
 		return nil, err
 	}
