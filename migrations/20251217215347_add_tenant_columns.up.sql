@@ -395,6 +395,30 @@ BEGIN
   END IF;
 END $$;
 
+-- ===== 19) Employee Photo table (if exists) =====
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'employee_photo') THEN
+    ALTER TABLE employee_photo ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
+    
+    -- Copy company_id from employees who have this photo
+    UPDATE employee_photo ep SET company_id = e.company_id
+    FROM employees e WHERE e.photo_id = ep.id AND ep.company_id IS NULL;
+    
+    -- Fallback to default for orphan photos
+    UPDATE employee_photo SET company_id = (SELECT company_id FROM _tenant_defaults LIMIT 1) 
+    WHERE company_id IS NULL;
+    
+    ALTER TABLE employee_photo ALTER COLUMN company_id SET NOT NULL;
+    CREATE INDEX IF NOT EXISTS employee_photo_company_idx ON employee_photo (company_id);
+    
+    -- Update checksum unique constraint to be per-company
+    DROP INDEX IF EXISTS employee_photo_checksum_uk;
+    CREATE UNIQUE INDEX IF NOT EXISTS employee_photo_company_checksum_uk 
+      ON employee_photo(company_id, checksum_md5);
+  END IF;
+END $$;
+
 -- =========================================
 -- TRIGGERS: Auto-populate tenant columns on INSERT
 -- =========================================
@@ -521,79 +545,11 @@ BEFORE INSERT ON payroll_accumulation FOR EACH ROW
 EXECUTE FUNCTION set_tenant_from_employee();
 
 -- =========================================
--- TRIGGERS: Auto-populate tenant columns using DEFAULT company/branch
--- For tables without employee_id reference
+-- NOTE: set_default_tenant() function and triggers are NOT created.
+-- API now explicitly passes company_id and branch_id for all INSERT operations.
+-- This ensures data isolation in multi-tenant environment.
+-- If company_id/branch_id is not provided, the NOT NULL constraint will catch it.
 -- =========================================
-
--- Generic function to set default tenant (for non-employee tables)
-CREATE OR REPLACE FUNCTION set_default_tenant() RETURNS trigger AS $$
-DECLARE
-  v_company_id UUID;
-  v_branch_id UUID;
-BEGIN
-  -- Get default company and branch
-  SELECT c.id, b.id INTO v_company_id, v_branch_id
-  FROM companies c
-  LEFT JOIN branches b ON b.company_id = c.id AND b.is_default = TRUE
-  WHERE c.code = 'DEFAULT'
-  LIMIT 1;
-  
-  IF NEW.company_id IS NULL THEN
-    NEW.company_id := v_company_id;
-  END IF;
-  
-  -- Only set branch_id if the column exists in the table
-  IF TG_TABLE_NAME IN ('payroll_run', 'bonus_cycle') THEN
-    IF NEW.branch_id IS NULL THEN
-      NEW.branch_id := v_branch_id;
-    END IF;
-  END IF;
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Apply to payroll_run
-DROP TRIGGER IF EXISTS tg_payroll_run_set_tenant ON payroll_run;
-CREATE TRIGGER tg_payroll_run_set_tenant
-BEFORE INSERT ON payroll_run FOR EACH ROW
-EXECUTE FUNCTION set_default_tenant();
-
--- Apply to payroll_config
-DROP TRIGGER IF EXISTS tg_payroll_config_set_tenant ON payroll_config;
-CREATE TRIGGER tg_payroll_config_set_tenant
-BEFORE INSERT ON payroll_config FOR EACH ROW
-EXECUTE FUNCTION set_default_tenant();
-
--- Apply to bonus_cycle
-DROP TRIGGER IF EXISTS tg_bonus_cycle_set_tenant ON bonus_cycle;
-CREATE TRIGGER tg_bonus_cycle_set_tenant
-BEFORE INSERT ON bonus_cycle FOR EACH ROW
-EXECUTE FUNCTION set_default_tenant();
-
--- Apply to salary_raise_cycle (only company_id)
-DROP TRIGGER IF EXISTS tg_salary_raise_cycle_set_tenant ON salary_raise_cycle;
-CREATE TRIGGER tg_salary_raise_cycle_set_tenant
-BEFORE INSERT ON salary_raise_cycle FOR EACH ROW
-EXECUTE FUNCTION set_default_tenant();
-
--- Apply to department (only company_id)
-DROP TRIGGER IF EXISTS tg_department_set_tenant ON department;
-CREATE TRIGGER tg_department_set_tenant
-BEFORE INSERT ON department FOR EACH ROW
-EXECUTE FUNCTION set_default_tenant();
-
--- Apply to employee_position (only company_id)
-DROP TRIGGER IF EXISTS tg_employee_position_set_tenant ON employee_position;
-CREATE TRIGGER tg_employee_position_set_tenant
-BEFORE INSERT ON employee_position FOR EACH ROW
-EXECUTE FUNCTION set_default_tenant();
-
--- Apply to employees (uses default until multi-company support)
-DROP TRIGGER IF EXISTS tg_employees_set_tenant ON employees;
-CREATE TRIGGER tg_employees_set_tenant
-BEFORE INSERT ON employees FOR EACH ROW
-EXECUTE FUNCTION set_default_tenant();
 
 -- Cleanup temp table
 DROP TABLE IF EXISTS _tenant_defaults;
@@ -602,3 +558,4 @@ DROP TABLE IF EXISTS _tenant_defaults;
 SET session_replication_role = origin;
 
 -- Done: Tenant columns added to all tables successfully
+

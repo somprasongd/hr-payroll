@@ -22,6 +22,8 @@ type Command struct {
 	BonusYear    *int   `json:"bonusYear,omitempty"`
 	PeriodStart  string `json:"periodStartDate"`
 	PeriodEnd    string `json:"periodEndDate"`
+	CompanyID    uuid.UUID
+	BranchID     uuid.UUID
 	ActorID      uuid.UUID
 	Repo         repository.Repository
 	Tx           transactor.Transactor
@@ -86,7 +88,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var cycle *repository.Cycle
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedBonusYear, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.ActorID)
+		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedBonusYear, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.CompanyID, cmd.BranchID, cmd.ActorID)
 		return err
 	}); err != nil {
 		switch {

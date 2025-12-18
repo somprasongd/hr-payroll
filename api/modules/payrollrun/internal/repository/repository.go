@@ -160,14 +160,14 @@ LIMIT 1`, netPayExpr, deductionExpr)
 	return &run, nil
 }
 
-func (r Repository) Create(ctx context.Context, run Run, actor uuid.UUID) (*Run, error) {
+func (r Repository) Create(ctx context.Context, run Run, companyID, branchID, actor uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO payroll_run (
   payroll_month_date, period_start_date, pay_date,
   social_security_rate_employee, social_security_rate_employer,
-  status, created_by, updated_by
-) VALUES ($1,$2,$3,$4,$5,'pending',$6,$6)
+  status, company_id, branch_id, created_by, updated_by
+) VALUES ($1,$2,$3,$4,$5,'pending',$6,$7,$8,$8)
 RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
@@ -177,7 +177,7 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
 	if err := db.GetContext(ctx, &out, q,
 		run.PayrollMonth, run.PeriodStart, run.PayDate,
 		run.SSORateEmp, run.SSORateEmployer,
-		actor,
+		companyID, branchID, actor,
 	); err != nil {
 		return nil, err
 	}
@@ -252,48 +252,48 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 }
 
 type Item struct {
-	ID                      uuid.UUID `db:"id"`
-	RunID                   uuid.UUID `db:"run_id"`
-	EmployeeID              uuid.UUID `db:"employee_id"`
-	EmployeeName            string    `db:"employee_name"`
-	EmployeeTypeName        *string   `db:"employee_type_name"`
-	EmployeeTypeCode        string    `db:"employee_type_code"`
-	EmployeeNumber          string    `db:"employee_number"`
+	ID                      uuid.UUID  `db:"id"`
+	RunID                   uuid.UUID  `db:"run_id"`
+	EmployeeID              uuid.UUID  `db:"employee_id"`
+	EmployeeName            string     `db:"employee_name"`
+	EmployeeTypeName        *string    `db:"employee_type_name"`
+	EmployeeTypeCode        string     `db:"employee_type_code"`
+	EmployeeNumber          string     `db:"employee_number"`
 	PhotoID                 *uuid.UUID `db:"photo_id"`
-	DepartmentName          *string   `db:"department_name"`
-	PositionName            *string   `db:"position_name"`
-	BankName                *string   `db:"bank_name"`
-	BankAccount             *string   `db:"bank_account_no"`
-	SalaryAmount            float64   `db:"salary_amount"`
-	PTHoursWorked           float64   `db:"pt_hours_worked"`
-	PTHourlyRate            float64   `db:"pt_hourly_rate"`
-	OtHours                 float64   `db:"ot_hours"`
-	OtAmount                float64   `db:"ot_amount"`
-	BonusAmount             float64   `db:"bonus_amount"`
-	LeaveCompensationAmount float64   `db:"leave_compensation_amount"`
-	IncomeTotal             float64   `db:"income_total"`
-	IncomeAccumPrev         float64   `db:"income_accum_prev"`
-	IncomeAccumTotal        float64   `db:"income_accum_total"`
-	LeaveDaysQty            float64   `db:"leave_days_qty"`
-	LeaveDaysDeduction      float64   `db:"leave_days_deduction"`
-	LateMinutesQty          int       `db:"late_minutes_qty"`
-	LateMinutesDeduction    float64   `db:"late_minutes_deduction"`
-	SsoMonthAmount          float64   `db:"sso_month_amount"`
-	TaxMonthAmount          float64   `db:"tax_month_amount"`
-	NetPay                  float64   `db:"net_pay"`
-	Status                  string    `db:"status"`
-	DeductionTotal          float64   `db:"deduction_total"`
-	AdvanceAmount           float64   `db:"advance_amount"`
-	LoanOutstandingTotal    float64   `db:"loan_outstanding_total"`
-	DoctorFee               float64   `db:"doctor_fee"`
-	SsoContribute           bool      `db:"sso_contribute"`
-	ProvidentFundContrib    bool      `db:"provident_fund_contribute"`
-	WithholdTax             bool      `db:"withhold_tax"`
-	AllowHousing            bool      `db:"allow_housing"`
-	AllowWater              bool      `db:"allow_water"`
-	AllowElectric           bool      `db:"allow_electric"`
-	AllowInternet           bool      `db:"allow_internet"`
-	AllowDoctorFee          bool      `db:"allow_doctor_fee"`
+	DepartmentName          *string    `db:"department_name"`
+	PositionName            *string    `db:"position_name"`
+	BankName                *string    `db:"bank_name"`
+	BankAccount             *string    `db:"bank_account_no"`
+	SalaryAmount            float64    `db:"salary_amount"`
+	PTHoursWorked           float64    `db:"pt_hours_worked"`
+	PTHourlyRate            float64    `db:"pt_hourly_rate"`
+	OtHours                 float64    `db:"ot_hours"`
+	OtAmount                float64    `db:"ot_amount"`
+	BonusAmount             float64    `db:"bonus_amount"`
+	LeaveCompensationAmount float64    `db:"leave_compensation_amount"`
+	IncomeTotal             float64    `db:"income_total"`
+	IncomeAccumPrev         float64    `db:"income_accum_prev"`
+	IncomeAccumTotal        float64    `db:"income_accum_total"`
+	LeaveDaysQty            float64    `db:"leave_days_qty"`
+	LeaveDaysDeduction      float64    `db:"leave_days_deduction"`
+	LateMinutesQty          int        `db:"late_minutes_qty"`
+	LateMinutesDeduction    float64    `db:"late_minutes_deduction"`
+	SsoMonthAmount          float64    `db:"sso_month_amount"`
+	TaxMonthAmount          float64    `db:"tax_month_amount"`
+	NetPay                  float64    `db:"net_pay"`
+	Status                  string     `db:"status"`
+	DeductionTotal          float64    `db:"deduction_total"`
+	AdvanceAmount           float64    `db:"advance_amount"`
+	LoanOutstandingTotal    float64    `db:"loan_outstanding_total"`
+	DoctorFee               float64    `db:"doctor_fee"`
+	SsoContribute           bool       `db:"sso_contribute"`
+	ProvidentFundContrib    bool       `db:"provident_fund_contribute"`
+	WithholdTax             bool       `db:"withhold_tax"`
+	AllowHousing            bool       `db:"allow_housing"`
+	AllowWater              bool       `db:"allow_water"`
+	AllowElectric           bool       `db:"allow_electric"`
+	AllowInternet           bool       `db:"allow_internet"`
+	AllowDoctorFee          bool       `db:"allow_doctor_fee"`
 }
 
 type ItemListResult struct {

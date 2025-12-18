@@ -26,6 +26,8 @@ type Command struct {
 	PayDateRaw      string                `json:"payDate"`
 	SSORateEmp      float64               `json:"socialSecurityRateEmployee"`
 	SSORateEmployer float64               `json:"socialSecurityRateEmployer"`
+	CompanyID       uuid.UUID             `json:"-"`
+	BranchID        uuid.UUID             `json:"-"`
 	ActorID         uuid.UUID             `json:"-"`
 	Repo            repository.Repository `json:"-"`
 	Tx              transactor.Transactor `json:"-"`
@@ -75,7 +77,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var created *repository.Run
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = cmd.Repo.Create(ctxTx, run, cmd.ActorID)
+		created, err = cmd.Repo.Create(ctxTx, run, cmd.CompanyID, cmd.BranchID, cmd.ActorID)
 		return err
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to create payroll run", zap.Error(err))

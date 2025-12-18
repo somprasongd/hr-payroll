@@ -155,7 +155,7 @@ LIMIT 1`
 	return &rec, nil
 }
 
-func (r Repository) Create(ctx context.Context, payload Record, actor uuid.UUID) (*Record, error) {
+func (r Repository) Create(ctx context.Context, payload Record, companyID, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO payroll_config (
@@ -179,11 +179,12 @@ INSERT INTO payroll_config (
   tax_progressive_brackets,
   withholding_tax_rate_service,
   note,
+  company_id,
   created_by,
   updated_by
 ) VALUES (
   daterange($1, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$22
 )
 RETURNING
   id,
@@ -235,7 +236,7 @@ RETURNING
 		payload.TaxProgressiveBrackets,
 		payload.WithholdingTaxRateService,
 		payload.Note,
-		actor,
+		companyID,
 		actor,
 	)
 	if err != nil {

@@ -31,6 +31,14 @@ func TenantFromContext(ctx context.Context) (TenantInfo, bool) {
 	return TenantInfo{}, false
 }
 
+// FirstBranchID returns the first branch ID for single-branch operations
+func (t TenantInfo) FirstBranchID() uuid.UUID {
+	if len(t.BranchIDs) > 0 {
+		return t.BranchIDs[0]
+	}
+	return uuid.Nil
+}
+
 // BranchIDsToStrings converts branch UUIDs to strings for SQL
 func (t TenantInfo) BranchIDsToStrings() []string {
 	result := make([]string, len(t.BranchIDs))

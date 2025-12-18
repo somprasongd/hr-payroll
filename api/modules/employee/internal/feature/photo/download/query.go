@@ -14,7 +14,8 @@ import (
 )
 
 type Query struct {
-	ID uuid.UUID
+	ID        uuid.UUID
+	CompanyID uuid.UUID
 }
 
 type Response struct {
@@ -32,7 +33,7 @@ func NewHandler(repo repository.Repository) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	rec, err := h.repo.GetPhoto(ctx, q.ID)
+	rec, err := h.repo.GetPhoto(ctx, q.ID, q.CompanyID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NotFound("photo not found")

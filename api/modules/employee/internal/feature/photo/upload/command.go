@@ -25,6 +25,7 @@ type Command struct {
 	ContentType string
 	Data        []byte
 	Size        int64
+	CompanyID   uuid.UUID
 	ActorID     uuid.UUID
 }
 
@@ -62,6 +63,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	checksum := hex.EncodeToString(sum[:])
 
 	rec, err := h.repo.InsertPhoto(ctx, repository.PhotoRecord{
+		CompanyID:     cmd.CompanyID,
 		FileName:      cmd.FileName,
 		ContentType:   cmd.ContentType,
 		FileSizeBytes: cmd.Size,

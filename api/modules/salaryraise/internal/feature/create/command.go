@@ -20,6 +20,8 @@ import (
 type Command struct {
 	PeriodStart string                `json:"periodStartDate"`
 	PeriodEnd   string                `json:"periodEndDate"`
+	CompanyID   uuid.UUID             `json:"-"`
+	BranchID    uuid.UUID             `json:"-"`
 	ActorID     uuid.UUID             `json:"-"`
 	Repo        repository.Repository `json:"-"`
 	Tx          transactor.Transactor `json:"-"`
@@ -66,7 +68,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var cycle *repository.Cycle
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.ActorID)
+		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.CompanyID, cmd.BranchID, cmd.ActorID)
 		return err
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to create salary raise cycle", zap.Error(err))
