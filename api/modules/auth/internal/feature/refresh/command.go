@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
 	"hrms/modules/auth/internal/repository"
 	"hrms/modules/auth/internal/service"
 	"hrms/shared/common/errs"
@@ -15,6 +14,8 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+
+	"go.uber.org/zap"
 )
 
 type Command struct {
@@ -51,6 +52,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	claims, err := h.tokenSvc.ParseRefreshToken(cmd.RefreshToken)
 	if err != nil {
+		logger.FromContext(ctx).Warn("refresh token validation failed", zap.Error(err))
 		return nil, errs.Unauthorized("invalid or expired refresh token")
 	}
 
@@ -58,12 +60,17 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	rec, err := h.repo.GetRefreshToken(ctx, tokenHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			logger.FromContext(ctx).Warn("refresh token not found in db", zap.String("hash", tokenHash))
 			return nil, errs.Unauthorized("refresh token not found")
 		}
 		logger.FromContext(ctx).Error("failed to validate refresh token", zap.Error(err))
 		return nil, errs.Internal("failed to validate refresh token")
 	}
 	if rec.RevokedAt.Valid || time.Now().After(rec.ExpiresAt) {
+		logger.FromContext(ctx).Warn("refresh token revoked or expired",
+			zap.Bool("revoked", rec.RevokedAt.Valid),
+			zap.Time("expiresAt", rec.ExpiresAt),
+			zap.Time("now", time.Now()))
 		return nil, errs.Unauthorized("refresh token is revoked or expired")
 	}
 

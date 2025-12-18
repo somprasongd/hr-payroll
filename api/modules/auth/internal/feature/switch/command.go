@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/auth/internal/repository"
+	"hrms/modules/auth/internal/service"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/jwt"
 	"hrms/shared/common/logger"
@@ -112,10 +113,18 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Internal("failed to generate access token")
 	}
 
-	refreshToken, _, err := h.tokenSvc.GenerateRefreshToken(cmd.UserID, cmd.Username, cmd.Role)
+	refreshToken, refreshExp, err := h.tokenSvc.GenerateRefreshToken(cmd.UserID, cmd.Username, cmd.Role)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to generate refresh token", zap.Error(err))
 		return nil, errs.Internal("failed to generate refresh token")
+	}
+
+	// Persist new refresh token
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+		return h.repo.InsertRefreshToken(ctxTx, service.HashRefreshToken(refreshToken), cmd.UserID, refreshExp)
+	}); err != nil {
+		logger.FromContext(ctx).Error("failed to persist refresh token", zap.Error(err))
+		return nil, errs.Internal("failed to persist refresh token")
 	}
 
 	return &Response{

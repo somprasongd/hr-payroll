@@ -245,9 +245,17 @@ func (r Repository) Create(ctx context.Context, payload UpsertPayload, actor uui
 
 	db := r.dbCtx(ctx)
 	const q = `
+WITH next_version AS (
+  SELECT
+    pg_advisory_xact_lock(hashtext($2::text)::bigint) AS locked,
+    COALESCE(MAX(version_no), 0) + 1 AS version_no
+  FROM payroll_org_profile
+  WHERE company_id = $2
+)
 INSERT INTO payroll_org_profile (
   effective_daterange,
   company_id,
+  version_no,
   company_name,
   address_line1,
   address_line2,
@@ -264,11 +272,13 @@ INSERT INTO payroll_org_profile (
   status,
   created_by,
   updated_by
-) VALUES (
+) OVERRIDING SYSTEM VALUE
+SELECT
   daterange($1::date, NULL, '[)'),
   $2,
+  next_version.version_no,
   $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::config_status, 'active'::config_status),$17,$17
-)
+FROM next_version
 RETURNING
   id,
   company_id,

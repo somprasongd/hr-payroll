@@ -82,8 +82,17 @@ export const useAuthStore = create<AuthState>()(
         returnUrl: state.returnUrl,
         returnUrlUserId: state.returnUrlUserId,
       }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state) {
+          console.error('[AuthStore] Hydration failed:', error);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth-storage');
+          }
+          // Force hydration state to allow app to load (in unauthenticated state)
+          useAuthStore.setState({ _hasHydrated: true });
+        } else {
+          state.setHasHydrated(true);
+        }
       },
     }
   )
