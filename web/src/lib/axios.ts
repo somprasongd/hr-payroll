@@ -42,7 +42,12 @@ const processQueue = (error: any, token: string | null = null) => {
 // Request interceptor - Add token and tenant headers to requests
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    let token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    // Fallback to store if not in localStorage (e.g. after hydration but before manual sync?)
+    if (!token) {
+       token = useAuthStore.getState().token;
+    }
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -143,9 +148,14 @@ axiosInstance.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+    let refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
 
     if (!refreshToken) {
+      refreshToken = useAuthStore.getState().refreshToken;
+    }
+
+    if (!refreshToken) {
+      console.log('[Axios] No refresh token available in storage or store, performing logout.');
       isRefreshing = false;
       if (typeof window !== 'undefined') {
         const { logout, setReturnUrl, user } = useAuthStore.getState();
@@ -195,6 +205,17 @@ axiosInstance.interceptors.response.use(
       isRefreshing = false;
       return axiosInstance(originalRequest);
     } catch (refreshError) {
+      // Log detailed refresh error for debugging
+      if (axios.isAxiosError(refreshError)) {
+        console.error('[Axios] Refresh token failed:', {
+          status: refreshError.response?.status,
+          data: refreshError.response?.data,
+          message: refreshError.message
+        });
+      } else {
+        console.error('[Axios] Refresh token failed with non-axios error:', refreshError);
+      }
+
       processQueue(refreshError, null);
       isRefreshing = false;
 

@@ -104,8 +104,16 @@ export const useTenantStore = create<TenantState>()(
         availableCompanies: state.availableCompanies,
         availableBranches: state.availableBranches,
       }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state) {
+          console.error('[TenantStore] Hydration failed:', error);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('tenant-storage');
+          }
+          useTenantStore.setState({ _hasHydrated: true });
+        } else {
+          state.setHasHydrated(true);
+        }
       },
     }
   )
