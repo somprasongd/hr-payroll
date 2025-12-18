@@ -33,13 +33,15 @@ func (s *LogSubscriber) HandleLogActivity(ev eventbus.Event) {
 	if e.Details != nil && len(e.Details) > 0 {
 		details, _ = json.Marshal(e.Details)
 	}
-	s.createLog(e.ActorID, e.Action, e.EntityName, e.EntityID, details, e.Timestamp)
+	s.createLog(e.ActorID, e.CompanyID, e.BranchID, e.Action, e.EntityName, e.EntityID, details, e.Timestamp)
 }
 
-func (s *LogSubscriber) createLog(userID uuid.UUID, action, entityName, entityID string, details []byte, timestamp time.Time) {
+func (s *LogSubscriber) createLog(userID uuid.UUID, companyID, branchID *uuid.UUID, action, entityName, entityID string, details []byte, timestamp time.Time) {
 	ctx := context.Background()
 	log := &entity.ActivityLog{
 		UserID:    userID,
+		CompanyID: companyID,
+		BranchID:  branchID,
 		Action:    action,
 		Entity:    entityName,
 		EntityID:  entityID,

@@ -1,6 +1,6 @@
 # HR Management System - API Specification
 
-Version: 1.1.0 (Revised Schema UUIDv7)
+Version: 1.2.0 (Multi-Tenancy Support)
 
 Base URL: <https://api.hrmsystem.com/v1>
 
@@ -15,7 +15,38 @@ Content-Type: application/json
 - **ID Format:** ใช้ **UUID v7** เป็น Primary Key (`id`) สำหรับทุก Resource แทน integer และ public_id เดิม
 - **Date-only Fields:** ช่องที่เป็นวันที่อย่างเดียวส่งและรับเป็น String รูปแบบ `YYYY-MM-DD` (ไม่พ่วงเวลา)
 
-### 1.2 Error Response Format (RFC 7807)
+### 1.2 Multi-Tenancy
+
+ระบบรองรับการแบ่งแยกข้อมูลระหว่างบริษัท (Company) และสาขา (Branch) ผ่าน PostgreSQL Row-Level Security (RLS)
+
+**Key Concepts:**
+
+- **Company Isolation:** ข้อมูลทุกตารางที่เกี่ยวข้องกับ tenant จะมี `company_id` เพื่อแยกแยะ
+- **Branch Isolation:** ข้อมูลที่ต้องแยกตามสาขาจะมี `branch_id` เพิ่มเติม
+- **User Roles:** ผู้ใช้สามารถมี role ที่แตกต่างกันในแต่ละบริษัท (ผ่าน `user_company_roles`)
+- **Branch Access:** ผู้ใช้สามารถเข้าถึงได้เฉพาะสาขาที่ได้รับสิทธิ์ (ผ่าน `user_branch_access`)
+- **Superadmin:** role พิเศษที่สามารถเข้าถึงข้อมูลข้ามบริษัทได้
+
+**Tenant Tables:**
+
+| Category    | Tables                                                                      |
+| ----------- | --------------------------------------------------------------------------- |
+| Core        | `companies`, `branches`, `user_company_roles`, `user_branch_access`         |
+| Employee    | `employees`, `department`, `employee_position`                              |
+| Payroll     | `payroll_config`, `payroll_run`, `payroll_run_item`, `payroll_accumulation` |
+| Worklog     | `worklog_ft`, `worklog_pt`, `payout_pt`, `payout_pt_item`                   |
+| Bonus/Raise | `bonus_cycle`, `bonus_item`, `salary_raise_cycle`, `salary_raise_item`      |
+| Financial   | `salary_advance`, `debt_txn`                                                |
+
+**Automatic Tenant Assignment:**
+
+เมื่อสร้างข้อมูลใหม่ ระบบจะ auto-assign tenant columns ผ่าน database triggers:
+
+- Record ที่มี `employee_id` → copy จาก `employees`
+- Record ที่เป็น child → copy จาก parent table
+- Record อื่นๆ → ใช้ DEFAULT company/branch
+
+### 1.3 Error Response Format (RFC 7807)
 
 เมื่อเกิด Error ระบบจะคืนค่า HTTP Status Code พร้อม Body ในรูปแบบ `application/problem+json`:
 
@@ -31,7 +62,7 @@ Content-Type: application/json
 
 ---
 
-### 1.3 Pagination Defaults
+### 1.4 Pagination Defaults
 
 - `page` เริ่มต้นที่ 1 ถ้าไม่ส่ง หรือส่งค่าน้อยกว่า 1 ระบบจะรีเซ็ตเป็น 1
 - `limit` เริ่มต้นที่ 20 ถ้าไม่ส่ง หรือส่งค่าน้อยกว่าหรือเท่ากับ 0 ระบบจะรีเซ็ตเป็น 20

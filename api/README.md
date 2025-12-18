@@ -106,3 +106,30 @@ Access Swagger UI at: `http://localhost:3001/swagger/`
 | `payrollrun`    | Payroll run processing        |
 | `payoutpt`      | Part-time payouts             |
 | `masterdata`    | Master data (banks, etc.)     |
+| `company`       | Company & Branch management   |
+
+## 🏢 Multi-Tenancy
+
+The API supports multi-tenant isolation at the database level:
+
+### Row-Level Security (RLS)
+
+All tenant-specific tables have `company_id` and/or `branch_id` columns with RLS policies that restrict access based on the user's tenant context.
+
+### Automatic Tenant Assignment
+
+BEFORE INSERT triggers automatically populate tenant columns:
+
+- **Employee-related tables**: Copy from `employees` table
+- **Root tables**: Use DEFAULT company/branch
+- **Item tables**: Copy from parent table (e.g., `payroll_run_item` → `payroll_run`)
+
+### Tenant Helper Functions
+
+```sql
+-- Check if company matches user's tenant
+tenant_company_matches(company_id UUID) → BOOLEAN
+
+-- Check if branch is accessible by user
+tenant_branch_allowed(branch_id UUID) → BOOLEAN
+```

@@ -3,10 +3,13 @@ package feature
 import (
 	"context"
 
-	"go.uber.org/zap"
 	"hrms/modules/masterdata/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type Query struct {
@@ -34,6 +37,12 @@ func NewHandler(repo repository.Repository) *Handler {
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	resp := &Response{}
 
+	// Get company ID from tenant context
+	var companyID uuid.UUID
+	if tenant, ok := contextx.TenantFromContext(ctx); ok {
+		companyID = tenant.CompanyID
+	}
+
 	loadAll := q.Only == ""
 	if loadAll || q.Only == "person_titles" {
 		data, err := h.repo.PersonTitles(ctx)
@@ -60,7 +69,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		resp.IDDocumentTypes = data
 	}
 	if loadAll || q.Only == "departments" {
-		data, err := h.repo.Departments(ctx)
+		data, err := h.repo.Departments(ctx, companyID)
 		if err != nil {
 			logger.FromContext(ctx).Error("failed to load departments", zap.Error(err))
 			return nil, err
@@ -68,7 +77,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		resp.Departments = data
 	}
 	if loadAll || q.Only == "employee_positions" {
-		data, err := h.repo.EmployeePositions(ctx)
+		data, err := h.repo.EmployeePositions(ctx, companyID)
 		if err != nil {
 			logger.FromContext(ctx).Error("failed to load employee positions", zap.Error(err))
 			return nil, err

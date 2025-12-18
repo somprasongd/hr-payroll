@@ -2,11 +2,13 @@
  * Axios Instance with Interceptors
  * 
  * Handles automatic token refresh when access token expires
+ * Automatically adds tenant headers (X-Company-ID, X-Branch-ID) to requests
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_CONFIG } from '@/config/api';
 import { useAuthStore } from '@/store/auth-store';
+import { useTenantStore } from '@/store/tenant-store';
 import { removeLocalePrefix } from '@/lib/i18n-utils';
 
 // Create axios instance
@@ -37,7 +39,7 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request interceptor - Add token to requests
+// Request interceptor - Add token and tenant headers to requests
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -46,12 +48,31 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Add tenant headers from store
+    if (typeof window !== 'undefined' && config.headers) {
+      const tenantState = useTenantStore.getState();
+      const { currentCompany, currentBranches } = tenantState;
+      
+      if (currentCompany?.id) {
+        config.headers['X-Company-ID'] = currentCompany.id;
+      }
+      
+      if (currentBranches && currentBranches.length > 0) {
+        // Join multiple branch IDs with comma
+        config.headers['X-Branch-ID'] = currentBranches.map(b => b.id).join(',');
+      }
+    }
+
     // Debug logging in development
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.log('[Axios Request]', {
         method: config.method?.toUpperCase(),
         url: config.url,
         hasToken: !!token,
+        tenantHeaders: {
+          companyId: config.headers?.['X-Company-ID'],
+          branchId: config.headers?.['X-Branch-ID'],
+        },
       });
     }
 
@@ -68,8 +89,11 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Skip 401 handling for login and refresh requests
-    if (originalRequest?.url?.includes('/auth/login') || originalRequest?.url?.includes('/auth/refresh')) {
+    // Skip 401 handling for login, refresh, and switch requests
+    // (switch needs special handling since it's called right after login)
+    if (originalRequest?.url?.includes('/auth/login') || 
+        originalRequest?.url?.includes('/auth/refresh') ||
+        originalRequest?.url?.includes('/auth/switch')) {
       return Promise.reject(error);
     }
 

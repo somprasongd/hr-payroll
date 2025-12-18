@@ -3,9 +3,11 @@ package transactor
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/logger"
 )
 
@@ -64,6 +66,42 @@ func (t *sqlTransactor) WithinTransaction(ctx context.Context, txFunc func(ctxWi
 	tx, err := currentDB.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	setLocalConfig := func(name, value string) error {
+		_, err := tx.ExecContext(ctx, "SELECT set_config($1, $2, true)", name, value)
+		return err
+	}
+
+	// Set RLS session variables from tenant context
+	if tenant, ok := contextx.TenantFromContext(ctx); ok {
+		// Set company ID for RLS
+		if err := setLocalConfig("app.current_company_id", tenant.CompanyID.String()); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("failed to set tenant company: %w", err)
+		}
+		// Set allowed branches for RLS
+		if err := setLocalConfig("app.allowed_branches", tenant.BranchIDsCSV()); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("failed to set tenant branches: %w", err)
+		}
+		// Set admin flag for RLS
+		if err := setLocalConfig("app.is_admin", strconv.FormatBool(tenant.IsAdmin)); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("failed to set tenant admin flag: %w", err)
+		}
+	}
+
+	// Set user context for RLS (always, even without tenant)
+	if user, ok := contextx.UserFromContext(ctx); ok {
+		if err := setLocalConfig("app.user_role", user.Role); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("failed to set user role: %w", err)
+		}
+		if err := setLocalConfig("app.current_user_id", user.ID.String()); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("failed to set current user id: %w", err)
+		}
 	}
 
 	var hooks []PostCommitHook

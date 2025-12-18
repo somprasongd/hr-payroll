@@ -11,13 +11,15 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
 type Query struct {
-	Page  int
-	Limit int
-	Role  string
+	Page      int
+	Limit     int
+	Role      string
+	CompanyID uuid.UUID
 }
 
 type Response struct {
@@ -44,7 +46,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	}
 	q.Role = strings.TrimSpace(q.Role)
 
-	result, err := h.repo.ListUsers(ctx, q.Page, q.Limit, q.Role)
+	result, err := h.repo.ListUsers(ctx, q.Page, q.Limit, q.Role, q.CompanyID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list users", zap.Error(err))
 		return nil, errs.Internal("failed to list users")

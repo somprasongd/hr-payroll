@@ -20,21 +20,24 @@ import (
 )
 
 type CreateCommand struct {
-	Code    string `json:"code"`
-	Name    string `json:"name"`
-	ActorID uuid.UUID
+	Code      string `json:"code"`
+	Name      string `json:"name"`
+	CompanyID uuid.UUID
+	ActorID   uuid.UUID
 }
 
 type UpdateCommand struct {
-	ID      uuid.UUID
-	Code    string `json:"code"`
-	Name    string `json:"name"`
-	ActorID uuid.UUID
+	ID        uuid.UUID
+	Code      string `json:"code"`
+	Name      string `json:"name"`
+	CompanyID uuid.UUID
+	ActorID   uuid.UUID
 }
 
 type DeleteCommand struct {
-	ID      uuid.UUID
-	ActorID uuid.UUID
+	ID        uuid.UUID
+	CompanyID uuid.UUID
+	ActorID   uuid.UUID
 }
 
 type Response struct {
@@ -81,7 +84,7 @@ func (h *CreateHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Respon
 		return nil, errs.BadRequest("code and name are required")
 	}
 
-	rec, err := h.repo.CreateEmployeePosition(ctx, code, name, cmd.ActorID)
+	rec, err := h.repo.CreateEmployeePosition(ctx, code, name, cmd.CompanyID, cmd.ActorID)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, errs.Conflict("code already exists")
@@ -110,7 +113,7 @@ func (h *UpdateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Respon
 		return nil, errs.BadRequest("code and name are required")
 	}
 
-	rec, err := h.repo.UpdateEmployeePosition(ctx, cmd.ID, code, name, cmd.ActorID)
+	rec, err := h.repo.UpdateEmployeePosition(ctx, cmd.ID, code, name, cmd.CompanyID, cmd.ActorID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NotFound("employee position not found")
@@ -138,7 +141,7 @@ func (h *UpdateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Respon
 }
 
 func (h *DeleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
-	if err := h.repo.SoftDeleteEmployeePosition(ctx, cmd.ID, cmd.ActorID); err != nil {
+	if err := h.repo.SoftDeleteEmployeePosition(ctx, cmd.ID, cmd.CompanyID, cmd.ActorID); err != nil {
 		if err == sql.ErrNoRows {
 			return mediator.NoResponse{}, errs.NotFound("employee position not found")
 		}

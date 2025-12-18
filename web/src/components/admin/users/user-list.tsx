@@ -11,12 +11,13 @@ import {
 } from '@/components/ui/dialog';
 import { GenericDataTable } from '@/components/common/generic-data-table';
 import { Button } from '@/components/ui/button';
-import { Shield, Key, Trash } from 'lucide-react';
+import { Shield, Key, Trash, GitBranch } from 'lucide-react';
 import { userService, User } from '@/services/user.service';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { PasswordResetDialog } from './password-reset-dialog';
 import { RoleEditDialog } from './role-edit-dialog';
+import { Link } from '@/i18n/routing';
 
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
@@ -116,6 +117,12 @@ export function UserList() {
   ];
 
   const actions = [
+    {
+      label: t('actions.manageBranches'),
+      icon: <GitBranch className="h-4 w-4" />,
+      href: (user: User) => `/admin/users/${user.id}/branches`,
+      condition: () => true,
+    },
     {
       label: t('actions.editRole'),
       icon: <Shield className="h-4 w-4" />,
