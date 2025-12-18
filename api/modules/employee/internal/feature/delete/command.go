@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -34,7 +35,12 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	if err := h.repo.SoftDelete(ctx, cmd.ID, cmd.Actor); err != nil {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	if err := h.repo.SoftDelete(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("employee not found")
 		}
@@ -44,6 +50,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "DELETE",
 		EntityName: "EMPLOYEE",
 		EntityID:   cmd.ID.String(),

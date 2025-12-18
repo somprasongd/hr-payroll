@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/dashboard/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -44,13 +45,18 @@ func NewEmployeeSummaryHandler() *employeeSummaryHandler {
 }
 
 func (h *employeeSummaryHandler) Handle(ctx context.Context, q *EmployeeSummaryQuery) (*EmployeeSummaryResponse, error) {
-	summary, err := q.Repo.GetEmployeeSummary(ctx)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	summary, err := q.Repo.GetEmployeeSummary(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get employee summary", zap.Error(err))
 		return nil, errs.Internal("failed to get employee summary")
 	}
 
-	deptCounts, err := q.Repo.GetEmployeesByDepartment(ctx)
+	deptCounts, err := q.Repo.GetEmployeesByDepartment(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get employees by department", zap.Error(err))
 		return nil, errs.Internal("failed to get employees by department")

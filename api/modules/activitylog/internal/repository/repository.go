@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
+
 	"hrms/modules/activitylog/internal/entity"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -48,12 +51,22 @@ func (r *Repository) CreateLog(ctx context.Context, log *entity.ActivityLog) err
 	).Scan(&log.ID)
 }
 
-func (r *Repository) ListLogs(ctx context.Context, filter ListFilter, page, limit int) ([]entity.ActivityLog, int, error) {
+func (r *Repository) ListLogs(ctx context.Context, tenant contextx.TenantInfo, filter ListFilter, page, limit int) ([]entity.ActivityLog, int, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 
 	var where []string
 	var args []interface{}
+
+	// Company Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("l.company_id = $%d", len(args)))
+
+	// Branch Filter
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("l.branch_id = ANY($%d)", len(args)))
+	}
 
 	if filter.Action != "" {
 		args = append(args, filter.Action)
@@ -137,18 +150,18 @@ type FilterOptions struct {
 	Entities []string `json:"entities"`
 }
 
-func (r *Repository) GetDistinctFilters(ctx context.Context) (*FilterOptions, error) {
+func (r *Repository) GetDistinctFilters(ctx context.Context, tenant contextx.TenantInfo) (*FilterOptions, error) {
 	db := r.dbCtx(ctx)
 
 	var actions []string
-	actionsQuery := `SELECT DISTINCT action FROM activity_logs ORDER BY action`
-	if err := db.SelectContext(ctx, &actions, actionsQuery); err != nil {
+	actionsQuery := `SELECT DISTINCT action FROM activity_logs WHERE company_id = $1 ORDER BY action`
+	if err := db.SelectContext(ctx, &actions, actionsQuery, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 
 	var entities []string
-	entitiesQuery := `SELECT DISTINCT entity FROM activity_logs ORDER BY entity`
-	if err := db.SelectContext(ctx, &entities, entitiesQuery); err != nil {
+	entitiesQuery := `SELECT DISTINCT entity FROM activity_logs WHERE company_id = $1 ORDER BY entity`
+	if err := db.SelectContext(ctx, &entities, entitiesQuery, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 

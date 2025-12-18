@@ -31,7 +31,12 @@ type deleteHandler struct{}
 func NewDeleteHandler() *deleteHandler { return &deleteHandler{} }
 
 func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
-	rec, err := cmd.Repo.Get(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	rec, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
@@ -42,7 +47,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 	if rec.Status != "pending" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete non-pending worklog")
 	}
-	if err := cmd.Repo.SoftDelete(ctx, cmd.ID, cmd.Actor); err != nil {
+	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
 		}
@@ -52,6 +57,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "DELETE",
 		EntityName: "WORKLOG_PT",
 		EntityID:   cmd.ID.String(),

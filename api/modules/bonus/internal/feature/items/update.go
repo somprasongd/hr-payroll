@@ -35,7 +35,12 @@ type updateHandler struct{}
 func NewUpdateHandler() *updateHandler { return &updateHandler{} }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
-	_, cycle, err := cmd.Repo.GetItem(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	_, cycle, err := cmd.Repo.GetItem(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("bonus item not found")
@@ -49,7 +54,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	if cmd.BonusAmount == nil && cmd.BonusMonths == nil {
 		return nil, errs.BadRequest("no fields to update")
 	}
-	updated, err := cmd.Repo.UpdateItem(ctx, cmd.ID, cmd.BonusMonths, cmd.BonusAmount, cmd.Actor)
+	updated, err := cmd.Repo.UpdateItem(ctx, tenant, cmd.ID, cmd.BonusMonths, cmd.BonusAmount, cmd.Actor)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to update bonus item", zap.Error(err))
 		return nil, errs.Internal("failed to update bonus item")

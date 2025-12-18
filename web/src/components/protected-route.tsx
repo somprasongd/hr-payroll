@@ -11,6 +11,7 @@
 import { useEffect } from 'react';
 import { usePathname, useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/auth-store';
+import { useTenantStore } from '@/store/tenant-store';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -20,7 +21,11 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, setReturnUrl, _hasHydrated, user, returnUrlUserId } = useAuthStore();
+  const { isAuthenticated, setReturnUrl, _hasHydrated: authHasHydrated, user, returnUrlUserId } = useAuthStore();
+  const { _hasHydrated: tenantHasHydrated } = useTenantStore();
+  
+  // Wait for both stores to hydrate before making authentication decisions
+  const _hasHydrated = authHasHydrated && tenantHasHydrated;
 
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {

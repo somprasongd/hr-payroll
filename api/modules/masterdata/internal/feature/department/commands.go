@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/masterdata/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -78,6 +79,12 @@ func NewDeleteHandler(repo repository.Repository, eb eventbus.EventBus) *DeleteH
 }
 
 func (h *CreateHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+	cmd.CompanyID = tenant.CompanyID
+
 	code := strings.TrimSpace(cmd.Code)
 	name := strings.TrimSpace(cmd.Name)
 	if code == "" || name == "" {
@@ -95,6 +102,7 @@ func (h *CreateHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Respon
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
 		Action:     "CREATE",
 		EntityName: "DEPARTMENT",
 		EntityID:   rec.ID.String(),
@@ -109,6 +117,12 @@ func (h *CreateHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Respon
 }
 
 func (h *UpdateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+	cmd.CompanyID = tenant.CompanyID
+
 	code := strings.TrimSpace(cmd.Code)
 	name := strings.TrimSpace(cmd.Name)
 	if code == "" || name == "" {
@@ -129,6 +143,7 @@ func (h *UpdateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Respon
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
 		Action:     "UPDATE",
 		EntityName: "DEPARTMENT",
 		EntityID:   rec.ID.String(),
@@ -143,6 +158,12 @@ func (h *UpdateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Respon
 }
 
 func (h *DeleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+	cmd.CompanyID = tenant.CompanyID
+
 	if err := h.repo.SoftDeleteDepartment(ctx, cmd.ID, cmd.CompanyID, cmd.ActorID); err != nil {
 		if err == sql.ErrNoRows {
 			return mediator.NoResponse{}, errs.NotFound("department not found")
@@ -152,6 +173,7 @@ func (h *DeleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 	}
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
 		Action:     "DELETE",
 		EntityName: "DEPARTMENT",
 		EntityID:   cmd.ID.String(),

@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/dashboard/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -70,7 +71,12 @@ func NewAttendanceSummaryHandler() *attendanceSummaryHandler {
 }
 
 func (h *attendanceSummaryHandler) Handle(ctx context.Context, q *AttendanceSummaryQuery) (*AttendanceSummaryResponse, error) {
-	entries, err := q.Repo.GetAttendanceSummary(ctx, q.StartDate, q.EndDate, q.GroupBy, q.DepartmentID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	entries, err := q.Repo.GetAttendanceSummary(ctx, tenant, q.StartDate, q.EndDate, q.GroupBy, q.DepartmentID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get attendance summary", zap.Error(err))
 		return nil, errs.Internal("failed to get attendance summary")

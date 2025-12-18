@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"hrms/modules/activitylog/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/logger"
 
 	"github.com/gofiber/fiber/v3"
@@ -20,6 +21,11 @@ func NewHandler(repo *repository.Repository) *Handler {
 }
 
 func (h *Handler) ListLogs(c fiber.Ctx) error {
+	tenant, ok := contextx.TenantFromContext(c.Context())
+	if !ok {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "missing tenant context"})
+	}
+
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 
@@ -31,7 +37,7 @@ func (h *Handler) ListLogs(c fiber.Ctx) error {
 		UserName: c.Query("userName"),
 	}
 
-	logs, total, err := h.repo.ListLogs(c.Context(), filter, page, limit)
+	logs, total, err := h.repo.ListLogs(c.Context(), tenant, filter, page, limit)
 	if err != nil {
 		logger.FromContext(c.Context()).Error("failed to list activity logs", zap.Error(err))
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -48,7 +54,12 @@ func (h *Handler) ListLogs(c fiber.Ctx) error {
 }
 
 func (h *Handler) GetFilterOptions(c fiber.Ctx) error {
-	options, err := h.repo.GetDistinctFilters(c.Context())
+	tenant, ok := contextx.TenantFromContext(c.Context())
+	if !ok {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "missing tenant context"})
+	}
+
+	options, err := h.repo.GetDistinctFilters(c.Context(), tenant)
 	if err != nil {
 		logger.FromContext(c.Context()).Error("failed to get filter options", zap.Error(err))
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

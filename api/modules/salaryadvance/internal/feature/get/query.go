@@ -10,6 +10,7 @@ import (
 
 	"hrms/modules/salaryadvance/internal/dto"
 	"hrms/modules/salaryadvance/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -34,7 +35,12 @@ func NewHandler(repo repository.Repository) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	rec, err := h.repo.Get(ctx, q.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	rec, err := h.repo.Get(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("salary advance not found")

@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -45,7 +46,12 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Limit <= 0 || q.Limit > 1000 {
 		q.Limit = 1000
 	}
-	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.Status)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	res, err := q.Repo.List(ctx, tenant, q.Page, q.Limit, q.EmployeeID, q.Status)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list payouts", zap.Error(err))
 		return nil, errs.Internal("failed to list payouts")

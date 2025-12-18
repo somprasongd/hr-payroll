@@ -77,6 +77,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
 		Action:     "CREATE",
 		EntityName: "SALARY_RAISE_CYCLE",
 		EntityID:   cycle.ID.String(),

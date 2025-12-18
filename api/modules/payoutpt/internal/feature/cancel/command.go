@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -31,7 +32,12 @@ var _ mediator.RequestHandler[*Command, mediator.NoResponse] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	payout, err := cmd.Repo.Get(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	payout, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("payout not found")
@@ -42,7 +48,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if payout.Status != "to_pay" {
 		return mediator.NoResponse{}, errs.BadRequest("only to_pay payouts can be cancelled")
 	}
-	if err := cmd.Repo.SoftDelete(ctx, cmd.ID, cmd.Actor); err != nil {
+	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("payout not found or already cancelled")
 		}
@@ -51,6 +57,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	}
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "DELETE", // Or STATUS_CHANGE? Delete implies removal. Soft delete is delete action.
 		EntityName: "PAYOUT_PT",
 		EntityID:   cmd.ID.String(),

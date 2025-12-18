@@ -9,6 +9,7 @@ import (
 
 	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -30,7 +31,12 @@ type listHandler struct{}
 func NewListHandler() *listHandler { return &listHandler{} }
 
 func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, error) {
-	items, err := q.Repo.ListItems(ctx, q.CycleID, q.Search)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	items, err := q.Repo.ListItems(ctx, tenant, q.CycleID, q.Search)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list bonus items", zap.Error(err))
 		return nil, errs.Internal("failed to list bonus items")

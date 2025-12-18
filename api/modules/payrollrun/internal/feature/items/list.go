@@ -12,6 +12,7 @@ import (
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -47,7 +48,13 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 	if q.EmployeeTypeCode != "" && q.EmployeeTypeCode != "full_time" && q.EmployeeTypeCode != "part_time" {
 		return nil, errs.BadRequest("employeeTypeCode must be full_time or part_time")
 	}
-	res, err := q.Repo.ListItems(ctx, q.RunID, q.Page, q.Limit, q.Search, q.EmployeeTypeCode)
+
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	res, err := q.Repo.ListItems(ctx, tenant, q.RunID, q.Page, q.Limit, q.Search, q.EmployeeTypeCode)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list payroll items", zap.Error(err))
 		return nil, errs.Internal("failed to list payroll items")

@@ -49,6 +49,11 @@ type CreateRequest struct {
 }
 
 func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*CreateResponse, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	parsedDate, err := validatePayload(&cmd.Payload)
 	if err != nil {
 		return nil, err
@@ -76,7 +81,7 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 			return errs.Conflict("worklog already exists for this employee on this date")
 		}
 
-		created, err = cmd.Repo.Insert(ctxTx, rec)
+		created, err = cmd.Repo.Insert(ctxTx, tenant, rec)
 		if err != nil {
 			if repository.IsUniqueErrPT(err) {
 				return errs.Conflict("worklog already exists for this employee on this date")
@@ -96,6 +101,7 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "CREATE",
 		EntityName: "WORKLOG_PT",
 		EntityID:   created.ID.String(),

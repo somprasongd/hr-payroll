@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -48,12 +49,21 @@ func NewPTRepository(dbCtx transactor.DBTXContext) PTRepository {
 	return PTRepository{dbCtx: dbCtx}
 }
 
-func (r PTRepository) List(ctx context.Context, page, limit int, employeeID *uuid.UUID, status string, startDate, endDate *time.Time) (PTListResult, error) {
+func (r PTRepository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, employeeID *uuid.UUID, status string, startDate, endDate *time.Time) (PTListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
 	where = append(where, "wl.deleted_at IS NULL")
+
+	// Tenant Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
 
 	if employeeID != nil {
 		args = append(args, *employeeID)
@@ -77,6 +87,7 @@ func (r PTRepository) List(ctx context.Context, page, limit int, employeeID *uui
 
 	query := fmt.Sprintf(`
 SELECT wl.* FROM worklog_pt wl
+JOIN employees e ON e.id = wl.employee_id
 WHERE %s
 ORDER BY wl.work_date DESC, wl.created_at DESC
 LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
@@ -97,7 +108,7 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 	}
 
 	countArgs := args[:len(args)-2]
-	countQuery := fmt.Sprintf(`SELECT COUNT(1) FROM worklog_pt wl WHERE %s`, whereClause)
+	countQuery := fmt.Sprintf(`SELECT COUNT(1) FROM worklog_pt wl JOIN employees e ON e.id = wl.employee_id WHERE %s`, whereClause)
 	var total int
 	if err := db.GetContext(ctx, &total, countQuery, countArgs...); err != nil {
 		return PTListResult{}, err
@@ -106,11 +117,14 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 	return PTListResult{Rows: list, Total: total}, nil
 }
 
-func (r PTRepository) Get(ctx context.Context, id uuid.UUID) (*PTRecord, error) {
+func (r PTRepository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT * FROM worklog_pt WHERE id=$1 AND deleted_at IS NULL LIMIT 1`
+	const q = `
+SELECT wl.* FROM worklog_pt wl
+JOIN employees e ON e.id = wl.employee_id
+WHERE wl.id=$1 AND e.company_id=$2 AND wl.deleted_at IS NULL LIMIT 1`
 	var rec PTRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -130,8 +144,17 @@ SELECT EXISTS (
 	return exists, nil
 }
 
-func (r PTRepository) Insert(ctx context.Context, rec PTRecord) (*PTRecord, error) {
+func (r PTRepository) Insert(ctx context.Context, tenant contextx.TenantInfo, rec PTRecord) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
+	// Validate employee belongs to company
+	var count int
+	if err := db.GetContext(ctx, &count, "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2", rec.EmployeeID, tenant.CompanyID); err != nil {
+		return nil, err
+	}
+	if count == 0 {
+		return nil, fmt.Errorf("employee not found in this company")
+	}
+
 	const q = `
 INSERT INTO worklog_pt (
   employee_id, work_date,
@@ -152,7 +175,7 @@ RETURNING *`
 	return &out, nil
 }
 
-func (r PTRepository) Update(ctx context.Context, id uuid.UUID, rec PTRecord) (*PTRecord, error) {
+func (r PTRepository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, rec PTRecord) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 UPDATE worklog_pt
@@ -161,24 +184,29 @@ SET work_date=$1,
     evening_in=$4, evening_out=$5,
     status=$6,
     updated_by=$7
-WHERE id=$8 AND deleted_at IS NULL
-RETURNING *`
+FROM employees e
+WHERE worklog_pt.id=$8 AND worklog_pt.employee_id = e.id AND e.company_id=$9 AND worklog_pt.deleted_at IS NULL
+RETURNING worklog_pt.*`
 	var out PTRecord
 	if err := db.GetContext(ctx, &out, q,
 		rec.WorkDate,
 		rec.MorningIn, rec.MorningOut,
 		rec.EveningIn, rec.EveningOut,
-		rec.Status, rec.UpdatedBy, id,
+		rec.Status, rec.UpdatedBy, id, tenant.CompanyID,
 	); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (r PTRepository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r PTRepository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE worklog_pt SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id)
+	const q = `
+UPDATE worklog_pt
+SET deleted_at=now(), deleted_by=$1
+FROM employees e
+WHERE worklog_pt.id=$2 AND worklog_pt.employee_id=e.id AND e.company_id=$3 AND worklog_pt.deleted_at IS NULL`
+	res, err := db.ExecContext(ctx, q, actor, id, tenant.CompanyID)
 	if err != nil {
 		return err
 	}

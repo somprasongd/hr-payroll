@@ -12,6 +12,7 @@ import (
 
 	"hrms/modules/salaryraise/internal/dto"
 	"hrms/modules/salaryraise/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -43,6 +44,11 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	if cmd.StartDate == nil && cmd.EndDate == nil && cmd.Status == nil {
 		return nil, errs.BadRequest("no fields to update")
 	}
@@ -62,7 +68,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.BadRequest("periodEndDate must be on or after periodStartDate")
 	}
 
-	updated, err := cmd.Repo.UpdateCycle(ctx, cmd.ID, cmd.StartDate, cmd.EndDate, cmd.Status, cmd.ActorID)
+	updated, err := cmd.Repo.UpdateCycle(ctx, tenant, cmd.ID, cmd.StartDate, cmd.EndDate, cmd.Status, cmd.ActorID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("cycle not found")
@@ -88,6 +94,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "UPDATE",
 		EntityName: "SALARY_RAISE_CYCLE",
 		EntityID:   updated.ID.String(),
