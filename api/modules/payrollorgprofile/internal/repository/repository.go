@@ -247,10 +247,10 @@ func (r Repository) Create(ctx context.Context, payload UpsertPayload, actor uui
 	const q = `
 WITH next_version AS (
   SELECT
-    pg_advisory_xact_lock(hashtext($2::text)::bigint) AS locked,
+    pg_advisory_xact_lock(hashtext(($2::uuid)::text)::bigint) AS locked,
     COALESCE(MAX(version_no), 0) + 1 AS version_no
   FROM payroll_org_profile
-  WHERE company_id = $2
+  WHERE company_id = $2::uuid
 )
 INSERT INTO payroll_org_profile (
   effective_daterange,
@@ -275,7 +275,7 @@ INSERT INTO payroll_org_profile (
 ) OVERRIDING SYSTEM VALUE
 SELECT
   daterange($1::date, NULL, '[)'),
-  $2,
+  $2::uuid,
   next_version.version_no,
   $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::config_status, 'active'::config_status),$17,$17
 FROM next_version
