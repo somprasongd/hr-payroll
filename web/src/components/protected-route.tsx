@@ -3,6 +3,7 @@
  * 
  * Wrapper component that checks authentication before rendering children
  * Redirects to login if not authenticated, saving the current path for return
+ * Also handles role-based route restrictions (e.g., superadmin can only access /super-admin/*)
  */
 
 'use client';
@@ -37,13 +38,47 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       
       // Redirect to login
       router.push('/');
-    } else if (_hasHydrated && isAuthenticated) {
-      console.log('[ProtectedRoute] Authenticated, rendering children', { pathname });
+    } else if (_hasHydrated && isAuthenticated && user) {
+      console.log('[ProtectedRoute] Authenticated, checking role restrictions', { pathname, role: user.role });
+      
+      // Superadmin can only access /super-admin/* routes AND /profile (for password change)
+      if (user.role === 'superadmin') {
+        const allowedForSuperadmin = pathname.startsWith('/super-admin') || pathname === '/profile';
+        if (!allowedForSuperadmin) {
+          console.log('[ProtectedRoute] Superadmin trying to access non-superadmin route, redirecting');
+          router.replace('/super-admin/companies');
+        }
+      } else {
+        // Non-superadmin users cannot access /super-admin/* routes
+        if (pathname.startsWith('/super-admin')) {
+          console.log('[ProtectedRoute] Non-superadmin trying to access superadmin route, redirecting');
+          router.replace('/dashboard');
+        }
+      }
     }
   }, [isAuthenticated, pathname, router, setReturnUrl, _hasHydrated, user, returnUrlUserId]);
 
   // Show loading while checking authentication or hydrating
   if (!_hasHydrated || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  // Block rendering if superadmin on non-superadmin route (or vice versa)
+  // Exception: /profile is allowed for superadmin to change password
+  const superadminAllowed = pathname.startsWith('/super-admin') || pathname === '/profile';
+  if (user?.role === 'superadmin' && !superadminAllowed) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+  
+  if (user?.role !== 'superadmin' && pathname.startsWith('/super-admin')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />

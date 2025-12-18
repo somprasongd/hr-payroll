@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"go.uber.org/zap"
 	"hrms/modules/auth/internal/repository"
 	"hrms/modules/auth/internal/service"
 	"hrms/shared/common/errs"
@@ -17,6 +16,8 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
 	"hrms/shared/common/storage/sqldb/transactor"
+
+	"go.uber.org/zap"
 )
 
 type Command struct {
@@ -27,11 +28,13 @@ type Command struct {
 }
 
 type Response struct {
-	AccessToken  string      `json:"accessToken"`
-	RefreshToken string      `json:"refreshToken"`
-	TokenType    string      `json:"tokenType"`
-	ExpiresIn    int64       `json:"expiresIn"`
-	User         userPayload `json:"user"`
+	AccessToken  string                   `json:"accessToken"`
+	RefreshToken string                   `json:"refreshToken"`
+	TokenType    string                   `json:"tokenType"`
+	ExpiresIn    int64                    `json:"expiresIn"`
+	User         userPayload              `json:"user"`
+	Companies    []repository.CompanyInfo `json:"companies,omitempty"`
+	Branches     []repository.BranchInfo  `json:"branches,omitempty"`
 }
 
 type userPayload struct {
@@ -103,6 +106,22 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Internal("failed to persist session")
 	}
 
+	// Fetch user's companies and branches
+	companies, err := h.repo.GetUserCompanies(ctx, user.ID)
+	if err != nil {
+		logger.FromContext(ctx).Warn("failed to get user companies", zap.Error(err))
+		companies = nil // Don't fail login, just skip companies
+	}
+
+	var branches []repository.BranchInfo
+	if len(companies) > 0 {
+		branches, err = h.repo.GetAllUserBranches(ctx, user.ID)
+		if err != nil {
+			logger.FromContext(ctx).Warn("failed to get user branches", zap.Error(err))
+			branches = nil
+		}
+	}
+
 	return &Response{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -113,5 +132,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 			Username: user.Username,
 			Role:     user.Role,
 		},
+		Companies: companies,
+		Branches:  branches,
 	}, nil
 }

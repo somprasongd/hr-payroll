@@ -8,6 +8,8 @@ import (
 
 type LogEvent struct {
 	ActorID    uuid.UUID
+	CompanyID  *uuid.UUID
+	BranchID   *uuid.UUID
 	Action     string
 	EntityName string
 	EntityID   string

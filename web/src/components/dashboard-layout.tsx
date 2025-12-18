@@ -3,6 +3,7 @@
 import { useAuthStore } from "@/store/auth-store";
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { BranchSwitcher } from "@/components/branch-switcher";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { 
   LogOut,
@@ -58,6 +59,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
+            <BranchSwitcher />
           </div>
           
           <div className="ml-auto flex items-center gap-2 md:gap-4">

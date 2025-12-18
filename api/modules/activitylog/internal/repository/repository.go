@@ -32,12 +32,14 @@ func (r *Repository) CreateLog(ctx context.Context, log *entity.ActivityLog) err
 		details = log.Details
 	}
 	query := `
-		INSERT INTO activity_logs (user_id, action, entity, entity_id, details, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO activity_logs (user_id, company_id, branch_id, action, entity, entity_id, details, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id
 	`
 	return db.QueryRowContext(ctx, query,
 		log.UserID,
+		log.CompanyID,
+		log.BranchID,
 		log.Action,
 		log.Entity,
 		log.EntityID,

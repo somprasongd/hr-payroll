@@ -13,6 +13,7 @@ import (
 	"hrms/modules/activitylog"
 	"hrms/modules/auth"
 	"hrms/modules/bonus"
+	"hrms/modules/branch"
 	"hrms/modules/dashboard"
 	"hrms/modules/debt"
 	"hrms/modules/employee"
@@ -23,7 +24,9 @@ import (
 	"hrms/modules/payrollrun"
 	"hrms/modules/salaryadvance"
 	"hrms/modules/salaryraise"
+	"hrms/modules/superadmin"
 	"hrms/modules/user"
+	"hrms/modules/userbranch"
 	"hrms/modules/worklog"
 	"hrms/shared/common/jwt"
 	"hrms/shared/common/logger"
@@ -79,6 +82,9 @@ func main() {
 	app.RegisterModules(
 		auth.NewModule(mCtx, tokenSvc),
 		user.NewModule(mCtx, tokenSvc),
+		superadmin.NewModule(mCtx, tokenSvc, trans),
+		branch.NewModule(mCtx, tokenSvc),
+		userbranch.NewModule(mCtx, tokenSvc),
 		employee.NewModule(mCtx, tokenSvc),
 		payrollconfig.NewModule(mCtx, tokenSvc),
 		salaryadvance.NewModule(mCtx, tokenSvc),

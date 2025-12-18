@@ -30,30 +30,40 @@ replace hrms/modules/payoutpt v0.0.0 => ../modules/payoutpt
 
 replace hrms/modules/payrollorgprofile v0.0.0 => ../modules/payrollorgprofile
 
+replace hrms/modules/branch v0.0.0 => ../modules/branch
+
+replace hrms/modules/userbranch v0.0.0 => ../modules/userbranch
+
 replace hrms/modules/activitylog v0.0.0 => ../modules/activitylog
 
 replace hrms/modules/dashboard v0.0.0 => ../modules/dashboard
+
+replace hrms/modules/superadmin v0.0.0 => ../modules/superadmin
 
 replace hrms/shared/events v0.0.0 => ../shared/events
 
 require (
 	github.com/caarlos0/env/v11 v11.1.0
 	github.com/gofiber/fiber/v3 v3.0.0-beta.4
+	github.com/google/uuid v1.6.0
 	github.com/somprasongd/fiber-swagger v1.0.1
 	github.com/swaggo/swag/v2 v2.0.0-rc4
 	hrms/modules/activitylog v0.0.0
 	hrms/modules/auth v0.0.0
 	hrms/modules/bonus v0.0.0
+	hrms/modules/branch v0.0.0
 	hrms/modules/dashboard v0.0.0
 	hrms/modules/debt v0.0.0
 	hrms/modules/employee v0.0.0
 	hrms/modules/masterdata v0.0.0
+	hrms/modules/userbranch v0.0.0
 	hrms/modules/payoutpt v0.0.0
 	hrms/modules/payrollconfig v0.0.0
 	hrms/modules/payrollorgprofile v0.0.0
 	hrms/modules/payrollrun v0.0.0
 	hrms/modules/salaryadvance v0.0.0
 	hrms/modules/salaryraise v0.0.0
+	hrms/modules/superadmin v0.0.0
 	hrms/modules/user v0.0.0
 	hrms/modules/worklog v0.0.0
 	hrms/shared/common v0.0.0
@@ -70,7 +80,6 @@ require (
 	github.com/gofiber/schema v1.2.0 // indirect
 	github.com/gofiber/utils/v2 v2.0.0-beta.7 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect

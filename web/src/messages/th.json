@@ -112,7 +112,8 @@
     "compensation": "ค่าตอบแทน",
     "collapse": "ย่อเมนู",
     "payroll": "เงินเดือน",
-    "activityLogs": "ประวัติการใช้งาน"
+    "activityLogs": "ประวัติการใช้งาน",
+    "companies": "จัดการบริษัท"
   },
   "Payroll": {
     "title": "เงินเดือน",
@@ -491,11 +492,13 @@
     },
     "roles": {
       "admin": "ผู้ดูแลระบบ",
-      "hr": "ฝ่ายบุคคล"
+      "hr": "ฝ่ายบุคคล",
+      "superadmin": "ผู้ดูแลสูงสุด"
     },
     "actions": {
       "title": "การจัดการ",
       "openMenu": "เปิดเมนู",
+      "manageBranches": "จัดการสาขา",
       "editRole": "แก้ไขสิทธิ์",
       "resetPassword": "รีเซ็ตรหัสผ่าน",
       "delete": "ลบผู้ใช้งาน",
@@ -1125,6 +1128,7 @@
   },
   "Nav": {
     "orgProfile": "ข้อมูลองค์กร",
+    "branches": "สาขา",
     "departments": "แผนก",
     "positions": "ตำแหน่ง",
     "documentTypes": "ประเภทเอกสาร"
@@ -1222,6 +1226,70 @@
       "codeRequired": "กรุณากรอกรหัสตำแหน่ง",
       "nameRequired": "กรุณากรอกชื่อตำแหน่ง"
     }
+  },
+  "Branches": {
+    "title": "จัดการสาขา",
+    "description": "จัดการสาขาในบริษัท",
+    "createButton": "สร้างสาขา",
+    "createTitle": "สร้างสาขาใหม่",
+    "createDescription": "กรอกข้อมูลสาขาที่ต้องการสร้าง",
+    "editTitle": "แก้ไขสาขา",
+    "editDescription": "แก้ไขข้อมูลสาขา",
+    "deleteTitle": "ยืนยันการลบ",
+    "deleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบสาขา {name}? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "default": "สาขาหลัก",
+    "setDefault": "ตั้งเป็นสาขาหลัก",
+    "fields": {
+      "code": "รหัสสาขา",
+      "name": "ชื่อสาขา",
+      "status": "สถานะ"
+    },
+    "placeholders": {
+      "code": "เช่น HQ, BR01",
+      "name": "เช่น สำนักงานใหญ่"
+    },
+    "status": {
+      "active": "ใช้งาน",
+      "suspended": "ระงับชั่วคราว",
+      "archived": "ถูกเก็บถาวร"
+    },
+    "noData": "ไม่พบข้อมูลสาขา",
+    "fetchError": "ไม่สามารถโหลดข้อมูลสาขาได้",
+    "createSuccess": "สร้างสาขาสำเร็จ",
+    "createError": "ไม่สามารถสร้างสาขา",
+    "updateSuccess": "แก้ไขสาขาสำเร็จ",
+    "updateError": "ไม่สามารถแก้ไขสาขา",
+    "deleteSuccess": "ลบสาขาสำเร็จ",
+    "deleteError": "ไม่สามารถลบสาขา",
+    "setDefaultSuccess": "ตั้งเป็นสาขาหลักสำเร็จ",
+    "setDefaultError": "ไม่สามารถตั้งเป็นสาขาหลักได้",
+    "statusChange": {
+      "title": "เปลี่ยนสถานะสาขา",
+      "suspend": "ระงับชั่วคราว",
+      "archive": "เก็บถาวร",
+      "activate": "เปิดใช้งาน",
+      "confirmSuspend": "ยืนยันการระงับสาขา \"{name}\" ชั่วคราว?",
+      "confirmArchive": "ยืนยันการเก็บถาวรสาขา \"{name}\"?",
+      "confirmArchiveWithEmployees": "สาขา \"{name}\" มีพนักงานอยู่ {count} คน ยืนยันต้องการเก็บถาวร?",
+      "confirmActivate": "ยืนยันการเปิดใช้งานสาขา \"{name}\" อีกครั้ง?",
+      "cannotChangeDefault": "ไม่สามารถเปลี่ยนสถานะสาขาหลักได้",
+      "success": "เปลี่ยนสถานะสาขาสำเร็จ",
+      "error": "ไม่สามารถเปลี่ยนสถานะสาขาได้"
+    },
+    "cannotEdit": "ไม่สามารถแก้ไขสาขาที่ถูกระงับหรือเก็บถาวรได้"
+  },
+  "UserBranches": {
+    "title": "จัดการสาขาของ {username}",
+    "description": "เลือกสาขาที่ผู้ใช้สามารถเข้าถึงได้",
+    "branchList": "รายการสาขา",
+    "selectBranches": "เลือกสาขา {count} รายการ",
+    "selectAll": "เลือกทั้งหมด",
+    "deselectAll": "ยกเลิกทั้งหมด",
+    "noBranches": "ไม่พบสาขา",
+    "default": "หลัก",
+    "fetchError": "ไม่สามารถโหลดข้อมูลได้",
+    "saveSuccess": "บันทึกสาขาสำเร็จ",
+    "saveError": "ไม่สามารถบันทึกได้"
   },
   "OrgProfile": {
     "title": "ข้อมูลองค์กร (หัวสลิป)",
@@ -1348,5 +1416,66 @@
     },
     "detailsTitle": "รายละเอียดการเปลี่ยนแปลง",
     "noData": "ไม่พบข้อมูลประวัติ"
+  },
+  "Tenant": {
+    "selectBranch": "เลือกสาขา",
+    "selectBranches": "เลือกสาขา",
+    "branches": "สาขา",
+    "default": "หลัก",
+    "branchSwitched": "เปลี่ยนสาขาเรียบร้อยแล้ว",
+    "switchFailed": "ไม่สามารถเปลี่ยนสาขาได้",
+    "mustSelectOneBranch": "ต้องเลือกอย่างน้อย 1 สาขา",
+    "error": "เกิดข้อผิดพลาด",
+    "success": "สำเร็จ",
+    "selectCompany": "เลือกบริษัท",
+    "selectCompanyDescription": "เลือกบริษัทที่คุณต้องการเข้าถึง",
+    "selectBranchDescription": "เลือกสาขาที่คุณต้องการทำงาน",
+    "back": "ย้อนกลับ",
+    "confirm": "ยืนยัน"
+  },
+  "SuperAdmin": {
+    "title": "Super Admin",
+    "companies": {
+      "title": "จัดการบริษัท",
+      "description": "ดูและจัดการบริษัทลูกค้าทั้งหมดในระบบ",
+      "create": "สร้างบริษัทใหม่",
+      "createDescription": "สร้างบริษัทใหม่พร้อมสาขาเริ่มต้นและผู้ดูแลระบบ",
+      "noData": "ไม่พบข้อมูลบริษัท",
+      "createSuccess": "สร้างบริษัทสำเร็จ",
+      "createError": "ไม่สามารถสร้างบริษัทได้",
+      "edit": "แก้ไขบริษัท",
+      "updateSuccess": "อัปเดตบริษัทสำเร็จ",
+      "updateError": "ไม่สามารถอัปเดตบริษัทได้",
+      "notFound": "ไม่พบบริษัท",
+      "companyInfo": "ข้อมูลบริษัท",
+      "companyInfoDesc": "กรอกรหัสและชื่อบริษัท",
+      "adminInfo": "ผู้ดูแลระบบ",
+      "adminInfoDesc": "สร้างบัญชีผู้ดูแลระบบสำหรับบริษัทนี้",
+      "passwordHint": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+      "fields": {
+        "code": "รหัสบริษัท",
+        "name": "ชื่อบริษัท",
+        "status": "สถานะ",
+        "createdAt": "วันที่สร้าง",
+        "adminUsername": "ชื่อผู้ใช้ผู้ดูแล",
+        "adminPassword": "รหัสผ่านผู้ดูแล"
+      },
+      "placeholders": {
+        "code": "เช่น COMPANY01",
+        "name": "เช่น บริษัท ABC จำกัด",
+        "adminUsername": "เช่น admin",
+        "adminPassword": "รหัสผ่าน"
+      },
+      "validation": {
+        "required": "กรุณากรอกข้อมูลให้ครบถ้วน",
+        "passwordLength": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"
+      }
+    },
+    "status": {
+      "active": "ใช้งาน",
+      "suspended": "ระงับ",
+      "archived": "ยกเลิก"
+    },
+    "fetchError": "ไม่สามารถโหลดข้อมูลได้"
   }
 }

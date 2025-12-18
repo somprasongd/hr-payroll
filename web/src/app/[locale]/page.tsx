@@ -16,20 +16,24 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuthStore } from "@/store/auth-store"
+import { useTenantStore, Company, Branch } from "@/store/tenant-store"
 import { useState, useEffect, useRef } from "react"
 import { useTranslations, useLocale } from 'next-intl';
 import { User, Lock, Eye, EyeOff, Users } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRouter, usePathname } from "@/i18n/routing";
-import { authService } from "@/services/auth.service";
-import { orgProfileService } from "@/services/org-profile.service";
+import { authService, CompanyInfo, BranchInfo } from "@/services/auth.service";
+
+import { switchTenant } from "@/services/tenant.service";
 import { ApiError } from "@/lib/api-client";
 import { DismissibleAlert } from "@/components/ui/dismissible-alert";
+import { CompanySelector } from "@/components/company-selector";
 
 export default function LoginPage() {
   const t = useTranslations('Index');
   const locale = useLocale();
   const { login, returnUrl, returnUrlUserId, clearReturnUrl, isAuthenticated, _hasHydrated, refreshToken, updateToken, updateTokens, logout } = useAuthStore()
+  const { setCompanies, setBranches, switchTenant: switchTenantStore, clearTenant } = useTenantStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string>('')
@@ -37,20 +41,15 @@ export default function LoginPage() {
   const router = useRouter();
   const pathname = usePathname();
   const hasVerified = useRef(false);
-  const [branding, setBranding] = useState<{ companyName: string; logoUrl: string | null } | null>(null);
 
-  // Fetch branding on mount (no auth required)
-  useEffect(() => {
-    orgProfileService.getPublicBranding().then((data) => {
-      // Convert relative logoUrl to absolute URL from API config
-      setBranding({
-        ...data,
-        logoUrl: data.logoUrl ? orgProfileService.getPublicLogoUrl() : null,
-      });
-    }).catch(() => {
-      setBranding({ companyName: '', logoUrl: null });
-    });
-  }, []);
+
+  // Company selection state
+  const [showCompanySelector, setShowCompanySelector] = useState(false);
+  const [pendingCompanies, setPendingCompanies] = useState<CompanyInfo[]>([]);
+  const [pendingBranches, setPendingBranches] = useState<BranchInfo[]>([]);
+  const [pendingRedirect, setPendingRedirect] = useState<string>('/dashboard');
+
+
 
   useEffect(() => {
     // Wait for hydration to complete
@@ -183,26 +182,31 @@ export default function LoginPage() {
         localStorageRefreshToken: localStorage.getItem('refreshToken')?.substring(0, 20) + '...',
       });
       
-      // Determine redirect destination
-      // If the logged-in user is the same as the one who was redirected to login, use returnUrl
-      // Otherwise, redirect to dashboard (different user logged in)
-      let redirectTo = '/dashboard';
-      if (savedReturnUrl && savedReturnUrlUserId && savedReturnUrlUserId === response.user.id) {
-        // Same user - redirect to saved URL
-        console.log('[Login] Same user detected, redirecting to saved URL:', savedReturnUrl);
-        redirectTo = savedReturnUrl;
-      } else if (savedReturnUrl && savedReturnUrlUserId && savedReturnUrlUserId !== response.user.id) {
-        // Different user - redirect to dashboard
-        console.log('[Login] Different user detected, redirecting to dashboard instead of:', savedReturnUrl);
-      } else if (savedReturnUrl && !savedReturnUrlUserId) {
-        // No saved user ID (legacy case), use returnUrl
-        console.log('[Login] No saved user ID, redirecting to saved URL:', savedReturnUrl);
-        redirectTo = savedReturnUrl;
+      // Determine redirect destination based on role
+      let redirectTo = response.user.role === 'superadmin' ? '/super-admin/companies' : '/dashboard';
+      if (response.user.role !== 'superadmin') {
+        if (savedReturnUrl && savedReturnUrlUserId && savedReturnUrlUserId === response.user.id) {
+          redirectTo = savedReturnUrl;
+        } else if (savedReturnUrl && !savedReturnUrlUserId) {
+          redirectTo = savedReturnUrl;
+        }
       }
       
-      console.log('[Login] Final redirect destination:', redirectTo);
-      clearReturnUrl() // Clear return URL and user ID
-      router.push(redirectTo)
+      clearReturnUrl();
+      
+      // Check if user has companies to select
+      if (response.companies && response.companies.length > 0) {
+        console.log('[Login] User has companies, showing selector');
+        setPendingCompanies(response.companies);
+        setPendingBranches(response.branches || []);
+        setPendingRedirect(redirectTo);
+        setShowCompanySelector(true);
+      } else {
+        // No companies (backward compatibility) - redirect directly
+        console.log('[Login] No companies, redirecting directly');
+        clearTenant();
+        router.push(redirectTo);
+      }
     } catch (err) {
       const apiError = err as ApiError
       if (apiError.statusCode === 401) {
@@ -215,6 +219,55 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
+  // Handle company selection
+  const handleCompanySelect = async (company: Company, branches: Branch[]) => {
+    try {
+      setLoading(true);
+      
+      // Debug: Verify token is available before calling switch
+      const tokenFromStorage = localStorage.getItem('token');
+      console.log('[handleCompanySelect] Before switch:', {
+        hasToken: !!tokenFromStorage,
+        tokenPreview: tokenFromStorage?.substring(0, 20) + '...',
+      });
+      
+      // Call switch API to get new tokens with tenant context
+      const response = await switchTenant({
+        companyId: company.id,
+        branchIds: branches.map(b => b.id),
+      });
+      
+      // Update tokens
+      updateTokens(response.accessToken, response.refreshToken);
+      
+      // Update tenant store
+      setCompanies(pendingCompanies.map(c => ({
+        id: c.id,
+        code: c.code,
+        name: c.name,
+        status: c.status,
+        role: c.role,
+      })));
+      setBranches(pendingBranches.map(b => ({
+        id: b.id,
+        companyId: b.companyId,
+        code: b.code,
+        name: b.name,
+        status: b.status,
+        isDefault: b.isDefault,
+      })));
+      switchTenantStore(response.company, response.branches);
+      
+      setShowCompanySelector(false);
+      router.push(pendingRedirect);
+    } catch (err) {
+      console.error('Company selection error:', err);
+      setError(t('errors.loginFailed'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (isChecking) {
     return (
@@ -232,21 +285,11 @@ export default function LoginPage() {
       
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-4 text-center">
-          {branding?.logoUrl ? (
-            <img 
-              src={branding.logoUrl} 
-              alt="Company Logo" 
-              className="mx-auto w-16 h-16 rounded-full object-contain bg-white shadow-md"
-              onError={(e) => {
-                // Fallback to icon if logo fails to load
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-          ) : null}
-          <div className={`mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center ${branding?.logoUrl ? 'hidden' : ''}`}>
-            <Users className="w-8 h-8 text-white" />
-          </div>
+          <img 
+            src="/icon-192x192.png" 
+            alt="System Logo" 
+            className="mx-auto w-16 h-16 rounded-full object-contain bg-white shadow-md"
+          />
           <div>
             <CardTitle className="text-2xl font-bold">{t('welcomeBack')}</CardTitle>
             <CardDescription className="text-sm text-gray-600 mt-1">
@@ -348,10 +391,31 @@ export default function LoginPage() {
             </form>
           </Form>
           <div className="mt-6 text-center text-xs text-gray-500">
-            © {new Date().getFullYear()} {branding?.companyName || t('copyright')}
+            © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_COMPANY_NAME || 'HRMS'}. All Rights Reserved
           </div>
         </CardContent>
       </Card>
+
+      {/* Company Selector Dialog */}
+      <CompanySelector
+        open={showCompanySelector}
+        companies={pendingCompanies.map(c => ({
+          id: c.id,
+          code: c.code,
+          name: c.name,
+          status: c.status,
+          role: c.role,
+        }))}
+        branches={pendingBranches.map(b => ({
+          id: b.id,
+          companyId: b.companyId,
+          code: b.code,
+          name: b.name,
+          status: b.status,
+          isDefault: b.isDefault,
+        }))}
+        onSelect={handleCompanySelect}
+      />
     </div>
   );
 }

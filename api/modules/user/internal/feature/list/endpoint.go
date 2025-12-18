@@ -4,7 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -28,10 +30,17 @@ func NewEndpoint(router fiber.Router) {
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
 		role := c.Query("role")
 
+		// Get company ID from tenant context
+		var companyID uuid.UUID
+		if tenant, ok := contextx.TenantFromContext(c.Context()); ok {
+			companyID = tenant.CompanyID
+		}
+
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
-			Page:  page,
-			Limit: limit,
-			Role:  role,
+			Page:      page,
+			Limit:     limit,
+			Role:      role,
+			CompanyID: companyID,
 		})
 		if err != nil {
 			return err

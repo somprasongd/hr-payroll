@@ -152,6 +152,34 @@ Recommended flow:
 - **Part-time Payout**
 - **Payroll Run**
 - **User Management**
+- **Multi-Tenancy** (Company & Branch isolation)
+
+## 🏢 Multi-Tenancy
+
+The system supports multi-company and multi-branch isolation using PostgreSQL Row-Level Security (RLS).
+
+### Key Features
+
+- **Company & Branch Isolation**: All tenant-specific data is scoped by `company_id` and `branch_id`
+- **User Company Roles**: Users can have different roles in different companies
+- **User Branch Access**: Fine-grained branch-level access control
+- **Automatic Tenant Assignment**: Triggers auto-populate tenant columns on INSERT
+- **Superadmin Role**: Cross-tenant management capabilities
+
+### Database Tables
+
+| Table                | Tenant Columns            | Description                |
+| -------------------- | ------------------------- | -------------------------- |
+| `companies`          | -                         | Company master data        |
+| `branches`           | `company_id`              | Branch within company      |
+| `user_company_roles` | -                         | User-company role mapping  |
+| `user_branch_access` | -                         | User-branch access mapping |
+| `employees`          | `company_id`, `branch_id` | Employee data              |
+| `department`         | `company_id`              | Departments                |
+| `employee_position`  | `company_id`              | Positions                  |
+| `payroll_*`          | `company_id`, `branch_id` | Payroll data               |
+| `bonus_*`            | `company_id`, `branch_id` | Bonus data                 |
+| `worklog_*`          | `company_id`, `branch_id` | Worklog data               |
 
 ## 🛠️ Tech Stack
 

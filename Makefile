@@ -94,6 +94,15 @@ mgu:
 mgd:
 	docker run --rm --network host -v $(ROOT_DIR)migrations:/migrations migrate/migrate -verbose -path=/migrations/ -database $(DB_DSN) down 1
 
+.PHONY: mgv
+mgv:
+	docker run --rm --network host -v $(ROOT_DIR)migrations:/migrations migrate/migrate -path=/migrations/ -database "$(DB_DSN)" version
+
+.PHONY: mgf
+# Usage: make mgf VERSION=20251217215346
+mgf:
+	docker run --rm --network host -v $(ROOT_DIR)migrations:/migrations migrate/migrate -path=/migrations/ -database "$(DB_DSN)" force $(VERSION)
+
 .PHONY: doc
 # Install swag by using: go install github.com/swaggo/swag/v2/cmd/swag@latest
 doc:

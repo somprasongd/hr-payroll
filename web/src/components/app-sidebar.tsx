@@ -70,6 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        {user?.role !== 'superadmin' && (
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
           <SidebarMenu>
@@ -205,6 +206,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
           </SidebarMenu>
         </SidebarGroup>
+        )}
 
         {user?.role === 'admin' && (
           <SidebarGroup>
@@ -225,6 +227,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <SidebarMenuSubButton asChild isActive={isActive('/admin/org-profile')}>
                           <Link href="/admin/org-profile">
                             <span>{tNav('orgProfile')}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/admin/branches')}>
+                          <Link href="/admin/branches">
+                            <span>{tNav('branches')}</span>
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -274,6 +283,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
+
+        {user?.role === 'superadmin' && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Super Admin</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/super-admin/companies')} tooltip="Companies">
+                  <Link href="/super-admin/companies">
+                    <Building2 />
+                    <span>{tMenu('companies')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         )}

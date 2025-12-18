@@ -112,7 +112,8 @@
     "compensation": "Compensation",
     "collapse": "Collapse",
     "payroll": "Payroll",
-    "activityLogs": "Activity Logs"
+    "activityLogs": "Activity Logs",
+    "companies": "Manage Companies"
   },
   "Payroll": {
     "title": "Payroll",
@@ -491,11 +492,13 @@
     },
     "roles": {
       "admin": "Admin",
-      "hr": "HR"
+      "hr": "HR",
+      "superadmin": "Super Admin"
     },
     "actions": {
       "title": "Actions",
       "openMenu": "Open menu",
+      "manageBranches": "Manage Branches",
       "editRole": "Edit Role",
       "resetPassword": "Reset Password",
       "delete": "Delete User",
@@ -1123,6 +1126,7 @@
   },
   "Nav": {
     "orgProfile": "Org Profile",
+    "branches": "Branches",
     "departments": "Departments",
     "positions": "Positions",
     "documentTypes": "Document Types"
@@ -1220,6 +1224,70 @@
       "codeRequired": "Please enter position code",
       "nameRequired": "Please enter position name"
     }
+  },
+  "Branches": {
+    "title": "Branch Management",
+    "description": "Manage branches in your company",
+    "createButton": "Create Branch",
+    "createTitle": "Create New Branch",
+    "createDescription": "Enter branch information",
+    "editTitle": "Edit Branch",
+    "editDescription": "Update branch information",
+    "deleteTitle": "Confirm Delete",
+    "deleteDescription": "Are you sure you want to delete {name}? This action cannot be undone.",
+    "default": "Default",
+    "setDefault": "Set as Default",
+    "fields": {
+      "code": "Branch Code",
+      "name": "Branch Name",
+      "status": "Status"
+    },
+    "placeholders": {
+      "code": "e.g. HQ, BR01",
+      "name": "e.g. Headquarters"
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "archived": "Archived"
+    },
+    "noData": "No branches found",
+    "fetchError": "Failed to load branches",
+    "createSuccess": "Branch created successfully",
+    "createError": "Failed to create branch",
+    "updateSuccess": "Branch updated successfully",
+    "updateError": "Failed to update branch",
+    "deleteSuccess": "Branch deleted successfully",
+    "deleteError": "Failed to delete branch",
+    "setDefaultSuccess": "Default branch set successfully",
+    "setDefaultError": "Failed to set default branch",
+    "statusChange": {
+      "title": "Change Branch Status",
+      "suspend": "Suspend",
+      "archive": "Archive",
+      "activate": "Activate",
+      "confirmSuspend": "Confirm suspending branch \"{name}\"?",
+      "confirmArchive": "Confirm archiving branch \"{name}\"?",
+      "confirmArchiveWithEmployees": "Branch \"{name}\" has {count} employee(s). Confirm archiving?",
+      "confirmActivate": "Confirm reactivating branch \"{name}\"?",
+      "cannotChangeDefault": "Cannot change status of default branch",
+      "success": "Branch status changed successfully",
+      "error": "Failed to change branch status"
+    },
+    "cannotEdit": "Cannot edit suspended or archived branch"
+  },
+  "UserBranches": {
+    "title": "Manage Branches for {username}",
+    "description": "Select branches this user can access",
+    "branchList": "Branch List",
+    "selectBranches": "{count} branches selected",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "noBranches": "No branches found",
+    "default": "Default",
+    "fetchError": "Failed to load data",
+    "saveSuccess": "Branches saved successfully",
+    "saveError": "Failed to save"
   },
   "OrgProfile": {
     "title": "Organization Profile (Slip Header)",
@@ -1346,5 +1414,66 @@
       "entity": "Type",
       "all": "All"
     }
+  },
+  "Tenant": {
+    "selectBranch": "Select Branch",
+    "selectBranches": "Select Branches",
+    "branches": "branches",
+    "default": "Default",
+    "branchSwitched": "Branch switched successfully",
+    "switchFailed": "Failed to switch branch",
+    "mustSelectOneBranch": "Must select at least one branch",
+    "error": "Error",
+    "success": "Success",
+    "selectCompany": "Select Company",
+    "selectCompanyDescription": "Choose the company you want to access",
+    "selectBranchDescription": "Select the branches you want to work with",
+    "back": "Back",
+    "confirm": "Confirm"
+  },
+  "SuperAdmin": {
+    "title": "Super Admin",
+    "companies": {
+      "title": "Manage Companies",
+      "description": "View and manage all customer companies in the system",
+      "create": "Create Company",
+      "createDescription": "Create a new company with default branch and admin user",
+      "noData": "No companies found",
+      "createSuccess": "Company created successfully",
+      "createError": "Failed to create company",
+      "edit": "Edit Company",
+      "updateSuccess": "Company updated successfully",
+      "updateError": "Failed to update company",
+      "notFound": "Company not found",
+      "companyInfo": "Company Information",
+      "companyInfoDesc": "Enter company code and name",
+      "adminInfo": "Admin User",
+      "adminInfoDesc": "Create an admin account for this company",
+      "passwordHint": "Password must be at least 8 characters",
+      "fields": {
+        "code": "Company Code",
+        "name": "Company Name",
+        "status": "Status",
+        "createdAt": "Created At",
+        "adminUsername": "Admin Username",
+        "adminPassword": "Admin Password"
+      },
+      "placeholders": {
+        "code": "e.g. COMPANY01",
+        "name": "e.g. ABC Company Ltd.",
+        "adminUsername": "e.g. admin",
+        "adminPassword": "Password"
+      },
+      "validation": {
+        "required": "Please fill in all required fields",
+        "passwordLength": "Password must be at least 8 characters"
+      }
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "archived": "Archived"
+    },
+    "fetchError": "Failed to fetch data"
   }
 }

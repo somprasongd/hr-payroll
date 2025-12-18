@@ -35,13 +35,20 @@ type UserListResult struct {
 	Total int
 }
 
-func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter string) (UserListResult, error) {
+func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter string, companyID uuid.UUID) (UserListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 
 	var args []interface{}
 	var where []string
 	where = append(where, "u.deleted_at IS NULL")
+
+	// Always filter by company via user_company_roles
+	if companyID != uuid.Nil {
+		args = append(args, companyID)
+		where = append(where, fmt.Sprintf("ucr.company_id = $%d", len(args)))
+	}
+
 	if roleFilter != "" {
 		args = append(args, roleFilter)
 		where = append(where, fmt.Sprintf("u.user_role = $%d", len(args)))
@@ -50,14 +57,15 @@ func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter s
 	whereClause := strings.Join(where, " AND ")
 	args = append(args, limit, offset)
 
-query := fmt.Sprintf(`
-SELECT u.id, u.username, u.password_hash, u.user_role, u.created_at, u.updated_at,
+	query := fmt.Sprintf(`
+SELECT DISTINCT u.id, u.username, u.password_hash, u.user_role, u.created_at, u.updated_at,
   COALESCE((
     SELECT l.login_at FROM user_access_logs l
     WHERE l.user_id = u.id AND l.status = 'success'
     ORDER BY l.login_at DESC LIMIT 1
   ), NULL) AS last_login_at
 FROM users u
+JOIN user_company_roles ucr ON ucr.user_id = u.id
 WHERE %s
 ORDER BY u.username ASC
 LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
@@ -77,7 +85,11 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 		users = append(users, u)
 	}
 
-	countQuery := "SELECT COUNT(1) FROM users u WHERE " + whereClause
+	countQuery := fmt.Sprintf(`
+SELECT COUNT(DISTINCT u.id) 
+FROM users u 
+JOIN user_company_roles ucr ON ucr.user_id = u.id 
+WHERE %s`, whereClause)
 	var total int
 	if err := db.GetContext(ctx, &total, countQuery, args[:len(args)-2]...); err != nil {
 		return UserListResult{}, err

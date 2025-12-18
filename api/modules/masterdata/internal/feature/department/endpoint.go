@@ -34,6 +34,12 @@ func NewCreateEndpoint(router fiber.Router) {
 		}
 		req.ActorID = user.ID
 
+		tenant, ok := contextx.TenantFromContext(c.Context())
+		if !ok {
+			return errs.Unauthorized("missing tenant context")
+		}
+		req.CompanyID = tenant.CompanyID
+
 		resp, err := mediator.Send[*CreateCommand, *Response](c.Context(), &req)
 		if err != nil {
 			return err
@@ -72,7 +78,13 @@ func NewUpdateEndpoint(router fiber.Router) {
 			return errs.Unauthorized("missing user")
 		}
 
+		tenant, ok := contextx.TenantFromContext(c.Context())
+		if !ok {
+			return errs.Unauthorized("missing tenant context")
+		}
+
 		req.ID = id
+		req.CompanyID = tenant.CompanyID
 		req.ActorID = user.ID
 
 		resp, err := mediator.Send[*UpdateCommand, *Response](c.Context(), &req)
@@ -105,9 +117,15 @@ func NewDeleteEndpoint(router fiber.Router) {
 			return errs.Unauthorized("missing user")
 		}
 
+		tenant, ok := contextx.TenantFromContext(c.Context())
+		if !ok {
+			return errs.Unauthorized("missing tenant context")
+		}
+
 		_, err = mediator.Send[*DeleteCommand, mediator.NoResponse](c.Context(), &DeleteCommand{
-			ID:      id,
-			ActorID: user.ID,
+			ID:        id,
+			CompanyID: tenant.CompanyID,
+			ActorID:   user.ID,
 		})
 		if err != nil {
 			return err
