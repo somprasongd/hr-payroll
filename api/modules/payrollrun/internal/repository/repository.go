@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
+
+	"hrms/shared/common/contextx"
 
 	"hrms/shared/common/storage/sqldb/transactor"
 )
@@ -69,12 +72,24 @@ COALESCE(income_total,0)
 
 const deductionExpr = `(COALESCE(income_total,0) - (` + netPayExpr + `))`
 
-func (r Repository) List(ctx context.Context, page, limit int, status string, year *int, month *time.Time) (RunListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, status string, year *int, month *time.Time) (RunListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
 	where = append(where, "deleted_at IS NULL")
+
+	// Company Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("company_id = $%d", len(args)))
+
+	// Branch Filter - Assuming payroll_run has branch_id if created per branch?
+	// Based on Create method: it has branch_id column.
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("branch_id = ANY($%d)", len(args)))
+	}
+
 	if s := strings.TrimSpace(status); s != "" && s != "all" {
 		args = append(args, s)
 		where = append(where, fmt.Sprintf("status = $%d", len(args)))
@@ -301,13 +316,29 @@ type ItemListResult struct {
 	Total int
 }
 
-func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit int, search string, employeeTypeCode string) (ItemListResult, error) {
+func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, runID uuid.UUID, page, limit int, search string, employeeTypeCode string) (ItemListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
+
+	// Ensure run_id belongs to company/branch accessed?
+	// Or filter items via employee's company/branch.
+	// Since items join employees, filtering on employee's company is safer.
+
 	where = append(where, "run_id = $1")
 	args = append(args, runID)
+
+	// Company Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	// Branch Filter
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
+
 	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")

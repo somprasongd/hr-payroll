@@ -37,6 +37,7 @@ Content-Type: application/json
 | Worklog     | `worklog_ft`, `worklog_pt`, `payout_pt`, `payout_pt_item`                   |
 | Bonus/Raise | `bonus_cycle`, `bonus_item`, `salary_raise_cycle`, `salary_raise_item`      |
 | Financial   | `salary_advance`, `debt_txn`                                                |
+| Audit       | `activity_logs`                                                             |
 
 **Automatic Tenant Assignment:**
 

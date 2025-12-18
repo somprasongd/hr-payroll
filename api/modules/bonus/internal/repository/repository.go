@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -60,7 +61,7 @@ type ListResult struct {
 	Total int
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, status string, year *int) (ListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, status string, year *int) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -69,6 +70,17 @@ func (r Repository) List(ctx context.Context, page, limit int, status string, ye
 
 	where := "deleted_at IS NULL"
 	var args []interface{}
+
+	// Company Filter
+	args = append(args, tenant.CompanyID)
+	where += fmt.Sprintf(" AND company_id = $%d", len(args))
+
+	// Branch Filter
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where += fmt.Sprintf(" AND branch_id = ANY($%d)", len(args))
+	}
+
 	if status != "" && status != "all" {
 		args = append(args, status)
 		where += fmt.Sprintf(" AND status = $%d", len(args))
@@ -110,14 +122,16 @@ LIMIT $%d OFFSET $%d`, where, len(args)+1, len(args)+2)
 	return ListResult{Rows: cycles, Total: total}, nil
 }
 
-func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Cycle, []Item, error) {
+func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Cycle, []Item, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at FROM bonus_cycle WHERE id=$1 AND deleted_at IS NULL LIMIT 1`
+	// Check company access for the cycle
+	q := `SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at 
+	      FROM bonus_cycle WHERE id=$1 AND company_id=$2 AND deleted_at IS NULL LIMIT 1`
 	var c Cycle
-	if err := db.GetContext(ctx, &c, q, id); err != nil {
+	if err := db.GetContext(ctx, &c, q, id, tenant.CompanyID); err != nil {
 		return nil, nil, err
 	}
-	items, err := r.ListItems(ctx, id, "")
+	items, err := r.ListItems(ctx, tenant, id, "")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -137,23 +151,23 @@ RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date
 	return &c, nil
 }
 
-func (r Repository) UpdateStatus(ctx context.Context, id uuid.UUID, status string, actor uuid.UUID) (*Cycle, error) {
+func (r Repository) UpdateStatus(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, status string, actor uuid.UUID) (*Cycle, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 UPDATE bonus_cycle
 SET status=$1, updated_by=$2
-WHERE id=$3 AND deleted_at IS NULL
+WHERE id=$3 AND company_id=$4 AND deleted_at IS NULL
 RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
 	var c Cycle
-	if err := db.GetContext(ctx, &c, q, status, actor, id); err != nil {
+	if err := db.GetContext(ctx, &c, q, status, actor, id, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 	return &c, nil
 }
 
-func (r Repository) DeleteCycle(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r Repository) DeleteCycle(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	res, err := db.ExecContext(ctx, `UPDATE bonus_cycle SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL`, actor, id)
+	res, err := db.ExecContext(ctx, `UPDATE bonus_cycle SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND company_id=$3 AND deleted_at IS NULL`, actor, id, tenant.CompanyID)
 	if err != nil {
 		return err
 	}
@@ -163,10 +177,21 @@ func (r Repository) DeleteCycle(ctx context.Context, id uuid.UUID, actor uuid.UU
 	return nil
 }
 
-func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search string) ([]Item, error) {
+func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, cycleID uuid.UUID, search string) ([]Item, error) {
 	db := r.dbCtx(ctx)
 	where := "bi.cycle_id = $1"
 	args := []interface{}{cycleID}
+
+	// Company Filter (via employees)
+	args = append(args, tenant.CompanyID)
+	where += fmt.Sprintf(" AND e.company_id = $%d", len(args))
+
+	// Branch Filter
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where += fmt.Sprintf(" AND e.branch_id = ANY($%d)", len(args))
+	}
+
 	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
@@ -190,8 +215,9 @@ ORDER BY e.employee_number ASC, employee_name`, fullNameExpr, where)
 	return out, nil
 }
 
-func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, error) {
+func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Item, *Cycle, error) {
 	db := r.dbCtx(ctx)
+	// Join employees to check company access
 	const q = `SELECT bi.id, bi.cycle_id, bi.employee_id,
        (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name,
        e.employee_number AS employee_number,
@@ -201,19 +227,19 @@ func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, e
 FROM bonus_item bi
 JOIN employees e ON e.id = bi.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
-WHERE bi.id=$1 LIMIT 1`
+WHERE bi.id=$1 AND e.company_id=$2 LIMIT 1`
 	var it Item
-	if err := db.GetContext(ctx, &it, q, id); err != nil {
+	if err := db.GetContext(ctx, &it, q, id, tenant.CompanyID); err != nil {
 		return nil, nil, err
 	}
-	cycle, _, err := r.Get(ctx, it.CycleID)
+	cycle, _, err := r.Get(ctx, tenant, it.CycleID)
 	if err != nil {
 		return nil, nil, err
 	}
 	return &it, cycle, nil
 }
 
-func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, months *float64, amount *float64, actor uuid.UUID) (*Item, error) {
+func (r Repository) UpdateItem(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, months *float64, amount *float64, actor uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
 	sets := []string{"updated_by=$1"}
 	args := []interface{}{actor}
@@ -231,12 +257,17 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, months *float6
 	if len(sets) == 1 {
 		return nil, fmt.Errorf("no fields to update")
 	}
-	args = append(args, id)
+	args = append(args, id, tenant.CompanyID)
 	setClause := strings.Join(sets, ",")
-	q := fmt.Sprintf(`UPDATE bonus_item SET %s WHERE id=$%d RETURNING id, cycle_id, employee_id,
+	q := fmt.Sprintf(`
+UPDATE bonus_item 
+SET %s 
+FROM employees e
+WHERE bonus_item.id=$%d AND bonus_item.employee_id = e.id AND e.company_id=$%d
+RETURNING bonus_item.id, bonus_item.cycle_id, bonus_item.employee_id,
        (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = bonus_item.employee_id) AS employee_name,
-       tenure_days, current_salary, late_minutes, leave_days, leave_double_days, leave_hours, ot_hours,
-       bonus_months, bonus_amount, updated_at`, setClause, argIdx)
+       bonus_item.tenure_days, bonus_item.current_salary, bonus_item.late_minutes, bonus_item.leave_days, bonus_item.leave_double_days, bonus_item.leave_hours, bonus_item.ot_hours,
+       bonus_item.bonus_months, bonus_item.bonus_amount, bonus_item.updated_at`, setClause, argIdx, argIdx+1)
 	var out Item
 	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err

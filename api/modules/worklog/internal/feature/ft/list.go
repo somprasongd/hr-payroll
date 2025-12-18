@@ -12,6 +12,7 @@ import (
 
 	"hrms/modules/worklog/internal/dto"
 	"hrms/modules/worklog/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -52,7 +53,12 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 		q.Limit = 1000
 	}
 
-	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.Status, q.EntryType, q.StartDate, q.EndDate)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	res, err := q.Repo.List(ctx, tenant, q.Page, q.Limit, q.EmployeeID, q.Status, q.EntryType, q.StartDate, q.EndDate)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list worklogs", zap.Error(err))
 		return nil, errs.Internal("failed to list worklogs")

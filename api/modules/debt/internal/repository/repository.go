@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -179,11 +180,20 @@ func parseDateString(s string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("cannot parse date: %s", s)
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, empID *uuid.UUID, txnType, status string, startDate, endDate *time.Time) (ListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, empID *uuid.UUID, txnType, status string, startDate, endDate *time.Time) (ListResult, error) {
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
 	where = append(where, "t.deleted_at IS NULL")
+
+	// Tenant Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
 
 	if empID != nil {
 		args = append(args, *empID)
@@ -221,6 +231,7 @@ SELECT t.*,
     WHERE child.parent_id = t.id AND child.deleted_at IS NULL
   ), '[]'::json) AS installments
 FROM debt_txn t
+JOIN employees e ON e.id = t.employee_id
 WHERE %s
 ORDER BY t.txn_date DESC, t.created_at DESC
 LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
@@ -249,15 +260,16 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 	return ListResult{Rows: list, Total: total}, nil
 }
 
-func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Record, error) {
+func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT t.*,
   (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
-WHERE t.id=$1 AND t.deleted_at IS NULL LIMIT 1`
+JOIN employees e ON e.id = t.employee_id
+WHERE t.id=$1 AND e.company_id=$2 AND t.deleted_at IS NULL LIMIT 1`
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil

@@ -48,7 +48,12 @@ type UpdateRequest struct {
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
-	current, err := cmd.Repo.Get(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	current, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")
@@ -88,7 +93,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 			}
 		}
 
-		updated, err = cmd.Repo.Update(ctxTx, cmd.ID, rec)
+		updated, err = cmd.Repo.Update(ctxTx, tenant, cmd.ID, rec)
 		if err != nil {
 			if repository.IsUniqueErrFT(err) {
 				return errs.Conflict("worklog already exists for this employee, date, and entryType")
@@ -126,6 +131,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "UPDATE",
 		EntityName: "WORKLOG_FT",
 		EntityID:   updated.ID.String(),

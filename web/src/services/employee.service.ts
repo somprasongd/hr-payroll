@@ -205,11 +205,16 @@ export const employeeService = {
       const response = await axiosInstance.get(`/employees/photos/${photoId}`, {
         responseType: 'blob',
         headers,
-        validateStatus: (status) => status === 200 || status === 304,
+        validateStatus: (status) => status === 200 || status === 304 || status === 401,
       });
 
       if (response.status === 304 && cached) {
         return cached.dataUrl;
+      }
+
+      // If unauthorized, return null gracefully (don't trigger logout redirect)
+      if (response.status === 401) {
+        return null;
       }
 
       const blob = response.data as Blob;

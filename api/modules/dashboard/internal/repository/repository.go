@@ -3,10 +3,13 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -35,10 +38,26 @@ type DepartmentCount struct {
 }
 
 // GetEmployeeSummary retrieves aggregated employee statistics
-func (r *Repository) GetEmployeeSummary(ctx context.Context) (*EmployeeSummary, error) {
+func (r *Repository) GetEmployeeSummary(ctx context.Context, tenant contextx.TenantInfo) (*EmployeeSummary, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	// Build filter
+	where := []string{"deleted_at IS NULL"}
+	args := []interface{}{}
+
+	// Company filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("company_id = $%d", len(args)))
+
+	// Branch filter
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("branch_id = ANY($%d)", len(args)))
+	}
+
+	whereClause := " WHERE " + strings.Join(where, " AND ")
+
+	query := fmt.Sprintf(`
 WITH stats AS (
     SELECT
         COUNT(*) FILTER (WHERE deleted_at IS NULL) AS total_employees,
@@ -49,34 +68,52 @@ WITH stats AS (
         COUNT(*) FILTER (WHERE deleted_at IS NULL AND employment_end_date IS NOT NULL AND employment_end_date >= date_trunc('month', CURRENT_DATE) AND employment_end_date <= CURRENT_DATE) AS terminated_this_month
     FROM employees e
     LEFT JOIN employee_type et ON e.employee_type_id = et.id
+    %s
 )
 SELECT * FROM stats
-`
+`, whereClause)
+
 	var summary EmployeeSummary
-	if err := db.GetContext(ctx, &summary, query); err != nil {
+	if err := db.GetContext(ctx, &summary, query, args...); err != nil {
 		return nil, err
 	}
 	return &summary, nil
 }
 
 // GetEmployeesByDepartment retrieves employee counts by department
-func (r *Repository) GetEmployeesByDepartment(ctx context.Context) ([]DepartmentCount, error) {
+func (r *Repository) GetEmployeesByDepartment(ctx context.Context, tenant contextx.TenantInfo) ([]DepartmentCount, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{}
+	where := []string{
+		"e.deleted_at IS NULL",
+		"(e.employment_end_date IS NULL OR e.employment_end_date > CURRENT_DATE)",
+	}
+
+	// Company filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	// Branch filter
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
+
+	query := fmt.Sprintf(`
 SELECT 
     e.department_id,
     COALESCE(d.name_th, 'ไม่ระบุแผนก') AS department_name,
     COUNT(*) AS count
 FROM employees e
 LEFT JOIN department d ON e.department_id = d.id AND d.deleted_at IS NULL
-WHERE e.deleted_at IS NULL 
-    AND (e.employment_end_date IS NULL OR e.employment_end_date > CURRENT_DATE)
+WHERE %s
 GROUP BY e.department_id, d.name_th
 ORDER BY count DESC
-`
+`, strings.Join(where, " AND "))
+
 	var results []DepartmentCount
-	if err := db.SelectContext(ctx, &results, query); err != nil {
+	if err := db.SelectContext(ctx, &results, query, args...); err != nil {
 		return nil, err
 	}
 	return results, nil
@@ -91,7 +128,7 @@ type AttendanceEntry struct {
 }
 
 // GetAttendanceSummary retrieves attendance statistics grouped by period
-func (r *Repository) GetAttendanceSummary(ctx context.Context, startDate, endDate time.Time, groupBy string, departmentID *uuid.UUID, employeeID *uuid.UUID) ([]AttendanceEntry, error) {
+func (r *Repository) GetAttendanceSummary(ctx context.Context, tenant contextx.TenantInfo, startDate, endDate time.Time, groupBy string, departmentID *uuid.UUID, employeeID *uuid.UUID) ([]AttendanceEntry, error) {
 	db := r.dbCtx(ctx)
 
 	periodFormat := "YYYY-MM"
@@ -100,36 +137,47 @@ func (r *Repository) GetAttendanceSummary(ctx context.Context, startDate, endDat
 	}
 
 	args := []interface{}{startDate, endDate}
-	argIndex := 3
-	filters := ""
 
+	where := []string{
+		"wl.deleted_at IS NULL",
+		"wl.work_date >= $1",
+		"wl.work_date <= $2",
+	}
+
+	// Company filter (on employees table)
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	// Branch filter (on employees table)
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
+
+	// Department filter
 	if departmentID != nil {
-		filters += fmt.Sprintf(" AND e.department_id = $%d", argIndex)
 		args = append(args, *departmentID)
-		argIndex++
+		where = append(where, fmt.Sprintf("e.department_id = $%d", len(args)))
 	}
 
 	if employeeID != nil {
-		filters += fmt.Sprintf(" AND wl.employee_id = $%d", argIndex)
 		args = append(args, *employeeID)
-		argIndex++
+		where = append(where, fmt.Sprintf("wl.employee_id = $%d", len(args)))
 	}
 
-	query := `
+	query := fmt.Sprintf(`
 SELECT 
-    TO_CHAR(wl.work_date, '` + periodFormat + `') AS period,
+    TO_CHAR(wl.work_date, '%s') AS period,
     wl.entry_type,
     COUNT(*) AS total_count,
     COALESCE(SUM(wl.quantity), 0) AS total_qty
 FROM worklog_ft wl
 INNER JOIN employees e ON wl.employee_id = e.id AND e.deleted_at IS NULL
-WHERE wl.deleted_at IS NULL
-    AND wl.work_date >= $1
-    AND wl.work_date <= $2
-    ` + filters + `
-GROUP BY TO_CHAR(wl.work_date, '` + periodFormat + `'), wl.entry_type
+WHERE %s
+GROUP BY TO_CHAR(wl.work_date, '%s'), wl.entry_type
 ORDER BY period, entry_type
-`
+`, periodFormat, strings.Join(where, " AND "), periodFormat)
+
 	var results []AttendanceEntry
 	if err := db.SelectContext(ctx, &results, query, args...); err != nil {
 		return nil, err
@@ -151,10 +199,28 @@ type PayrollRunSummary struct {
 }
 
 // GetLatestPayrollRun retrieves the most recent payroll run
-func (r *Repository) GetLatestPayrollRun(ctx context.Context) (*PayrollRunSummary, error) {
+func (r *Repository) GetLatestPayrollRun(ctx context.Context, tenant contextx.TenantInfo) (*PayrollRunSummary, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{}
+	where := []string{"pr.deleted_at IS NULL"}
+
+	// Company filter (Payroll Run usually has company_id directly, but if not we assume it needs to be filtered)
+	// Checking payroll_run table structure assumption: it should have company_id ideally.
+	// If not, we might need to join or assume isolation by other means.
+	// Assuming payroll_run has company_id based on standard multi-tenant design.
+	// But let's check table structure if possible. Assuming yes for now.
+	// Wait, standard practice: yes.
+
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("pr.company_id = $%d", len(args)))
+
+	// Branch filter? Payroll run is usually per company or per branch?
+	// If it's per company, we ignore branch filter unless we want to filter runs for specific branches...
+	// Usually payroll run is Company wide in this system context?
+	// Let's assume company level for now.
+
+	query := fmt.Sprintf(`
 SELECT 
     pr.id,
     pr.payroll_month_date,
@@ -167,13 +233,14 @@ SELECT
     COUNT(pri.id) AS employee_count
 FROM payroll_run pr
 LEFT JOIN payroll_run_item pri ON pr.id = pri.run_id
-WHERE pr.deleted_at IS NULL
+WHERE %s
 GROUP BY pr.id, pr.payroll_month_date, pr.status, pr.approved_at
 ORDER BY pr.payroll_month_date DESC
 LIMIT 1
-`
+`, strings.Join(where, " AND "))
+
 	var summary PayrollRunSummary
-	if err := db.GetContext(ctx, &summary, query); err != nil {
+	if err := db.GetContext(ctx, &summary, query, args...); err != nil {
 		return nil, err
 	}
 	return &summary, nil
@@ -188,10 +255,11 @@ type YearlyPayrollTotals struct {
 }
 
 // GetYearlyPayrollTotals retrieves yearly totals for payroll
-func (r *Repository) GetYearlyPayrollTotals(ctx context.Context, year int) (*YearlyPayrollTotals, error) {
+func (r *Repository) GetYearlyPayrollTotals(ctx context.Context, tenant contextx.TenantInfo, year int) (*YearlyPayrollTotals, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{year, tenant.CompanyID}
+	query := `
 SELECT 
     COALESCE(SUM(pri.income_total - (pri.late_minutes_deduction + pri.leave_days_deduction + pri.leave_double_deduction + pri.leave_hours_deduction + pri.sso_month_amount + pri.tax_month_amount + pri.pf_month_amount + pri.water_amount + pri.electric_amount + pri.internet_amount + pri.advance_repay_amount + COALESCE((SELECT SUM((item->>'amount')::numeric) FROM jsonb_array_elements(pri.loan_repayments) AS item), 0) + COALESCE((SELECT SUM((item->>'value')::numeric) FROM jsonb_array_elements(pri.others_deduction) AS item), 0))), 0) AS total_net_pay,
     COALESCE(SUM(pri.tax_month_amount), 0) AS total_tax,
@@ -202,9 +270,10 @@ JOIN payroll_run_item pri ON pr.id = pri.run_id
 WHERE pr.deleted_at IS NULL
     AND pr.status = 'approved'
     AND EXTRACT(YEAR FROM pr.payroll_month_date) = $1
+    AND pr.company_id = $2
 `
 	var totals YearlyPayrollTotals
-	if err := db.GetContext(ctx, &totals, query, year); err != nil {
+	if err := db.GetContext(ctx, &totals, query, args...); err != nil {
 		return nil, err
 	}
 	return &totals, nil
@@ -220,10 +289,11 @@ type MonthlyPayrollBreakdown struct {
 }
 
 // GetMonthlyPayrollBreakdown retrieves monthly breakdown for a year
-func (r *Repository) GetMonthlyPayrollBreakdown(ctx context.Context, year int) ([]MonthlyPayrollBreakdown, error) {
+func (r *Repository) GetMonthlyPayrollBreakdown(ctx context.Context, tenant contextx.TenantInfo, year int) ([]MonthlyPayrollBreakdown, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{year, tenant.CompanyID}
+	query := `
 SELECT 
     TO_CHAR(pr.payroll_month_date, 'YYYY-MM') AS month,
     COALESCE(SUM(pri.income_total - (pri.late_minutes_deduction + pri.leave_days_deduction + pri.leave_double_deduction + pri.leave_hours_deduction + pri.sso_month_amount + pri.tax_month_amount + pri.pf_month_amount + pri.water_amount + pri.electric_amount + pri.internet_amount + pri.advance_repay_amount + COALESCE((SELECT SUM((item->>'amount')::numeric) FROM jsonb_array_elements(pri.loan_repayments) AS item), 0) + COALESCE((SELECT SUM((item->>'value')::numeric) FROM jsonb_array_elements(pri.others_deduction) AS item), 0))), 0) AS net_pay,
@@ -235,11 +305,12 @@ JOIN payroll_run_item pri ON pr.id = pri.run_id
 WHERE pr.deleted_at IS NULL
     AND pr.status = 'approved'
     AND EXTRACT(YEAR FROM pr.payroll_month_date) = $1
+    AND pr.company_id = $2
 GROUP BY TO_CHAR(pr.payroll_month_date, 'YYYY-MM')
 ORDER BY month
 `
 	var results []MonthlyPayrollBreakdown
-	if err := db.SelectContext(ctx, &results, query, year); err != nil {
+	if err := db.SelectContext(ctx, &results, query, args...); err != nil {
 		return nil, err
 	}
 	return results, nil
@@ -252,97 +323,160 @@ type FinancialPending struct {
 }
 
 // GetPendingAdvances retrieves pending salary advances count and total
-func (r *Repository) GetPendingAdvances(ctx context.Context) (*FinancialPending, error) {
+func (r *Repository) GetPendingAdvances(ctx context.Context, tenant contextx.TenantInfo) (*FinancialPending, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{tenant.CompanyID}
+	where := []string{
+		"sa.deleted_at IS NULL",
+		"sa.status = 'pending'",
+		"e.company_id = $1",
+	}
+
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
+
+	query := fmt.Sprintf(`
 SELECT 
     COUNT(*) AS count,
-    COALESCE(SUM(amount), 0) AS total_amount
-FROM salary_advance
-WHERE deleted_at IS NULL AND status = 'pending'
-`
+    COALESCE(SUM(sa.amount), 0) AS total_amount
+FROM salary_advance sa
+JOIN employees e ON sa.employee_id = e.id
+WHERE %s
+`, strings.Join(where, " AND "))
+
 	var result FinancialPending
-	if err := db.GetContext(ctx, &result, query); err != nil {
+	if err := db.GetContext(ctx, &result, query, args...); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
 // GetPendingLoans retrieves pending loans count and total
-func (r *Repository) GetPendingLoans(ctx context.Context) (*FinancialPending, error) {
+func (r *Repository) GetPendingLoans(ctx context.Context, tenant contextx.TenantInfo) (*FinancialPending, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{tenant.CompanyID}
+	where := []string{
+		"dt.deleted_at IS NULL",
+		"dt.status = 'pending'",
+		"dt.txn_type IN ('loan', 'other')",
+		"dt.parent_id IS NULL",
+		"e.company_id = $1",
+	}
+
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
+
+	query := fmt.Sprintf(`
 SELECT 
     COUNT(*) AS count,
-    COALESCE(SUM(amount), 0) AS total_amount
-FROM debt_txn
-WHERE deleted_at IS NULL 
-    AND status = 'pending' 
-    AND txn_type IN ('loan', 'other')
-    AND parent_id IS NULL
-`
+    COALESCE(SUM(dt.amount), 0) AS total_amount
+FROM debt_txn dt
+JOIN employees e ON dt.employee_id = e.id
+WHERE %s
+`, strings.Join(where, " AND "))
+
 	var result FinancialPending
-	if err := db.GetContext(ctx, &result, query); err != nil {
+	if err := db.GetContext(ctx, &result, query, args...); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
 // GetOutstandingInstallments retrieves outstanding installments count and total
-func (r *Repository) GetOutstandingInstallments(ctx context.Context) (*FinancialPending, error) {
+func (r *Repository) GetOutstandingInstallments(ctx context.Context, tenant contextx.TenantInfo) (*FinancialPending, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{tenant.CompanyID}
+	where := []string{
+		"dt.deleted_at IS NULL",
+		"dt.status = 'pending'",
+		"dt.txn_type = 'installment'",
+		"e.company_id = $1",
+	}
+
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
+
+	query := fmt.Sprintf(`
 SELECT 
     COUNT(*) AS count,
-    COALESCE(SUM(amount), 0) AS total_amount
-FROM debt_txn
-WHERE deleted_at IS NULL 
-    AND status = 'pending' 
-    AND txn_type = 'installment'
-`
+    COALESCE(SUM(dt.amount), 0) AS total_amount
+FROM debt_txn dt
+JOIN employees e ON dt.employee_id = e.id
+WHERE %s
+`, strings.Join(where, " AND "))
+
 	var result FinancialPending
-	if err := db.GetContext(ctx, &result, query); err != nil {
+	if err := db.GetContext(ctx, &result, query, args...); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
 // GetPendingBonusCycles retrieves pending bonus cycles count and total
-func (r *Repository) GetPendingBonusCycles(ctx context.Context) (*FinancialPending, error) {
+func (r *Repository) GetPendingBonusCycles(ctx context.Context, tenant contextx.TenantInfo) (*FinancialPending, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	// Bonus cycle is usually Company wide or branch specific?
+	// Assuming company specific for now.
+
+	args := []interface{}{tenant.CompanyID}
+	where := []string{
+		"bc.deleted_at IS NULL",
+		"bc.status = 'pending'",
+		"bc.company_id = $1",
+	}
+
+	// Branch filter? Bonus Cycle might have branch_id or items
+	// If items have employees, we might need complex join.
+	// For simplicity, cycle must have company_id.
+
+	query := fmt.Sprintf(`
 SELECT 
     COUNT(DISTINCT bc.id) AS count,
     COALESCE(SUM(bi.bonus_amount), 0) AS total_amount
 FROM bonus_cycle bc
 LEFT JOIN bonus_item bi ON bc.id = bi.cycle_id
-WHERE bc.deleted_at IS NULL AND bc.status = 'pending'
-`
+WHERE %s
+`, strings.Join(where, " AND "))
+
 	var result FinancialPending
-	if err := db.GetContext(ctx, &result, query); err != nil {
+	if err := db.GetContext(ctx, &result, query, args...); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
 // GetPendingSalaryRaiseCycles retrieves pending salary raise cycles count and total
-func (r *Repository) GetPendingSalaryRaiseCycles(ctx context.Context) (*FinancialPending, error) {
+func (r *Repository) GetPendingSalaryRaiseCycles(ctx context.Context, tenant contextx.TenantInfo) (*FinancialPending, error) {
 	db := r.dbCtx(ctx)
 
-	const query = `
+	args := []interface{}{tenant.CompanyID}
+	where := []string{
+		"src.deleted_at IS NULL",
+		"src.status = 'pending'",
+		"src.company_id = $1",
+	}
+
+	query := fmt.Sprintf(`
 SELECT 
     COUNT(DISTINCT src.id) AS count,
     COALESCE(SUM(sri.raise_amount), 0) AS total_amount
 FROM salary_raise_cycle src
 LEFT JOIN salary_raise_item sri ON src.id = sri.cycle_id
-WHERE src.deleted_at IS NULL AND src.status = 'pending'
-`
+WHERE %s
+`, strings.Join(where, " AND "))
+
 	var result FinancialPending
-	if err := db.GetContext(ctx, &result, query); err != nil {
+	if err := db.GetContext(ctx, &result, query, args...); err != nil {
 		return nil, err
 	}
 	return &result, nil

@@ -34,16 +34,19 @@ import (
 )
 
 type Module struct {
-	ctx      *module.ModuleContext
-	repo     repository.Repository
-	tokenSvc *jwt.TokenService
+	ctx        *module.ModuleContext
+	repo       repository.Repository
+	tenantRepo repository.TenantRepo
+	tokenSvc   *jwt.TokenService
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
+	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:      ctx,
-		repo:     repository.NewRepository(ctx.DBCtx),
-		tokenSvc: tokenSvc,
+		ctx:        ctx,
+		repo:       repo,
+		tenantRepo: repository.NewTenantRepo(repo),
+		tokenSvc:   tokenSvc,
 	}
 }
 
@@ -80,7 +83,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/employees", middleware.Auth(m.tokenSvc))
+	group := r.Group("/employees", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo))
 	// Staff & Admin
 	list.NewEndpoint(group)
 	create.NewEndpoint(group)
@@ -109,15 +112,15 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	accupsert.NewEndpoint(admin)
 	accdelete.NewEndpoint(admin)
 
-	// Document Types - separate top-level route
-	docTypes := r.Group("/employee-document-types", middleware.Auth(m.tokenSvc))
+	// Document Types - separate top-level route (with tenant context)
+	docTypes := r.Group("/employee-document-types", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo))
 	doctypelist.NewEndpoint(docTypes)
 	adminDocTypes := docTypes.Group("", middleware.RequireRoles("admin"))
 	doctypecreate.NewEndpoint(adminDocTypes)
 	doctypeupdate.NewEndpoint(adminDocTypes)
 	doctypedelete.NewEndpoint(adminDocTypes)
 
-	// Expiring documents - separate route for dashboard
-	docsAdmin := r.Group("/documents", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
+	// Expiring documents - separate route for dashboard (with tenant context)
+	docsAdmin := r.Group("/documents", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"), middleware.TenantMiddleware(m.tenantRepo))
 	docexpiring.NewEndpoint(docsAdmin)
 }

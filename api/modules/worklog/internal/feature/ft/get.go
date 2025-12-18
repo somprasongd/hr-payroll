@@ -11,6 +11,7 @@ import (
 
 	"hrms/modules/worklog/internal/dto"
 	"hrms/modules/worklog/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -31,7 +32,12 @@ type getHandler struct{}
 func NewGetHandler() *getHandler { return &getHandler{} }
 
 func (h *getHandler) Handle(ctx context.Context, q *GetQuery) (*GetResponse, error) {
-	rec, err := q.Repo.Get(ctx, q.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	rec, err := q.Repo.Get(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")

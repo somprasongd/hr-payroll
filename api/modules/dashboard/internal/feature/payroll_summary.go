@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/dashboard/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -66,22 +67,27 @@ func NewPayrollSummaryHandler() *payrollSummaryHandler {
 }
 
 func (h *payrollSummaryHandler) Handle(ctx context.Context, q *PayrollSummaryQuery) (*PayrollSummaryResponse, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	// Get latest payroll run
-	latestRun, err := q.Repo.GetLatestPayrollRun(ctx)
+	latestRun, err := q.Repo.GetLatestPayrollRun(ctx, tenant)
 	if err != nil && err != sql.ErrNoRows {
 		logger.FromContext(ctx).Error("failed to get latest payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to get latest payroll run")
 	}
 
 	// Get yearly totals
-	yearlyTotals, err := q.Repo.GetYearlyPayrollTotals(ctx, q.Year)
+	yearlyTotals, err := q.Repo.GetYearlyPayrollTotals(ctx, tenant, q.Year)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get yearly payroll totals", zap.Error(err))
 		return nil, errs.Internal("failed to get yearly payroll totals")
 	}
 
 	// Get monthly breakdown
-	monthlyBreakdown, err := q.Repo.GetMonthlyPayrollBreakdown(ctx, q.Year)
+	monthlyBreakdown, err := q.Repo.GetMonthlyPayrollBreakdown(ctx, tenant, q.Year)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get monthly payroll breakdown", zap.Error(err))
 		return nil, errs.Internal("failed to get monthly payroll breakdown")

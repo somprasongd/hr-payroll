@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -106,7 +107,7 @@ type AccumRecord struct {
 	UpdatedBy uuid.UUID `db:"updated_by" json:"updatedBy"`
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, search, status, employeeTypeID string, hasOutstandingDebt bool) (ListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, search, status, employeeTypeID string, hasOutstandingDebt bool) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -118,6 +119,16 @@ func (r Repository) List(ctx context.Context, page, limit int, search, status, e
 		args  []interface{}
 	)
 	where = append(where, "e.deleted_at IS NULL")
+
+	// Filter by Company
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	// Filter by Branch (if not admin and has specific branches)
+	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+		args = append(args, pq.Array(tenant.BranchIDs))
+		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	}
 
 	switch status {
 	case "terminated":
@@ -217,7 +228,7 @@ func (r Repository) GetIDDocumentTypeCode(ctx context.Context, id uuid.UUID) (st
 	return code, nil
 }
 
-func (r Repository) Get(ctx context.Context, id uuid.UUID) (*DetailRecord, error) {
+func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT 
@@ -261,10 +272,10 @@ SELECT
   pt.name_th AS title_name
 FROM employees e
 LEFT JOIN person_title pt ON pt.id = e.title_id
-WHERE e.id = $1 AND e.deleted_at IS NULL
+WHERE e.id = $1 AND e.company_id = $2 AND e.deleted_at IS NULL
 LIMIT 1`
 	var rec DetailRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -395,7 +406,7 @@ INSERT INTO employees (
 	return &rec, nil
 }
 
-func (r Repository) Update(ctx context.Context, id uuid.UUID, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
+func (r Repository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 UPDATE employees SET
@@ -433,7 +444,7 @@ UPDATE employees SET
   allow_attendance_bonus_nolate=:allow_attendance_bonus_nolate,
   allow_attendance_bonus_noleave=:allow_attendance_bonus_noleave,
   updated_by=:updated_by
-WHERE id=:id AND deleted_at IS NULL
+WHERE id=:id AND company_id=:company_id AND deleted_at IS NULL
 RETURNING *`
 
 	stmt, err := db.PrepareNamedContext(ctx, q)
@@ -444,6 +455,7 @@ RETURNING *`
 
 	params := map[string]interface{}{
 		"id":                             id,
+		"company_id":                     tenant.CompanyID,
 		"employee_number":                payload.EmployeeNumber,
 		"title_id":                       payload.TitleID,
 		"first_name":                     payload.FirstName,
@@ -487,10 +499,10 @@ RETURNING *`
 	return &rec, nil
 }
 
-func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r Repository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id)
+	const q = `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND company_id = $3 AND deleted_at IS NULL`
+	res, err := db.ExecContext(ctx, q, actor, id, tenant.CompanyID)
 	if err != nil {
 		return err
 	}

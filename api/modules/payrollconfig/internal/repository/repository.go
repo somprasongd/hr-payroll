@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -54,7 +55,7 @@ type ListResult struct {
 	Total int
 }
 
-func (r Repository) List(ctx context.Context, page, limit int) (ListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -93,11 +94,11 @@ SELECT
   created_at,
   updated_at
 FROM payroll_config
-WHERE effective_daterange IS NOT NULL
+WHERE effective_daterange IS NOT NULL AND company_id = $1
 ORDER BY version_no DESC
-LIMIT $1 OFFSET $2`
+LIMIT $2 OFFSET $3`
 
-	rows, err := db.QueryxContext(ctx, baseQuery, limit, offset)
+	rows, err := db.QueryxContext(ctx, baseQuery, tenant.CompanyID, limit, offset)
 	if err != nil {
 		return ListResult{}, err
 	}
@@ -112,16 +113,16 @@ LIMIT $1 OFFSET $2`
 		items = append(items, rec)
 	}
 
-	const countQ = `SELECT COUNT(1) FROM payroll_config WHERE effective_daterange IS NOT NULL`
+	const countQ = `SELECT COUNT(1) FROM payroll_config WHERE effective_daterange IS NOT NULL AND company_id=$1`
 	var total int
-	if err := db.GetContext(ctx, &total, countQ); err != nil {
+	if err := db.GetContext(ctx, &total, countQ, tenant.CompanyID); err != nil {
 		return ListResult{}, err
 	}
 
 	return ListResult{Rows: items, Total: total}, nil
 }
 
-func (r Repository) GetEffective(ctx context.Context, date time.Time) (*Record, error) {
+func (r Repository) GetEffective(ctx context.Context, tenant contextx.TenantInfo, date time.Time) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT
@@ -154,11 +155,12 @@ SELECT
   note,
   created_at,
   updated_at
-FROM get_effective_payroll_config($1) pc
-WHERE pc.id IS NOT NULL
+FROM payroll_config
+WHERE effective_daterange @> $1::date AND company_id=$2
+ORDER BY version_no DESC
 LIMIT 1`
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, date); err != nil {
+	if err := db.GetContext(ctx, &rec, q, date, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil

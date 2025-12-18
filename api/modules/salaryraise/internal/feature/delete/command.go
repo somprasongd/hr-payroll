@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/salaryraise/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -28,7 +29,12 @@ var _ mediator.RequestHandler[*Command, mediator.NoResponse] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	if err := cmd.Repo.DeleteCycle(ctx, cmd.ID, cmd.Actor); err != nil {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	if err := cmd.Repo.DeleteCycle(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
 		if err == sql.ErrNoRows {
 			return mediator.NoResponse{}, errs.NotFound("cycle not found or already deleted")
 		}
@@ -36,6 +42,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	}
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "DELETE",
 		EntityName: "SALARY_RAISE_CYCLE",
 		EntityID:   cmd.ID.String(),

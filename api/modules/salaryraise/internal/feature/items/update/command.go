@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/salaryraise/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -38,7 +39,12 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	_, cycle, err := cmd.Repo.GetItem(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	_, cycle, err := cmd.Repo.GetItem(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("raise item not found")
@@ -52,7 +58,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if cmd.RaisePercent == nil && cmd.RaiseAmount == nil && cmd.NewSSOWage == nil {
 		return nil, errs.BadRequest("no fields to update")
 	}
-	updated, err := cmd.Repo.UpdateItem(ctx, cmd.ID, cmd.RaisePercent, cmd.RaiseAmount, cmd.NewSSOWage, cmd.ActorID)
+	updated, err := cmd.Repo.UpdateItem(ctx, tenant, cmd.ID, cmd.RaisePercent, cmd.RaiseAmount, cmd.NewSSOWage, cmd.ActorID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to update raise item", zap.Error(err))
 		return nil, errs.Internal("failed to update raise item")
@@ -73,6 +79,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "UPDATE_ITEM",
 		EntityName: "SALARY_RAISE_ITEM",
 		EntityID:   updated.ID.String(),

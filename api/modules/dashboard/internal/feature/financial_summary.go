@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/dashboard/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -40,36 +41,41 @@ func NewFinancialSummaryHandler() *financialSummaryHandler {
 }
 
 func (h *financialSummaryHandler) Handle(ctx context.Context, q *FinancialSummaryQuery) (*FinancialSummaryResponse, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	// Get pending advances
-	advances, err := q.Repo.GetPendingAdvances(ctx)
+	advances, err := q.Repo.GetPendingAdvances(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending advances", zap.Error(err))
 		return nil, errs.Internal("failed to get pending advances")
 	}
 
 	// Get pending loans
-	loans, err := q.Repo.GetPendingLoans(ctx)
+	loans, err := q.Repo.GetPendingLoans(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending loans", zap.Error(err))
 		return nil, errs.Internal("failed to get pending loans")
 	}
 
 	// Get outstanding installments
-	installments, err := q.Repo.GetOutstandingInstallments(ctx)
+	installments, err := q.Repo.GetOutstandingInstallments(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get outstanding installments", zap.Error(err))
 		return nil, errs.Internal("failed to get outstanding installments")
 	}
 
 	// Get pending bonus cycles
-	bonusCycles, err := q.Repo.GetPendingBonusCycles(ctx)
+	bonusCycles, err := q.Repo.GetPendingBonusCycles(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending bonus cycles", zap.Error(err))
 		return nil, errs.Internal("failed to get pending bonus cycles")
 	}
 
 	// Get pending salary raise cycles
-	salaryRaiseCycles, err := q.Repo.GetPendingSalaryRaiseCycles(ctx)
+	salaryRaiseCycles, err := q.Repo.GetPendingSalaryRaiseCycles(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending salary raise cycles", zap.Error(err))
 		return nil, errs.Internal("failed to get pending salary raise cycles")

@@ -19,17 +19,20 @@ import (
 )
 
 type Module struct {
-	ctx      *module.ModuleContext
-	repo     repository.Repository
-	tokenSvc *jwt.TokenService
-	eb       eventbus.EventBus
+	ctx        *module.ModuleContext
+	repo       repository.Repository
+	tenantRepo repository.TenantRepo
+	tokenSvc   *jwt.TokenService
+	eb         eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
+	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:      ctx,
-		repo:     repository.NewRepository(ctx.DBCtx),
-		tokenSvc: tokenSvc,
+		ctx:        ctx,
+		repo:       repo,
+		tenantRepo: repository.NewTenantRepo(repo),
+		tokenSvc:   tokenSvc,
 	}
 }
 
@@ -49,7 +52,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	runGroup := r.Group("/payroll-runs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
+	runGroup := r.Group("/payroll-runs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo), middleware.RequireRoles("admin", "hr"))
 	list.NewEndpoint(runGroup, m.repo)
 	create.NewEndpoint(runGroup, m.repo, m.ctx.Transactor, m.eb)
 	get.NewEndpoint(runGroup, m.repo)

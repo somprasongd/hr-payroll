@@ -10,6 +10,7 @@ import (
 
 	"hrms/modules/payrollconfig/internal/dto"
 	"hrms/modules/payrollconfig/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -45,6 +46,12 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+	cmd.CompanyID = tenant.CompanyID
+
 	applyDefaults(&cmd.Payload)
 
 	if err := validatePayload(cmd.Payload); err != nil {
@@ -66,6 +73,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
 		Action:     "CREATE",
 		EntityName: "PAYROLL_CONFIG",
 		EntityID:   created.ID.String(),

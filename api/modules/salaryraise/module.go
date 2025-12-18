@@ -20,17 +20,20 @@ import (
 )
 
 type Module struct {
-	ctx      *module.ModuleContext
-	repo     repository.Repository
-	tokenSvc *jwt.TokenService
-	eb       eventbus.EventBus
+	ctx        *module.ModuleContext
+	repo       repository.Repository
+	tenantRepo repository.TenantRepo
+	tokenSvc   *jwt.TokenService
+	eb         eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
+	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:      ctx,
-		repo:     repository.NewRepository(ctx.DBCtx),
-		tokenSvc: tokenSvc,
+		ctx:        ctx,
+		repo:       repo,
+		tenantRepo: repository.NewTenantRepo(repo),
+		tokenSvc:   tokenSvc,
 	}
 }
 
@@ -49,14 +52,14 @@ func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/salary-raise-cycles", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
+	group := r.Group("/salary-raise-cycles", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo), middleware.RequireRoles("admin", "hr"))
 	list.NewEndpoint(group, m.repo)
 	get.NewEndpoint(group, m.repo)
 	create.NewEndpoint(group, m.repo, m.ctx.Transactor, m.eb)
 	update.NewEndpoint(group, m.repo, m.eb)
 	itemslist.NewEndpoint(group, m.repo)
 	// items update (hr/admin)
-	itemGroup := r.Group("/salary-raise-items", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
+	itemGroup := r.Group("/salary-raise-items", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo), middleware.RequireRoles("admin", "hr"))
 	itemsupdate.NewEndpoint(itemGroup, m.repo, m.ctx.Transactor, m.eb)
 	delete.NewEndpoint(group, m.repo, m.eb)
 }

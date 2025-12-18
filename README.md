@@ -179,7 +179,11 @@ The system supports multi-company and multi-branch isolation using PostgreSQL Ro
 | `employee_position`  | `company_id`              | Positions                  |
 | `payroll_*`          | `company_id`, `branch_id` | Payroll data               |
 | `bonus_*`            | `company_id`, `branch_id` | Bonus data                 |
+| `salary_raise_*`     | `company_id`, `branch_id` | Salary Raise data          |
+| `salary_advance`     | `company_id`              | Salary Advance             |
+| `debt_txn`           | `company_id`              | Debt & Loan                |
 | `worklog_*`          | `company_id`, `branch_id` | Worklog data               |
+| `activity_logs`      | `company_id`, `branch_id` | Audit Logs                 |
 
 ## 🛠️ Tech Stack
 

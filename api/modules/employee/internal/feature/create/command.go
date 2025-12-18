@@ -81,6 +81,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		hook(func(ctx context.Context) error {
 			h.eb.Publish(events.LogEvent{
 				ActorID:    cmd.ActorID,
+				CompanyID:  &cmd.CompanyID,
 				Action:     "CREATE",
 				EntityName: "EMPLOYEE",
 				EntityID:   created.ID.String(),
