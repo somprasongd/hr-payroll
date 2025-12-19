@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"time"
 
+	"hrms/shared/common/contextx"
+
 	"github.com/google/uuid"
 )
 
@@ -14,6 +16,8 @@ type DocumentTypeRecord struct {
 	Code      string     `db:"code" json:"code"`
 	NameTh    string     `db:"name_th" json:"nameTh"`
 	NameEn    string     `db:"name_en" json:"nameEn"`
+	IsSystem  bool       `db:"is_system" json:"isSystem"`
+	CompanyID *uuid.UUID `db:"company_id" json:"companyId,omitempty"`
 	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
 	UpdatedAt time.Time  `db:"updated_at" json:"updatedAt"`
 	CreatedBy uuid.UUID  `db:"created_by" json:"-"`
@@ -64,12 +68,51 @@ type ExpiringDocumentRecord struct {
 
 // ===== Document Type Repository Methods =====
 
+// ListDocumentTypes returns system types + company's custom types
 func (r Repository) ListDocumentTypes(ctx context.Context) ([]DocumentTypeRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
-SELECT id, code, name_th, name_en, created_at, updated_at
+
+	// Get tenant info (optional - for custom types)
+	tenant, hasTenant := contextx.TenantFromContext(ctx)
+
+	var q string
+	var args []interface{}
+
+	if hasTenant {
+		// Return system types + company's custom types
+		q = `
+SELECT id, code, name_th, name_en, is_system, company_id, created_at, updated_at
 FROM employee_document_type
 WHERE deleted_at IS NULL
+  AND (is_system = TRUE OR company_id = $1)
+ORDER BY is_system DESC, code`
+		args = append(args, tenant.CompanyID)
+	} else {
+		// No tenant - return only system types
+		q = `
+SELECT id, code, name_th, name_en, is_system, company_id, created_at, updated_at
+FROM employee_document_type
+WHERE deleted_at IS NULL AND is_system = TRUE
+ORDER BY code`
+	}
+
+	var out []DocumentTypeRecord
+	if err := db.SelectContext(ctx, &out, q, args...); err != nil {
+		return nil, err
+	}
+	if out == nil {
+		out = make([]DocumentTypeRecord, 0)
+	}
+	return out, nil
+}
+
+// ListSystemDocumentTypes returns only system types (for superadmin)
+func (r Repository) ListSystemDocumentTypes(ctx context.Context) ([]DocumentTypeRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+SELECT id, code, name_th, name_en, is_system, company_id, created_at, updated_at
+FROM employee_document_type
+WHERE deleted_at IS NULL AND is_system = TRUE
 ORDER BY code`
 	var out []DocumentTypeRecord
 	if err := db.SelectContext(ctx, &out, q); err != nil {
@@ -83,7 +126,7 @@ ORDER BY code`
 
 func (r Repository) GetDocumentType(ctx context.Context, id uuid.UUID) (*DocumentTypeRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT id, code, name_th, name_en, created_at, updated_at FROM employee_document_type WHERE id=$1 AND deleted_at IS NULL`
+	const q = `SELECT id, code, name_th, name_en, is_system, company_id, created_at, updated_at FROM employee_document_type WHERE id=$1 AND deleted_at IS NULL`
 	var rec DocumentTypeRecord
 	if err := db.GetContext(ctx, &rec, q, id); err != nil {
 		return nil, err
@@ -93,7 +136,7 @@ func (r Repository) GetDocumentType(ctx context.Context, id uuid.UUID) (*Documen
 
 func (r Repository) GetDocumentTypeByCode(ctx context.Context, code string) (*DocumentTypeRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT id, code, name_th, name_en, created_at, updated_at FROM employee_document_type WHERE LOWER(code) = LOWER($1) AND deleted_at IS NULL`
+	const q = `SELECT id, code, name_th, name_en, is_system, company_id, created_at, updated_at FROM employee_document_type WHERE LOWER(code) = LOWER($1) AND deleted_at IS NULL`
 	var rec DocumentTypeRecord
 	if err := db.GetContext(ctx, &rec, q, code); err != nil {
 		return nil, err
@@ -101,12 +144,33 @@ func (r Repository) GetDocumentTypeByCode(ctx context.Context, code string) (*Do
 	return &rec, nil
 }
 
+// CreateDocumentType creates a custom document type for the current company
 func (r Repository) CreateDocumentType(ctx context.Context, input DocumentTypeRecord, actor uuid.UUID) (*DocumentTypeRecord, error) {
 	db := r.dbCtx(ctx)
+
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+
 	const q = `
-INSERT INTO employee_document_type (code, name_th, name_en, created_by, updated_by)
-VALUES ($1, $2, $3, $4, $4)
-RETURNING id, code, name_th, name_en, created_at, updated_at`
+INSERT INTO employee_document_type (code, name_th, name_en, company_id, is_system, created_by, updated_by)
+VALUES ($1, $2, $3, $4, FALSE, $5, $5)
+RETURNING id, code, name_th, name_en, is_system, company_id, created_at, updated_at`
+	var rec DocumentTypeRecord
+	if err := db.GetContext(ctx, &rec, q, input.Code, input.NameTh, input.NameEn, tenant.CompanyID, actor); err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+// CreateSystemDocumentType creates a system document type (superadmin only)
+func (r Repository) CreateSystemDocumentType(ctx context.Context, input DocumentTypeRecord, actor uuid.UUID) (*DocumentTypeRecord, error) {
+	db := r.dbCtx(ctx)
+	const q = `
+INSERT INTO employee_document_type (code, name_th, name_en, company_id, is_system, created_by, updated_by)
+VALUES ($1, $2, $3, NULL, TRUE, $4, $4)
+RETURNING id, code, name_th, name_en, is_system, company_id, created_at, updated_at`
 	var rec DocumentTypeRecord
 	if err := db.GetContext(ctx, &rec, q, input.Code, input.NameTh, input.NameEn, actor); err != nil {
 		return nil, err
@@ -114,12 +178,34 @@ RETURNING id, code, name_th, name_en, created_at, updated_at`
 	return &rec, nil
 }
 
+// UpdateDocumentType updates a custom document type (company admin)
 func (r Repository) UpdateDocumentType(ctx context.Context, id uuid.UUID, input DocumentTypeRecord, actor uuid.UUID) (*DocumentTypeRecord, error) {
+	db := r.dbCtx(ctx)
+
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+
+	// Only allow updating custom types owned by this company
+	const q = `
+UPDATE employee_document_type SET code=$1, name_th=$2, name_en=$3, updated_by=$4
+WHERE id=$5 AND deleted_at IS NULL AND is_system = FALSE AND company_id = $6
+RETURNING id, code, name_th, name_en, is_system, company_id, created_at, updated_at`
+	var rec DocumentTypeRecord
+	if err := db.GetContext(ctx, &rec, q, input.Code, input.NameTh, input.NameEn, actor, id, tenant.CompanyID); err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+// UpdateSystemDocumentType updates a system document type (superadmin only)
+func (r Repository) UpdateSystemDocumentType(ctx context.Context, id uuid.UUID, input DocumentTypeRecord, actor uuid.UUID) (*DocumentTypeRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 UPDATE employee_document_type SET code=$1, name_th=$2, name_en=$3, updated_by=$4
-WHERE id=$5 AND deleted_at IS NULL
-RETURNING id, code, name_th, name_en, created_at, updated_at`
+WHERE id=$5 AND deleted_at IS NULL AND is_system = TRUE
+RETURNING id, code, name_th, name_en, is_system, company_id, created_at, updated_at`
 	var rec DocumentTypeRecord
 	if err := db.GetContext(ctx, &rec, q, input.Code, input.NameTh, input.NameEn, actor, id); err != nil {
 		return nil, err
@@ -127,9 +213,31 @@ RETURNING id, code, name_th, name_en, created_at, updated_at`
 	return &rec, nil
 }
 
+// SoftDeleteDocumentType soft deletes a custom document type (company admin)
 func (r Repository) SoftDeleteDocumentType(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE employee_document_type SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL`
+
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return sql.ErrNoRows
+	}
+
+	// Only allow deleting custom types owned by this company
+	const q = `UPDATE employee_document_type SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL AND is_system = FALSE AND company_id = $3`
+	res, err := db.ExecContext(ctx, q, actor, id, tenant.CompanyID)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+// SoftDeleteSystemDocumentType soft deletes a system document type (superadmin only)
+func (r Repository) SoftDeleteSystemDocumentType(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `UPDATE employee_document_type SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL AND is_system = TRUE`
 	res, err := db.ExecContext(ctx, q, actor, id)
 	if err != nil {
 		return err

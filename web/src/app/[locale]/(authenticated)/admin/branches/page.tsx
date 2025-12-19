@@ -16,6 +16,7 @@ import {
   getBranchEmployeeCount,
   deleteBranch,
 } from '@/services/tenant.service';
+import { authService } from '@/services/auth.service';
 import { Branch, useTenantStore } from '@/store/tenant-store';
 import {
   Dialog,
@@ -79,8 +80,16 @@ export default function BranchesPage() {
       setLoading(true);
       const data = await getBranches();
       setBranches(data);
-      // Refresh the branch switcher dropdown with latest branches
-      refreshAvailableBranches(data);
+      // Refresh the branch switcher dropdown with user's authorized branches only
+      try {
+        const userContext = await authService.getUserCompanies();
+        if (userContext.branches) {
+          refreshAvailableBranches(userContext.branches as Branch[]);
+        }
+      } catch (e) {
+        // Fallback: if can't get user's branches, don't update dropdown
+        console.warn('Failed to refresh user branches for dropdown:', e);
+      }
     } catch {
       toast({ title: tCommon('error'), description: t('fetchError'), variant: 'destructive' });
     } finally {

@@ -1144,8 +1144,11 @@
     "fields": {
       "code": "Code",
       "nameTh": "Name (Thai)",
-      "nameEn": "Name (English)"
+      "nameEn": "Name (English)",
+      "type": "Type"
     },
+    "systemType": "System",
+    "customType": "Custom",
     "placeholders": {
       "code": "e.g. PASSPORT, VISA",
       "nameTh": "e.g. หนังสือเดินทาง",
@@ -1468,6 +1471,10 @@
         "required": "Please fill in all required fields",
         "passwordLength": "Password must be at least 8 characters"
       }
+    },
+    "documentTypes": {
+      "title": "System Document Types",
+      "description": "Manage system-wide document types available to all companies"
     },
     "status": {
       "active": "Active",

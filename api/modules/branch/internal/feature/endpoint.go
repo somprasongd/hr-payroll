@@ -165,7 +165,7 @@ func updateHandler(repo repository.Repository) fiber.Handler {
 // @Security BearerAuth
 // @Param id path string true "branch ID"
 // @Success 204
-// @Failure 400 {object} response.ErrorResponse "Branch must be archived before deletion"
+// @Failure 400 {object} response.Problem "Branch must be archived before deletion"
 // @Router /admin/branches/{id} [delete]
 func deleteHandler(repo repository.Repository) fiber.Handler {
 	return func(c fiber.Ctx) error {

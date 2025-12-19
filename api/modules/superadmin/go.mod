@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	go.uber.org/zap v1.27.1
 	hrms/shared/common v0.0.0
+	hrms/shared/contracts v0.0.0
 )
 
 require (
@@ -30,3 +31,5 @@ require (
 )
 
 replace hrms/shared/common => ../../shared/common
+
+replace hrms/shared/contracts => ../../shared/contracts

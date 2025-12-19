@@ -139,3 +139,77 @@ func (r Repository) UpdateCompany(ctx context.Context, id uuid.UUID, code, name,
 	}
 	return &out, nil
 }
+
+// ===== Document Type (System Types Management) =====
+
+// DocumentType model for system document types
+type DocumentType struct {
+	ID        uuid.UUID  `db:"id" json:"id"`
+	Code      string     `db:"code" json:"code"`
+	NameTh    string     `db:"name_th" json:"nameTh"`
+	NameEn    string     `db:"name_en" json:"nameEn"`
+	IsSystem  bool       `db:"is_system" json:"isSystem"`
+	CompanyID *uuid.UUID `db:"company_id" json:"companyId,omitempty"`
+	CreatedAt string     `db:"created_at" json:"createdAt"`
+	UpdatedAt string     `db:"updated_at" json:"updatedAt"`
+}
+
+// ListSystemDocumentTypes returns all system document types
+func (r Repository) ListSystemDocumentTypes(ctx context.Context) ([]DocumentType, error) {
+	db := r.dbCtx(ctx)
+	var out []DocumentType
+	const q = `SELECT id, code, name_th, name_en, is_system, company_id, created_at, updated_at
+		FROM employee_document_type 
+		WHERE deleted_at IS NULL AND is_system = TRUE
+		ORDER BY code ASC`
+	if err := db.SelectContext(ctx, &out, q); err != nil {
+		return nil, err
+	}
+	if out == nil {
+		out = make([]DocumentType, 0)
+	}
+	return out, nil
+}
+
+// CreateSystemDocumentType creates a new system document type
+func (r Repository) CreateSystemDocumentType(ctx context.Context, code, nameTh, nameEn string, actorID uuid.UUID) (*DocumentType, error) {
+	db := r.dbCtx(ctx)
+	var out DocumentType
+	const q = `INSERT INTO employee_document_type (code, name_th, name_en, company_id, is_system, created_by, updated_by)
+		VALUES ($1, $2, $3, NULL, TRUE, $4, $4)
+		RETURNING id, code, name_th, name_en, is_system, company_id, created_at, updated_at`
+	if err := db.GetContext(ctx, &out, q, code, nameTh, nameEn, actorID); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// UpdateSystemDocumentType updates a system document type
+func (r Repository) UpdateSystemDocumentType(ctx context.Context, id uuid.UUID, code, nameTh, nameEn string, actorID uuid.UUID) (*DocumentType, error) {
+	db := r.dbCtx(ctx)
+	var out DocumentType
+	const q = `UPDATE employee_document_type 
+		SET code = $2, name_th = $3, name_en = $4, updated_by = $5, updated_at = now()
+		WHERE id = $1 AND deleted_at IS NULL AND is_system = TRUE
+		RETURNING id, code, name_th, name_en, is_system, company_id, created_at, updated_at`
+	if err := db.GetContext(ctx, &out, q, id, code, nameTh, nameEn, actorID); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// SoftDeleteSystemDocumentType soft deletes a system document type
+func (r Repository) SoftDeleteSystemDocumentType(ctx context.Context, id, actorID uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `UPDATE employee_document_type 
+		SET deleted_at = now(), deleted_by = $2
+		WHERE id = $1 AND deleted_at IS NULL AND is_system = TRUE`
+	res, err := db.ExecContext(ctx, q, id, actorID)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return nil // Not found or not system type - return nil for soft delete
+	}
+	return nil
+}

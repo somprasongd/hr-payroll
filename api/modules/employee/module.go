@@ -1,6 +1,7 @@
 package employee
 
 import (
+	"hrms/modules/employee/doctype"
 	accdelete "hrms/modules/employee/internal/feature/accum/delete"
 	acclist "hrms/modules/employee/internal/feature/accum/list"
 	accupsert "hrms/modules/employee/internal/feature/accum/upsert"
@@ -65,11 +66,14 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 	mediator.Register[*photodownload.Query, *photodownload.Response](photodownload.NewHandler(m.repo))
 	mediator.Register[*photodelete.Command, mediator.NoResponse](photodelete.NewHandler(m.repo, m.ctx.Transactor, eventBus))
 
-	// Document Type handlers
+	// Document Type handlers (custom types - company admin)
 	mediator.Register[*doctypelist.Query, *doctypelist.Response](doctypelist.NewHandler(m.repo))
 	mediator.Register[*doctypecreate.Command, *doctypecreate.Response](doctypecreate.NewHandler(m.repo, eventBus))
 	mediator.Register[*doctypeupdate.Command, *doctypeupdate.Response](doctypeupdate.NewHandler(m.repo, eventBus))
 	mediator.Register[*doctypedelete.Command, mediator.NoResponse](doctypedelete.NewHandler(m.repo, eventBus))
+
+	// System Document Type handlers (superadmin) - uses public doctype package
+	doctype.RegisterSystemHandlers(m.repo, eventBus)
 
 	// Document handlers
 	mediator.Register[*doclist.Query, *doclist.Response](doclist.NewHandler(m.repo))
