@@ -7,6 +7,8 @@ require (
 	github.com/google/uuid v1.6.0
 	go.uber.org/zap v1.27.1
 	hrms/shared/common v0.0.0
+	hrms/shared/contracts v0.0.0
+	hrms/shared/events v0.0.0
 )
 
 require (
@@ -29,4 +31,8 @@ require (
 	golang.org/x/text v0.32.0 // indirect
 )
 
-replace hrms/shared/common => ../../shared/common
+replace (
+	hrms/shared/common => ../../shared/common
+	hrms/shared/contracts => ../../shared/contracts
+	hrms/shared/events => ../../shared/events
+)

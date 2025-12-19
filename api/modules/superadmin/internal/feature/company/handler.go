@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -12,8 +13,10 @@ import (
 	"hrms/modules/superadmin/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 // CreateCompanyRequest for creating a new company with admin user
@@ -35,11 +38,12 @@ type CreateCompanyResponse struct {
 type Handler struct {
 	repo repository.Repository
 	tx   transactor.Transactor
+	eb   eventbus.EventBus
 }
 
 // NewHandler creates a new company handler
-func NewHandler(repo repository.Repository, tx transactor.Transactor) *Handler {
-	return &Handler{repo: repo, tx: tx}
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
 }
 
 // Create handles POST /super-admin/companies
@@ -65,7 +69,7 @@ func (h *Handler) Create(c fiber.Ctx) error {
 
 	var resp CreateCompanyResponse
 
-	err := h.tx.WithinTransaction(ctx, func(txCtx context.Context, _ func(transactor.PostCommitHook)) error {
+	err := h.tx.WithinTransaction(ctx, func(txCtx context.Context, registerHook func(transactor.PostCommitHook)) error {
 		// 1. Create company
 		company, err := h.repo.CreateCompany(txCtx, req.CompanyCode, req.CompanyName, user.ID.String())
 		if err != nil {
@@ -101,6 +105,29 @@ func (h *Handler) Create(c fiber.Ctx) error {
 			logger.FromContext(ctx).Error("failed to assign user to branch", zap.Error(err))
 			return errs.Internal("failed to assign user to branch")
 		}
+
+		registerHook(func(ctx context.Context) error {
+			companyID := resp.Company.ID
+			branchID := resp.Branch.ID
+			h.eb.Publish(events.LogEvent{
+				ActorID:    user.ID,
+				CompanyID:  &companyID,
+				BranchID:   &branchID,
+				Action:     "CREATE",
+				EntityName: "COMPANY",
+				EntityID:   companyID.String(),
+				Details: map[string]interface{}{
+					"code":          resp.Company.Code,
+					"name":          resp.Company.Name,
+					"status":        resp.Company.Status,
+					"defaultBranch": resp.Branch.Code,
+					"branchName":    resp.Branch.Name,
+					"adminUserId":   resp.AdminID.String(),
+				},
+				Timestamp: time.Now(),
+			})
+			return nil
+		})
 
 		return nil
 	})
@@ -174,5 +201,21 @@ func (h *Handler) Update(c fiber.Ctx) error {
 		logger.FromContext(ctx).Error("failed to update company", zap.Error(err))
 		return errs.Internal("failed to update company")
 	}
+
+	companyID := company.ID
+	h.eb.Publish(events.LogEvent{
+		ActorID:    user.ID,
+		CompanyID:  &companyID,
+		Action:     "UPDATE",
+		EntityName: "COMPANY",
+		EntityID:   companyID.String(),
+		Details: map[string]interface{}{
+			"code":   company.Code,
+			"name":   company.Name,
+			"status": company.Status,
+		},
+		Timestamp: time.Now(),
+	})
+
 	return c.JSON(company)
 }
