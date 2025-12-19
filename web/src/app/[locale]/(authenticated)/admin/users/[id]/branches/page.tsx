@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Save, Building2 } from 'lucide-react';
+import { ArrowLeft, Save, Building2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -14,8 +14,10 @@ import {
   setUserBranches,
   BranchAccess 
 } from '@/services/tenant.service';
+import { authService } from '@/services/auth.service';
 import { userService } from '@/services/user.service';
-import { Branch } from '@/store/tenant-store';
+import { Branch, useTenantStore } from '@/store/tenant-store';
+import { useAuthStore } from '@/store/auth-store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function UserBranchesPage() {
@@ -28,8 +30,12 @@ export default function UserBranchesPage() {
   const [username, setUsername] = useState<string>('');
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
   const [selectedBranchIds, setSelectedBranchIds] = useState<Set<string>>(new Set());
+  const [initialBranchIds, setInitialBranchIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const { user: currentUser } = useAuthStore();
+  const { refreshAvailableBranches } = useTenantStore();
 
   const fetchData = useCallback(async () => {
     try {
@@ -48,7 +54,9 @@ export default function UserBranchesPage() {
 
       // Fetch user's current branches
       const userBranches = await getUserBranches(userId);
-      setSelectedBranchIds(new Set(userBranches.map(b => b.branchId)));
+      const branchIds = new Set(userBranches.map(b => b.branchId));
+      setSelectedBranchIds(branchIds);
+      setInitialBranchIds(new Set(branchIds));
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast({ 
@@ -66,29 +74,62 @@ export default function UserBranchesPage() {
   }, [fetchData]);
 
   const handleToggleBranch = (branchId: string) => {
-    setSelectedBranchIds(prev => {
-      const next = new Set(prev);
-      if (next.has(branchId)) {
-        next.delete(branchId);
-      } else {
-        next.add(branchId);
+    if (selectedBranchIds.has(branchId)) {
+      // Prevent deselecting if only 1 branch remains
+      if (selectedBranchIds.size <= 1) {
+        toast({ 
+          title: tCommon('error'), 
+          description: t('mustSelectOne'), 
+          variant: 'destructive' 
+        });
+        return;
       }
-      return next;
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedBranchIds.size === allBranches.length) {
-      setSelectedBranchIds(new Set());
+      
+      const next = new Set(selectedBranchIds);
+      next.delete(branchId);
+      setSelectedBranchIds(next);
     } else {
-      setSelectedBranchIds(new Set(allBranches.map(b => b.id)));
+      const next = new Set(selectedBranchIds);
+      next.add(branchId);
+      setSelectedBranchIds(next);
     }
   };
 
+  const handleSelectAll = () => {
+    setSelectedBranchIds(new Set(allBranches.map(b => b.id)));
+  };
+
+  const handleReset = () => {
+    setSelectedBranchIds(new Set(initialBranchIds));
+  };
+
   const handleSave = async () => {
+    // Validate at least 1 branch is selected
+    if (selectedBranchIds.size === 0) {
+      toast({ 
+        title: tCommon('error'), 
+        description: t('mustSelectOne'), 
+        variant: 'destructive' 
+      });
+      return;
+    }
+    
     try {
       setSaving(true);
       await setUserBranches(userId, Array.from(selectedBranchIds));
+      
+      // If saving branches for the currently logged-in user, refresh the branch switcher dropdown
+      if (currentUser && currentUser.id === userId) {
+        try {
+          const userContext = await authService.getUserCompanies();
+          if (userContext.branches) {
+            refreshAvailableBranches(userContext.branches as Branch[]);
+          }
+        } catch (e) {
+          console.warn('Failed to refresh user branches for dropdown:', e);
+        }
+      }
+      
       toast({ 
         title: tCommon('success'), 
         description: t('saveSuccess') 
@@ -147,12 +188,16 @@ export default function UserBranchesPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={handleSelectAll}
+                onClick={selectedBranchIds.size === allBranches.length ? handleReset : handleSelectAll}
               >
-                {selectedBranchIds.size === allBranches.length 
-                  ? t('deselectAll') 
-                  : t('selectAll')
-                }
+                {selectedBranchIds.size === allBranches.length ? (
+                  <>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    {tCommon('reset')}
+                  </>
+                ) : (
+                  t('selectAll')
+                )}
               </Button>
             </div>
           </div>
@@ -194,6 +239,7 @@ export default function UserBranchesPage() {
         <Button variant="outline" asChild>
           <Link href="/admin/users">{tCommon('cancel')}</Link>
         </Button>
+
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
           {saving ? tCommon('saving') : tCommon('save')}

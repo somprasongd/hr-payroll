@@ -10,6 +10,7 @@ import (
 	"hrms/modules/user/internal/feature/get"
 	"hrms/modules/user/internal/feature/list"
 	"hrms/modules/user/internal/feature/me"
+	"hrms/modules/user/internal/feature/mecompanies"
 	"hrms/modules/user/internal/feature/resetpassword"
 	"hrms/modules/user/internal/feature/updaterole"
 	"hrms/modules/user/internal/repository"
@@ -51,6 +52,7 @@ func (m *Module) Init(eventBus eventbus.EventBus) error {
 	mediator.Register[*resetpassword.Command, *resetpassword.Response](resetpassword.NewHandler(m.repo, eventBus))
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, eventBus))
 	mediator.Register[*me.Query, *me.Response](me.NewHandler(m.repo))
+	mediator.Register[*mecompanies.Query, *mecompanies.Response](mecompanies.NewHandler(m.repo))
 	mediator.Register[*changepassword.Command, *changepassword.Response](changepassword.NewHandler(m.repo))
 
 	// Contract handlers for superadmin module
@@ -75,4 +77,5 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	meGroup := r.Group("/me", middleware.Auth(m.tokenSvc))
 	me.NewEndpoint(meGroup)
 	changepassword.NewEndpoint(meGroup)
+	mecompanies.NewEndpoint(meGroup)
 }

@@ -35,6 +35,23 @@ type UserListResult struct {
 	Total int
 }
 
+type CompanyInfo struct {
+	ID     uuid.UUID `db:"id" json:"id"`
+	Code   string    `db:"code" json:"code"`
+	Name   string    `db:"name" json:"name"`
+	Status string    `db:"status" json:"status"`
+	Role   string    `db:"role" json:"role"`
+}
+
+type BranchInfo struct {
+	ID        uuid.UUID `db:"id" json:"id"`
+	CompanyID uuid.UUID `db:"company_id" json:"companyId"`
+	Code      string    `db:"code" json:"code"`
+	Name      string    `db:"name" json:"name"`
+	Status    string    `db:"status" json:"status"`
+	IsDefault bool      `db:"is_default" json:"isDefault"`
+}
+
 func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter string, companyID uuid.UUID) (UserListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
@@ -96,6 +113,36 @@ WHERE %s`, whereClause)
 	}
 
 	return UserListResult{Users: users, Total: total}, nil
+}
+
+func (r Repository) GetUserCompanies(ctx context.Context, userID uuid.UUID) ([]CompanyInfo, error) {
+	db := r.dbCtx(ctx)
+	var out []CompanyInfo
+	const q = `
+		SELECT c.id, c.code, c.name, c.status, ucr.role
+		FROM companies c
+		JOIN user_company_roles ucr ON ucr.company_id = c.id
+		WHERE ucr.user_id = $1 AND c.status = 'active'
+		ORDER BY c.name`
+	if err := db.SelectContext(ctx, &out, q, userID); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r Repository) GetUserBranches(ctx context.Context, userID uuid.UUID) ([]BranchInfo, error) {
+	db := r.dbCtx(ctx)
+	var out []BranchInfo
+	const q = `
+		SELECT b.id, b.company_id, b.code, b.name, b.status, b.is_default
+		FROM branches b
+		JOIN user_branch_access uba ON uba.branch_id = b.id
+		WHERE uba.user_id = $1 AND b.status = 'active'
+		ORDER BY b.is_default DESC, b.name`
+	if err := db.SelectContext(ctx, &out, q, userID); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (r Repository) CreateUser(ctx context.Context, username, passwordHash, role string, actor uuid.UUID) (*UserRecord, error) {

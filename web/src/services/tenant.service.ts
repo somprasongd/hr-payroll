@@ -104,8 +104,8 @@ export async function getCompanyUsers(): Promise<CompanyUser[]> {
 }
 
 export async function getUserBranches(userId: string): Promise<BranchAccess[]> {
-  const response = await api.get<BranchAccess[]>(`/admin/users/${userId}/branches`);
-  return response.data;
+  const response = await api.get<{ data: BranchAccess[] }>(`/admin/users/${userId}/branches`);
+  return response.data.data;
 }
 
 export async function setUserBranches(userId: string, branchIds: string[]): Promise<BranchAccess[]> {

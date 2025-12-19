@@ -95,6 +95,7 @@ export const authService = {
    * Get user's companies and branches (for tenant selection)
    */
   async getUserCompanies(): Promise<{ companies: CompanyInfo[]; branches: BranchInfo[] }> {
-    return apiClient.get<{ companies: CompanyInfo[]; branches: BranchInfo[] }>('/me/companies');
+    const response = await apiClient.get<{ data: { companies: CompanyInfo[]; branches: BranchInfo[] } }>('/me/companies');
+    return response.data;
   },
 };

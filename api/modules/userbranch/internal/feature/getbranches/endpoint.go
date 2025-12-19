@@ -31,6 +31,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 		if err != nil {
 			return err
 		}
-		return response.JSON(c, fiber.StatusOK, resp.Branches)
+		return response.JSON(c, fiber.StatusOK, fiber.Map{"data": resp.Branches})
 	})
 }
