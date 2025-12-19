@@ -5,6 +5,8 @@ export interface DocumentType {
   code: string;
   nameTh: string;
   nameEn: string;
+  isSystem: boolean;
+  companyId?: string;
   createdAt: string;
   updatedAt: string;
 }

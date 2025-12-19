@@ -42,6 +42,8 @@ replace hrms/modules/superadmin v0.0.0 => ../modules/superadmin
 
 replace hrms/shared/events v0.0.0 => ../shared/events
 
+replace hrms/shared/contracts v0.0.0 => ../shared/contracts
+
 require (
 	github.com/caarlos0/env/v11 v11.1.0
 	github.com/gofiber/fiber/v3 v3.0.0-rc.3
@@ -102,5 +104,6 @@ require (
 	golang.org/x/tools v0.39.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	hrms/shared/contracts v0.0.0 // indirect
 	hrms/shared/events v0.0.0 // indirect
 )

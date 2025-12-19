@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { GenericDataTable } from '@/components/common/generic-data-table';
-import { SquarePen, Trash2 } from 'lucide-react';
+import { SquarePen, Trash2, Lock } from 'lucide-react';
 import { documentTypeService, type DocumentType } from '@/services/document-type.service';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentTypeForm } from './document-type-form';
@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface DocumentTypeListProps {
   refreshKey?: number;
@@ -63,6 +64,15 @@ export function DocumentTypeList({ refreshKey = 0 }: DocumentTypeListProps) {
     fetchData();
   }, [refreshKey]);
 
+  // Group data: system types first, then custom types
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => {
+      if (a.isSystem && !b.isSystem) return -1;
+      if (!a.isSystem && b.isSystem) return 1;
+      return a.code.localeCompare(b.code);
+    });
+  }, [data]);
+
   const handleUpdate = async (formData: { code: string; nameTh: string; nameEn: string }) => {
     if (!selectedItem) return;
     await documentTypeService.update(selectedItem.id, formData);
@@ -99,7 +109,15 @@ export function DocumentTypeList({ refreshKey = 0 }: DocumentTypeListProps) {
       id: 'code',
       header: t('fields.code'),
       accessorFn: (row: DocumentType) => row.code,
-      cell: (info: any) => <span className="font-mono">{info.getValue()}</span>,
+      cell: (info: any) => {
+        const row = info.row.original as DocumentType;
+        return (
+          <span className="flex items-center gap-2">
+            {row.isSystem && <Lock className="h-3 w-3 text-muted-foreground" />}
+            <span className="font-mono">{info.getValue()}</span>
+          </span>
+        );
+      },
     },
     {
       id: 'nameTh',
@@ -111,6 +129,19 @@ export function DocumentTypeList({ refreshKey = 0 }: DocumentTypeListProps) {
       header: t('fields.nameEn'),
       accessorFn: (row: DocumentType) => row.nameEn,
     },
+    {
+      id: 'type',
+      header: t('fields.type'),
+      accessorFn: (row: DocumentType) => row.isSystem,
+      cell: (info: any) => {
+        const isSystem = info.getValue();
+        return isSystem ? (
+          <Badge variant="secondary">{t('systemType')}</Badge>
+        ) : (
+          <Badge variant="outline">{t('customType')}</Badge>
+        );
+      },
+    },
   ];
 
   const actions = [
@@ -121,6 +152,7 @@ export function DocumentTypeList({ refreshKey = 0 }: DocumentTypeListProps) {
         setSelectedItem(item);
         setIsEditOpen(true);
       },
+      condition: (item: DocumentType) => !item.isSystem,
     },
     {
       label: tCommon('delete'),
@@ -130,6 +162,7 @@ export function DocumentTypeList({ refreshKey = 0 }: DocumentTypeListProps) {
         setSelectedItem(item);
         setIsDeleteOpen(true);
       },
+      condition: (item: DocumentType) => !item.isSystem,
     },
   ];
 

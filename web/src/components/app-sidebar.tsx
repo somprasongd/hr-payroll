@@ -13,7 +13,8 @@ import {
   CreditCard,
   Settings2,
   Banknote,
-  Building2
+  Building2,
+  FileText
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/routing"
@@ -296,6 +297,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Link href="/super-admin/companies">
                     <Building2 />
                     <span>{tMenu('companies')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/super-admin/document-types')} tooltip="Document Types">
+                  <Link href="/super-admin/document-types">
+                    <FileText />
+                    <span>{tNav('documentTypes')}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

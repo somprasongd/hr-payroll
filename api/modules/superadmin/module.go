@@ -2,6 +2,7 @@ package superadmin
 
 import (
 	"hrms/modules/superadmin/internal/feature/company"
+	"hrms/modules/superadmin/internal/feature/doctype"
 	"hrms/modules/superadmin/internal/repository"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/jwt"
@@ -47,4 +48,11 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	superAdmin.Post("/companies", companyHandler.Create)
 	superAdmin.Get("/companies/:id", companyHandler.Get)
 	superAdmin.Patch("/companies/:id", companyHandler.Update)
+
+	// Document type management (system types) - uses mediator
+	doctypeHandler := doctype.NewHandler()
+	superAdmin.Get("/employee-document-types", doctypeHandler.List)
+	superAdmin.Post("/employee-document-types", doctypeHandler.Create)
+	superAdmin.Put("/employee-document-types/:id", doctypeHandler.Update)
+	superAdmin.Delete("/employee-document-types/:id", doctypeHandler.Delete)
 }
