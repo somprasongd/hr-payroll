@@ -25,6 +25,7 @@ import (
 	"hrms/modules/salaryadvance"
 	"hrms/modules/salaryraise"
 	"hrms/modules/superadmin"
+	"hrms/modules/tenant"
 	"hrms/modules/user"
 	"hrms/modules/userbranch"
 	"hrms/modules/worklog"
@@ -80,6 +81,8 @@ func main() {
 	tokenSvc := jwt.NewTokenService(cfg.JWTAccessSecret, cfg.JWTRefreshSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
 
 	app.RegisterModules(
+		// Tenant module must be first to register mediator handlers before middleware runs
+		tenant.NewModule(mCtx),
 		auth.NewModule(mCtx, tokenSvc),
 		user.NewModule(mCtx, tokenSvc),
 		superadmin.NewModule(mCtx, tokenSvc, trans),

@@ -17,7 +17,6 @@ type Module struct {
 	ctx        *module.ModuleContext
 	tokenSvc   *jwt.TokenService
 	repo       *repository.Repository
-	tenantRepo repository.TenantRepo
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -26,7 +25,6 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 		ctx:        ctx,
 		tokenSvc:   tokenSvc,
 		repo:       repo,
-		tenantRepo: repository.NewTenantRepo(repo),
 	}
 }
 
@@ -46,7 +44,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	handler := http.NewHandler(m.repo)
 
 	// Admin only
-	g := r.Group("/admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo), middleware.RequireRoles("admin"))
+	g := r.Group("/admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
 	g.Get("/", handler.ListLogs)
 	g.Get("/latest", handler.ListLogs)
 	g.Get("/filter-options", handler.GetFilterOptions)

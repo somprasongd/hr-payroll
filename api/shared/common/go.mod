@@ -1,6 +1,6 @@
 module hrms/shared/common
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/gofiber/fiber/v3 v3.0.0-beta.4
@@ -10,7 +10,10 @@ require (
 	github.com/lib/pq v1.10.9
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.32.0
+	hrms/shared/contracts v0.0.0
 )
+
+replace hrms/shared/contracts => ../contracts
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect

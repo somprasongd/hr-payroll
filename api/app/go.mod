@@ -44,6 +44,8 @@ replace hrms/shared/events v0.0.0 => ../shared/events
 
 replace hrms/shared/contracts v0.0.0 => ../shared/contracts
 
+replace hrms/modules/tenant v0.0.0 => ../modules/tenant
+
 require (
 	github.com/caarlos0/env/v11 v11.1.0
 	github.com/gofiber/fiber/v3 v3.0.0-rc.3
@@ -64,6 +66,7 @@ require (
 	hrms/modules/salaryadvance v0.0.0
 	hrms/modules/salaryraise v0.0.0
 	hrms/modules/superadmin v0.0.0
+	hrms/modules/tenant v0.0.0
 	hrms/modules/user v0.0.0
 	hrms/modules/userbranch v0.0.0
 	hrms/modules/worklog v0.0.0

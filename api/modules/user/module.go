@@ -24,7 +24,6 @@ type Module struct {
 	ctx        *module.ModuleContext
 	tokenSvc   *jwt.TokenService
 	repo       repository.Repository
-	tenantRepo repository.TenantRepo
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
@@ -33,7 +32,6 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 		ctx:        ctx,
 		tokenSvc:   tokenSvc,
 		repo:       repo,
-		tenantRepo: repository.NewTenantRepo(repo),
 	}
 }
 
@@ -55,7 +53,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	// Admin user management routes - with tenant context for company filtering
-	admin := r.Group("/admin", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo), middleware.RequireRoles("admin"))
+	admin := r.Group("/admin", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
 	list.NewEndpoint(admin)
 	create.NewEndpoint(admin)
 	get.NewEndpoint(admin)
