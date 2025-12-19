@@ -37,7 +37,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 		"/admin/users",
 		cmw.Auth(m.tokenSvc),
 		cmw.RequireRoles("admin"),
-		cmw.TenantMiddleware(m.repo),
+		cmw.TenantMiddleware(),
 	)
 	feature.Register(admin, m.repo)
 }

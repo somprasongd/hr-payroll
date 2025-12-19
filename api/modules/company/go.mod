@@ -30,3 +30,4 @@ require (
 )
 
 replace hrms/shared/common => ../../shared/common
+replace hrms/shared/contracts v0.0.0 => ../../shared/contracts

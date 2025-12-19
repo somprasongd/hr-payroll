@@ -7,19 +7,14 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/shared/common/contextx"
+	"hrms/shared/common/mediator"
+	"hrms/shared/contracts"
 )
 
-// TenantRepo defines the interface for tenant access validation
-type TenantRepo interface {
-	HasCompanyAccess(userID, companyID uuid.UUID) bool
-	GetUserBranches(userID, companyID uuid.UUID) ([]uuid.UUID, error)
-	IsAdmin(userID, companyID uuid.UUID) bool
-}
-
 // TenantMiddleware reads X-Company-ID, X-Branch-ID headers,
-// validates user access, and sets tenant info in context.
+// validates user access via mediator, and sets tenant info in context.
 // RLS session variables are set in transactor.WithinTransaction()
-func TenantMiddleware(repo TenantRepo) fiber.Handler {
+func TenantMiddleware() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -37,11 +32,21 @@ func TenantMiddleware(repo TenantRepo) fiber.Handler {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid X-Company-ID header")
 		}
 
-		if !repo.HasCompanyAccess(user.ID, companyID) {
+		// Check company access via mediator
+		accessResp, err := mediator.Send[*contracts.HasCompanyAccessQuery, *contracts.HasCompanyAccessResponse](
+			c.Context(),
+			&contracts.HasCompanyAccessQuery{UserID: user.ID, CompanyID: companyID},
+		)
+		if err != nil || !accessResp.HasAccess {
 			return fiber.NewError(fiber.StatusForbidden, "access denied to this company")
 		}
 
-		isAdmin := repo.IsAdmin(user.ID, companyID)
+		// Check if admin via mediator
+		adminResp, err := mediator.Send[*contracts.IsAdminQuery, *contracts.IsAdminResponse](
+			c.Context(),
+			&contracts.IsAdminQuery{UserID: user.ID, CompanyID: companyID},
+		)
+		isAdmin := err == nil && adminResp.IsAdmin
 
 		var branchIDs []uuid.UUID
 		branchIDsStr := c.Get("X-Branch-ID")
@@ -60,11 +65,15 @@ func TenantMiddleware(repo TenantRepo) fiber.Handler {
 		}
 
 		if len(branchIDs) == 0 && !isAdmin {
-			userBranches, err := repo.GetUserBranches(user.ID, companyID)
+			// Get user branches via mediator
+			branchResp, err := mediator.Send[*contracts.GetUserBranchesQuery, *contracts.GetUserBranchesResponse](
+				c.Context(),
+				&contracts.GetUserBranchesQuery{UserID: user.ID, CompanyID: companyID},
+			)
 			if err != nil {
 				return fiber.NewError(fiber.StatusInternalServerError, "failed to get user branches")
 			}
-			branchIDs = userBranches
+			branchIDs = branchResp.BranchIDs
 		}
 
 		tenant := contextx.TenantInfo{
@@ -82,7 +91,7 @@ func TenantMiddleware(repo TenantRepo) fiber.Handler {
 
 // OptionalTenantMiddleware is like TenantMiddleware but doesn't require headers.
 // Used for endpoints that can work with or without tenant context.
-func OptionalTenantMiddleware(repo TenantRepo) fiber.Handler {
+func OptionalTenantMiddleware() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -99,11 +108,21 @@ func OptionalTenantMiddleware(repo TenantRepo) fiber.Handler {
 			return c.Next()
 		}
 
-		if !repo.HasCompanyAccess(user.ID, companyID) {
+		// Check company access via mediator
+		accessResp, err := mediator.Send[*contracts.HasCompanyAccessQuery, *contracts.HasCompanyAccessResponse](
+			c.Context(),
+			&contracts.HasCompanyAccessQuery{UserID: user.ID, CompanyID: companyID},
+		)
+		if err != nil || !accessResp.HasAccess {
 			return c.Next()
 		}
 
-		isAdmin := repo.IsAdmin(user.ID, companyID)
+		// Check if admin via mediator
+		adminResp, err := mediator.Send[*contracts.IsAdminQuery, *contracts.IsAdminResponse](
+			c.Context(),
+			&contracts.IsAdminQuery{UserID: user.ID, CompanyID: companyID},
+		)
+		isAdmin := err == nil && adminResp.IsAdmin
 
 		var branchIDs []uuid.UUID
 		branchIDsStr := c.Get("X-Branch-ID")
@@ -120,8 +139,13 @@ func OptionalTenantMiddleware(repo TenantRepo) fiber.Handler {
 		}
 
 		if len(branchIDs) == 0 && !isAdmin {
-			if userBranches, err := repo.GetUserBranches(user.ID, companyID); err == nil {
-				branchIDs = userBranches
+			// Get user branches via mediator
+			branchResp, err := mediator.Send[*contracts.GetUserBranchesQuery, *contracts.GetUserBranchesResponse](
+				c.Context(),
+				&contracts.GetUserBranchesQuery{UserID: user.ID, CompanyID: companyID},
+			)
+			if err == nil {
+				branchIDs = branchResp.BranchIDs
 			}
 		}
 

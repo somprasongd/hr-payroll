@@ -16,7 +16,6 @@ import (
 type Module struct {
 	ctx        *module.ModuleContext
 	repo       *repository.Repository
-	tenantRepo repository.TenantRepo
 	tokenSvc   *jwt.TokenService
 }
 
@@ -25,7 +24,6 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 	return &Module{
 		ctx:        ctx,
 		repo:       repo,
-		tenantRepo: repository.NewTenantRepo(repo),
 		tokenSvc:   tokenSvc,
 	}
 }
@@ -52,7 +50,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/dashboard", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(m.tenantRepo))
+	group := r.Group("/dashboard", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 
 	feature.RegisterEmployeeSummary(group, m.repo)
 	feature.RegisterAttendanceSummary(group, m.repo)

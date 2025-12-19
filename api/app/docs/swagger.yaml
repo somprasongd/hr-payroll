@@ -479,6 +479,20 @@ definitions:
       otHours:
         type: number
     type: object
+  feature.CreateRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - code
+    - name
+    type: object
   feature.DepartmentCountDTO:
     properties:
       count:
@@ -487,6 +501,11 @@ definitions:
         type: string
       departmentName:
         type: string
+    type: object
+  feature.EmployeeCountResponse:
+    properties:
+      count:
+        type: integer
     type: object
   feature.EmployeeSummaryResponse:
     properties:
@@ -601,6 +620,44 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  feature.StatusChangeRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - suspended
+        - archived
+        type: string
+    required:
+    - status
+    type: object
+  feature.StatusChangeResponse:
+    properties:
+      branch:
+        $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+      employeeCount:
+        type: integer
+    type: object
+  feature.UpdateRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      status:
+        enum:
+        - active
+        - suspended
+        type: string
+    required:
+    - code
+    - name
+    - status
     type: object
   feature.YearlyTotalsDTO:
     properties:
@@ -942,6 +999,27 @@ definitions:
         $ref: '#/definitions/hrms_modules_bonus_internal_dto.Meta'
     type: object
   hrms_modules_bonus_internal_repository.Repository:
+    type: object
+  hrms_modules_branch_internal_repository.Branch:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
     type: object
   hrms_modules_debt_internal_dto.Item:
     properties:
@@ -3375,6 +3453,175 @@ info:
   title: HR Payroll API
   version: "1.0"
 paths:
+  /admin/branches:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List all branches
+      tags:
+      - Branches
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: branch payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/feature.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+      security:
+      - BearerAuth: []
+      summary: Create a new branch
+      tags:
+      - Branches
+  /admin/branches/{id}:
+    delete:
+      description: Soft deletes a branch. Branch must be archived before deletion.
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Branch must be archived before deletion
+          schema:
+            $ref: '#/definitions/response.Problem'
+      security:
+      - BearerAuth: []
+      summary: Delete a branch (soft delete)
+      tags:
+      - Branches
+    get:
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+      security:
+      - BearerAuth: []
+      summary: Get a branch by ID
+      tags:
+      - Branches
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: branch payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/feature.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+      security:
+      - BearerAuth: []
+      summary: Update a branch
+      tags:
+      - Branches
+  /admin/branches/{id}/default:
+    put:
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Set a branch as default
+      tags:
+      - Branches
+  /admin/branches/{id}/employee-count:
+    get:
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.EmployeeCountResponse'
+      security:
+      - BearerAuth: []
+      summary: Get employee count for a branch
+      tags:
+      - Branches
+  /admin/branches/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: status payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/feature.StatusChangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.StatusChangeResponse'
+      security:
+      - BearerAuth: []
+      summary: Change branch status
+      tags:
+      - Branches
   /admin/payroll-configs:
     get:
       description: ดึงประวัติการตั้งค่าทั้งหมด (Admin)

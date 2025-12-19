@@ -53,7 +53,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 		"/admin/payroll-org-profiles",
 		middleware.Auth(m.tokenSvc),
 		middleware.RequireRoles("admin"),
-		middleware.TenantMiddleware(m.repo),
+		middleware.TenantMiddleware(),
 	)
 	list.NewEndpoint(admin)
 	effective.NewEndpoint(admin)
@@ -64,7 +64,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 		"/admin/payroll-org-logos",
 		middleware.Auth(m.tokenSvc),
 		middleware.RequireRoles("admin"),
-		middleware.TenantMiddleware(m.repo),
+		middleware.TenantMiddleware(),
 	)
 	uploadlogo.NewEndpoint(logo)
 	downloadlogo.NewEndpoint(logo)
