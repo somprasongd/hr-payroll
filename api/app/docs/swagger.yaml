@@ -17,6 +17,128 @@ definitions:
       message:
         type: string
     type: object
+  changestatus.StatusChangeRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - suspended
+        - archived
+        type: string
+    required:
+    - status
+    type: object
+  changestatus.StatusChangeResponse:
+    properties:
+      branch:
+        $ref: '#/definitions/repository.Branch'
+      employeeCount:
+        type: integer
+    type: object
+  contracts.BranchDTO:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  contracts.CompanyDTO:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  contracts.CreateSystemDocTypeResponse:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  contracts.UpdateSystemDocTypeResponse:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  create.CreateCompanyRequest:
+    properties:
+      adminPassword:
+        minLength: 8
+        type: string
+      adminUsername:
+        maxLength: 50
+        minLength: 3
+        type: string
+      companyCode:
+        maxLength: 50
+        type: string
+      companyName:
+        maxLength: 200
+        type: string
+    required:
+    - adminPassword
+    - adminUsername
+    - companyCode
+    - companyName
+    type: object
+  create.CreateRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  create.DocumentTypeRequest:
+    properties:
+      code:
+        type: string
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
   create.OptionalUUID:
     type: object
   create.Request:
@@ -377,6 +499,11 @@ definitions:
       username:
         type: string
     type: object
+  employeecount.EmployeeCountResponse:
+    properties:
+      count:
+        type: integer
+    type: object
   employeeposition.CreateCommand:
     properties:
       actorID:
@@ -404,6 +531,32 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  entity.ActivityLog:
+    properties:
+      action:
+        type: string
+      branchId:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      details:
+        items:
+          type: integer
+        type: array
+      entity:
+        type: string
+      entityId:
+        type: string
+      id:
+        type: string
+      userId:
+        type: string
+      userName:
+        description: Joined fields
         type: string
     type: object
   expiring.Response:
@@ -479,20 +632,6 @@ definitions:
       otHours:
         type: number
     type: object
-  feature.CreateRequest:
-    properties:
-      code:
-        maxLength: 10
-        minLength: 1
-        type: string
-      name:
-        maxLength: 100
-        minLength: 1
-        type: string
-    required:
-    - code
-    - name
-    type: object
   feature.DepartmentCountDTO:
     properties:
       count:
@@ -501,11 +640,6 @@ definitions:
         type: string
       departmentName:
         type: string
-    type: object
-  feature.EmployeeCountResponse:
-    properties:
-      count:
-        type: integer
     type: object
   feature.EmployeeSummaryResponse:
     properties:
@@ -614,51 +748,6 @@ definitions:
           $ref: '#/definitions/repository.MasterRecord'
         type: array
     type: object
-  feature.SetBranchesRequest:
-    properties:
-      branchIds:
-        items:
-          type: string
-        type: array
-    type: object
-  feature.StatusChangeRequest:
-    properties:
-      status:
-        enum:
-        - active
-        - suspended
-        - archived
-        type: string
-    required:
-    - status
-    type: object
-  feature.StatusChangeResponse:
-    properties:
-      branch:
-        $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
-      employeeCount:
-        type: integer
-    type: object
-  feature.UpdateRequest:
-    properties:
-      code:
-        maxLength: 10
-        minLength: 1
-        type: string
-      name:
-        maxLength: 100
-        minLength: 1
-        type: string
-      status:
-        enum:
-        - active
-        - suspended
-        type: string
-    required:
-    - code
-    - name
-    - status
-    type: object
   feature.YearlyTotalsDTO:
     properties:
       totalNetPay:
@@ -669,6 +758,17 @@ definitions:
         type: number
       totalTax:
         type: number
+    type: object
+  filteroptions.Response:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      entities:
+        items:
+          type: string
+        type: array
     type: object
   ft.CreateRequest:
     properties:
@@ -765,6 +865,24 @@ definitions:
         type: string
       workDate:
         type: string
+    type: object
+  hrms_modules_activitylog_internal_feature_list.Meta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  hrms_modules_activitylog_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/entity.ActivityLog'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_activitylog_internal_feature_list.Meta'
     type: object
   hrms_modules_bonus_internal_dto.Cycle:
     properties:
@@ -1000,26 +1118,25 @@ definitions:
     type: object
   hrms_modules_bonus_internal_repository.Repository:
     type: object
-  hrms_modules_branch_internal_repository.Branch:
+  hrms_modules_branch_internal_feature_update.UpdateRequest:
     properties:
       code:
+        maxLength: 10
+        minLength: 1
         type: string
-      companyId:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      isDefault:
-        type: boolean
       name:
+        maxLength: 100
+        minLength: 1
         type: string
       status:
+        enum:
+        - active
+        - suspended
         type: string
-      updatedAt:
-        type: string
+    required:
+    - code
+    - name
+    - status
     type: object
   hrms_modules_debt_internal_dto.Item:
     properties:
@@ -1602,6 +1719,15 @@ definitions:
       payout:
         $ref: '#/definitions/repository.Payout'
     type: object
+  hrms_modules_payoutpt_internal_feature_list.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
   hrms_modules_payoutpt_internal_feature_list.Response:
     properties:
       data:
@@ -1609,7 +1735,7 @@ definitions:
           $ref: '#/definitions/repository.Payout'
         type: array
       meta:
-        $ref: '#/definitions/list.Meta'
+        $ref: '#/definitions/hrms_modules_payoutpt_internal_feature_list.Meta'
     type: object
   hrms_modules_payoutpt_internal_repository.Repository:
     type: object
@@ -2546,6 +2672,24 @@ definitions:
     type: object
   hrms_modules_salaryraise_internal_repository.Repository:
     type: object
+  hrms_modules_superadmin_internal_feature_company_create.Response:
+    properties:
+      adminUserId:
+        type: string
+      branch:
+        $ref: '#/definitions/contracts.BranchDTO'
+      company:
+        $ref: '#/definitions/contracts.CompanyDTO'
+    type: object
+  hrms_modules_superadmin_internal_feature_company_update.UpdateRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+    type: object
   hrms_modules_user_internal_dto.Meta:
     properties:
       currentPage:
@@ -2843,15 +2987,6 @@ definitions:
       updatedAt:
         type: string
     type: object
-  list.Meta:
-    properties:
-      currentPage:
-        type: integer
-      totalItems:
-        type: integer
-      totalPages:
-        type: integer
-    type: object
   login.RequestBody:
     properties:
       password:
@@ -3133,6 +3268,27 @@ definitions:
       updatedBy:
         type: string
     type: object
+  repository.Branch:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   repository.BranchAccess:
     properties:
       branchId:
@@ -3377,6 +3533,13 @@ definitions:
       type:
         type: string
     type: object
+  setbranches.SetBranchesRequest:
+    properties:
+      branchIds:
+        items:
+          type: string
+        type: array
+    type: object
   switch_tenant.Response:
     properties:
       accessToken:
@@ -3401,6 +3564,15 @@ definitions:
           type: string
         type: array
       companyId:
+        type: string
+    type: object
+  update.DocumentTypeRequest:
+    properties:
+      code:
+        type: string
+      nameEn:
+        type: string
+      nameTh:
         type: string
     type: object
   update.Request:
@@ -3453,6 +3625,66 @@ info:
   title: HR Payroll API
   version: "1.0"
 paths:
+  /admin/activity-logs:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by action
+        in: query
+        name: action
+        type: string
+      - description: Filter by entity
+        in: query
+        name: entity
+        type: string
+      - description: Filter from date (YYYY-MM-DD)
+        in: query
+        name: fromDate
+        type: string
+      - description: Filter to date (YYYY-MM-DD)
+        in: query
+        name: toDate
+        type: string
+      - description: Filter by username
+        in: query
+        name: userName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_activitylog_internal_feature_list.Response'
+      security:
+      - BearerAuth: []
+      summary: List activity logs
+      tags:
+      - ActivityLog
+  /admin/activity-logs/filter-options:
+    get:
+      description: Returns distinct actions and entities for filtering
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/filteroptions.Response'
+      security:
+      - BearerAuth: []
+      summary: Get filter options for activity logs
+      tags:
+      - ActivityLog
   /admin/branches:
     get:
       produces:
@@ -3462,7 +3694,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+              $ref: '#/definitions/repository.Branch'
             type: array
       security:
       - BearerAuth: []
@@ -3478,14 +3710,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/feature.CreateRequest'
+          $ref: '#/definitions/create.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+            $ref: '#/definitions/repository.Branch'
       security:
       - BearerAuth: []
       summary: Create a new branch
@@ -3525,7 +3757,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+            $ref: '#/definitions/repository.Branch'
       security:
       - BearerAuth: []
       summary: Get a branch by ID
@@ -3545,14 +3777,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/feature.UpdateRequest'
+          $ref: '#/definitions/hrms_modules_branch_internal_feature_update.UpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_branch_internal_repository.Branch'
+            $ref: '#/definitions/repository.Branch'
       security:
       - BearerAuth: []
       summary: Update a branch
@@ -3588,7 +3820,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/feature.EmployeeCountResponse'
+            $ref: '#/definitions/employeecount.EmployeeCountResponse'
       security:
       - BearerAuth: []
       summary: Get employee count for a branch
@@ -3609,14 +3841,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/feature.StatusChangeRequest'
+          $ref: '#/definitions/changestatus.StatusChangeRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/feature.StatusChangeResponse'
+            $ref: '#/definitions/changestatus.StatusChangeResponse'
       security:
       - BearerAuth: []
       summary: Change branch status
@@ -4105,7 +4337,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/feature.SetBranchesRequest'
+          $ref: '#/definitions/setbranches.SetBranchesRequest'
       produces:
       - application/json
       responses:
@@ -6393,6 +6625,171 @@ paths:
       summary: Update salary raise item
       tags:
       - Salary Raise
+  /super-admin/companies:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/contracts.CompanyDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List all companies
+      tags:
+      - SuperAdmin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: company and admin payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/create.CreateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_superadmin_internal_feature_company_create.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new company with admin user
+      tags:
+      - SuperAdmin
+  /super-admin/companies/{id}:
+    get:
+      parameters:
+      - description: company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contracts.CompanyDTO'
+      security:
+      - BearerAuth: []
+      summary: Get a company by ID
+      tags:
+      - SuperAdmin
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: company payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_superadmin_internal_feature_company_update.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contracts.CompanyDTO'
+      security:
+      - BearerAuth: []
+      summary: Update a company
+      tags:
+      - SuperAdmin
+  /super-admin/employee-document-types:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all system document types
+      tags:
+      - SuperAdmin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: document type payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/create.DocumentTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/contracts.CreateSystemDocTypeResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a system document type
+      tags:
+      - SuperAdmin
+  /super-admin/employee-document-types/{id}:
+    delete:
+      parameters:
+      - description: document type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a system document type
+      tags:
+      - SuperAdmin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: document type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: document type payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/update.DocumentTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contracts.UpdateSystemDocTypeResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a system document type
+      tags:
+      - SuperAdmin
   /worklogs/ft:
     get:
       description: รายการ worklog (Full-time)

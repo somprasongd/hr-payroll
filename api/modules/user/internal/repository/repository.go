@@ -168,3 +168,25 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	}
 	return nil
 }
+
+// ===== Methods for superadmin contracts =====
+
+// AssignUserToCompany assigns a user to a company with a role
+func (r Repository) AssignUserToCompany(ctx context.Context, userID, companyID uuid.UUID, role string, actorID uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `INSERT INTO user_company_roles (user_id, company_id, role, created_by)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (user_id, company_id) DO UPDATE SET role = EXCLUDED.role`
+	_, err := db.ExecContext(ctx, q, userID, companyID, role, actorID)
+	return err
+}
+
+// AssignUserToBranch assigns a user to a branch
+func (r Repository) AssignUserToBranch(ctx context.Context, userID, branchID, actorID uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `INSERT INTO user_branch_access (user_id, branch_id, created_by)
+		VALUES ($1, $2, $3)
+		ON CONFLICT DO NOTHING`
+	_, err := db.ExecContext(ctx, q, userID, branchID, actorID)
+	return err
+}

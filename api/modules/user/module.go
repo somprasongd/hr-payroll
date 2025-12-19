@@ -1,8 +1,11 @@
 package user
 
 import (
+	"hrms/modules/user/internal/feature/assigntobranch"
+	"hrms/modules/user/internal/feature/assigntocompany"
 	"hrms/modules/user/internal/feature/changepassword"
 	"hrms/modules/user/internal/feature/create"
+	"hrms/modules/user/internal/feature/createwithpassword"
 	"hrms/modules/user/internal/feature/delete"
 	"hrms/modules/user/internal/feature/get"
 	"hrms/modules/user/internal/feature/list"
@@ -15,7 +18,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -39,7 +42,8 @@ func (m *Module) APIVersion() string {
 	return "v1"
 }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) error {
+func (m *Module) Init(eventBus eventbus.EventBus) error {
+	// Internal user management handlers
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eventBus))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
@@ -48,6 +52,12 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, eventBus))
 	mediator.Register[*me.Query, *me.Response](me.NewHandler(m.repo))
 	mediator.Register[*changepassword.Command, *changepassword.Response](changepassword.NewHandler(m.repo))
+
+	// Contract handlers for superadmin module
+	mediator.Register[*contracts.CreateUserWithPasswordCommand, *contracts.CreateUserWithPasswordResponse](createwithpassword.NewHandler(m.repo))
+	mediator.Register[*contracts.AssignUserToCompanyCommand, *contracts.AssignUserToCompanyResponse](assigntocompany.NewHandler(m.repo))
+	mediator.Register[*contracts.AssignUserToBranchCommand, *contracts.AssignUserToBranchResponse](assigntobranch.NewHandler(m.repo))
+
 	return nil
 }
 

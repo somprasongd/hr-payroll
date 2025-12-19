@@ -1,13 +1,20 @@
 package company
 
 import (
-	"hrms/modules/company/internal/feature"
+	"hrms/modules/company/internal/feature/createcompany"
+	"hrms/modules/company/internal/feature/createdefaultbranch"
+	"hrms/modules/company/internal/feature/get"
+	"hrms/modules/company/internal/feature/getbyid"
+	"hrms/modules/company/internal/feature/listall"
+	"hrms/modules/company/internal/feature/update"
+	"hrms/modules/company/internal/feature/updatebyid"
 	"hrms/modules/company/internal/repository"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/jwt"
+	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -28,11 +35,25 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ eventbus.EventBus) error {
+	// Register internal handlers for company module endpoints
+	mediator.Register[*get.Query, *get.Response](get.NewHandler())
+	mediator.Register[*update.Command, *update.Response](update.NewHandler())
+
+	// Register contract handlers for superadmin module to use via mediator
+	mediator.Register[*contracts.ListAllCompaniesQuery, *contracts.ListAllCompaniesResponse](listall.NewHandler(m.repo))
+	mediator.Register[*contracts.GetCompanyByIDQuery, *contracts.GetCompanyByIDResponse](getbyid.NewHandler(m.repo))
+	mediator.Register[*contracts.CreateCompanyCommand, *contracts.CreateCompanyResponse](createcompany.NewHandler(m.repo))
+	mediator.Register[*contracts.UpdateCompanyByIDCommand, *contracts.UpdateCompanyByIDResponse](updatebyid.NewHandler(m.repo))
+	mediator.Register[*contracts.CreateDefaultBranchCommand, *contracts.CreateDefaultBranchResponse](createdefaultbranch.NewHandler(m.repo))
+
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	admin := r.Group("/admin/company", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
-	feature.Register(admin, m.repo)
+
+	// Register CQRS endpoints
+	get.NewEndpoint(admin, m.repo)
+	update.NewEndpoint(admin, m.repo)
 }

@@ -58,7 +58,7 @@ make mgu
 make run
 
 # Or run separately
-make run-api  # API at http://localhost:3001
+make run-api  # API at http://localhost:8080
 make run-web  # Web at http://localhost:3000
 ```
 

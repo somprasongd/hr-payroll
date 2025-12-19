@@ -8,7 +8,6 @@ import (
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
@@ -30,7 +29,7 @@ func NewModule(ctx *module.ModuleContext) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ eventbus.EventBus) error {
 	// Register query handlers
 	mediator.Register[*contracts.HasCompanyAccessQuery, *contracts.HasCompanyAccessResponse](hasaccess.NewHandler(m.repo))
 	mediator.Register[*contracts.GetUserBranchesQuery, *contracts.GetUserBranchesResponse](getbranches.NewHandler(m.repo))
