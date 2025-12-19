@@ -11,7 +11,6 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -34,7 +33,7 @@ func (m *Module) APIVersion() string {
 	return "v1"
 }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ eventbus.EventBus) error {
 	mediator.Register[*login.Command, *login.Response](login.NewHandler(m.tokenSvc, m.repo, m.ctx.Transactor))
 	mediator.Register[*refresh.Command, *refresh.Response](refresh.NewHandler(m.tokenSvc, m.repo, m.ctx.Transactor))
 	mediator.Register[*logout.Command, mediator.NoResponse](logout.NewHandler(m.tokenSvc, m.repo))

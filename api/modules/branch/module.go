@@ -1,13 +1,20 @@
 package branch
 
 import (
-	"hrms/modules/branch/internal/feature"
+	"hrms/modules/branch/internal/feature/changestatus"
+	"hrms/modules/branch/internal/feature/create"
+	"hrms/modules/branch/internal/feature/delete"
+	"hrms/modules/branch/internal/feature/employeecount"
+	"hrms/modules/branch/internal/feature/get"
+	"hrms/modules/branch/internal/feature/list"
+	"hrms/modules/branch/internal/feature/setdefault"
+	"hrms/modules/branch/internal/feature/update"
 	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/jwt"
+	"hrms/shared/common/mediator"
 	cmw "hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -29,8 +36,19 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
+
+	// Register handlers with mediator
+	mediator.Register[*list.Query, *list.Response](list.NewHandler())
+	mediator.Register[*get.Query, *get.Response](get.NewHandler())
+	mediator.Register[*create.Command, *create.Response](create.NewHandler())
+	mediator.Register[*update.Command, *update.Response](update.NewHandler())
+	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler())
+	mediator.Register[*setdefault.Command, mediator.NoResponse](setdefault.NewHandler())
+	mediator.Register[*changestatus.Command, *changestatus.Response](changestatus.NewHandler())
+	mediator.Register[*employeecount.Query, *employeecount.Response](employeecount.NewHandler())
+
 	return nil
 }
 
@@ -42,7 +60,16 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 		cmw.RequireRoles("admin"),
 		cmw.TenantMiddleware(),
 	)
-	feature.Register(admin, m.repo, m.eb)
+
+	// Register CQRS endpoints
+	list.NewEndpoint(admin, m.repo)
+	create.NewEndpoint(admin, m.repo, m.eb)
+	get.NewEndpoint(admin, m.repo)
+	update.NewEndpoint(admin, m.repo, m.eb)
+	delete.NewEndpoint(admin, m.repo, m.eb)
+	setdefault.NewEndpoint(admin, m.repo, m.eb)
+	changestatus.NewEndpoint(admin, m.repo, m.eb)
+	employeecount.NewEndpoint(admin, m.repo)
 }
 
 // GetRepository returns the repository for use by tenant middleware

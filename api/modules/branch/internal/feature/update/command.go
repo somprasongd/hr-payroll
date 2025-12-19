@@ -1,0 +1,72 @@
+package update
+
+import (
+	"context"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+
+	"hrms/modules/branch/internal/repository"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
+	"hrms/shared/common/logger"
+	"hrms/shared/events"
+)
+
+
+type Command struct {
+	Repo    repository.Repository
+	Eb      eventbus.EventBus
+	ID      uuid.UUID
+	Code    string
+	Name    string
+	Status  string
+	ActorID uuid.UUID
+}
+
+type Response struct {
+	Branch *repository.Branch `json:"branch"`
+}
+
+type commandHandler struct{}
+
+func NewHandler() *commandHandler {
+	return &commandHandler{}
+}
+
+func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	// Rule 2: Cannot edit suspended or archived branches
+	existing, err := cmd.Repo.GetByID(ctx, cmd.ID)
+	if err != nil {
+		return nil, errs.NotFound("branch not found")
+	}
+	if existing.Status == "suspended" || existing.Status == "archived" {
+		return nil, errs.BadRequest("cannot edit suspended or archived branch, use status change endpoint instead")
+	}
+
+	branch, err := cmd.Repo.Update(ctx, cmd.ID, cmd.Code, cmd.Name, cmd.Status, cmd.ActorID)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to update branch", zap.Error(err))
+		return nil, errs.NotFound("branch not found")
+	}
+
+	companyID := branch.CompanyID
+	branchID := branch.ID
+	cmd.Eb.Publish(events.LogEvent{
+		ActorID:    cmd.ActorID,
+		CompanyID:  &companyID,
+		BranchID:   &branchID,
+		Action:     "UPDATE",
+		EntityName: "BRANCH",
+		EntityID:   branch.ID.String(),
+		Details: map[string]interface{}{
+			"code":       branch.Code,
+			"name":       branch.Name,
+			"status":     branch.Status,
+			"is_default": branch.IsDefault,
+		},
+		Timestamp: branch.UpdatedAt,
+	})
+
+	return &Response{Branch: branch}, nil
+}

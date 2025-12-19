@@ -5,7 +5,9 @@ go 1.25.0
 require (
 	github.com/gofiber/fiber/v3 v3.0.0-rc.3
 	github.com/google/uuid v1.6.0
+	go.uber.org/zap v1.27.1
 	hrms/shared/common v0.0.0
+	hrms/shared/contracts v0.0.0
 )
 
 require (
@@ -22,7 +24,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.68.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.1 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
@@ -30,4 +31,5 @@ require (
 )
 
 replace hrms/shared/common => ../../shared/common
+
 replace hrms/shared/contracts v0.0.0 => ../../shared/contracts
