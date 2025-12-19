@@ -159,11 +159,13 @@ func updateHandler(repo repository.Repository) fiber.Handler {
 	}
 }
 
-// @Summary Delete a branch
+// @Summary Delete a branch (soft delete)
+// @Description Soft deletes a branch. Branch must be archived before deletion.
 // @Tags Branches
 // @Security BearerAuth
 // @Param id path string true "branch ID"
 // @Success 204
+// @Failure 400 {object} response.ErrorResponse "Branch must be archived before deletion"
 // @Router /admin/branches/{id} [delete]
 func deleteHandler(repo repository.Repository) fiber.Handler {
 	return func(c fiber.Ctx) error {
@@ -177,9 +179,25 @@ func deleteHandler(repo repository.Repository) fiber.Handler {
 			return errs.BadRequest("invalid id")
 		}
 
+		// First check the branch status
+		branch, err := repo.GetByID(c.Context(), id)
+		if err != nil {
+			return errs.NotFound("branch not found")
+		}
+
+		// Rule: Cannot delete default branch
+		if branch.IsDefault {
+			return errs.BadRequest("cannot delete default branch")
+		}
+
+		// Rule: Can only delete archived branches
+		if branch.Status != "archived" {
+			return errs.BadRequest("branch must be archived before deletion")
+		}
+
 		if err := repo.Delete(c.Context(), id, user.ID); err != nil {
 			logger.FromContext(c.Context()).Error("failed to delete branch", zap.Error(err))
-			return errs.BadRequest("cannot delete this branch (may be default or not found)")
+			return errs.BadRequest("cannot delete this branch")
 		}
 		return c.SendStatus(fiber.StatusNoContent)
 	}

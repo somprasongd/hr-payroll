@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Building2, MoreHorizontal, Pencil, Star, Pause, Archive, Play } from 'lucide-react';
+import { Plus, Building2, MoreHorizontal, Pencil, Star, Pause, Archive, Play, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,8 +14,9 @@ import {
   setDefaultBranch,
   changeBranchStatus,
   getBranchEmployeeCount,
+  deleteBranch,
 } from '@/services/tenant.service';
-import { Branch } from '@/store/tenant-store';
+import { Branch, useTenantStore } from '@/store/tenant-store';
 import {
   Dialog,
   DialogContent,
@@ -64,23 +65,28 @@ export default function BranchesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [statusAction, setStatusAction] = useState<StatusAction>('suspend');
   const [employeeCount, setEmployeeCount] = useState(0);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [formData, setFormData] = useState({ code: '', name: '' });
   const [saving, setSaving] = useState(false);
 
+  const { refreshAvailableBranches } = useTenantStore();
+
   const fetchBranches = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getBranches();
       setBranches(data);
+      // Refresh the branch switcher dropdown with latest branches
+      refreshAvailableBranches(data);
     } catch {
       toast({ title: tCommon('error'), description: t('fetchError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [toast, tCommon, t]);
+  }, [toast, tCommon, t, refreshAvailableBranches]);
 
   useEffect(() => {
     fetchBranches();
@@ -213,6 +219,28 @@ export default function BranchesPage() {
   const canSuspend = (branch: Branch) => branch.status === 'active' && !branch.isDefault;
   const canArchive = (branch: Branch) => (branch.status === 'active' || branch.status === 'suspended') && !branch.isDefault;
   const canActivate = (branch: Branch) => branch.status === 'suspended' || branch.status === 'archived';
+  const canDelete = (branch: Branch) => branch.status === 'archived' && !branch.isDefault;
+
+  const openDeleteConfirm = (branch: Branch) => {
+    setSelectedBranch(branch);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedBranch) return;
+    setSaving(true);
+    try {
+      await deleteBranch(selectedBranch.id);
+      toast({ title: tCommon('success'), description: t('deleteSuccess') });
+      setIsDeleteOpen(false);
+      setSelectedBranch(null);
+      fetchBranches();
+    } catch {
+      toast({ title: tCommon('error'), description: t('deleteError'), variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -353,6 +381,18 @@ export default function BranchesPage() {
                             {t('statusChange.activate')}
                           </DropdownMenuItem>
                         )}
+                        {canDelete(branch) && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => openDeleteConfirm(branch)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              {tCommon('delete')}
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -412,6 +452,28 @@ export default function BranchesPage() {
             <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleStatusChange} disabled={saving}>
               {saving ? tCommon('saving') : tCommon('confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteDescription', { name: selectedBranch?.name || '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              disabled={saving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {saving ? tCommon('saving') : tCommon('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -21,14 +21,15 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 
 // Branch represents a branch record
 type Branch struct {
-	ID        uuid.UUID `db:"id" json:"id"`
-	CompanyID uuid.UUID `db:"company_id" json:"companyId"`
-	Code      string    `db:"code" json:"code"`
-	Name      string    `db:"name" json:"name"`
-	Status    string    `db:"status" json:"status"`
-	IsDefault bool      `db:"is_default" json:"isDefault"`
-	CreatedAt time.Time `db:"created_at" json:"createdAt"`
-	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
+	ID        uuid.UUID  `db:"id" json:"id"`
+	CompanyID uuid.UUID  `db:"company_id" json:"companyId"`
+	Code      string     `db:"code" json:"code"`
+	Name      string     `db:"name" json:"name"`
+	Status    string     `db:"status" json:"status"`
+	IsDefault bool       `db:"is_default" json:"isDefault"`
+	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
+	UpdatedAt time.Time  `db:"updated_at" json:"updatedAt"`
+	DeletedAt *time.Time `db:"deleted_at" json:"deletedAt,omitempty"`
 }
 
 // List returns all branches for the current company
@@ -41,9 +42,9 @@ func (r Repository) List(ctx context.Context) ([]Branch, error) {
 	db := r.dbCtx(ctx)
 	var out []Branch
 	const q = `
-		SELECT id, company_id, code, name, status, is_default, created_at, updated_at
+		SELECT id, company_id, code, name, status, is_default, created_at, updated_at, deleted_at
 		FROM branches
-		WHERE company_id = $1
+		WHERE company_id = $1 AND deleted_at IS NULL
 		ORDER BY is_default DESC, code ASC`
 	if err := db.SelectContext(ctx, &out, q, tenant.CompanyID); err != nil {
 		return nil, err
@@ -61,9 +62,9 @@ func (r Repository) GetByID(ctx context.Context, id uuid.UUID) (*Branch, error) 
 	db := r.dbCtx(ctx)
 	var out Branch
 	const q = `
-		SELECT id, company_id, code, name, status, is_default, created_at, updated_at
+		SELECT id, company_id, code, name, status, is_default, created_at, updated_at, deleted_at
 		FROM branches
-		WHERE id = $1 AND company_id = $2`
+		WHERE id = $1 AND company_id = $2 AND deleted_at IS NULL`
 	if err := db.GetContext(ctx, &out, q, id, tenant.CompanyID); err != nil {
 		return nil, err
 	}
@@ -100,8 +101,8 @@ func (r Repository) Update(ctx context.Context, id uuid.UUID, code, name, status
 	const q = `
 		UPDATE branches
 		SET code = $1, name = $2, status = $3, updated_by = $4, updated_at = now()
-		WHERE id = $5 AND company_id = $6
-		RETURNING id, company_id, code, name, status, is_default, created_at, updated_at`
+		WHERE id = $5 AND company_id = $6 AND deleted_at IS NULL
+		RETURNING id, company_id, code, name, status, is_default, created_at, updated_at, deleted_at`
 	var out Branch
 	if err := db.GetContext(ctx, &out, q, code, name, status, actor, id, tenant.CompanyID); err != nil {
 		return nil, err
@@ -139,7 +140,8 @@ func (r Repository) SetDefault(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	return nil
 }
 
-// Delete soft-deletes a branch (sets status to archived)
+// Delete performs a soft delete on a branch (sets deleted_at timestamp)
+// Only allowed for branches with status 'archived' and not default
 func (r Repository) Delete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
@@ -148,19 +150,30 @@ func (r Repository) Delete(ctx context.Context, id uuid.UUID, actor uuid.UUID) e
 
 	db := r.dbCtx(ctx)
 
-	// Check if this is the default branch
-	var isDefault bool
-	err := db.GetContext(ctx, &isDefault,
-		`SELECT is_default FROM branches WHERE id = $1 AND company_id = $2`, id, tenant.CompanyID)
+	// Check branch status and if it's default
+	var branch struct {
+		Status    string `db:"status"`
+		IsDefault bool   `db:"is_default"`
+	}
+	err := db.GetContext(ctx, &branch,
+		`SELECT status, is_default FROM branches WHERE id = $1 AND company_id = $2 AND deleted_at IS NULL`, id, tenant.CompanyID)
 	if err != nil {
 		return err
 	}
-	if isDefault {
+
+	// Rule: Cannot delete default branch
+	if branch.IsDefault {
 		return sql.ErrNoRows // Cannot delete default branch
 	}
 
+	// Rule: Can only delete archived branches
+	if branch.Status != "archived" {
+		return sql.ErrNoRows // Must be archived first
+	}
+
+	// Perform soft delete
 	res, err := db.ExecContext(ctx,
-		`UPDATE branches SET status = 'archived', updated_by = $1, updated_at = now() WHERE id = $2 AND company_id = $3 AND is_default = FALSE`,
+		`UPDATE branches SET deleted_at = now(), deleted_by = $1, updated_at = now() WHERE id = $2 AND company_id = $3 AND is_default = FALSE AND status = 'archived'`,
 		actor, id, tenant.CompanyID)
 	if err != nil {
 		return err
@@ -230,9 +243,9 @@ func (r Repository) GetUserBranchesForCompany(ctx context.Context, userID, compa
 		// Admin sees all branches
 		var out []Branch
 		const q = `
-			SELECT id, company_id, code, name, status, is_default, created_at, updated_at
+			SELECT id, company_id, code, name, status, is_default, created_at, updated_at, deleted_at
 			FROM branches
-			WHERE company_id = $1 AND status = 'active'
+			WHERE company_id = $1 AND status = 'active' AND deleted_at IS NULL
 			ORDER BY is_default DESC, code ASC`
 		if err := db.SelectContext(ctx, &out, q, companyID); err != nil {
 			return nil, err
@@ -243,10 +256,10 @@ func (r Repository) GetUserBranchesForCompany(ctx context.Context, userID, compa
 	// Non-admin sees only assigned branches
 	var out []Branch
 	const q = `
-		SELECT b.id, b.company_id, b.code, b.name, b.status, b.is_default, b.created_at, b.updated_at
+		SELECT b.id, b.company_id, b.code, b.name, b.status, b.is_default, b.created_at, b.updated_at, b.deleted_at
 		FROM branches b
 		JOIN user_branch_access uba ON uba.branch_id = b.id
-		WHERE uba.user_id = $1 AND b.company_id = $2 AND b.status = 'active'
+		WHERE uba.user_id = $1 AND b.company_id = $2 AND b.status = 'active' AND b.deleted_at IS NULL
 		ORDER BY b.is_default DESC, b.code ASC`
 	if err := db.SelectContext(ctx, &out, q, userID, companyID); err != nil {
 		return nil, err
@@ -285,8 +298,8 @@ func (r Repository) UpdateStatus(ctx context.Context, id uuid.UUID, status strin
 	const q = `
 		UPDATE branches
 		SET status = $1, updated_by = $2, updated_at = now()
-		WHERE id = $3 AND company_id = $4
-		RETURNING id, company_id, code, name, status, is_default, created_at, updated_at`
+		WHERE id = $3 AND company_id = $4 AND deleted_at IS NULL
+		RETURNING id, company_id, code, name, status, is_default, created_at, updated_at, deleted_at`
 	var out Branch
 	if err := db.GetContext(ctx, &out, q, status, actor, id, tenant.CompanyID); err != nil {
 		return nil, err

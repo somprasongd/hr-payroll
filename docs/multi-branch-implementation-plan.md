@@ -69,6 +69,8 @@ CREATE TABLE branches (
   created_by UUID REFERENCES users(id),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_by UUID REFERENCES users(id),
+  deleted_at TIMESTAMPTZ DEFAULT NULL,  -- Soft delete timestamp
+  deleted_by UUID REFERENCES users(id),  -- Who deleted
   UNIQUE(company_id, code)
 );
 ```
