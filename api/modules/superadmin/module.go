@@ -20,6 +20,7 @@ type Module struct {
 	repo     repository.Repository
 	tokenSvc *jwt.TokenService
 	tx       transactor.Transactor
+	eb       eventbus.EventBus
 }
 
 // NewModule creates a new super admin module
@@ -34,7 +35,8 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService, tx transac
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
+func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+	m.eb = eb
 	return nil
 }
 
@@ -43,7 +45,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	superAdmin := r.Group("/super-admin", middleware.Auth(m.tokenSvc), middleware.RequireRoles("superadmin"))
 
 	// Company management
-	companyHandler := company.NewHandler(m.repo, m.tx)
+	companyHandler := company.NewHandler(m.repo, m.tx, m.eb)
 	superAdmin.Get("/companies", companyHandler.List)
 	superAdmin.Post("/companies", companyHandler.Create)
 	superAdmin.Get("/companies/:id", companyHandler.Get)

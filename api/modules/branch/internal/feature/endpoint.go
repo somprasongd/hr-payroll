@@ -1,27 +1,30 @@
 package feature
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/response"
-
-	"go.uber.org/zap"
+	"hrms/shared/events"
 )
 
 // Register registers all branch endpoints
-func Register(router fiber.Router, repo repository.Repository) {
+func Register(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
 	router.Get("/", listHandler(repo))
-	router.Post("/", createHandler(repo))
+	router.Post("/", createHandler(repo, eb))
 	router.Get("/:id", getHandler(repo))
-	router.Patch("/:id", updateHandler(repo))
-	router.Delete("/:id", deleteHandler(repo))
-	router.Put("/:id/default", setDefaultHandler(repo))
-	router.Patch("/:id/status", changeStatusHandler(repo))
+	router.Patch("/:id", updateHandler(repo, eb))
+	router.Delete("/:id", deleteHandler(repo, eb))
+	router.Put("/:id/default", setDefaultHandler(repo, eb))
+	router.Patch("/:id/status", changeStatusHandler(repo, eb))
 	router.Get("/:id/employee-count", getEmployeeCountHandler(repo))
 }
 
@@ -56,7 +59,7 @@ type CreateRequest struct {
 // @Param request body CreateRequest true "branch payload"
 // @Success 201 {object} repository.Branch
 // @Router /admin/branches [post]
-func createHandler(repo repository.Repository) fiber.Handler {
+func createHandler(repo repository.Repository, eb eventbus.EventBus) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -77,6 +80,25 @@ func createHandler(repo repository.Repository) fiber.Handler {
 			logger.FromContext(c.Context()).Error("failed to create branch", zap.Error(err))
 			return errs.Internal("failed to create branch")
 		}
+
+		companyID := branch.CompanyID
+		branchID := branch.ID
+		eb.Publish(events.LogEvent{
+			ActorID:    user.ID,
+			CompanyID:  &companyID,
+			BranchID:   &branchID,
+			Action:     "CREATE",
+			EntityName: "BRANCH",
+			EntityID:   branch.ID.String(),
+			Details: map[string]interface{}{
+				"code":       branch.Code,
+				"name":       branch.Name,
+				"status":     branch.Status,
+				"is_default": branch.IsDefault,
+			},
+			Timestamp: branch.CreatedAt,
+		})
+
 		return response.JSON(c, fiber.StatusCreated, branch)
 	}
 }
@@ -120,7 +142,7 @@ type UpdateRequest struct {
 // @Param request body UpdateRequest true "branch payload"
 // @Success 200 {object} repository.Branch
 // @Router /admin/branches/{id} [patch]
-func updateHandler(repo repository.Repository) fiber.Handler {
+func updateHandler(repo repository.Repository, eb eventbus.EventBus) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -155,6 +177,25 @@ func updateHandler(repo repository.Repository) fiber.Handler {
 			logger.FromContext(c.Context()).Error("failed to update branch", zap.Error(err))
 			return errs.NotFound("branch not found")
 		}
+
+		companyID := branch.CompanyID
+		branchID := branch.ID
+		eb.Publish(events.LogEvent{
+			ActorID:    user.ID,
+			CompanyID:  &companyID,
+			BranchID:   &branchID,
+			Action:     "UPDATE",
+			EntityName: "BRANCH",
+			EntityID:   branch.ID.String(),
+			Details: map[string]interface{}{
+				"code":       branch.Code,
+				"name":       branch.Name,
+				"status":     branch.Status,
+				"is_default": branch.IsDefault,
+			},
+			Timestamp: branch.UpdatedAt,
+		})
+
 		return response.JSON(c, fiber.StatusOK, branch)
 	}
 }
@@ -167,7 +208,7 @@ func updateHandler(repo repository.Repository) fiber.Handler {
 // @Success 204
 // @Failure 400 {object} response.Problem "Branch must be archived before deletion"
 // @Router /admin/branches/{id} [delete]
-func deleteHandler(repo repository.Repository) fiber.Handler {
+func deleteHandler(repo repository.Repository, eb eventbus.EventBus) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -199,6 +240,25 @@ func deleteHandler(repo repository.Repository) fiber.Handler {
 			logger.FromContext(c.Context()).Error("failed to delete branch", zap.Error(err))
 			return errs.BadRequest("cannot delete this branch")
 		}
+
+		companyID := branch.CompanyID
+		branchID := branch.ID
+		eb.Publish(events.LogEvent{
+			ActorID:    user.ID,
+			CompanyID:  &companyID,
+			BranchID:   &branchID,
+			Action:     "DELETE",
+			EntityName: "BRANCH",
+			EntityID:   branch.ID.String(),
+			Details: map[string]interface{}{
+				"code":       branch.Code,
+				"name":       branch.Name,
+				"status":     branch.Status,
+				"is_default": branch.IsDefault,
+			},
+			Timestamp: time.Now(),
+		})
+
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 }
@@ -209,7 +269,7 @@ func deleteHandler(repo repository.Repository) fiber.Handler {
 // @Param id path string true "branch ID"
 // @Success 204
 // @Router /admin/branches/{id}/default [put]
-func setDefaultHandler(repo repository.Repository) fiber.Handler {
+func setDefaultHandler(repo repository.Repository, eb eventbus.EventBus) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -221,10 +281,42 @@ func setDefaultHandler(repo repository.Repository) fiber.Handler {
 			return errs.BadRequest("invalid id")
 		}
 
+		branch, err := repo.GetByID(c.Context(), id)
+		if err != nil {
+			return errs.NotFound("branch not found")
+		}
+
+		companyID := branch.CompanyID
+		branchID := branch.ID
+
 		if err := repo.SetDefault(c.Context(), id, user.ID); err != nil {
 			logger.FromContext(c.Context()).Error("failed to set default branch", zap.Error(err))
 			return errs.NotFound("branch not found")
 		}
+
+		updatedBranch, err := repo.GetByID(c.Context(), id)
+		if err != nil {
+			logger.FromContext(c.Context()).Error("failed to reload branch after set default", zap.Error(err))
+			updatedBranch = branch
+			updatedBranch.IsDefault = true
+		}
+
+		eb.Publish(events.LogEvent{
+			ActorID:    user.ID,
+			CompanyID:  &companyID,
+			BranchID:   &branchID,
+			Action:     "SET_DEFAULT",
+			EntityName: "BRANCH",
+			EntityID:   updatedBranch.ID.String(),
+			Details: map[string]interface{}{
+				"code":       updatedBranch.Code,
+				"name":       updatedBranch.Name,
+				"status":     updatedBranch.Status,
+				"is_default": updatedBranch.IsDefault,
+			},
+			Timestamp: time.Now(),
+		})
+
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 }
@@ -249,7 +341,7 @@ type StatusChangeResponse struct {
 // @Param request body StatusChangeRequest true "status payload"
 // @Success 200 {object} StatusChangeResponse
 // @Router /admin/branches/{id}/status [patch]
-func changeStatusHandler(repo repository.Repository) fiber.Handler {
+func changeStatusHandler(repo repository.Repository, eb eventbus.EventBus) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -308,6 +400,26 @@ func changeStatusHandler(repo repository.Repository) fiber.Handler {
 			logger.FromContext(c.Context()).Error("failed to update branch status", zap.Error(err))
 			return errs.Internal("failed to update branch status")
 		}
+
+		companyID := updatedBranch.CompanyID
+		branchID := updatedBranch.ID
+		eb.Publish(events.LogEvent{
+			ActorID:    user.ID,
+			CompanyID:  &companyID,
+			BranchID:   &branchID,
+			Action:     "UPDATE_STATUS",
+			EntityName: "BRANCH",
+			EntityID:   updatedBranch.ID.String(),
+			Details: map[string]interface{}{
+				"code":          updatedBranch.Code,
+				"name":          updatedBranch.Name,
+				"status":        updatedBranch.Status,
+				"old_status":    currentStatus,
+				"is_default":    updatedBranch.IsDefault,
+				"employeeCount": employeeCount,
+			},
+			Timestamp: updatedBranch.UpdatedAt,
+		})
 
 		return response.JSON(c, fiber.StatusOK, StatusChangeResponse{
 			Branch:        updatedBranch,
