@@ -3624,3 +3624,303 @@ Logic (Database Trigger):
 | --------------- | ------------ | ---------------------------------- |
 | **401**         | Unauthorized | ไม่ได้แนบ Token หรือ Token หมดอายุ |
 | **403**         | Forbidden    | ผู้เรียกไม่ใช่ Role `admin`        |
+
+---
+
+## 19. Branch Management (Admin Only)
+
+กลุ่ม API สำหรับจัดการสาขา (Branch) ของบริษัท
+
+### 19.1 List Branches
+
+ดึงรายการสาขาทั้งหมดของบริษัทปัจจุบัน
+
+- **Endpoint:** `GET /admin/branches`
+- **Access:** Admin
+- **Headers:** `X-Company-ID` (required)
+
+**Success Response Example (200 OK):**
+
+```json
+[
+  {
+    "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
+    "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+    "code": "00000",
+    "name": "สำนักงานใหญ่",
+    "status": "active",
+    "isDefault": true,
+    "createdAt": "2025-11-20T10:00:00Z",
+    "updatedAt": "2025-11-20T10:00:00Z"
+  },
+  {
+    "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6790",
+    "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+    "code": "00001",
+    "name": "สาขากะทู้",
+    "status": "active",
+    "isDefault": false,
+    "createdAt": "2025-11-21T09:00:00Z",
+    "updatedAt": "2025-11-21T09:00:00Z"
+  }
+]
+```
+
+**Response Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                | **ประเภท (Type)** | **Required** |
+| --------------- | ----------------------------------------- | ----------------- | ------------ |
+| `id`            | รหัสสาขา (UUIDv7)                         | UUID              | **Yes**      |
+| `companyId`     | รหัสบริษัท                                | UUID              | **Yes**      |
+| `code`          | รหัสสาขา (unique ในบริษัท)                | String            | **Yes**      |
+| `name`          | ชื่อสาขา                                  | String            | **Yes**      |
+| `status`        | สถานะ (`active`, `suspended`, `archived`) | Enum              | **Yes**      |
+| `isDefault`     | เป็นสาขาหลักหรือไม่                       | Boolean           | **Yes**      |
+| `createdAt`     | เวลาที่สร้าง                              | String (ISO 8601) | **Yes**      |
+| `updatedAt`     | เวลาที่แก้ไขล่าสุด                        | String (ISO 8601) | **Yes**      |
+
+**Note:** สาขาที่ถูก soft delete (`deleted_at` IS NOT NULL) จะไม่แสดงในรายการ
+
+---
+
+### 19.2 Create Branch
+
+สร้างสาขาใหม่
+
+- **Endpoint:** `POST /admin/branches`
+- **Access:** Admin
+- **Headers:** `X-Company-ID` (required)
+
+**Request Body Example:**
+
+```json
+{
+  "code": "BR001",
+  "name": "สาขาเซ็นทรัล"
+}
+```
+
+**Request Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** |
+| --------------- | -------------------------- | ----------------- | ------------ |
+| `code`          | รหัสสาขา (1-10 ตัวอักษร)   | String            | **Yes**      |
+| `name`          | ชื่อสาขา (1-100 ตัวอักษร)  | String            | **Yes**      |
+
+**Success Response Example (201 Created):**
+
+```json
+{
+  "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6791",
+  "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+  "code": "BR001",
+  "name": "สาขาเซ็นทรัล",
+  "status": "active",
+  "isDefault": false,
+  "createdAt": "2025-12-19T10:00:00Z",
+  "updatedAt": "2025-12-19T10:00:00Z"
+}
+```
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**      |
+| --------------- | ----------- | --------------------------- |
+| **400**         | Bad Request | ข้อมูลไม่ครบถ้วน            |
+| **409**         | Conflict    | รหัสสาขาซ้ำกับที่มีอยู่แล้ว |
+
+---
+
+### 19.3 Get Branch Detail
+
+ดูรายละเอียดสาขา
+
+- **Endpoint:** `GET /admin/branches/{id}`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Success Response Example (200 OK):** เหมือน 19.1
+
+**Error Responses:**
+
+| **HTTP Status** | **Title** | **Description/Reason** |
+| --------------- | --------- | ---------------------- |
+| **404**         | Not Found | ไม่พบสาขา              |
+
+---
+
+### 19.4 Update Branch
+
+แก้ไขข้อมูลสาขา (เฉพาะสาขาที่มีสถานะ `active` เท่านั้น)
+
+- **Endpoint:** `PATCH /admin/branches/{id}`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Request Body Example:**
+
+```json
+{
+  "code": "BR001",
+  "name": "สาขาเซ็นทรัล พัทยา",
+  "status": "active"
+}
+```
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**                        |
+| --------------- | ----------- | --------------------------------------------- |
+| **400**         | Bad Request | ไม่สามารถแก้ไขสาขาที่ suspended หรือ archived |
+| **404**         | Not Found   | ไม่พบสาขา                                     |
+
+---
+
+### 19.5 Delete Branch (Soft Delete)
+
+ลบสาขา (Soft Delete) **เฉพาะสาขาที่มีสถานะ `archived` เท่านั้น**
+
+- **Endpoint:** `DELETE /admin/branches/{id}`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Business Rules:**
+
+1. **ไม่สามารถลบ Default Branch ได้** - ต้องเปลี่ยน default ไปสาขาอื่นก่อน
+2. **ต้องเก็บถาวร (archive) ก่อน** - สาขาต้องมีสถานะ `archived` ก่อนจึงจะลบได้
+
+**Delete Flow:**
+
+```
+active → archived → deleted (soft delete)
+    ↓
+suspended → archived → deleted (soft delete)
+```
+
+**Success Response:**
+
+- **Status:** `204 No Content`
+- **Body:** Empty
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**                    |
+| --------------- | ----------- | ----------------------------------------- |
+| **400**         | Bad Request | `cannot delete default branch`            |
+| **400**         | Bad Request | `branch must be archived before deletion` |
+| **404**         | Not Found   | ไม่พบสาขา (หรือถูกลบไปแล้ว)               |
+
+**Database Implementation:**
+
+```sql
+-- Soft delete: ไม่ลบจริงแต่ set deleted_at
+UPDATE branches
+SET deleted_at = now(), deleted_by = :actor_id
+WHERE id = :id
+  AND company_id = :company_id
+  AND status = 'archived'
+  AND is_default = FALSE;
+```
+
+---
+
+### 19.6 Set Default Branch
+
+กำหนดสาขาเป็นค่าเริ่มต้น
+
+- **Endpoint:** `PUT /admin/branches/{id}/default`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Success Response:**
+
+- **Status:** `204 No Content`
+
+**Error Responses:**
+
+| **HTTP Status** | **Title** | **Description/Reason** |
+| --------------- | --------- | ---------------------- |
+| **404**         | Not Found | ไม่พบสาขา              |
+
+---
+
+### 19.7 Change Branch Status
+
+เปลี่ยนสถานะสาขา
+
+- **Endpoint:** `PATCH /admin/branches/{id}/status`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Request Body Example:**
+
+```json
+{
+  "status": "suspended"
+}
+```
+
+**Request Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                    | **ประเภท (Type)** | **Required** |
+| --------------- | --------------------------------------------- | ----------------- | ------------ |
+| `status`        | สถานะใหม่ (`active`, `suspended`, `archived`) | Enum              | **Yes**      |
+
+**Status Transitions:**
+
+| From        | To                      | Allowed                |
+| ----------- | ----------------------- | ---------------------- |
+| `active`    | `suspended`, `archived` | ✅ (ถ้าไม่ใช่ default) |
+| `suspended` | `active`, `archived`    | ✅                     |
+| `archived`  | `active`                | ✅                     |
+| `archived`  | `suspended`             | ❌                     |
+| (any)       | non-active (if default) | ❌                     |
+
+**Success Response Example (200 OK):**
+
+```json
+{
+  "branch": {
+    "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6790",
+    "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+    "code": "00001",
+    "name": "สาขากะทู้",
+    "status": "suspended",
+    "isDefault": false,
+    "createdAt": "2025-11-21T09:00:00Z",
+    "updatedAt": "2025-12-19T11:00:00Z"
+  },
+  "employeeCount": 5
+}
+```
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**                               |
+| --------------- | ----------- | ---------------------------------------------------- |
+| **400**         | Bad Request | ไม่สามารถเปลี่ยนสถานะ default branch เป็น non-active |
+| **400**         | Bad Request | ไม่สามารถเปลี่ยนจาก archived เป็น suspended          |
+
+---
+
+### 19.8 Get Branch Employee Count
+
+ดึงจำนวนพนักงานในสาขา (สำหรับแสดง warning ก่อน archive)
+
+- **Endpoint:** `GET /admin/branches/{id}/employee-count`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Success Response Example (200 OK):**
+
+```json
+{
+  "count": 15
+}
+```
+
+**Response Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** |
+| --------------- | -------------------------- | ----------------- | ------------ |
+| `count`         | จำนวนพนักงานในสาขา         | Integer           | **Yes**      |

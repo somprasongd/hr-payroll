@@ -38,6 +38,7 @@ interface TenantState {
   switchTenant: (company: Company, branches: Branch[]) => void;
   clearTenant: () => void;
   setHasHydrated: (state: boolean) => void;
+  refreshAvailableBranches: (branches: Branch[]) => void;
 }
 
 export const useTenantStore = create<TenantState>()(
@@ -94,6 +95,30 @@ export const useTenantStore = create<TenantState>()(
 
       setHasHydrated: (state) => {
         set({ _hasHydrated: state });
+      },
+
+      refreshAvailableBranches: (branches) => {
+        set((state) => {
+          // Filter only active branches for available selection
+          const activeBranches = branches.filter(b => b.status === 'active');
+          
+          // Keep currentBranches in sync - remove deleted/archived branches
+          const validCurrentBranches = state.currentBranches.filter(
+            current => activeBranches.some(active => active.id === current.id)
+          );
+          
+          // If no valid current branches, select default branch
+          let finalCurrentBranches = validCurrentBranches;
+          if (validCurrentBranches.length === 0 && activeBranches.length > 0) {
+            const defaultBranch = activeBranches.find(b => b.isDefault) || activeBranches[0];
+            finalCurrentBranches = [defaultBranch];
+          }
+          
+          return {
+            availableBranches: activeBranches,
+            currentBranches: finalCurrentBranches,
+          };
+        });
       },
     }),
     {

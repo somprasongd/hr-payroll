@@ -165,6 +165,29 @@ The system supports multi-company and multi-branch isolation using PostgreSQL Ro
 - **User Branch Access**: Fine-grained branch-level access control
 - **Automatic Tenant Assignment**: Triggers auto-populate tenant columns on INSERT
 - **Superadmin Role**: Cross-tenant management capabilities
+- **Branch Lifecycle Management**: Full status workflow with soft delete support
+
+### Branch Status Workflow
+
+Branches have a status-based lifecycle:
+
+```
+active → suspended → archived → deleted (soft delete)
+         ↓
+         archived → deleted (soft delete)
+```
+
+| Status      | Can Edit | Can Delete | Visible in UI |
+| ----------- | -------- | ---------- | ------------- |
+| `active`    | ✅       | ❌         | ✅            |
+| `suspended` | ❌       | ❌         | ✅            |
+| `archived`  | ❌       | ✅         | ✅            |
+| `deleted`   | ❌       | ❌         | ❌            |
+
+**Delete Rules:**
+
+- Branch must be `archived` before deletion
+- Default branch cannot be deleted
 
 ### Database Tables
 
@@ -207,3 +230,6 @@ The system supports multi-company and multi-branch isolation using PostgreSQL Ro
 
 - [API README](./api/README.md)
 - [Web README](./web/README.md)
+- [API Specification](./docs/design/api_specification.md)
+- [Branch Lifecycle & Soft Delete](./docs/branch-lifecycle.md)
+- [Multi-Branch Implementation Plan](./docs/multi-branch-implementation-plan.md)
