@@ -1290,7 +1290,8 @@
     "default": "Default",
     "fetchError": "Failed to load data",
     "saveSuccess": "Branches saved successfully",
-    "saveError": "Failed to save"
+    "saveError": "Failed to save",
+    "mustSelectOne": "Must select at least one branch"
   },
   "OrgProfile": {
     "title": "Organization Profile (Slip Header)",

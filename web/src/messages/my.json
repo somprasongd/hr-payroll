@@ -1282,5 +1282,19 @@
     },
     "detailsTitle": "Change Details",
     "noData": "No activity logs found"
+  },
+  "UserBranches": {
+    "title": "{username} အတွက် ဘဏ်ခွဲများ",
+    "description": "အသုံးပြုသူ ဝင်ရောက်နိုင်သော ဘဏ်ခွဲများကို ရွေးချယ်ပါ",
+    "branchList": "ဘဏ်ခွဲစာရင်း",
+    "selectBranches": "{count} ခု ရွေးချယ်ထားသည်",
+    "selectAll": "အားလုံးရွေးချယ်ပါ",
+    "deselectAll": "အားလုံးပယ်ဖျက်ပါ",
+    "noBranches": "ဘဏ်ခွဲများ မတွေ့ရှိပါ",
+    "default": "နဂိုမူလ",
+    "fetchError": "ဒေတာ ရယူ၍မရပါ",
+    "saveSuccess": "အောင်မြင်စွာ သိမ်းဆည်းပြီး",
+    "saveError": "သိမ်းဆည်းမရပါ",
+    "mustSelectOne": "အနည်းဆုံး ဘဏ်ခွဲတစ်ခု ရွေးချယ်ရမည်"
   }
 }

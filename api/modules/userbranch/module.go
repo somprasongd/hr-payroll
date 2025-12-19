@@ -30,11 +30,11 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	// Register handlers with mediator
 	mediator.Register[*listusers.Query, *listusers.Response](listusers.NewHandler())
 	mediator.Register[*getbranches.Query, *getbranches.Response](getbranches.NewHandler())
-	mediator.Register[*setbranches.Command, *setbranches.Response](setbranches.NewHandler())
+	mediator.Register[*setbranches.Command, *setbranches.Response](setbranches.NewHandler(eb))
 
 	return nil
 }

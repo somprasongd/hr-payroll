@@ -169,8 +169,16 @@ LIMIT 1`
 func (r Repository) Create(ctx context.Context, payload Record, companyID, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
+WITH next_version AS (
+  SELECT
+    pg_advisory_xact_lock(hashtext(($21::uuid)::text)::bigint) AS locked,
+    COALESCE(MAX(version_no), 0) + 1 AS version_no
+  FROM payroll_config
+  WHERE company_id = $21::uuid
+)
 INSERT INTO payroll_config (
   effective_daterange,
+  version_no,
   hourly_rate,
   ot_hourly_rate,
   attendance_bonus_no_late,
@@ -196,10 +204,12 @@ INSERT INTO payroll_config (
   company_id,
   created_by,
   updated_by
-) VALUES (
-  daterange($1, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$22,$23,$24,$25,$26
 )
+SELECT
+  daterange($1, NULL, '[)'),
+  next_version.version_no,
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$22,$23,$24,$25,$26
+FROM next_version
 RETURNING
   id,
   COALESCE(version_no, 0) AS version_no,
