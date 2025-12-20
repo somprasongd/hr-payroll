@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lib/pq"
-
 	"hrms/modules/activitylog/internal/entity"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -63,9 +61,9 @@ func (r *Repository) ListLogs(ctx context.Context, tenant contextx.TenantInfo, f
 	where = append(where, fmt.Sprintf("l.company_id = $%d", len(args)))
 
 	// Branch Filter
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("l.branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("l.branch_id = $%d", len(args)))
 	}
 
 	if filter.Action != "" {

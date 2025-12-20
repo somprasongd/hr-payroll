@@ -26,7 +26,7 @@ export function BranchSwitcher() {
   
   const { 
     currentCompany, 
-    currentBranches, 
+    currentBranch,  // Changed from currentBranches
     availableBranches,
     switchTenant: switchTenantStore 
   } = useTenantStore();
@@ -37,9 +37,6 @@ export function BranchSwitcher() {
   if (!currentCompany) {
     return null;
   }
-
-  // Get the currently selected single branch
-  const currentBranch = currentBranches.length > 0 ? currentBranches[0] : null;
 
   const handleBranchSelect = async (branch: Branch) => {
     // If same branch, do nothing
@@ -58,8 +55,11 @@ export function BranchSwitcher() {
       // Update auth tokens
       updateTokens(response.accessToken, response.refreshToken);
 
-      // Update tenant store
-      switchTenantStore(response.company, response.branches);
+      // Update tenant store - response.branches[0] since we now expect single branch
+      const selectedBranch = response.branches[0];
+      if (selectedBranch) {
+        switchTenantStore(response.company, selectedBranch);
+      }
 
       toast({
         title: t('success'),

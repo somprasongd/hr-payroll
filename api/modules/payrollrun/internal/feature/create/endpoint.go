@@ -39,7 +39,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 			return errs.Unauthorized("missing tenant context")
 		}
 		req.CompanyID = tenant.CompanyID
-		req.BranchID = tenant.FirstBranchID()
+		req.BranchID = tenant.BranchID
 		req.ActorID = user.ID
 		req.Repo = repo
 		req.Tx = tx

@@ -150,7 +150,7 @@ func NewEndpoint(router fiber.Router) {
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
 			Payload:   req,
 			CompanyID: tenant.CompanyID,
-			BranchID:  tenant.FirstBranchID(),
+			BranchID:  tenant.BranchID,
 			ActorID:   user.ID,
 		})
 		if err != nil {
