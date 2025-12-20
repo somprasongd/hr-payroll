@@ -167,6 +167,18 @@ The system supports multi-company and multi-branch isolation using PostgreSQL Ro
 - **Superadmin Role**: Cross-tenant management capabilities
 - **Branch Lifecycle Management**: Full status workflow with soft delete support
 
+### Required Request Headers
+
+For Platform APIs (non-superadmin routes), the following headers are **required**:
+
+| Header         | Description                   | Required |
+| -------------- | ----------------------------- | -------- |
+| `X-Company-ID` | UUID of the company to access | Yes      |
+| `X-Branch-ID`  | UUID of the selected branch   | **Yes**  |
+
+> **Note:** If `X-Branch-ID` is missing, the API will return `400 Bad Request`.
+> Superadmin routes (`/super-admin/*`) do not require these headers.
+
 ### Branch Status Workflow
 
 Branches have a status-based lifecycle:
@@ -231,5 +243,3 @@ active → suspended → archived → deleted (soft delete)
 - [API README](./api/README.md)
 - [Web README](./web/README.md)
 - [API Specification](./docs/design/api_specification.md)
-- [Branch Lifecycle & Soft Delete](./docs/branch-lifecycle.md)
-- [Multi-Branch Implementation Plan](./docs/multi-branch-implementation-plan.md)

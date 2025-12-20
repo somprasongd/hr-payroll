@@ -16,6 +16,7 @@ import {
   Legend,
 } from 'recharts';
 import { dashboardService, AttendanceSummaryResponse } from '@/services/dashboard.service';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function AttendanceChartWidget() {
   const t = useTranslations('Dashboard');
@@ -53,6 +54,9 @@ export function AttendanceChartWidget() {
       setLoading(false);
     }
   }, [t, dateRange]);
+
+  // Refetch when branch changes
+  useBranchChange(fetchData);
 
   useEffect(() => {
     fetchData();

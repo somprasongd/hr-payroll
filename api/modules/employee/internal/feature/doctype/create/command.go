@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -62,8 +63,16 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, err
 	}
 
+	// Get company ID from tenant context (nil if superadmin)
+	var companyID *uuid.UUID
+	if tenant, ok := contextx.TenantFromContext(ctx); ok {
+		companyID = &tenant.CompanyID
+	}
+
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  companyID,
+		BranchID:   nil,
 		Action:     "CREATE",
 		EntityName: "DOCUMENT_TYPE",
 		EntityID:   rec.ID.String(),

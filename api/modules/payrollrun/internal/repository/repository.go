@@ -85,7 +85,7 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 
 	// Branch Filter - Assuming payroll_run has branch_id if created per branch?
 	// Based on Create method: it has branch_id column.
-	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+	if len(tenant.BranchIDs) > 0 {
 		args = append(args, pq.Array(tenant.BranchIDs))
 		where = append(where, fmt.Sprintf("branch_id = ANY($%d)", len(args)))
 	}
@@ -334,7 +334,7 @@ func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, r
 	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
 
 	// Branch Filter
-	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+	if len(tenant.BranchIDs) > 0 {
 		args = append(args, pq.Array(tenant.BranchIDs))
 		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
 	}

@@ -32,6 +32,8 @@ replace hrms/modules/payrollorgprofile v0.0.0 => ../modules/payrollorgprofile
 
 replace hrms/modules/branch v0.0.0 => ../modules/branch
 
+replace hrms/modules/company v0.0.0 => ../modules/company
+
 replace hrms/modules/userbranch v0.0.0 => ../modules/userbranch
 
 replace hrms/modules/activitylog v0.0.0 => ../modules/activitylog
@@ -55,6 +57,7 @@ require (
 	hrms/modules/auth v0.0.0
 	hrms/modules/bonus v0.0.0
 	hrms/modules/branch v0.0.0
+	hrms/modules/company v0.0.0
 	hrms/modules/dashboard v0.0.0
 	hrms/modules/debt v0.0.0
 	hrms/modules/employee v0.0.0

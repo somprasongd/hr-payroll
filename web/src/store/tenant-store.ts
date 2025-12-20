@@ -102,14 +102,15 @@ export const useTenantStore = create<TenantState>()(
           // Filter only active branches for available selection
           const activeBranches = branches.filter(b => b.status === 'active');
           
-          // Keep currentBranches in sync - remove deleted/archived branches
-          const validCurrentBranches = state.currentBranches.filter(
-            current => activeBranches.some(active => active.id === current.id)
-          );
+          // Keep single current branch if still valid
+          const currentBranch = state.currentBranches[0];
+          let finalCurrentBranches: Branch[] = [];
           
-          // If no valid current branches, select default branch
-          let finalCurrentBranches = validCurrentBranches;
-          if (validCurrentBranches.length === 0 && activeBranches.length > 0) {
+          if (currentBranch && activeBranches.some(b => b.id === currentBranch.id)) {
+            // Current branch is still valid
+            finalCurrentBranches = [currentBranch];
+          } else if (activeBranches.length > 0) {
+            // Select default branch or first branch
             const defaultBranch = activeBranches.find(b => b.isDefault) || activeBranches[0];
             finalCurrentBranches = [defaultBranch];
           }

@@ -14,6 +14,7 @@ import (
 	"hrms/modules/auth"
 	"hrms/modules/bonus"
 	"hrms/modules/branch"
+	"hrms/modules/company"
 	"hrms/modules/dashboard"
 	"hrms/modules/debt"
 	"hrms/modules/employee"
@@ -85,6 +86,7 @@ func main() {
 		tenant.NewModule(mCtx),
 		auth.NewModule(mCtx, tokenSvc),
 		user.NewModule(mCtx, tokenSvc),
+		company.NewModule(mCtx, tokenSvc),
 		superadmin.NewModule(mCtx, tokenSvc, trans),
 		branch.NewModule(mCtx, tokenSvc),
 		userbranch.NewModule(mCtx, tokenSvc),

@@ -71,6 +71,12 @@ interface OrgProfileFormData {
   logoId: string;
 }
 
+// Helper: Get first day of current month as YYYY-MM-DD
+const getFirstDayOfCurrentMonth = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+};
+
 export default function OrgProfilePage() {
   const t = useTranslations('OrgProfile');
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -79,7 +85,7 @@ export default function OrgProfilePage() {
   const [activeProfile, setActiveProfile] = useState<OrgProfile | null>(null);
   const [profileHistory, setProfileHistory] = useState<OrgProfile[]>([]);
   const [formData, setFormData] = useState<OrgProfileFormData>({
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: getFirstDayOfCurrentMonth(),
     companyName: '',
     addressLine1: '',
     addressLine2: '',
@@ -127,7 +133,7 @@ export default function OrgProfilePage() {
       setActiveProfile(profile);
       // Populate form with current data
       setFormData({
-        startDate: profile.startDate || new Date().toISOString().split('T')[0],
+        startDate: profile.startDate || getFirstDayOfCurrentMonth(),
         companyName: profile.companyName || '',
         addressLine1: profile.addressLine1 || '',
         addressLine2: profile.addressLine2 || '',
@@ -235,7 +241,7 @@ export default function OrgProfilePage() {
   const handleReset = () => {
     if (activeProfile) {
       setFormData({
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: getFirstDayOfCurrentMonth(),
         companyName: activeProfile.companyName || '',
         addressLine1: activeProfile.addressLine1 || '',
         addressLine2: activeProfile.addressLine2 || '',

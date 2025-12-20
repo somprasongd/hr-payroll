@@ -108,7 +108,7 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 	args = append(args, tenant.CompanyID)
 	where += fmt.Sprintf(" AND e.company_id=$%d", len(args))
 
-	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+	if len(tenant.BranchIDs) > 0 {
 		args = append(args, pq.Array(tenant.BranchIDs))
 		where += fmt.Sprintf(" AND e.branch_id = ANY($%d)", len(args))
 	}

@@ -269,27 +269,36 @@ CREATE INDEX IF NOT EXISTS bonus_item_tenant_idx ON bonus_item (company_id, bran
 
 -- ===== 15) Salary Raise Cycle table =====
 ALTER TABLE salary_raise_cycle ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
+ALTER TABLE salary_raise_cycle ADD COLUMN IF NOT EXISTS branch_id UUID REFERENCES branches(id) ON DELETE SET NULL;
 
-UPDATE salary_raise_cycle SET company_id = (SELECT company_id FROM _tenant_defaults LIMIT 1) 
-WHERE company_id IS NULL;
+UPDATE salary_raise_cycle SET 
+  company_id = (SELECT company_id FROM _tenant_defaults LIMIT 1),
+  branch_id = (SELECT branch_id FROM _tenant_defaults LIMIT 1)
+WHERE company_id IS NULL OR branch_id IS NULL;
 
 ALTER TABLE salary_raise_cycle ALTER COLUMN company_id SET NOT NULL;
-CREATE INDEX IF NOT EXISTS salary_raise_cycle_company_idx ON salary_raise_cycle (company_id);
+ALTER TABLE salary_raise_cycle ALTER COLUMN branch_id SET NOT NULL;
+CREATE INDEX IF NOT EXISTS salary_raise_cycle_tenant_idx ON salary_raise_cycle (company_id, branch_id);
 
 -- ===== 15.1) Salary Raise Item table =====
 ALTER TABLE salary_raise_item ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
+ALTER TABLE salary_raise_item ADD COLUMN IF NOT EXISTS branch_id UUID REFERENCES branches(id) ON DELETE SET NULL;
 
 -- Backfill from salary_raise_cycle (parent)
 UPDATE salary_raise_item sri SET 
-  company_id = src.company_id
-FROM salary_raise_cycle src WHERE sri.cycle_id = src.id AND sri.company_id IS NULL;
+  company_id = src.company_id,
+  branch_id = src.branch_id
+FROM salary_raise_cycle src WHERE sri.cycle_id = src.id AND (sri.company_id IS NULL OR sri.branch_id IS NULL);
 
 -- Fallback to defaults if still null
-UPDATE salary_raise_item SET company_id = (SELECT company_id FROM _tenant_defaults LIMIT 1)
-WHERE company_id IS NULL;
+UPDATE salary_raise_item SET 
+  company_id = (SELECT company_id FROM _tenant_defaults LIMIT 1),
+  branch_id = (SELECT branch_id FROM _tenant_defaults LIMIT 1)
+WHERE company_id IS NULL OR branch_id IS NULL;
 
 ALTER TABLE salary_raise_item ALTER COLUMN company_id SET NOT NULL;
-CREATE INDEX IF NOT EXISTS salary_raise_item_company_idx ON salary_raise_item (company_id);
+ALTER TABLE salary_raise_item ALTER COLUMN branch_id SET NOT NULL;
+CREATE INDEX IF NOT EXISTS salary_raise_item_tenant_idx ON salary_raise_item (company_id, branch_id);
 
 -- ===== 15.2) Payout PT Item table =====
 DO $$
@@ -460,8 +469,8 @@ EXECUTE FUNCTION bonus_item_set_tenant();
 -- 3) salary_raise_item: Copy from salary_raise_cycle (parent)
 CREATE OR REPLACE FUNCTION salary_raise_item_set_tenant() RETURNS trigger AS $$
 BEGIN
-  IF NEW.company_id IS NULL THEN
-    SELECT company_id INTO NEW.company_id
+  IF NEW.company_id IS NULL OR NEW.branch_id IS NULL THEN
+    SELECT company_id, branch_id INTO NEW.company_id, NEW.branch_id
     FROM salary_raise_cycle WHERE id = NEW.cycle_id;
   END IF;
   RETURN NEW;
@@ -505,9 +514,16 @@ END $$;
 -- Generic function to copy tenant from employees table (for tables with employee_id)
 CREATE OR REPLACE FUNCTION set_tenant_from_employee() RETURNS trigger AS $$
 BEGIN
-  IF NEW.company_id IS NULL OR NEW.branch_id IS NULL THEN
-    SELECT company_id, branch_id INTO NEW.company_id, NEW.branch_id
+  IF NEW.company_id IS NULL THEN
+    SELECT company_id INTO NEW.company_id
     FROM employees WHERE id = NEW.employee_id;
+  END IF;
+
+  IF TG_TABLE_NAME IN ('worklog_ft', 'worklog_pt', 'payout_pt', 'salary_advance', 'debt_txn') THEN
+    IF NEW.branch_id IS NULL THEN
+      SELECT branch_id INTO NEW.branch_id
+      FROM employees WHERE id = NEW.employee_id;
+    END IF;
   END IF;
   RETURN NEW;
 END;
@@ -558,4 +574,3 @@ DROP TABLE IF EXISTS _tenant_defaults;
 SET session_replication_role = origin;
 
 -- Done: Tenant columns added to all tables successfully
-

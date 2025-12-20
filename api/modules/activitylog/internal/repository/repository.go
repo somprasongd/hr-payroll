@@ -63,7 +63,7 @@ func (r *Repository) ListLogs(ctx context.Context, tenant contextx.TenantInfo, f
 	where = append(where, fmt.Sprintf("l.company_id = $%d", len(args)))
 
 	// Branch Filter
-	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+	if len(tenant.BranchIDs) > 0 {
 		args = append(args, pq.Array(tenant.BranchIDs))
 		where = append(where, fmt.Sprintf("l.branch_id = ANY($%d)", len(args)))
 	}

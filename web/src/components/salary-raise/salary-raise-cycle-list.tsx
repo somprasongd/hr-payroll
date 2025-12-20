@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { format } from 'date-fns';
@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/ui/pagination';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function SalaryRaiseCycleList() {
   const t = useTranslations('SalaryRaise');
@@ -86,6 +87,11 @@ export function SalaryRaiseCycleList() {
       setLoading(false);
     }
   };
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchCycles();
+  }, []));
 
   useEffect(() => {
     fetchCycles();

@@ -50,30 +50,25 @@ func TenantMiddleware() fiber.Handler {
 
 		var branchIDs []uuid.UUID
 		branchIDsStr := c.Get("X-Branch-ID")
-		if branchIDsStr != "" {
-			for _, idStr := range strings.Split(branchIDsStr, ",") {
-				idStr = strings.TrimSpace(idStr)
-				if idStr == "" {
-					continue
-				}
-				branchID, err := uuid.Parse(idStr)
-				if err != nil {
-					return fiber.NewError(fiber.StatusBadRequest, "invalid X-Branch-ID header")
-				}
-				branchIDs = append(branchIDs, branchID)
-			}
+		if branchIDsStr == "" {
+			// Branch ID is required for all roles (including admin)
+			return fiber.NewError(fiber.StatusBadRequest, "X-Branch-ID header is required")
 		}
 
-		if len(branchIDs) == 0 && !isAdmin {
-			// Get user branches via mediator
-			branchResp, err := mediator.Send[*contracts.GetUserBranchesQuery, *contracts.GetUserBranchesResponse](
-				c.Context(),
-				&contracts.GetUserBranchesQuery{UserID: user.ID, CompanyID: companyID},
-			)
-			if err != nil {
-				return fiber.NewError(fiber.StatusInternalServerError, "failed to get user branches")
+		for _, idStr := range strings.Split(branchIDsStr, ",") {
+			idStr = strings.TrimSpace(idStr)
+			if idStr == "" {
+				continue
 			}
-			branchIDs = branchResp.BranchIDs
+			branchID, err := uuid.Parse(idStr)
+			if err != nil {
+				return fiber.NewError(fiber.StatusBadRequest, "invalid X-Branch-ID header")
+			}
+			branchIDs = append(branchIDs, branchID)
+		}
+
+		if len(branchIDs) == 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "X-Branch-ID header is required")
 		}
 
 		tenant := contextx.TenantInfo{
@@ -138,8 +133,8 @@ func OptionalTenantMiddleware() fiber.Handler {
 			}
 		}
 
-		if len(branchIDs) == 0 && !isAdmin {
-			// Get user branches via mediator
+		if len(branchIDs) == 0 {
+			// For both admin and non-admin: if no branch specified, get user's allowed branches
 			branchResp, err := mediator.Send[*contracts.GetUserBranchesQuery, *contracts.GetUserBranchesResponse](
 				c.Context(),
 				&contracts.GetUserBranchesQuery{UserID: user.ID, CompanyID: companyID},

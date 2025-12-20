@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { FilterBar } from '@/components/common/filter-bar';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { ActionDropdown } from '@/components/common/action-dropdown';
 import { EmployeePhoto } from '@/components/common/employee-photo';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export default function EmployeesPage() {
   const t = useTranslations('Employees');
@@ -27,6 +28,12 @@ export default function EmployeesPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployeeTypes();
+    fetchEmployees();
+  }, []));
 
   useEffect(() => {
     fetchEmployeeTypes();

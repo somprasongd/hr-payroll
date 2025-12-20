@@ -47,6 +47,32 @@ Content-Type: application/json
 - Record ที่เป็น child → copy จาก parent table
 - Record อื่นๆ → ใช้ DEFAULT company/branch
 
+**Required Request Headers:**
+
+API ที่ต้องการ tenant context จะต้องส่ง headers ดังนี้:
+
+| Header         | Description                     | Required                   | Example                       |
+| -------------- | ------------------------------- | -------------------------- | ----------------------------- |
+| `X-Company-ID` | UUID ของบริษัทที่ต้องการเข้าถึง | Yes (สำหรับ Platform APIs) | `019347e8-94ca-7d69-9f3a-...` |
+| `X-Branch-ID`  | UUID ของสาขาที่ต้องการดูข้อมูล  | **Yes** (ต้องส่งเสมอ)      | `019347e8-94ca-7d69-9f3b-...` |
+
+**กฎการส่ง Headers:**
+
+1. **Super Admin Routes** (`/super-admin/*`): ไม่ต้องส่ง headers ทั้ง `X-Company-ID` และ `X-Branch-ID`
+2. **Platform Routes** (employees, payroll, worklogs, etc.): **ต้องส่งทั้งสอง headers**
+3. **Branch Selection**: UI จะต้องเลือกสาขาจาก dropdown และส่ง **1 branch ID ต่อครั้ง**
+4. **Error if Missing**: ถ้าไม่ส่ง `X-Branch-ID` จะได้รับ `400 Bad Request` พร้อมข้อความ "X-Branch-ID header is required"
+
+**Example Request with Tenant Headers:**
+
+```http
+GET /employees HTTP/1.1
+Host: api.hrmsystem.com
+Authorization: Bearer eyJhbGciOiJIUzI1Ni...
+X-Company-ID: 019347e8-94ca-7d69-9f3a-1c3d4e5f6789
+X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
+```
+
 ### 1.3 Error Response Format (RFC 7807)
 
 เมื่อเกิด Error ระบบจะคืนค่า HTTP Status Code พร้อม Body ในรูปแบบ `application/problem+json`:
