@@ -18,6 +18,8 @@ import (
 type Command struct {
 	DocumentID uuid.UUID
 	ActorID    uuid.UUID
+	CompanyID  uuid.UUID
+	BranchID   uuid.UUID
 }
 
 type Handler struct {
@@ -42,6 +44,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
+		BranchID:   &cmd.BranchID,
 		Action:     "DELETE",
 		EntityName: "EMPLOYEE_DOCUMENT",
 		EntityID:   cmd.DocumentID.String(),

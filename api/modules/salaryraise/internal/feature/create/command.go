@@ -71,8 +71,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.CompanyID, cmd.BranchID, cmd.ActorID)
 		return err
 	}); err != nil {
+		if repository.IsUniqueViolation(err, "salary_raise_cycle_pending_branch_uk") {
+			return nil, errs.Conflict("pending salary raise cycle for this branch already exists")
+		}
 		logger.FromContext(ctx).Error("failed to create salary raise cycle", zap.Error(err))
-		return nil, errs.Internal("failed to create cycle (ensure only one pending cycle exists)")
+		return nil, errs.Internal("failed to create cycle")
 	}
 
 	cmd.Eb.Publish(events.LogEvent{

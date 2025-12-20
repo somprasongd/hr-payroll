@@ -204,20 +204,15 @@ func (r *Repository) GetLatestPayrollRun(ctx context.Context, tenant contextx.Te
 	args := []interface{}{}
 	where := []string{"pr.deleted_at IS NULL"}
 
-	// Company filter (Payroll Run usually has company_id directly, but if not we assume it needs to be filtered)
-	// Checking payroll_run table structure assumption: it should have company_id ideally.
-	// If not, we might need to join or assume isolation by other means.
-	// Assuming payroll_run has company_id based on standard multi-tenant design.
-	// But let's check table structure if possible. Assuming yes for now.
-	// Wait, standard practice: yes.
-
+	// Company filter
 	args = append(args, tenant.CompanyID)
 	where = append(where, fmt.Sprintf("pr.company_id = $%d", len(args)))
 
-	// Branch filter? Payroll run is usually per company or per branch?
-	// If it's per company, we ignore branch filter unless we want to filter runs for specific branches...
-	// Usually payroll run is Company wide in this system context?
-	// Let's assume company level for now.
+	// Branch filter
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("pr.branch_id = $%d", len(args)))
+	}
 
 	query := fmt.Sprintf(`
 SELECT 
@@ -258,7 +253,19 @@ func (r *Repository) GetYearlyPayrollTotals(ctx context.Context, tenant contextx
 	db := r.dbCtx(ctx)
 
 	args := []interface{}{year, tenant.CompanyID}
-	query := `
+	where := []string{
+		"pr.deleted_at IS NULL",
+		"pr.status = 'approved'",
+		"EXTRACT(YEAR FROM pr.payroll_month_date) = $1",
+		"pr.company_id = $2",
+	}
+
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("pr.branch_id = $%d", len(args)))
+	}
+
+	query := fmt.Sprintf(`
 SELECT 
     COALESCE(SUM(pri.income_total - (pri.late_minutes_deduction + pri.leave_days_deduction + pri.leave_double_deduction + pri.leave_hours_deduction + pri.sso_month_amount + pri.tax_month_amount + pri.pf_month_amount + pri.water_amount + pri.electric_amount + pri.internet_amount + pri.advance_repay_amount + COALESCE((SELECT SUM((item->>'amount')::numeric) FROM jsonb_array_elements(pri.loan_repayments) AS item), 0) + COALESCE((SELECT SUM((item->>'value')::numeric) FROM jsonb_array_elements(pri.others_deduction) AS item), 0))), 0) AS total_net_pay,
     COALESCE(SUM(pri.tax_month_amount), 0) AS total_tax,
@@ -266,11 +273,8 @@ SELECT
     COALESCE(SUM(pri.pf_month_amount), 0) AS total_pf
 FROM payroll_run pr
 JOIN payroll_run_item pri ON pr.id = pri.run_id
-WHERE pr.deleted_at IS NULL
-    AND pr.status = 'approved'
-    AND EXTRACT(YEAR FROM pr.payroll_month_date) = $1
-    AND pr.company_id = $2
-`
+WHERE %s
+`, strings.Join(where, " AND "))
 	var totals YearlyPayrollTotals
 	if err := db.GetContext(ctx, &totals, query, args...); err != nil {
 		return nil, err
@@ -292,7 +296,19 @@ func (r *Repository) GetMonthlyPayrollBreakdown(ctx context.Context, tenant cont
 	db := r.dbCtx(ctx)
 
 	args := []interface{}{year, tenant.CompanyID}
-	query := `
+	where := []string{
+		"pr.deleted_at IS NULL",
+		"pr.status = 'approved'",
+		"EXTRACT(YEAR FROM pr.payroll_month_date) = $1",
+		"pr.company_id = $2",
+	}
+
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("pr.branch_id = $%d", len(args)))
+	}
+
+	query := fmt.Sprintf(`
 SELECT 
     TO_CHAR(pr.payroll_month_date, 'YYYY-MM') AS month,
     COALESCE(SUM(pri.income_total - (pri.late_minutes_deduction + pri.leave_days_deduction + pri.leave_double_deduction + pri.leave_hours_deduction + pri.sso_month_amount + pri.tax_month_amount + pri.pf_month_amount + pri.water_amount + pri.electric_amount + pri.internet_amount + pri.advance_repay_amount + COALESCE((SELECT SUM((item->>'amount')::numeric) FROM jsonb_array_elements(pri.loan_repayments) AS item), 0) + COALESCE((SELECT SUM((item->>'value')::numeric) FROM jsonb_array_elements(pri.others_deduction) AS item), 0))), 0) AS net_pay,
@@ -301,13 +317,10 @@ SELECT
     COALESCE(SUM(pri.pf_month_amount), 0) AS pf
 FROM payroll_run pr
 JOIN payroll_run_item pri ON pr.id = pri.run_id
-WHERE pr.deleted_at IS NULL
-    AND pr.status = 'approved'
-    AND EXTRACT(YEAR FROM pr.payroll_month_date) = $1
-    AND pr.company_id = $2
+WHERE %s
 GROUP BY TO_CHAR(pr.payroll_month_date, 'YYYY-MM')
 ORDER BY month
-`
+`, strings.Join(where, " AND "))
 	var results []MonthlyPayrollBreakdown
 	if err := db.SelectContext(ctx, &results, query, args...); err != nil {
 		return nil, err
@@ -424,9 +437,6 @@ WHERE %s
 func (r *Repository) GetPendingBonusCycles(ctx context.Context, tenant contextx.TenantInfo) (*FinancialPending, error) {
 	db := r.dbCtx(ctx)
 
-	// Bonus cycle is usually Company wide or branch specific?
-	// Assuming company specific for now.
-
 	args := []interface{}{tenant.CompanyID}
 	where := []string{
 		"bc.deleted_at IS NULL",
@@ -434,9 +444,11 @@ func (r *Repository) GetPendingBonusCycles(ctx context.Context, tenant contextx.
 		"bc.company_id = $1",
 	}
 
-	// Branch filter? Bonus Cycle might have branch_id or items
-	// If items have employees, we might need complex join.
-	// For simplicity, cycle must have company_id.
+	// Branch filter for branch-level pending
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("bc.branch_id = $%d", len(args)))
+	}
 
 	query := fmt.Sprintf(`
 SELECT 
@@ -463,6 +475,12 @@ func (r *Repository) GetPendingSalaryRaiseCycles(ctx context.Context, tenant con
 		"src.deleted_at IS NULL",
 		"src.status = 'pending'",
 		"src.company_id = $1",
+	}
+
+	// Branch filter for branch-level pending
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("src.branch_id = $%d", len(args)))
 	}
 
 	query := fmt.Sprintf(`

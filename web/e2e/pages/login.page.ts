@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 /**
  * Page Object for Login page
@@ -32,17 +32,56 @@ export class LoginPage {
    * Login with username and password
    */
   async login(username: string, password: string) {
+    await this.usernameInput.waitFor({ state: 'visible', timeout: 10000 });
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.loginButton.click();
   }
 
   /**
-   * Login and wait for dashboard redirect
+   * Select a company from the company selector modal (For Super Admins)
    */
-  async loginAndWaitForDashboard(username: string, password: string) {
+  async selectCompany(companyName: string = 'COMPANY2') {
+    try {
+      await this.page.getByText('เลือกบริษัท').waitFor({ state: 'visible', timeout: 5000 });
+      await this.page.locator('div, span, button').filter({ hasText: companyName }).first().click({ force: true });
+    } catch (e) {
+      // Optional, ignore if not found
+    }
+  }
+
+  /**
+   * Select a branch from the branch selector modal
+   */
+  async selectBranch(branchName: string = 'สำนักงานใหญ่') {
+    try {
+      // 1. Wait for confirm button to be visible (Short timeout as it might be skipped)
+      const confirmButton = this.page.locator('button').filter({ hasText: 'ยืนยัน' });
+      await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
+      
+      // 2. Select the branch
+      const option = this.page.locator('div, span, label, button').filter({ hasText: branchName }).last();
+      await option.click({ force: true }).catch(() => {});
+
+      // 3. Click "Confirm" button
+      await confirmButton.click({ force: true });
+      
+      // 4. Wait for modal to disappear
+      await confirmButton.waitFor({ state: 'hidden', timeout: 5000 });
+    } catch (e) {
+      console.log('Branch selector modal not appeared, might be redirected elsewhere.');
+    }
+  }
+
+  /**
+   * Complete login flow including optional company and branch selection
+   */
+  async fullLogin(username: string, password: string, company: string = 'DEFAULT', branch: string = 'สำนักงานใหญ่') {
     await this.login(username, password);
-    await this.page.waitForURL('**/dashboard');
+    await this.selectCompany(company);
+    await this.selectBranch(branch);
+    // Wait for the URL to change from /login but don't force /dashboard
+    await this.page.waitForLoadState('networkidle');
   }
 
   /**

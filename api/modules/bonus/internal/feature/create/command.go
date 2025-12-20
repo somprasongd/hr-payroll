@@ -92,10 +92,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return err
 	}); err != nil {
 		switch {
-		case repository.IsUniqueViolation(err, "bonus_cycle_month_approved_uk"):
-			return nil, errs.Conflict("approved bonus cycle for this payroll month already exists")
-		case repository.IsUniqueViolation(err, "bonus_cycle_pending_one_uk"):
-			return nil, errs.Conflict("pending bonus cycle already exists")
+		case repository.IsUniqueViolation(err, "bonus_cycle_month_branch_approved_uk"):
+			return nil, errs.Conflict("approved bonus cycle for this branch and payroll month already exists")
+		case repository.IsUniqueViolation(err, "bonus_cycle_pending_branch_uk"):
+			return nil, errs.Conflict("pending bonus cycle for this branch already exists")
 		default:
 			logger.FromContext(ctx).Error("failed to create bonus cycle", zap.Error(err))
 			return nil, errs.Internal("failed to create bonus cycle")

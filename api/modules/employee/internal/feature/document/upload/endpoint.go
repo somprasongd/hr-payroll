@@ -98,6 +98,11 @@ func NewEndpoint(router fiber.Router) {
 			return errs.Unauthorized("missing user")
 		}
 
+		tenant, ok := contextx.TenantFromContext(c.Context())
+		if !ok {
+			return errs.Unauthorized("missing tenant context")
+		}
+
 		// Parse optional fields
 		var documentNumber *string
 		if dn := c.FormValue("documentNumber"); dn != "" {
@@ -135,6 +140,8 @@ func NewEndpoint(router fiber.Router) {
 			ExpiryDate:     expiryDate,
 			Notes:          notes,
 			ActorID:        user.ID,
+			CompanyID:      tenant.CompanyID,
+			BranchID:       tenant.BranchID,
 		})
 		if err != nil {
 			return err

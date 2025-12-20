@@ -60,10 +60,10 @@ func (r *Repository) ListLogs(ctx context.Context, tenant contextx.TenantInfo, f
 	args = append(args, tenant.CompanyID)
 	where = append(where, fmt.Sprintf("l.company_id = $%d", len(args)))
 
-	// Branch Filter
+	// Branch Filter: show branch-specific logs AND company-level logs (branch_id IS NULL)
 	if tenant.HasBranchID() {
 		args = append(args, tenant.BranchID)
-		where = append(where, fmt.Sprintf("l.branch_id = $%d", len(args)))
+		where = append(where, fmt.Sprintf("(l.branch_id = $%d OR l.branch_id IS NULL)", len(args)))
 	}
 
 	if filter.Action != "" {

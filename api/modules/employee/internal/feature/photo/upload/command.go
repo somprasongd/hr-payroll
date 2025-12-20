@@ -26,6 +26,7 @@ type Command struct {
 	Data        []byte
 	Size        int64
 	CompanyID   uuid.UUID
+	BranchID    uuid.UUID
 	ActorID     uuid.UUID
 }
 
@@ -81,6 +82,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
+		BranchID:   &cmd.BranchID,
 		Action:     "UPLOAD",
 		EntityName: "EMPLOYEE_PHOTO",
 		EntityID:   rec.ID.String(),

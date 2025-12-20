@@ -13,7 +13,7 @@ import (
 )
 
 // @Summary Create bonus cycle
-// @Description สร้างรอบโบนัส (pending) — มีได้ครั้งละ 1 pending และไม่อนุญาตงวดเงินเดือนที่มีรอบอนุมัติแล้ว
+// @Description สร้างรอบโบนัส (pending) — มีได้ครั้งละ 1 pending ต่อสาขา และไม่อนุญาตงวดเงินเดือนที่มีรอบอนุมัติแล้วในสาขาเดียวกัน
 // @Tags Bonus
 // @Accept json
 // @Produce json
