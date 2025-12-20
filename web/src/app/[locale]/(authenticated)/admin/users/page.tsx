@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { UserList } from '@/components/admin/users/user-list';
 import { UserForm } from '@/components/admin/users/user-form';
@@ -17,12 +18,15 @@ import {
 
 export default function UsersPage() {
   const t = useTranslations('Users');
+  const router = useRouter();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleUserCreated = () => {
+  const handleUserCreated = (userId: string) => {
     setIsCreateOpen(false);
     setRefreshKey((prev) => prev + 1);
+    // Redirect to branch management page for the new user
+    router.push(`/admin/users/${userId}/branches`);
   };
 
   return (

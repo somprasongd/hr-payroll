@@ -67,6 +67,12 @@ const DEFAULT_TAX_BRACKETS: TaxProgressiveBracket[] = [
   { min: 5000001, max: null, rate: 35 },
 ];
 
+// Helper: Get first day of current month as YYYY-MM-DD
+const getFirstDayOfCurrentMonth = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+};
+
 interface ConfigFormData {
   startDate: string;
   hourlyRate: number;
@@ -102,7 +108,7 @@ export default function SettingsPage() {
   const [activeConfig, setActiveConfig] = useState<PayrollConfig | null>(null);
   const [configHistory, setConfigHistory] = useState<PayrollConfig[]>([]);
   const [formData, setFormData] = useState<ConfigFormData>({
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: getFirstDayOfCurrentMonth(),
     hourlyRate: 0,
     otHourlyRate: 0,
     attendanceBonusNoLate: 0,
@@ -162,7 +168,7 @@ export default function SettingsPage() {
       
       // Load data into form (convert decimal to percentage for social security and tax rates)
       setFormData({
-        startDate: data.startDate || new Date().toISOString().split('T')[0],
+        startDate: data.startDate || getFirstDayOfCurrentMonth(),
         hourlyRate: data.hourlyRate || 0,
         otHourlyRate: data.otHourlyRate || 0,
         attendanceBonusNoLate: data.attendanceBonusNoLate || 0,

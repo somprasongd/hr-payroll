@@ -6,6 +6,7 @@ import { Banknote, HandCoins, Coins, Gift, TrendingUp, Loader2 } from 'lucide-re
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { dashboardService, FinancialSummaryResponse } from '@/services/dashboard.service';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function PendingItemsWidget() {
   const t = useTranslations('Dashboard');
@@ -27,6 +28,9 @@ export function PendingItemsWidget() {
       setLoading(false);
     }
   }, [t]);
+
+  // Refetch when branch changes
+  useBranchChange(fetchData);
 
   useEffect(() => {
     fetchData();

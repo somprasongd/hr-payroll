@@ -1,16 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useTranslations, useLocale } from "next-intl";
-import {
-  TrendingUp,
-  Clock,
-  Calendar,
-  AlertTriangle,
-  Loader2,
-  Clock3,
-  Users,
-} from "lucide-react";
+import { EmployeeSelector } from "@/components/common/employee-selector";
 import {
   Card,
   CardContent,
@@ -18,17 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
 import {
   Select,
   SelectContent,
@@ -36,12 +15,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useBranchChange } from '@/hooks/use-branch-change';
 import {
-  dashboardService,
   AttendanceSummaryResponse,
+  dashboardService,
 } from "@/services/dashboard.service";
-import { employeeService, Employee } from "@/services/employee.service";
-import { EmployeeSelector } from "@/components/common/employee-selector";
+import { Employee, employeeService } from "@/services/employee.service";
+import {
+  AlertTriangle,
+  Calendar,
+  Clock,
+  Clock3,
+  Loader2,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 export function AttendanceChartWidget() {
   const t = useTranslations("Dashboard");
@@ -106,6 +107,9 @@ export function AttendanceChartWidget() {
       setLoading(false);
     }
   }, [t, dateRange, selectedEmployeeId]);
+
+  // Refetch when branch changes
+  useBranchChange(fetchData);
 
   useEffect(() => {
     fetchData();

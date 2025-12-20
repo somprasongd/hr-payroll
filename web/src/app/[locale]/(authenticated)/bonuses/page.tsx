@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import { Eye, Trash2, Filter, Plus, RotateCcw } from 'lucide-react';
@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { GenericDataTable } from '@/components/common/generic-data-table';
 import { FilterBar } from '@/components/common/filter-bar';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export default function BonusListPage() {
   const t = useTranslations('Bonus');
@@ -57,6 +58,11 @@ export default function BonusListPage() {
       setLoading(false);
     }
   };
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchCycles();
+  }, []));
 
   useEffect(() => {
     fetchCycles();

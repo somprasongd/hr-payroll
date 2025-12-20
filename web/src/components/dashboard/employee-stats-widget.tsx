@@ -6,6 +6,7 @@ import { Users, UserPlus, UserMinus, Briefcase, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { dashboardService, EmployeeSummaryResponse } from '@/services/dashboard.service';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function EmployeeStatsWidget() {
   const t = useTranslations('Dashboard');
@@ -26,6 +27,9 @@ export function EmployeeStatsWidget() {
       setLoading(false);
     }
   }, [t]);
+
+  // Refetch when branch changes
+  useBranchChange(fetchData);
 
   useEffect(() => {
     fetchData();

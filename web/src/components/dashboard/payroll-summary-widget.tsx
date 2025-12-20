@@ -6,6 +6,7 @@ import { CreditCard, Wallet, Receipt, Loader2, CheckCircle, Clock } from 'lucide
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { dashboardService, PayrollSummaryResponse } from '@/services/dashboard.service';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function PayrollSummaryWidget() {
   const t = useTranslations('Dashboard');
@@ -27,6 +28,9 @@ export function PayrollSummaryWidget() {
       setLoading(false);
     }
   }, [t]);
+
+  // Refetch when branch changes
+  useBranchChange(fetchData);
 
   useEffect(() => {
     fetchData();

@@ -1,18 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { Link, useRouter } from '@/i18n/routing';
-import { Button } from '@/components/ui/button';
-import { Plus, Search, Edit, Trash2, Filter, RotateCcw } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { employeeService, Employee, EmployeeType } from '@/services/employee.service';
-import { GenericDataTable } from '@/components/common/generic-data-table';
-import { FilterBar } from '@/components/common/filter-bar';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
-import { ActionDropdown } from '@/components/common/action-dropdown';
 import { EmployeePhoto } from '@/components/common/employee-photo';
 import { EmployeeTypeBadge } from '@/components/common/employee-type-badge';
+import { FilterBar } from '@/components/common/filter-bar';
+import { GenericDataTable } from '@/components/common/generic-data-table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useBranchChange } from '@/hooks/use-branch-change';
+import { Link, useRouter } from '@/i18n/routing';
+import { Employee, employeeService, EmployeeType } from '@/services/employee.service';
+import { Edit, Filter, Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function EmployeesPage() {
   const t = useTranslations('Employees');
@@ -28,6 +28,12 @@ export default function EmployeesPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployeeTypes();
+    fetchEmployees();
+  }, []));
 
   useEffect(() => {
     fetchEmployeeTypes();

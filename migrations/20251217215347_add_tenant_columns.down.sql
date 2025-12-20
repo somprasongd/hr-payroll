@@ -102,7 +102,7 @@ DROP INDEX IF EXISTS payout_pt_tenant_idx;
 DROP INDEX IF EXISTS salary_advance_tenant_idx;
 DROP INDEX IF EXISTS debt_txn_tenant_idx;
 DROP INDEX IF EXISTS bonus_cycle_tenant_idx;
-DROP INDEX IF EXISTS salary_raise_cycle_company_idx;
+DROP INDEX IF EXISTS salary_raise_cycle_tenant_idx;
 DROP INDEX IF EXISTS org_profile_company_uk;
 DROP INDEX IF EXISTS activity_logs_tenant_idx;
 DROP INDEX IF EXISTS employee_document_company_idx;
@@ -140,8 +140,10 @@ ALTER TABLE bonus_item DROP COLUMN IF EXISTS branch_id;
 DROP INDEX IF EXISTS bonus_item_tenant_idx;
 
 ALTER TABLE salary_raise_cycle DROP COLUMN IF EXISTS company_id;
+ALTER TABLE salary_raise_cycle DROP COLUMN IF EXISTS branch_id;
 ALTER TABLE salary_raise_item DROP COLUMN IF EXISTS company_id;
-DROP INDEX IF EXISTS salary_raise_item_company_idx;
+ALTER TABLE salary_raise_item DROP COLUMN IF EXISTS branch_id;
+DROP INDEX IF EXISTS salary_raise_item_tenant_idx;
 
 -- Drop payout_pt_item tenant columns if exists
 DO $$

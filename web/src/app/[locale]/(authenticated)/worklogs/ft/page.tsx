@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 // Get default date range (current month)
 const getDefaultStartDate = () => format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -67,6 +68,13 @@ export default function FTWorklogsPage() {
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployees();
+    setEmployeeFilter('');
+    setWorklogs([]);
+  }, []));
 
   useEffect(() => {
     fetchEmployees();

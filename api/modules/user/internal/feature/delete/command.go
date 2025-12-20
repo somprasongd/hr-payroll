@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/user/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -42,8 +43,16 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		return mediator.NoResponse{}, errs.Internal("failed to delete user")
 	}
 
+	// Get company ID from tenant context (nil if superadmin)
+	var companyID *uuid.UUID
+	if tenant, ok := contextx.TenantFromContext(ctx); ok {
+		companyID = &tenant.CompanyID
+	}
+
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  companyID,
+		BranchID:   nil,
 		Action:     "DELETE",
 		EntityName: "USER",
 		EntityID:   cmd.ID.String(),

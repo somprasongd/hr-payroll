@@ -54,7 +54,7 @@ export default function UserBranchesPage() {
 
       // Fetch user's current branches
       const userBranches = await getUserBranches(userId);
-      const branchIds = new Set(userBranches.map(b => b.branchId));
+      const branchIds = new Set((userBranches || []).map(b => b.branchId));
       setSelectedBranchIds(branchIds);
       setInitialBranchIds(new Set(branchIds));
     } catch (error) {

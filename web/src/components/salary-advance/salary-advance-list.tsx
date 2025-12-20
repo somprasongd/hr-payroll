@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { 
   Table, 
@@ -47,6 +47,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
+import { useBranchChange } from '@/hooks/use-branch-change';
 import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
 
 export function SalaryAdvanceList() {
@@ -66,6 +67,13 @@ export function SalaryAdvanceList() {
   const [editItem, setEditItem] = useState<SalaryAdvance | null>(null);
   const [deleteItem, setDeleteItem] = useState<SalaryAdvance | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployees();
+    setEmployeeFilter('all');
+    setData([]);
+  }, []));
 
   useEffect(() => {
     fetchEmployees();

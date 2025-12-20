@@ -76,7 +76,7 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 	where += fmt.Sprintf(" AND company_id = $%d", len(args))
 
 	// Branch Filter
-	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+	if len(tenant.BranchIDs) > 0 {
 		args = append(args, pq.Array(tenant.BranchIDs))
 		where += fmt.Sprintf(" AND branch_id = ANY($%d)", len(args))
 	}
@@ -187,7 +187,7 @@ func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, c
 	where += fmt.Sprintf(" AND e.company_id = $%d", len(args))
 
 	// Branch Filter
-	if !tenant.IsAdmin && len(tenant.BranchIDs) > 0 {
+	if len(tenant.BranchIDs) > 0 {
 		args = append(args, pq.Array(tenant.BranchIDs))
 		where += fmt.Sprintf(" AND e.branch_id = ANY($%d)", len(args))
 	}

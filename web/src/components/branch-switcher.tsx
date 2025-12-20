@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Building2, ChevronDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Building2, ChevronDown, Check } from 'lucide-react';
 import { useTenantStore, Branch } from '@/store/tenant-store';
 import { useAuthStore } from '@/store/auth-store';
 import { switchTenant } from '@/services/tenant.service';
@@ -13,12 +14,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
+  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
 export function BranchSwitcher() {
   const t = useTranslations('Tenant');
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
@@ -36,33 +38,21 @@ export function BranchSwitcher() {
     return null;
   }
 
-  const handleBranchToggle = async (branch: Branch) => {
+  // Get the currently selected single branch
+  const currentBranch = currentBranches.length > 0 ? currentBranches[0] : null;
+
+  const handleBranchSelect = async (branch: Branch) => {
+    // If same branch, do nothing
+    if (currentBranch?.id === branch.id) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Toggle branch selection
-      const currentIds = currentBranches.map(b => b.id);
-      let newBranchIds: string[];
-      
-      if (currentIds.includes(branch.id)) {
-        // Remove branch (but keep at least one)
-        if (currentIds.length === 1) {
-          toast({
-            title: t('error'),
-            description: t('mustSelectOneBranch'),
-            variant: 'destructive',
-          });
-          return;
-        }
-        newBranchIds = currentIds.filter(id => id !== branch.id);
-      } else {
-        // Add branch
-        newBranchIds = [...currentIds, branch.id];
-      }
-
-      // Call API to switch tenant
+      // Call API to switch tenant with single branch
       const response = await switchTenant({
         companyId: currentCompany.id,
-        branchIds: newBranchIds,
+        branchIds: [branch.id], // Single branch
       });
 
       // Update auth tokens
@@ -75,6 +65,9 @@ export function BranchSwitcher() {
         title: t('success'),
         description: t('branchSwitched'),
       });
+
+      // Reload page data to reflect new branch context
+      router.refresh();
     } catch {
       toast({
         title: t('error'),
@@ -86,11 +79,7 @@ export function BranchSwitcher() {
     }
   };
 
-  const selectedBranchNames = currentBranches.length > 0
-    ? currentBranches.length === 1
-      ? currentBranches[0].name
-      : `${currentBranches.length} ${t('branches')}`
-    : t('selectBranch');
+  const selectedBranchName = currentBranch?.name || t('selectBranch');
 
   return (
     <DropdownMenu>
@@ -102,7 +91,7 @@ export function BranchSwitcher() {
           disabled={isLoading}
         >
           <Building2 className="h-4 w-4 shrink-0" />
-          <span className="truncate">{selectedBranchNames}</span>
+          <span className="truncate">{selectedBranchName}</span>
           <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
@@ -113,16 +102,16 @@ export function BranchSwitcher() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-xs text-muted-foreground">
-          {t('selectBranches')}
+          {t('selectBranch')}
         </DropdownMenuLabel>
         {availableBranches.map((branch) => {
-          const isSelected = currentBranches.some(b => b.id === branch.id);
+          const isSelected = currentBranch?.id === branch.id;
           return (
-            <DropdownMenuCheckboxItem
+            <DropdownMenuItem
               key={branch.id}
-              checked={isSelected}
-              onCheckedChange={() => handleBranchToggle(branch)}
+              onClick={() => handleBranchSelect(branch)}
               disabled={isLoading}
+              className="flex items-center justify-between cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 {branch.name}
@@ -130,7 +119,8 @@ export function BranchSwitcher() {
                   <span className="text-xs text-muted-foreground">({t('default')})</span>
                 )}
               </span>
-            </DropdownMenuCheckboxItem>
+              {isSelected && <Check className="h-4 w-4 text-primary" />}
+            </DropdownMenuItem>
           );
         })}
       </DropdownMenuContent>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function DebtList() {
   const t = useTranslations('Debt');
@@ -64,6 +65,15 @@ export function DebtList() {
   const [hasOutstandingFilter, setHasOutstandingFilter] = useState(true);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
 
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployees();
+    setEmployeeFilter('all');
+    setData([]);
+    setOutstandingDebt(0);
+    setPendingInstallments(0);
+  }, []));
 
   useEffect(() => {
     fetchEmployees();

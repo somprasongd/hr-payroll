@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useTenantStore } from '@/store/tenant-store';
 
 
 export default function PayoutPtListPage() {
@@ -60,15 +61,23 @@ export default function PayoutPtListPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
+  // Get current branch from tenant store
+  const { currentBranches } = useTenantStore();
+  const currentBranchId = currentBranches[0]?.id;
+  
   // Filters - initialize from URL query
   const [status, setStatus] = useState<string>('all');
   const [employeeId, setEmployeeId] = useState<string>(searchParams.get('employeeId') || '');
   const [startDate, setStartDate] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState<string>(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
 
+  // Refetch employees when branch changes
   useEffect(() => {
     fetchEmployees();
-  }, []);
+    // Reset employee selection when branch changes
+    setEmployeeId('');
+    setPayouts([]);
+  }, [currentBranchId]);
 
   useEffect(() => {
     fetchPayouts();

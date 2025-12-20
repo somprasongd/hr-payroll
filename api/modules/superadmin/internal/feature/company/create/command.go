@@ -16,7 +16,6 @@ import (
 	"hrms/shared/events"
 )
 
-
 type Command struct {
 	Tx            transactor.Transactor
 	Eb            eventbus.EventBus
@@ -103,15 +102,13 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		}
 
 		registerHook(func(ctx context.Context) error {
-			companyID := resp.Company.ID
-			branchID := resp.Branch.ID
 			cmd.Eb.Publish(events.LogEvent{
 				ActorID:    cmd.ActorID,
-				CompanyID:  &companyID,
-				BranchID:   &branchID,
+				CompanyID:  nil,
+				BranchID:   nil,
 				Action:     "CREATE",
 				EntityName: "COMPANY",
-				EntityID:   companyID.String(),
+				EntityID:   resp.Company.ID.String(),
 				Details: map[string]interface{}{
 					"code":          resp.Company.Code,
 					"name":          resp.Company.Name,

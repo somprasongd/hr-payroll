@@ -56,13 +56,13 @@ func NewEndpoint(router fiber.Router, eb eventbus.EventBus) {
 		}
 
 		// Publish log event
-		companyID := resp.Company.ID
 		eb.Publish(events.LogEvent{
 			ActorID:    user.ID,
-			CompanyID:  &companyID,
+			CompanyID:  nil,
+			BranchID:   nil,
 			Action:     "UPDATE",
 			EntityName: "COMPANY",
-			EntityID:   companyID.String(),
+			EntityID:   resp.Company.ID.String(),
 			Details: map[string]interface{}{
 				"code":   resp.Company.Code,
 				"name":   resp.Company.Name,
