@@ -353,6 +353,8 @@
       "electric": "ค่าไฟ",
       "internet": "ค่าอินเทอร์เน็ต",
       "doctorFee": "ค่าแพทย์",
+      "allowAttendanceBonusNoLate": "เบี้ยขยัน (ไม่สาย)",
+      "allowAttendanceBonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
       "status": "สถานะ",
       "photo": "รูปพนักงาน",
       "department": "แผนก",

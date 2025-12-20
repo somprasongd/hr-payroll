@@ -913,39 +913,41 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Response Body Fields Description**
 
-| **ชื่อฟิลด์ (Field Name)**  | **ประเภท (Type)** | **ตัวอย่าง (Example)**  | **คำอธิบาย (Description)**                                         |
-| --------------------------- | ----------------- | ----------------------- | ------------------------------------------------------------------ |
-| `id`                        | UUID              | `"019aa095-..."`        | รหัสอ้างอิงพนักงาน (Primary Key แบบ UUIDv7)                        |
-| `employeeNumber`            | String            | `"EMP-001"`             | รหัสพนักงาน (ที่ HR กำหนด)                                         |
-| `titleId`                   | UUID              | `"019aa..."`            | รหัสคำนำหน้าชื่อ (FK เชื่อมตาราง `person_title`)                   |
-| `firstName`                 | String            | `"สมชาย"`               | ชื่อจริง (ภาษาไทย/อังกฤษ ตามที่เก็บ)                               |
-| `lastName`                  | String            | `"ศรีสุข"`              | นามสกุล                                                            |
-| `idDocumentTypeId`          | UUID              | `"019aa..."`            | รหัสประเภทบัตรยืนยันตัวตน (FK เชื่อม `id_document_type`)           |
-| `idDocumentNumber`          | String            | `"1103701234567"`       | เลขที่บัตรประชาชน หรือเลขที่พาสปอร์ต                               |
-| `phone`                     | String            | `"0812345678"`          | เบอร์โทรศัพท์ติดต่อ (อาจเป็น null)                                 |
-| `email`                     | String            | `"somchai@example.com"` | อีเมล (อาจเป็น null)                                               |
-| `photoId`                   | UUID              | `"019b..."`             | รหัสรูปพนักงานในตาราง `employee_photo` (อาจเป็น null)              |
-| `employeeTypeId`            | UUID              | `"019aa..."`            | รหัสประเภทพนักงาน (FK เชื่อม `employee_type` เช่น ประจำ/พาร์ทไทม์) |
-| `departmentId`              | UUID              | `"019b..."`             | รหัสแผนก (FK เชื่อม `department`, อาจเป็น null)                    |
-| `positionId`                | UUID              | `"019b..."`             | รหัสตำแหน่งงาน (FK เชื่อม `employee_position`, อาจเป็น null)       |
-| `basePayAmount`             | Number            | `30500.00`              | ฐานเงินเดือน (พนักงานประจำ) หรือค่าแรงต่อชั่วโมง (พาร์ทไทม์)       |
-| `employmentStartDate`       | String (Date)     | `"2024-06-01"`          | วันที่เริ่มงาน (Format: YYYY-MM-DD)                                |
-| `employmentEndDate`         | String (Date)     | `null`                  | วันที่สิ้นสุดงาน/ลาออก (เป็น `null` ถ้ายังทำงานอยู่)               |
-| `bankName`                  | String            | `"KBank"`               | ชื่อธนาคารเจ้าของบัญชี (อาจเป็น null)                              |
-| `bankAccountNo`             | String            | `"123-4-56789-0"`       | เลขที่บัญชีธนาคาร (อาจเป็น null)                                   |
-| `ssoContribute`             | Boolean           | `true`                  | สถานะการหักเงินสมทบประกันสังคม (`true` = หัก)                      |
-| `ssoDeclaredWage`           | Number            | `15000.00`              | ฐานเงินเดือนสำหรับคำนวณประกันสังคม (สูงสุด 15,000)                 |
-| `providentFundContribute`   | Boolean           | `true`                  | สถานะการหักกองทุนสำรองเลี้ยงชีพ (PVD)                              |
-| `providentFundRateEmployee` | Number            | `0.03`                  | อัตราสะสมส่วนของลูกจ้าง (ทศนิยม: 0.03 = 3%)                        |
-| `providentFundRateEmployer` | Number            | `0.03`                  | อัตราสมทบส่วนของนายจ้าง (ทศนิยม: 0.03 = 3%)                        |
-| `withholdTax`               | Boolean           | `true`                  | สถานะการหักภาษี ณ ที่จ่าย (`true` = คำนวณภาษี)                     |
-| `allowHousing`              | Boolean           | `true`                  | สิทธิ์ได้รับค่าเช่าบ้าน                                            |
-| `allowWater`                | Boolean           | `false`                 | สิทธิ์ได้รับค่าน้ำ                                                 |
-| `allowElectric`             | Boolean           | `false`                 | สิทธิ์ได้รับค่าไฟ                                                  |
-| `allowInternet`             | Boolean           | `true`                  | สิทธิ์ได้รับค่าอินเทอร์เน็ต                                        |
-| `allowDoctorFee`            | Boolean           | `true`                  | สิทธิ์ได้รับค่าเวร/ค่าใบประกอบวิชาชีพ (มาจาก `allow_df` ใน DB)     |
-| `createdAt`                 | String (ISO)      | `"2025-11-20T..."`      | วันเวลาที่สร้างข้อมูล                                              |
-| `updatedAt`                 | String (ISO)      | `"2025-11-21T..."`      | วันเวลาที่แก้ไขข้อมูลล่าสุด                                        |
+| **ชื่อฟิลด์ (Field Name)**    | **ประเภท (Type)** | **ตัวอย่าง (Example)**  | **คำอธิบาย (Description)**                                         |
+| ----------------------------- | ----------------- | ----------------------- | ------------------------------------------------------------------ |
+| `id`                          | UUID              | `"019aa095-..."`        | รหัสอ้างอิงพนักงาน (Primary Key แบบ UUIDv7)                        |
+| `employeeNumber`              | String            | `"EMP-001"`             | รหัสพนักงาน (ที่ HR กำหนด)                                         |
+| `titleId`                     | UUID              | `"019aa..."`            | รหัสคำนำหน้าชื่อ (FK เชื่อมตาราง `person_title`)                   |
+| `firstName`                   | String            | `"สมชาย"`               | ชื่อจริง (ภาษาไทย/อังกฤษ ตามที่เก็บ)                               |
+| `lastName`                    | String            | `"ศรีสุข"`              | นามสกุล                                                            |
+| `idDocumentTypeId`            | UUID              | `"019aa..."`            | รหัสประเภทบัตรยืนยันตัวตน (FK เชื่อม `id_document_type`)           |
+| `idDocumentNumber`            | String            | `"1103701234567"`       | เลขที่บัตรประชาชน หรือเลขที่พาสปอร์ต                               |
+| `phone`                       | String            | `"0812345678"`          | เบอร์โทรศัพท์ติดต่อ (อาจเป็น null)                                 |
+| `email`                       | String            | `"somchai@example.com"` | อีเมล (อาจเป็น null)                                               |
+| `photoId`                     | UUID              | `"019b..."`             | รหัสรูปพนักงานในตาราง `employee_photo` (อาจเป็น null)              |
+| `employeeTypeId`              | UUID              | `"019aa..."`            | รหัสประเภทพนักงาน (FK เชื่อม `employee_type` เช่น ประจำ/พาร์ทไทม์) |
+| `departmentId`                | UUID              | `"019b..."`             | รหัสแผนก (FK เชื่อม `department`, อาจเป็น null)                    |
+| `positionId`                  | UUID              | `"019b..."`             | รหัสตำแหน่งงาน (FK เชื่อม `employee_position`, อาจเป็น null)       |
+| `basePayAmount`               | Number            | `30500.00`              | ฐานเงินเดือน (พนักงานประจำ) หรือค่าแรงต่อชั่วโมง (พาร์ทไทม์)       |
+| `employmentStartDate`         | String (Date)     | `"2024-06-01"`          | วันที่เริ่มงาน (Format: YYYY-MM-DD)                                |
+| `employmentEndDate`           | String (Date)     | `null`                  | วันที่สิ้นสุดงาน/ลาออก (เป็น `null` ถ้ายังทำงานอยู่)               |
+| `bankName`                    | String            | `"KBank"`               | ชื่อธนาคารเจ้าของบัญชี (อาจเป็น null)                              |
+| `bankAccountNo`               | String            | `"123-4-56789-0"`       | เลขที่บัญชีธนาคาร (อาจเป็น null)                                   |
+| `ssoContribute`               | Boolean           | `true`                  | สถานะการหักเงินสมทบประกันสังคม (`true` = หัก)                      |
+| `ssoDeclaredWage`             | Number            | `15000.00`              | ฐานเงินเดือนสำหรับคำนวณประกันสังคม (สูงสุด 15,000)                 |
+| `providentFundContribute`     | Boolean           | `true`                  | สถานะการหักกองทุนสำรองเลี้ยงชีพ (PVD)                              |
+| `providentFundRateEmployee`   | Number            | `0.03`                  | อัตราสะสมส่วนของลูกจ้าง (ทศนิยม: 0.03 = 3%)                        |
+| `providentFundRateEmployer`   | Number            | `0.03`                  | อัตราสมทบส่วนของนายจ้าง (ทศนิยม: 0.03 = 3%)                        |
+| `withholdTax`                 | Boolean           | `true`                  | สถานะการหักภาษี ณ ที่จ่าย (`true` = คำนวณภาษี)                     |
+| `allowHousing`                | Boolean           | `true`                  | สิทธิ์ได้รับค่าเช่าบ้าน                                            |
+| `allowWater`                  | Boolean           | `false`                 | สิทธิ์ได้รับค่าน้ำ                                                 |
+| `allowElectric`               | Boolean           | `false`                 | สิทธิ์ได้รับค่าไฟ                                                  |
+| `allowInternet`               | Boolean           | `true`                  | สิทธิ์ได้รับค่าอินเทอร์เน็ต                                        |
+| `allowDoctorFee`              | Boolean           | `true`                  | สิทธิ์ได้รับค่าเวร/ค่าใบประกอบวิชาชีพ (มาจาก `allow_df` ใน DB)     |
+| `allowAttendanceBonusNoLate`  | Boolean           | `false`                 | สิทธิ์ได้รับเบี้ยขยัน (ไม่สาย)                                     |
+| `allowAttendanceBonusNoLeave` | Boolean           | `false`                 | สิทธิ์ได้รับเบี้ยขยัน (ไม่ลา)                                      |
+| `createdAt`                   | String (ISO)      | `"2025-11-20T..."`      | วันเวลาที่สร้างข้อมูล                                              |
+| `updatedAt`                   | String (ISO)      | `"2025-11-21T..."`      | วันเวลาที่แก้ไขข้อมูลล่าสุด                                        |
 
 **หมายเหตุสำหรับ Developer:**
 
@@ -999,28 +1001,30 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 **Request Fields (Validation):**
 
-| **ชื่อ (Name)**             | **คำอธิบาย**     | **ประเภท** | **Required** | **Constraint / Note**                           |
-| --------------------------- | ---------------- | ---------- | ------------ | ----------------------------------------------- |
-| `employeeNumber`            | รหัสพนักงาน      | String     | **Yes**      | ห้ามซ้ำ (Unique)                                |
-| `titleId`                   | ID คำนำหน้า      | UUID       | **Yes**      | ต้องมีอยู่ในระบบ                                |
-| `firstName`                 | ชื่อจริง         | String     | **Yes**      |                                                 |
-| `lastName`                  | นามสกุล          | String     | **Yes**      |                                                 |
-| `idDocumentTypeId`          | ID ประเภทบัตร    | UUID       | **Yes**      |                                                 |
-| `idDocumentNumber`          | เลขที่บัตร       | String     | **Yes**      |                                                 |
-| `photoId`                   | ID รูปพนักงาน    | UUID       | No           | ใช้ ID จาก API อัปโหลดรูป (`/employees/photos`) |
-| `employeeTypeId`            | ID ประเภทพนักงาน | UUID       | **Yes**      |                                                 |
-| `departmentId`              | ID แผนก          | UUID       | No           | FK ตาราง `department`                           |
-| `positionId`                | ID ตำแหน่ง       | UUID       | No           | FK ตาราง `employee_position`                    |
-| `basePayAmount`             | เงินเดือน/ค่าแรง | Number     | **Yes**      | ต้อง > 0                                        |
-| `employmentStartDate`       | วันเริ่มงาน      | Date       | **Yes**      | YYYY-MM-DD                                      |
-| `bankName`                  | ชื่อธนาคาร       | String     | No           | ต้องมาคู่กับ AccountNo                          |
-| `bankAccountNo`             | เลขบัญชี         | String     | No           | ต้องมาคู่กับ BankName                           |
-| `ssoContribute`             | ส่งประกันสังคม   | Boolean    | **Yes**      | Default: false                                  |
-| `ssoDeclaredWage`           | ฐานเงินเดือน SSO | Number     | Cond         | ต้องใส่ถ้า Contribute=true                      |
-| `providentFundContribute`   | ส่งกองทุนฯ (PVD) | Boolean    | **Yes**      | Default: false                                  |
-| `providentFundRateEmployee` | % สะสมลูกจ้าง    | Number     | Cond         | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true)               |
-| `providentFundRateEmployer` | % สมทบนายจ้าง    | Number     | Cond         | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true)               |
-| `allowDoctorFee`            | ค่าเวร/แพทย์     | Boolean    | **Yes**      | (`allow_df` ใน DB)                              |
+| **ชื่อ (Name)**               | **คำอธิบาย**       | **ประเภท** | **Required** | **Constraint / Note**                           |
+| ----------------------------- | ------------------ | ---------- | ------------ | ----------------------------------------------- |
+| `employeeNumber`              | รหัสพนักงาน        | String     | **Yes**      | ห้ามซ้ำ (Unique)                                |
+| `titleId`                     | ID คำนำหน้า        | UUID       | **Yes**      | ต้องมีอยู่ในระบบ                                |
+| `firstName`                   | ชื่อจริง           | String     | **Yes**      |                                                 |
+| `lastName`                    | นามสกุล            | String     | **Yes**      |                                                 |
+| `idDocumentTypeId`            | ID ประเภทบัตร      | UUID       | **Yes**      |                                                 |
+| `idDocumentNumber`            | เลขที่บัตร         | String     | **Yes**      |                                                 |
+| `photoId`                     | ID รูปพนักงาน      | UUID       | No           | ใช้ ID จาก API อัปโหลดรูป (`/employees/photos`) |
+| `employeeTypeId`              | ID ประเภทพนักงาน   | UUID       | **Yes**      |                                                 |
+| `departmentId`                | ID แผนก            | UUID       | No           | FK ตาราง `department`                           |
+| `positionId`                  | ID ตำแหน่ง         | UUID       | No           | FK ตาราง `employee_position`                    |
+| `basePayAmount`               | เงินเดือน/ค่าแรง   | Number     | **Yes**      | ต้อง > 0                                        |
+| `employmentStartDate`         | วันเริ่มงาน        | Date       | **Yes**      | YYYY-MM-DD                                      |
+| `bankName`                    | ชื่อธนาคาร         | String     | No           | ต้องมาคู่กับ AccountNo                          |
+| `bankAccountNo`               | เลขบัญชี           | String     | No           | ต้องมาคู่กับ BankName                           |
+| `ssoContribute`               | ส่งประกันสังคม     | Boolean    | **Yes**      | Default: false                                  |
+| `ssoDeclaredWage`             | ฐานเงินเดือน SSO   | Number     | Cond         | ต้องใส่ถ้า Contribute=true                      |
+| `providentFundContribute`     | ส่งกองทุนฯ (PVD)   | Boolean    | **Yes**      | Default: false                                  |
+| `providentFundRateEmployee`   | % สะสมลูกจ้าง      | Number     | Cond         | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true)               |
+| `providentFundRateEmployer`   | % สมทบนายจ้าง      | Number     | Cond         | 0.00 - 1.00 (ต้องใส่ถ้า PVD=true)               |
+| `allowDoctorFee`              | ค่าเวร/แพทย์       | Boolean    | **Yes**      | (`allow_df` ใน DB)                              |
+| `allowAttendanceBonusNoLate`  | เบี้ยขยัน (ไม่สาย) | Boolean    | No           | Default: false                                  |
+| `allowAttendanceBonusNoLeave` | เบี้ยขยัน (ไม่ลา)  | Boolean    | No           | Default: false                                  |
 
 **Success Response (201 Created):**
 
@@ -1209,7 +1213,7 @@ Frontend จะต้องทำงานแบบ "Clone & Edit":
 
 | **HTTP Status** | **Title** | **Description** |
 | --------------- | --------- | --------------- |
-| **404**         | Not Found | ไม่พบพนักงาน     |
+| **404**         | Not Found | ไม่พบพนักงาน    |
 
 ---
 

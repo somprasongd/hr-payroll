@@ -30,39 +30,41 @@ type Meta struct {
 }
 
 type Detail struct {
-	ID                        uuid.UUID  `json:"id"`
-	EmployeeNumber            string     `json:"employeeNumber"`
-	TitleID                   uuid.UUID  `json:"titleId"`
-	TitleName                 *string    `json:"titleName,omitempty"`
-	FirstName                 string     `json:"firstName"`
-	LastName                  string     `json:"lastName"`
-	IDDocumentTypeID          uuid.UUID  `json:"idDocumentTypeId"`
-	IDDocumentNumber          string     `json:"idDocumentNumber"`
-	Phone                     *string    `json:"phone,omitempty"`
-	Email                     *string    `json:"email,omitempty"`
-	PhotoID                   *uuid.UUID `json:"photoId,omitempty"`
-	EmployeeTypeID            uuid.UUID  `json:"employeeTypeId"`
-	DepartmentID              *uuid.UUID `json:"departmentId,omitempty"`
-	PositionID                *uuid.UUID `json:"positionId,omitempty"`
-	BasePayAmount             float64    `json:"basePayAmount"`
-	EmploymentStartDate       string     `json:"employmentStartDate"`
-	EmploymentEndDate         *string    `json:"employmentEndDate,omitempty"`
-	BankName                  *string    `json:"bankName,omitempty"`
-	BankAccountNo             *string    `json:"bankAccountNo,omitempty"`
-	SSOContribute             bool       `json:"ssoContribute"`
-	SSODeclaredWage           *float64   `json:"ssoDeclaredWage,omitempty"`
-	ProvidentFundContribute   bool       `json:"providentFundContribute"`
-	ProvidentFundRateEmployee float64    `json:"providentFundRateEmployee"`
-	ProvidentFundRateEmployer float64    `json:"providentFundRateEmployer"`
-	WithholdTax               bool       `json:"withholdTax"`
-	AllowHousing              bool       `json:"allowHousing"`
-	AllowWater                bool       `json:"allowWater"`
-	AllowElectric             bool       `json:"allowElectric"`
-	AllowInternet             bool       `json:"allowInternet"`
-	AllowDoctorFee            bool       `json:"allowDoctorFee"`
-	CreatedAt                 time.Time  `json:"createdAt"`
-	UpdatedAt                 time.Time  `json:"updatedAt"`
-	Status                    string     `json:"status"`
+	ID                          uuid.UUID  `json:"id"`
+	EmployeeNumber              string     `json:"employeeNumber"`
+	TitleID                     uuid.UUID  `json:"titleId"`
+	TitleName                   *string    `json:"titleName,omitempty"`
+	FirstName                   string     `json:"firstName"`
+	LastName                    string     `json:"lastName"`
+	IDDocumentTypeID            uuid.UUID  `json:"idDocumentTypeId"`
+	IDDocumentNumber            string     `json:"idDocumentNumber"`
+	Phone                       *string    `json:"phone,omitempty"`
+	Email                       *string    `json:"email,omitempty"`
+	PhotoID                     *uuid.UUID `json:"photoId,omitempty"`
+	EmployeeTypeID              uuid.UUID  `json:"employeeTypeId"`
+	DepartmentID                *uuid.UUID `json:"departmentId,omitempty"`
+	PositionID                  *uuid.UUID `json:"positionId,omitempty"`
+	BasePayAmount               float64    `json:"basePayAmount"`
+	EmploymentStartDate         string     `json:"employmentStartDate"`
+	EmploymentEndDate           *string    `json:"employmentEndDate,omitempty"`
+	BankName                    *string    `json:"bankName,omitempty"`
+	BankAccountNo               *string    `json:"bankAccountNo,omitempty"`
+	SSOContribute               bool       `json:"ssoContribute"`
+	SSODeclaredWage             *float64   `json:"ssoDeclaredWage,omitempty"`
+	ProvidentFundContribute     bool       `json:"providentFundContribute"`
+	ProvidentFundRateEmployee   float64    `json:"providentFundRateEmployee"`
+	ProvidentFundRateEmployer   float64    `json:"providentFundRateEmployer"`
+	WithholdTax                 bool       `json:"withholdTax"`
+	AllowHousing                bool       `json:"allowHousing"`
+	AllowWater                  bool       `json:"allowWater"`
+	AllowElectric               bool       `json:"allowElectric"`
+	AllowInternet               bool       `json:"allowInternet"`
+	AllowDoctorFee              bool       `json:"allowDoctorFee"`
+	AllowAttendanceBonusNoLate  bool       `json:"allowAttendanceBonusNoLate"`
+	AllowAttendanceBonusNoLeave bool       `json:"allowAttendanceBonusNoLeave"`
+	CreatedAt                   time.Time  `json:"createdAt"`
+	UpdatedAt                   time.Time  `json:"updatedAt"`
+	Status                      string     `json:"status"`
 }
 
 func FromListRecord(r repository.ListRecord) ListItem {
@@ -88,38 +90,40 @@ func FromDetailRecord(r repository.DetailRecord) Detail {
 	}
 
 	return Detail{
-		ID:                        r.ID,
-		EmployeeNumber:            r.EmployeeNumber,
-		TitleID:                   r.TitleID,
-		FirstName:                 r.FirstName,
-		LastName:                  r.LastName,
-		IDDocumentTypeID:          r.IDDocumentTypeID,
-		IDDocumentNumber:          r.IDDocumentNumber,
-		Phone:                     r.Phone,
-		Email:                     r.Email,
-		TitleName:                 r.TitleName,
-		PhotoID:                   r.PhotoID,
-		EmployeeTypeID:            r.EmployeeTypeID,
-		DepartmentID:              r.DepartmentID,
-		PositionID:                r.PositionID,
-		BasePayAmount:             r.BasePayAmount,
-		EmploymentStartDate:       r.EmploymentStartDate.Format(dateLayout),
-		EmploymentEndDate:         endDateStr,
-		BankName:                  r.BankName,
-		BankAccountNo:             r.BankAccountNo,
-		SSOContribute:             r.SSOContribute,
-		SSODeclaredWage:           r.SSODeclaredWage,
-		ProvidentFundContribute:   r.ProvidentFundContribute,
-		ProvidentFundRateEmployee: r.ProvidentFundRateEmployee,
-		ProvidentFundRateEmployer: r.ProvidentFundRateEmployer,
-		WithholdTax:               r.WithholdTax,
-		AllowHousing:              r.AllowHousing,
-		AllowWater:                r.AllowWater,
-		AllowElectric:             r.AllowElectric,
-		AllowInternet:             r.AllowInternet,
-		AllowDoctorFee:            r.AllowDoctorFee,
-		CreatedAt:                 r.CreatedAt,
-		UpdatedAt:                 r.UpdatedAt,
-		Status:                    r.Status,
+		ID:                          r.ID,
+		EmployeeNumber:              r.EmployeeNumber,
+		TitleID:                     r.TitleID,
+		FirstName:                   r.FirstName,
+		LastName:                    r.LastName,
+		IDDocumentTypeID:            r.IDDocumentTypeID,
+		IDDocumentNumber:            r.IDDocumentNumber,
+		Phone:                       r.Phone,
+		Email:                       r.Email,
+		TitleName:                   r.TitleName,
+		PhotoID:                     r.PhotoID,
+		EmployeeTypeID:              r.EmployeeTypeID,
+		DepartmentID:                r.DepartmentID,
+		PositionID:                  r.PositionID,
+		BasePayAmount:               r.BasePayAmount,
+		EmploymentStartDate:         r.EmploymentStartDate.Format(dateLayout),
+		EmploymentEndDate:           endDateStr,
+		BankName:                    r.BankName,
+		BankAccountNo:               r.BankAccountNo,
+		SSOContribute:               r.SSOContribute,
+		SSODeclaredWage:             r.SSODeclaredWage,
+		ProvidentFundContribute:     r.ProvidentFundContribute,
+		ProvidentFundRateEmployee:   r.ProvidentFundRateEmployee,
+		ProvidentFundRateEmployer:   r.ProvidentFundRateEmployer,
+		WithholdTax:                 r.WithholdTax,
+		AllowHousing:                r.AllowHousing,
+		AllowWater:                  r.AllowWater,
+		AllowElectric:               r.AllowElectric,
+		AllowInternet:               r.AllowInternet,
+		AllowDoctorFee:              r.AllowDoctorFee,
+		AllowAttendanceBonusNoLate:  r.AllowAttendanceBonusNoLate,
+		AllowAttendanceBonusNoLeave: r.AllowAttendanceBonusNoLeave,
+		CreatedAt:                   r.CreatedAt,
+		UpdatedAt:                   r.UpdatedAt,
+		Status:                      r.Status,
 	}
 }

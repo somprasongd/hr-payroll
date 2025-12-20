@@ -123,6 +123,8 @@ interface EmployeeFormProps {
     allowElectric: z.boolean().default(false),
     allowInternet: z.boolean().default(false),
     allowDoctorFee: z.boolean().default(false),
+    allowAttendanceBonusNoLate: z.boolean().default(false),
+    allowAttendanceBonusNoLeave: z.boolean().default(false),
   });
 
   type EmployeeFormValues = z.infer<typeof employeeSchema>;
@@ -157,6 +159,8 @@ interface EmployeeFormProps {
       allowElectric: initialData?.allowElectric || false,
       allowInternet: initialData?.allowInternet || false,
       allowDoctorFee: initialData?.allowDoctorFee || false,
+      allowAttendanceBonusNoLate: initialData?.allowAttendanceBonusNoLate || false,
+      allowAttendanceBonusNoLeave: initialData?.allowAttendanceBonusNoLeave || false,
     },
   });
 
@@ -976,6 +980,36 @@ interface EmployeeFormProps {
                             />
                           </FormControl>
                           <FormLabel className="font-normal">{t('fields.doctorFee')}</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="allowAttendanceBonusNoLate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">{t('fields.allowAttendanceBonusNoLate')}</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="allowAttendanceBonusNoLeave"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">{t('fields.allowAttendanceBonusNoLeave')}</FormLabel>
                         </FormItem>
                       )}
                     />

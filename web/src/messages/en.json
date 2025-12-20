@@ -353,6 +353,8 @@
       "electric": "Electricity",
       "internet": "Internet",
       "doctorFee": "Doctor Fee",
+      "allowAttendanceBonusNoLate": "Diligence Bonus (No Late)",
+      "allowAttendanceBonusNoLeave": "Diligence Bonus (No Leave)",
       "status": "Status",
       "photo": "Employee Photo",
       "department": "Department",

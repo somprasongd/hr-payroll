@@ -303,6 +303,8 @@
       "electric": "လျှပ်စစ်",
       "internet": "အင်တာနက်",
       "doctorFee": "ဆရာဝန်ကြေး",
+      "allowAttendanceBonusNoLate": "ကြိုးစားခ (အချိန်မနောက်ကျ)",
+      "allowAttendanceBonusNoLeave": "ကြိုးစားခ (အလုပ်မပျက်)",
       "status": "အခြေအနေ",
       "photo": "ဝန်ထမ်းဓာတ်ပုံ",
       "department": "ဌာန",

@@ -611,12 +611,14 @@ BEGIN
         CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
         CASE
           WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+               AND v_emp.allow_attendance_bonus_nolate
             THEN v_config.attendance_bonus_no_late
           ELSE 0
         END +
         CASE
           WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0
                AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+               AND v_emp.allow_attendance_bonus_noleave
             THEN v_config.attendance_bonus_no_leave
           ELSE 0
         END +
@@ -675,12 +677,14 @@ BEGIN
       CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
       CASE
         WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+             AND v_emp.allow_attendance_bonus_nolate
           THEN v_config.attendance_bonus_no_late
         ELSE 0
       END,
       CASE
         WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0
              AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+             AND v_emp.allow_attendance_bonus_noleave
           THEN v_config.attendance_bonus_no_leave
         ELSE 0
       END,
@@ -1111,12 +1115,14 @@ BEGIN
       CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
       CASE
         WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+             AND v_emp.allow_attendance_bonus_nolate
           THEN v_config.attendance_bonus_no_late
         ELSE 0
       END +
       CASE
         WHEN v_emp.type_code='full_time' AND v_ft_salary > 0
              AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+             AND v_emp.allow_attendance_bonus_noleave
           THEN v_config.attendance_bonus_no_leave
         ELSE 0
       END +
@@ -1159,12 +1165,14 @@ BEGIN
     housing_allowance = CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
     attendance_bonus_nolate = CASE
       WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+           AND v_emp.allow_attendance_bonus_nolate
         THEN v_config.attendance_bonus_no_late
       ELSE 0
     END,
     attendance_bonus_noleave = CASE
       WHEN v_emp.type_code='full_time' AND v_ft_salary > 0
            AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+           AND v_emp.allow_attendance_bonus_noleave
         THEN v_config.attendance_bonus_no_leave
       ELSE 0
     END,
@@ -1223,8 +1231,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tg_sync_payroll_emp
-AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage,
-  allow_housing, allow_internet,
+AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage, withhold_tax,
+  allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+  allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
   provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
   department_id, position_id, bank_name, bank_account_no, employee_type_id
 ON employees

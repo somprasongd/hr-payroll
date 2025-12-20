@@ -129,6 +129,8 @@ CREATE TABLE employees (
   allow_electric    BOOLEAN NOT NULL DEFAULT FALSE,
   allow_internet    BOOLEAN NOT NULL DEFAULT FALSE,
   allow_doctor_fee  BOOLEAN NOT NULL DEFAULT FALSE,
+  allow_attendance_bonus_nolate  BOOLEAN NOT NULL DEFAULT FALSE, -- สิทธิ์ได้รับเบี้ยขยัน (ไม่สาย)
+  allow_attendance_bonus_noleave BOOLEAN NOT NULL DEFAULT FALSE, -- สิทธิ์ได้รับเบี้ยขยัน (ไม่ลา)
 
   deleted_at TIMESTAMPTZ NULL,
   deleted_by UUID NULL REFERENCES users(id),

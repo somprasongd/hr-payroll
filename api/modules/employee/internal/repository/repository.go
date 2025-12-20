@@ -36,43 +36,45 @@ type ListRecord struct {
 }
 
 type DetailRecord struct {
-	ID                        uuid.UUID  `db:"id"`
-	EmployeeNumber            string     `db:"employee_number"`
-	TitleID                   uuid.UUID  `db:"title_id"`
-	TitleName                 *string    `db:"title_name"`
-	FirstName                 string     `db:"first_name"`
-	LastName                  string     `db:"last_name"`
-	IDDocumentTypeID          uuid.UUID  `db:"id_document_type_id"`
-	IDDocumentNumber          string     `db:"id_document_number"`
-	Phone                     *string    `db:"phone"`
-	Email                     *string    `db:"email"`
-	PhotoID                   *uuid.UUID `db:"photo_id"`
-	EmployeeTypeID            uuid.UUID  `db:"employee_type_id"`
-	DepartmentID              *uuid.UUID `db:"department_id"`
-	PositionID                *uuid.UUID `db:"position_id"`
-	BasePayAmount             float64    `db:"base_pay_amount"`
-	EmploymentStartDate       time.Time  `db:"employment_start_date"`
-	EmploymentEndDate         *time.Time `db:"employment_end_date"`
-	BankName                  *string    `db:"bank_name"`
-	BankAccountNo             *string    `db:"bank_account_no"`
-	SSOContribute             bool       `db:"sso_contribute"`
-	SSODeclaredWage           *float64   `db:"sso_declared_wage"`
-	ProvidentFundContribute   bool       `db:"provident_fund_contribute"`
-	ProvidentFundRateEmployee float64    `db:"provident_fund_rate_employee"`
-	ProvidentFundRateEmployer float64    `db:"provident_fund_rate_employer"`
-	WithholdTax               bool       `db:"withhold_tax"`
-	AllowHousing              bool       `db:"allow_housing"`
-	AllowWater                bool       `db:"allow_water"`
-	AllowElectric             bool       `db:"allow_electric"`
-	AllowInternet             bool       `db:"allow_internet"`
-	AllowDoctorFee            bool       `db:"allow_doctor_fee"`
-	CreatedAt                 time.Time  `db:"created_at"`
-	UpdatedAt                 time.Time  `db:"updated_at"`
-	Status                    string     `db:"status"`
-	CreatedBy                 uuid.UUID  `db:"created_by"`
-	UpdatedBy                 uuid.UUID  `db:"updated_by"`
-	DeletedAt                 *time.Time `db:"deleted_at"`
-	DeletedBy                 *uuid.UUID `db:"deleted_by"`
+	ID                          uuid.UUID  `db:"id"`
+	EmployeeNumber              string     `db:"employee_number"`
+	TitleID                     uuid.UUID  `db:"title_id"`
+	TitleName                   *string    `db:"title_name"`
+	FirstName                   string     `db:"first_name"`
+	LastName                    string     `db:"last_name"`
+	IDDocumentTypeID            uuid.UUID  `db:"id_document_type_id"`
+	IDDocumentNumber            string     `db:"id_document_number"`
+	Phone                       *string    `db:"phone"`
+	Email                       *string    `db:"email"`
+	PhotoID                     *uuid.UUID `db:"photo_id"`
+	EmployeeTypeID              uuid.UUID  `db:"employee_type_id"`
+	DepartmentID                *uuid.UUID `db:"department_id"`
+	PositionID                  *uuid.UUID `db:"position_id"`
+	BasePayAmount               float64    `db:"base_pay_amount"`
+	EmploymentStartDate         time.Time  `db:"employment_start_date"`
+	EmploymentEndDate           *time.Time `db:"employment_end_date"`
+	BankName                    *string    `db:"bank_name"`
+	BankAccountNo               *string    `db:"bank_account_no"`
+	SSOContribute               bool       `db:"sso_contribute"`
+	SSODeclaredWage             *float64   `db:"sso_declared_wage"`
+	ProvidentFundContribute     bool       `db:"provident_fund_contribute"`
+	ProvidentFundRateEmployee   float64    `db:"provident_fund_rate_employee"`
+	ProvidentFundRateEmployer   float64    `db:"provident_fund_rate_employer"`
+	WithholdTax                 bool       `db:"withhold_tax"`
+	AllowHousing                bool       `db:"allow_housing"`
+	AllowWater                  bool       `db:"allow_water"`
+	AllowElectric               bool       `db:"allow_electric"`
+	AllowInternet               bool       `db:"allow_internet"`
+	AllowDoctorFee              bool       `db:"allow_doctor_fee"`
+	AllowAttendanceBonusNoLate  bool       `db:"allow_attendance_bonus_nolate"`
+	AllowAttendanceBonusNoLeave bool       `db:"allow_attendance_bonus_noleave"`
+	CreatedAt                   time.Time  `db:"created_at"`
+	UpdatedAt                   time.Time  `db:"updated_at"`
+	Status                      string     `db:"status"`
+	CreatedBy                   uuid.UUID  `db:"created_by"`
+	UpdatedBy                   uuid.UUID  `db:"updated_by"`
+	DeletedAt                   *time.Time `db:"deleted_at"`
+	DeletedBy                   *uuid.UUID `db:"deleted_by"`
 }
 
 type ListResult struct {
@@ -230,6 +232,8 @@ SELECT
   e.allow_electric,
   e.allow_internet,
   e.allow_doctor_fee,
+  e.allow_attendance_bonus_nolate,
+  e.allow_attendance_bonus_noleave,
   e.created_at,
   e.updated_at,
   CASE WHEN e.employment_end_date IS NULL THEN 'active' ELSE 'terminated' END AS status,
@@ -295,6 +299,7 @@ INSERT INTO employees (
   provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
   withhold_tax,
   allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+  allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
   created_by, updated_by
 ) VALUES (
   :employee_number, :title_id, :first_name, :last_name,
@@ -306,6 +311,7 @@ INSERT INTO employees (
   :provident_fund_contribute, :provident_fund_rate_employee, :provident_fund_rate_employer,
   :withhold_tax,
   :allow_housing, :allow_water, :allow_electric, :allow_internet, :allow_doctor_fee,
+  :allow_attendance_bonus_nolate, :allow_attendance_bonus_noleave,
   :created_by, :updated_by
 ) RETURNING *`
 
@@ -320,36 +326,38 @@ INSERT INTO employees (
 	defer stmt.Close()
 
 	params := map[string]interface{}{
-		"employee_number":              payload.EmployeeNumber,
-		"title_id":                     payload.TitleID,
-		"first_name":                   payload.FirstName,
-		"last_name":                    payload.LastName,
-		"id_document_type_id":          payload.IDDocumentTypeID,
-		"id_document_number":           payload.IDDocumentNumber,
-		"phone":                        payload.Phone,
-		"email":                        payload.Email,
-		"photo_id":                     payload.PhotoID,
-		"employee_type_id":             payload.EmployeeTypeID,
-		"department_id":                payload.DepartmentID,
-		"position_id":                  payload.PositionID,
-		"base_pay_amount":              payload.BasePayAmount,
-		"employment_start_date":        payload.EmploymentStartDate,
-		"employment_end_date":          payload.EmploymentEndDate,
-		"bank_name":                    payload.BankName,
-		"bank_account_no":              payload.BankAccountNo,
-		"sso_contribute":               payload.SSOContribute,
-		"sso_declared_wage":            payload.SSODeclaredWage,
-		"provident_fund_contribute":    payload.ProvidentFundContribute,
-		"provident_fund_rate_employee": payload.ProvidentFundRateEmployee,
-		"provident_fund_rate_employer": payload.ProvidentFundRateEmployer,
-		"withhold_tax":                 payload.WithholdTax,
-		"allow_housing":                payload.AllowHousing,
-		"allow_water":                  payload.AllowWater,
-		"allow_electric":               payload.AllowElectric,
-		"allow_internet":               payload.AllowInternet,
-		"allow_doctor_fee":             payload.AllowDoctorFee,
-		"created_by":                   actor,
-		"updated_by":                   actor,
+		"employee_number":                payload.EmployeeNumber,
+		"title_id":                       payload.TitleID,
+		"first_name":                     payload.FirstName,
+		"last_name":                      payload.LastName,
+		"id_document_type_id":            payload.IDDocumentTypeID,
+		"id_document_number":             payload.IDDocumentNumber,
+		"phone":                          payload.Phone,
+		"email":                          payload.Email,
+		"photo_id":                       payload.PhotoID,
+		"employee_type_id":               payload.EmployeeTypeID,
+		"department_id":                  payload.DepartmentID,
+		"position_id":                    payload.PositionID,
+		"base_pay_amount":                payload.BasePayAmount,
+		"employment_start_date":          payload.EmploymentStartDate,
+		"employment_end_date":            payload.EmploymentEndDate,
+		"bank_name":                      payload.BankName,
+		"bank_account_no":                payload.BankAccountNo,
+		"sso_contribute":                 payload.SSOContribute,
+		"sso_declared_wage":              payload.SSODeclaredWage,
+		"provident_fund_contribute":      payload.ProvidentFundContribute,
+		"provident_fund_rate_employee":   payload.ProvidentFundRateEmployee,
+		"provident_fund_rate_employer":   payload.ProvidentFundRateEmployer,
+		"withhold_tax":                   payload.WithholdTax,
+		"allow_housing":                  payload.AllowHousing,
+		"allow_water":                    payload.AllowWater,
+		"allow_electric":                 payload.AllowElectric,
+		"allow_internet":                 payload.AllowInternet,
+		"allow_doctor_fee":               payload.AllowDoctorFee,
+		"allow_attendance_bonus_nolate":  payload.AllowAttendanceBonusNoLate,
+		"allow_attendance_bonus_noleave": payload.AllowAttendanceBonusNoLeave,
+		"created_by":                     actor,
+		"updated_by":                     actor,
 	}
 
 	var rec DetailRecord
@@ -391,6 +399,8 @@ UPDATE employees SET
   allow_electric=:allow_electric,
   allow_internet=:allow_internet,
   allow_doctor_fee=:allow_doctor_fee,
+  allow_attendance_bonus_nolate=:allow_attendance_bonus_nolate,
+  allow_attendance_bonus_noleave=:allow_attendance_bonus_noleave,
   updated_by=:updated_by
 WHERE id=:id AND deleted_at IS NULL
 RETURNING *`
@@ -402,36 +412,38 @@ RETURNING *`
 	defer stmt.Close()
 
 	params := map[string]interface{}{
-		"id":                           id,
-		"employee_number":              payload.EmployeeNumber,
-		"title_id":                     payload.TitleID,
-		"first_name":                   payload.FirstName,
-		"last_name":                    payload.LastName,
-		"id_document_type_id":          payload.IDDocumentTypeID,
-		"id_document_number":           payload.IDDocumentNumber,
-		"phone":                        payload.Phone,
-		"email":                        payload.Email,
-		"photo_id":                     payload.PhotoID,
-		"employee_type_id":             payload.EmployeeTypeID,
-		"department_id":                payload.DepartmentID,
-		"position_id":                  payload.PositionID,
-		"base_pay_amount":              payload.BasePayAmount,
-		"employment_start_date":        payload.EmploymentStartDate,
-		"employment_end_date":          payload.EmploymentEndDate,
-		"bank_name":                    payload.BankName,
-		"bank_account_no":              payload.BankAccountNo,
-		"sso_contribute":               payload.SSOContribute,
-		"sso_declared_wage":            payload.SSODeclaredWage,
-		"provident_fund_contribute":    payload.ProvidentFundContribute,
-		"provident_fund_rate_employee": payload.ProvidentFundRateEmployee,
-		"provident_fund_rate_employer": payload.ProvidentFundRateEmployer,
-		"withhold_tax":                 payload.WithholdTax,
-		"allow_housing":                payload.AllowHousing,
-		"allow_water":                  payload.AllowWater,
-		"allow_electric":               payload.AllowElectric,
-		"allow_internet":               payload.AllowInternet,
-		"allow_doctor_fee":             payload.AllowDoctorFee,
-		"updated_by":                   actor,
+		"id":                             id,
+		"employee_number":                payload.EmployeeNumber,
+		"title_id":                       payload.TitleID,
+		"first_name":                     payload.FirstName,
+		"last_name":                      payload.LastName,
+		"id_document_type_id":            payload.IDDocumentTypeID,
+		"id_document_number":             payload.IDDocumentNumber,
+		"phone":                          payload.Phone,
+		"email":                          payload.Email,
+		"photo_id":                       payload.PhotoID,
+		"employee_type_id":               payload.EmployeeTypeID,
+		"department_id":                  payload.DepartmentID,
+		"position_id":                    payload.PositionID,
+		"base_pay_amount":                payload.BasePayAmount,
+		"employment_start_date":          payload.EmploymentStartDate,
+		"employment_end_date":            payload.EmploymentEndDate,
+		"bank_name":                      payload.BankName,
+		"bank_account_no":                payload.BankAccountNo,
+		"sso_contribute":                 payload.SSOContribute,
+		"sso_declared_wage":              payload.SSODeclaredWage,
+		"provident_fund_contribute":      payload.ProvidentFundContribute,
+		"provident_fund_rate_employee":   payload.ProvidentFundRateEmployee,
+		"provident_fund_rate_employer":   payload.ProvidentFundRateEmployer,
+		"withhold_tax":                   payload.WithholdTax,
+		"allow_housing":                  payload.AllowHousing,
+		"allow_water":                    payload.AllowWater,
+		"allow_electric":                 payload.AllowElectric,
+		"allow_internet":                 payload.AllowInternet,
+		"allow_doctor_fee":               payload.AllowDoctorFee,
+		"allow_attendance_bonus_nolate":  payload.AllowAttendanceBonusNoLate,
+		"allow_attendance_bonus_noleave": payload.AllowAttendanceBonusNoLeave,
+		"updated_by":                     actor,
 	}
 
 	var rec DetailRecord

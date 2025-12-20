@@ -32,6 +32,8 @@ export interface Employee {
   allowElectric: boolean;
   allowInternet: boolean;
   allowDoctorFee: boolean;
+  allowAttendanceBonusNoLate: boolean;
+  allowAttendanceBonusNoLeave: boolean;
   createdAt: string;
   updatedAt: string;
   
@@ -75,6 +77,8 @@ export interface CreateEmployeeRequest {
   allowElectric?: boolean;
   allowInternet?: boolean;
   allowDoctorFee: boolean;
+  allowAttendanceBonusNoLate?: boolean;
+  allowAttendanceBonusNoLeave?: boolean;
 }
 
 export interface UpdateEmployeeRequest {
@@ -105,6 +109,8 @@ export interface UpdateEmployeeRequest {
   allowWater?: boolean;
   allowElectric?: boolean;
   allowInternet?: boolean;
+  allowAttendanceBonusNoLate?: boolean;
+  allowAttendanceBonusNoLeave?: boolean;
 }
 
 export interface PhotoUploadResponse {
