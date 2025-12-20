@@ -62,8 +62,8 @@ export default function PayoutPtListPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
   // Get current branch from tenant store
-  const { currentBranches } = useTenantStore();
-  const currentBranchId = currentBranches[0]?.id;
+  const { currentBranch } = useTenantStore();
+  const currentBranchId = currentBranch?.id;
   
   // Filters - initialize from URL query
   const [status, setStatus] = useState<string>('all');

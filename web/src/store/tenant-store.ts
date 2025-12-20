@@ -21,7 +21,7 @@ export interface Branch {
 interface TenantState {
   // Current selection
   currentCompany: Company | null;
-  currentBranches: Branch[];
+  currentBranch: Branch | null;  // Changed from currentBranches: Branch[]
 
   // Available options
   availableCompanies: Company[];
@@ -34,8 +34,8 @@ interface TenantState {
   setCompanies: (companies: Company[]) => void;
   setBranches: (branches: Branch[]) => void;
   selectCompany: (company: Company) => void;
-  selectBranches: (branches: Branch[]) => void;
-  switchTenant: (company: Company, branches: Branch[]) => void;
+  selectBranch: (branch: Branch | null) => void;  // Changed from selectBranches
+  switchTenant: (company: Company, branch: Branch) => void;  // Changed signature
   clearTenant: () => void;
   setHasHydrated: (state: boolean) => void;
   refreshAvailableBranches: (branches: Branch[]) => void;
@@ -45,7 +45,7 @@ export const useTenantStore = create<TenantState>()(
   persist(
     (set) => ({
       currentCompany: null,
-      currentBranches: [],
+      currentBranch: null,  // Changed from currentBranches: []
       availableCompanies: [],
       availableBranches: [],
       _hasHydrated: false,
@@ -62,32 +62,29 @@ export const useTenantStore = create<TenantState>()(
         set({ currentCompany: company });
       },
 
-      selectBranches: (branches) => {
-        set({ currentBranches: branches });
+      selectBranch: (branch) => {  // Changed from selectBranches
+        set({ currentBranch: branch });
       },
 
-      switchTenant: (company, branches) => {
+      switchTenant: (company, branch) => {  // Changed signature
         if (typeof window !== "undefined") {
           localStorage.setItem("tenantCompanyId", company.id);
-          localStorage.setItem(
-            "tenantBranchIds",
-            branches.map((b) => b.id).join(",")
-          );
+          localStorage.setItem("tenantBranchId", branch.id);  // Changed from tenantBranchIds
         }
         set({
           currentCompany: company,
-          currentBranches: branches,
+          currentBranch: branch,  // Changed from currentBranches: branches
         });
       },
 
       clearTenant: () => {
         if (typeof window !== "undefined") {
           localStorage.removeItem("tenantCompanyId");
-          localStorage.removeItem("tenantBranchIds");
+          localStorage.removeItem("tenantBranchId");  // Changed from tenantBranchIds
         }
         set({
           currentCompany: null,
-          currentBranches: [],
+          currentBranch: null,  // Changed from currentBranches: []
           availableCompanies: [],
           availableBranches: [],
         });
@@ -102,22 +99,20 @@ export const useTenantStore = create<TenantState>()(
           // Filter only active branches for available selection
           const activeBranches = branches.filter(b => b.status === 'active');
           
-          // Keep single current branch if still valid
-          const currentBranch = state.currentBranches[0];
-          let finalCurrentBranches: Branch[] = [];
+          // Keep current branch if still valid
+          let finalCurrentBranch: Branch | null = null;
           
-          if (currentBranch && activeBranches.some(b => b.id === currentBranch.id)) {
+          if (state.currentBranch && activeBranches.some(b => b.id === state.currentBranch?.id)) {
             // Current branch is still valid
-            finalCurrentBranches = [currentBranch];
+            finalCurrentBranch = state.currentBranch;
           } else if (activeBranches.length > 0) {
             // Select default branch or first branch
-            const defaultBranch = activeBranches.find(b => b.isDefault) || activeBranches[0];
-            finalCurrentBranches = [defaultBranch];
+            finalCurrentBranch = activeBranches.find(b => b.isDefault) || activeBranches[0];
           }
           
           return {
             availableBranches: activeBranches,
-            currentBranches: finalCurrentBranches,
+            currentBranch: finalCurrentBranch,
           };
         });
       },
@@ -126,7 +121,7 @@ export const useTenantStore = create<TenantState>()(
       name: "tenant-storage",
       partialize: (state) => ({
         currentCompany: state.currentCompany,
-        currentBranches: state.currentBranches,
+        currentBranch: state.currentBranch,  // Changed from currentBranches
         availableCompanies: state.availableCompanies,
         availableBranches: state.availableBranches,
       }),
@@ -154,8 +149,8 @@ export function getTenantHeaders(): Record<string, string> {
     headers["X-Company-ID"] = store.currentCompany.id;
   }
 
-  if (store.currentBranches.length > 0) {
-    headers["X-Branch-ID"] = store.currentBranches.map((b) => b.id).join(",");
+  if (store.currentBranch) {  // Changed from currentBranches
+    headers["X-Branch-ID"] = store.currentBranch.id;  // Single value, not joined
   }
 
   return headers;
@@ -165,6 +160,6 @@ export function getCurrentCompanyId(): string | null {
   return useTenantStore.getState().currentCompany?.id ?? null;
 }
 
-export function getCurrentBranchIds(): string[] {
-  return useTenantStore.getState().currentBranches.map((b) => b.id);
+export function getCurrentBranchId(): string | null {  // Changed from getCurrentBranchIds
+  return useTenantStore.getState().currentBranch?.id ?? null;
 }

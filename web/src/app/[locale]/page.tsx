@@ -257,7 +257,11 @@ export default function LoginPage() {
         status: b.status,
         isDefault: b.isDefault,
       })));
-      switchTenantStore(response.company, response.branches);
+      // Update tenant store - use first branch since we now expect single branch
+      const selectedBranch = response.branches[0];
+      if (selectedBranch) {
+        switchTenantStore(response.company, selectedBranch);
+      }
       
       setShowCompanySelector(false);
       router.push(pendingRedirect);

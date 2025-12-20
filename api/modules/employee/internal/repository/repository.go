@@ -124,10 +124,10 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 	args = append(args, tenant.CompanyID)
 	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
 
-	// Filter by Branch - always filter when branches are specified from dropdown
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	// Filter by Branch (single branch from dropdown)
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	switch status {

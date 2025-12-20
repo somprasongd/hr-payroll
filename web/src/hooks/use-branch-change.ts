@@ -6,8 +6,8 @@ import { useTenantStore } from '@/store/tenant-store';
  * Useful for refetching data when user switches branch.
  */
 export function useBranchChange(callback: () => void) {
-  const { currentBranches } = useTenantStore();
-  const currentBranchId = currentBranches[0]?.id;
+  const { currentBranch } = useTenantStore();  // Changed from currentBranches
+  const currentBranchId = currentBranch?.id;
   const previousBranchIdRef = useRef<string | undefined>(currentBranchId);
   const isFirstMount = useRef(true);
 
@@ -33,6 +33,6 @@ export function useBranchChange(callback: () => void) {
  * Returns the current branch ID from tenant store.
  */
 export function useCurrentBranchId(): string | undefined {
-  const { currentBranches } = useTenantStore();
-  return currentBranches[0]?.id;
+  const { currentBranch } = useTenantStore();  // Changed from currentBranches
+  return currentBranch?.id;
 }

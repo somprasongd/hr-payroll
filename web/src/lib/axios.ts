@@ -56,15 +56,14 @@ axiosInstance.interceptors.request.use(
     // Add tenant headers from store
     if (typeof window !== 'undefined' && config.headers) {
       const tenantState = useTenantStore.getState();
-      const { currentCompany, currentBranches } = tenantState;
+      const { currentCompany, currentBranch } = tenantState;
       
       if (currentCompany?.id) {
         config.headers['X-Company-ID'] = currentCompany.id;
       }
       
-      if (currentBranches && currentBranches.length > 0) {
-        // Join multiple branch IDs with comma
-        config.headers['X-Branch-ID'] = currentBranches.map(b => b.id).join(',');
+      if (currentBranch?.id) {
+        config.headers['X-Branch-ID'] = currentBranch.id;
       }
     }
 

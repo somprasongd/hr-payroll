@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -50,9 +49,9 @@ func (r *Repository) GetEmployeeSummary(ctx context.Context, tenant contextx.Ten
 	where = append(where, fmt.Sprintf("company_id = $%d", len(args)))
 
 	// Branch filter
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("branch_id = $%d", len(args)))
 	}
 
 	whereClause := " WHERE " + strings.Join(where, " AND ")
@@ -95,9 +94,9 @@ func (r *Repository) GetEmployeesByDepartment(ctx context.Context, tenant contex
 	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
 
 	// Branch filter
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	query := fmt.Sprintf(`
@@ -149,9 +148,9 @@ func (r *Repository) GetAttendanceSummary(ctx context.Context, tenant contextx.T
 	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
 
 	// Branch filter (on employees table)
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	// Department filter
@@ -333,9 +332,9 @@ func (r *Repository) GetPendingAdvances(ctx context.Context, tenant contextx.Ten
 		"e.company_id = $1",
 	}
 
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	query := fmt.Sprintf(`
@@ -367,9 +366,9 @@ func (r *Repository) GetPendingLoans(ctx context.Context, tenant contextx.Tenant
 		"e.company_id = $1",
 	}
 
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	query := fmt.Sprintf(`
@@ -400,9 +399,9 @@ func (r *Repository) GetOutstandingInstallments(ctx context.Context, tenant cont
 		"e.company_id = $1",
 	}
 
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	query := fmt.Sprintf(`

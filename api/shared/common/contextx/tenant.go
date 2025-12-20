@@ -6,11 +6,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// TenantInfo holds tenant context information for multi-branch support
+// TenantInfo holds tenant context information for multi-tenant support
 type TenantInfo struct {
-	CompanyID uuid.UUID   // Current company ID
-	BranchIDs []uuid.UUID // Allowed branch IDs (supports multi-branch)
-	IsAdmin   bool        // Whether user is admin (can access all branches)
+	CompanyID uuid.UUID // Current company ID
+	BranchID  uuid.UUID // Selected branch ID (single branch per request)
+	IsAdmin   bool      // Whether user is admin
 }
 
 type tenantKey struct{}
@@ -31,47 +31,7 @@ func TenantFromContext(ctx context.Context) (TenantInfo, bool) {
 	return TenantInfo{}, false
 }
 
-// FirstBranchID returns the first branch ID for single-branch operations
-func (t TenantInfo) FirstBranchID() uuid.UUID {
-	if len(t.BranchIDs) > 0 {
-		return t.BranchIDs[0]
-	}
-	return uuid.Nil
-}
-
-// BranchIDsToStrings converts branch UUIDs to strings for SQL
-func (t TenantInfo) BranchIDsToStrings() []string {
-	result := make([]string, len(t.BranchIDs))
-	for i, id := range t.BranchIDs {
-		result[i] = id.String()
-	}
-	return result
-}
-
-// BranchIDsCSV returns comma-separated branch IDs for RLS
-func (t TenantInfo) BranchIDsCSV() string {
-	if len(t.BranchIDs) == 0 {
-		return ""
-	}
-	result := ""
-	for i, id := range t.BranchIDs {
-		if i > 0 {
-			result += ","
-		}
-		result += id.String()
-	}
-	return result
-}
-
-// HasBranchAccess checks if a specific branch is in the allowed list
-func (t TenantInfo) HasBranchAccess(branchID uuid.UUID) bool {
-	if t.IsAdmin {
-		return true
-	}
-	for _, id := range t.BranchIDs {
-		if id == branchID {
-			return true
-		}
-	}
-	return false
+// HasBranchID checks if a branch ID is set
+func (t TenantInfo) HasBranchID() bool {
+	return t.BranchID != uuid.Nil
 }

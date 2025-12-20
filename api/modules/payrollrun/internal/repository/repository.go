@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 
 	"hrms/shared/common/contextx"
 
@@ -85,9 +84,9 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 
 	// Branch Filter - Assuming payroll_run has branch_id if created per branch?
 	// Based on Create method: it has branch_id column.
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("branch_id = $%d", len(args)))
 	}
 
 	if s := strings.TrimSpace(status); s != "" && s != "all" {
@@ -334,9 +333,9 @@ func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, r
 	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
 
 	// Branch Filter
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where = append(where, fmt.Sprintf("e.branch_id = ANY($%d)", len(args)))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"

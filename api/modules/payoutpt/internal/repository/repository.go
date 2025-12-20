@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -108,9 +107,9 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 	args = append(args, tenant.CompanyID)
 	where += fmt.Sprintf(" AND e.company_id=$%d", len(args))
 
-	if len(tenant.BranchIDs) > 0 {
-		args = append(args, pq.Array(tenant.BranchIDs))
-		where += fmt.Sprintf(" AND e.branch_id = ANY($%d)", len(args))
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += fmt.Sprintf(" AND e.branch_id = $%d", len(args))
 	}
 
 	if employeeID != nil {

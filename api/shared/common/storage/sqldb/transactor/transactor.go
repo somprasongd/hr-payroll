@@ -80,10 +80,10 @@ func (t *sqlTransactor) WithinTransaction(ctx context.Context, txFunc func(ctxWi
 			_ = tx.Rollback()
 			return fmt.Errorf("failed to set tenant company: %w", err)
 		}
-		// Set allowed branches for RLS
-		if err := setLocalConfig("app.allowed_branches", tenant.BranchIDsCSV()); err != nil {
+		// Set allowed branches for RLS (single branch)
+		if err := setLocalConfig("app.allowed_branches", tenant.BranchID.String()); err != nil {
 			_ = tx.Rollback()
-			return fmt.Errorf("failed to set tenant branches: %w", err)
+			return fmt.Errorf("failed to set tenant branch: %w", err)
 		}
 		// Set admin flag for RLS
 		if err := setLocalConfig("app.is_admin", strconv.FormatBool(tenant.IsAdmin)); err != nil {

@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"strings"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
@@ -48,32 +46,20 @@ func TenantMiddleware() fiber.Handler {
 		)
 		isAdmin := err == nil && adminResp.IsAdmin
 
-		var branchIDs []uuid.UUID
-		branchIDsStr := c.Get("X-Branch-ID")
-		if branchIDsStr == "" {
-			// Branch ID is required for all roles (including admin)
+		// Branch ID is required (single value)
+		branchIDStr := c.Get("X-Branch-ID")
+		if branchIDStr == "" {
 			return fiber.NewError(fiber.StatusBadRequest, "X-Branch-ID header is required")
 		}
 
-		for _, idStr := range strings.Split(branchIDsStr, ",") {
-			idStr = strings.TrimSpace(idStr)
-			if idStr == "" {
-				continue
-			}
-			branchID, err := uuid.Parse(idStr)
-			if err != nil {
-				return fiber.NewError(fiber.StatusBadRequest, "invalid X-Branch-ID header")
-			}
-			branchIDs = append(branchIDs, branchID)
-		}
-
-		if len(branchIDs) == 0 {
-			return fiber.NewError(fiber.StatusBadRequest, "X-Branch-ID header is required")
+		branchID, err := uuid.Parse(branchIDStr)
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid X-Branch-ID header")
 		}
 
 		tenant := contextx.TenantInfo{
 			CompanyID: companyID,
-			BranchIDs: branchIDs,
+			BranchID:  branchID,
 			IsAdmin:   isAdmin,
 		}
 
@@ -119,34 +105,29 @@ func OptionalTenantMiddleware() fiber.Handler {
 		)
 		isAdmin := err == nil && adminResp.IsAdmin
 
-		var branchIDs []uuid.UUID
-		branchIDsStr := c.Get("X-Branch-ID")
-		if branchIDsStr != "" {
-			for _, idStr := range strings.Split(branchIDsStr, ",") {
-				idStr = strings.TrimSpace(idStr)
-				if idStr == "" {
-					continue
-				}
-				if branchID, err := uuid.Parse(idStr); err == nil {
-					branchIDs = append(branchIDs, branchID)
-				}
+		// Branch ID is optional in OptionalTenantMiddleware
+		var branchID uuid.UUID
+		branchIDStr := c.Get("X-Branch-ID")
+		if branchIDStr != "" {
+			if parsed, err := uuid.Parse(branchIDStr); err == nil {
+				branchID = parsed
 			}
 		}
 
-		if len(branchIDs) == 0 {
-			// For both admin and non-admin: if no branch specified, get user's allowed branches
+		// If no branch specified, get user's first allowed branch
+		if branchID == uuid.Nil {
 			branchResp, err := mediator.Send[*contracts.GetUserBranchesQuery, *contracts.GetUserBranchesResponse](
 				c.Context(),
 				&contracts.GetUserBranchesQuery{UserID: user.ID, CompanyID: companyID},
 			)
-			if err == nil {
-				branchIDs = branchResp.BranchIDs
+			if err == nil && len(branchResp.BranchIDs) > 0 {
+				branchID = branchResp.BranchIDs[0]
 			}
 		}
 
 		tenant := contextx.TenantInfo{
 			CompanyID: companyID,
-			BranchIDs: branchIDs,
+			BranchID:  branchID,
 			IsAdmin:   isAdmin,
 		}
 
