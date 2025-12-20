@@ -39,7 +39,8 @@ image-api:
 	-t hr-payroll-api:${BUILD_VERSION} \
 	-f api/Dockerfile \
 	--build-arg VERSION=${BUILD_VERSION} \
-	.
+	--build-context migrations=./migrations \
+	./api
 
 .PHONY: image-web
 image-web:

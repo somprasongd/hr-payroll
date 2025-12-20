@@ -1,0 +1,21 @@
+name: Build Images on Tag
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build-images:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_VERSION: ${{ github.ref_name }}
+      DOCKER_BUILDKIT: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for Makefile include
+        run: echo "BUILD_VERSION=${BUILD_VERSION}" > .env
+
+      - name: Build images
+        run: make image

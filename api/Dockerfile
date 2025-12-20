@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /workspace
@@ -28,16 +29,25 @@ COPY shared/events/go.mod shared/events/go.sum shared/events/
 
 RUN cd app && go mod download
 
-# Copy source
+# Install migrate CLI (static) for linux
+ARG MIGRATE_VERSION=v4.19.1
+RUN CGO_ENABLED=0 go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@${MIGRATE_VERSION}
+
+# Copy API source
 COPY . .
 
 RUN cd app && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/hr-payroll-api ./cmd/api
+
+# Copy migrations from additional context for runtime
+COPY --from=migrations / /workspace/migrations
 
 FROM gcr.io/distroless/base-debian12:nonroot
 # Copy wget from busybox
 COPY --from=busybox:1.36.1-uclibc /bin/wget /bin/wget
 WORKDIR /app
 COPY --from=builder /out/hr-payroll-api /app/hr-payroll-api
+COPY --from=builder /go/bin/migrate /app/migrate
+COPY --from=builder /workspace/migrations /app/migrations
 
 EXPOSE 8080
 
