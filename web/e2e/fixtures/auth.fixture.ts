@@ -6,6 +6,14 @@ export const testUsers = {
     username: process.env.TEST_ADMIN_USERNAME || 'admin',
     password: process.env.TEST_ADMIN_PASSWORD || 'changeme',
   },
+  admin2: {
+    username: 'admin2',
+    password: 'changeme',
+  },
+  superadmin: {
+    username: 'superadmin',
+    password: 'changeme',
+  },
   hr: {
     username: process.env.TEST_HR_USERNAME || 'test_hr',
     password: process.env.TEST_HR_PASSWORD || 'changeme',

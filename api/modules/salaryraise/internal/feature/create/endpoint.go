@@ -13,7 +13,7 @@ import (
 )
 
 // @Summary Create salary raise cycle
-// @Description สร้างรอบปรับเงินเดือน (pending)
+// @Description สร้างรอบปรับเงินเดือน (pending) มีได้ 1 รอบต่อสาขา
 // @Tags Salary Raise
 // @Accept json
 // @Produce json

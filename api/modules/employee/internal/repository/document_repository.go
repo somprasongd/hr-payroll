@@ -304,15 +304,20 @@ WHERE id = $1 AND deleted_at IS NULL`
 
 func (r Repository) InsertDocument(ctx context.Context, input DocumentRecord, actor uuid.UUID) (*DocumentRecord, error) {
 	db := r.dbCtx(ctx)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
 	const q = `
 INSERT INTO employee_document (
-  employee_id, document_type_id, file_name, content_type, file_size_bytes, data, checksum_md5,
+  company_id, employee_id, document_type_id, file_name, content_type, file_size_bytes, data, checksum_md5,
   document_number, issue_date, expiry_date, notes, created_by, updated_by
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12)
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13)
 RETURNING id, employee_id, document_type_id, file_name, content_type, file_size_bytes, checksum_md5,
           document_number, issue_date, expiry_date, notes, created_at, updated_at`
 	var rec DocumentRecord
 	if err := db.GetContext(ctx, &rec, q,
+		tenant.CompanyID,
 		input.EmployeeID,
 		input.DocumentTypeID,
 		input.FileName,
@@ -371,16 +376,30 @@ func (r Repository) SoftDeleteDocument(ctx context.Context, id uuid.UUID, actor 
 
 func (r Repository) ListExpiringDocuments(ctx context.Context, daysAhead int) ([]ExpiringDocumentRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+
+	args := []interface{}{daysAhead, tenant.CompanyID}
+	where := "days_until_expiry <= $1 AND company_id = $2"
+
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += " AND branch_id = $3"
+	}
+
+	q := `
 SELECT 
   document_id, employee_id, employee_number, first_name, last_name,
   document_type_code, document_type_name_th, document_type_name_en,
   file_name, expiry_date, days_until_expiry
 FROM v_employee_documents_expiring
-WHERE days_until_expiry <= $1
+WHERE ` + where + `
 ORDER BY days_until_expiry ASC, employee_number ASC`
 	var out []ExpiringDocumentRecord
-	if err := db.SelectContext(ctx, &out, q, daysAhead); err != nil {
+	if err := db.SelectContext(ctx, &out, q, args...); err != nil {
 		return nil, err
 	}
 	if out == nil {

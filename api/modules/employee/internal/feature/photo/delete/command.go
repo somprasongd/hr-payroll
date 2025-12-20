@@ -21,6 +21,8 @@ import (
 type Command struct {
 	EmployeeID uuid.UUID
 	ActorID    uuid.UUID
+	CompanyID  uuid.UUID
+	BranchID   uuid.UUID
 }
 
 type Handler struct {
@@ -54,6 +56,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 			hook(func(ctx context.Context) error {
 				h.eb.Publish(events.LogEvent{
 					ActorID:    cmd.ActorID,
+					CompanyID:  &cmd.CompanyID,
+					BranchID:   &cmd.BranchID,
 					Action:     "DELETE",
 					EntityName: "EMPLOYEE_PHOTO",
 					EntityID:   prevPhotoID.String(),
@@ -78,4 +82,3 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 
 	return mediator.NoResponse{}, nil
 }
-

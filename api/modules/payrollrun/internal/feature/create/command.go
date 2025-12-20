@@ -83,7 +83,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to create payroll run", zap.Error(err))
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
-			return nil, errs.Conflict("payroll run for this month already exists")
+			return nil, errs.Conflict("payroll run for this branch and month already exists")
 		}
 		return nil, errs.Internal("failed to create payroll run")
 	}

@@ -33,9 +33,16 @@ func NewEndpoint(router fiber.Router) {
 			return errs.Unauthorized("missing user")
 		}
 
+		tenant, ok := contextx.TenantFromContext(c.Context())
+		if !ok {
+			return errs.Unauthorized("missing tenant context")
+		}
+
 		_, err = mediator.Send[*Command, mediator.NoResponse](c.Context(), &Command{
 			EmployeeID: id,
 			ActorID:    user.ID,
+			CompanyID:  tenant.CompanyID,
+			BranchID:   tenant.BranchID,
 		})
 		if err != nil {
 			return err
@@ -44,4 +51,3 @@ func NewEndpoint(router fiber.Router) {
 		return c.SendStatus(fiber.StatusNoContent)
 	})
 }
-

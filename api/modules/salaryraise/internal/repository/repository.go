@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
@@ -341,4 +343,16 @@ RETURNING salary_raise_item.id, salary_raise_item.cycle_id, salary_raise_item.em
 	}
 	out.hydrateStats()
 	return &out, nil
+}
+
+// IsUniqueViolation reports whether the error is a Postgres unique_violation (optional constraint name match).
+func IsUniqueViolation(err error, constraint string) bool {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+		if constraint == "" {
+			return true
+		}
+		return pqErr.Constraint == constraint
+	}
+	return false
 }

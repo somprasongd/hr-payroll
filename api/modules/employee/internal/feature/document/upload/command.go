@@ -39,6 +39,8 @@ type Command struct {
 	ExpiryDate     *time.Time
 	Notes          *string
 	ActorID        uuid.UUID
+	CompanyID      uuid.UUID
+	BranchID       uuid.UUID
 }
 
 type Response struct {
@@ -107,6 +109,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &cmd.CompanyID,
+		BranchID:   &cmd.BranchID,
 		Action:     "UPLOAD",
 		EntityName: "EMPLOYEE_DOCUMENT",
 		EntityID:   rec.ID.String(),

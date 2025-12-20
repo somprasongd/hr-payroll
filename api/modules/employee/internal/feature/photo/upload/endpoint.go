@@ -86,6 +86,7 @@ func NewEndpoint(router fiber.Router) {
 			Data:        buf.Bytes(),
 			Size:        int64(buf.Len()),
 			CompanyID:   tenant.CompanyID,
+			BranchID:    tenant.BranchID,
 			ActorID:     user.ID,
 		})
 		if err != nil {

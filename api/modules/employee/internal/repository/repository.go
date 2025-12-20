@@ -39,6 +39,8 @@ type ListRecord struct {
 type DetailRecord struct {
 	ID                          uuid.UUID  `db:"id"`
 	EmployeeNumber              string     `db:"employee_number"`
+	CompanyID                   uuid.UUID  `db:"company_id"`
+	BranchID                    uuid.UUID  `db:"branch_id"`
 	TitleID                     uuid.UUID  `db:"title_id"`
 	TitleName                   *string    `db:"title_name"`
 	FirstName                   string     `db:"first_name"`

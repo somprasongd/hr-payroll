@@ -13,7 +13,7 @@ import (
 )
 
 // @Summary Create payroll run
-// @Description สร้างงวดจ่ายเงินเดือน
+// @Description สร้างงวดจ่ายเงินเดือน (มีได้ 1 งวดต่อสาขาต่อเดือน)
 // @Tags Payroll Run
 // @Accept json
 // @Produce json

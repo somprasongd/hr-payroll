@@ -457,13 +457,13 @@ BEGIN
         COALESCE(v_ot_amount,0) +
         CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
         CASE
-          WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+          WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0 AND v_emp.allow_attendance_bonus_nolate
             THEN v_config.attendance_bonus_no_late
           ELSE 0
         END +
         CASE
           WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0
-               AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+               AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0 AND v_emp.allow_attendance_bonus_noleave
             THEN v_config.attendance_bonus_no_leave
           ELSE 0
         END +
@@ -520,13 +520,13 @@ BEGIN
       
       CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
       CASE
-        WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+        WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0 AND v_emp.allow_attendance_bonus_nolate
           THEN v_config.attendance_bonus_no_late
         ELSE 0
       END,
       CASE
         WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0
-             AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+             AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0 AND v_emp.allow_attendance_bonus_noleave
           THEN v_config.attendance_bonus_no_leave
         ELSE 0
       END,
@@ -975,10 +975,22 @@ BEGIN
   v_income_total :=
       COALESCE(v_ft_salary,0) +
       COALESCE(v_ot_amount,0) +
-      COALESCE(v_config.housing_allowance,0) +
-      COALESCE(v_config.attendance_bonus_no_late,0) +
-      COALESCE(v_config.attendance_bonus_no_leave,0) +
+      CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
+      CASE
+        WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+             AND v_emp.allow_attendance_bonus_nolate
+          THEN v_config.attendance_bonus_no_late
+        ELSE 0
+      END +
+      CASE
+        WHEN v_emp.type_code='full_time' AND v_ft_salary > 0
+             AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+             AND v_emp.allow_attendance_bonus_noleave
+          THEN v_config.attendance_bonus_no_leave
+        ELSE 0
+      END +
       COALESCE(v_bonus_amt,0) +
+      COALESCE(v_doctor_fee,0) +
       COALESCE(jsonb_sum_value(v_others_income),0);
 
   v_tax_month := calculate_withholding_tax(
@@ -1015,13 +1027,13 @@ BEGIN
     
     housing_allowance = CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
     attendance_bonus_nolate = CASE
-      WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+      WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0 AND v_emp.allow_attendance_bonus_nolate
         THEN v_config.attendance_bonus_no_late
       ELSE 0
     END,
     attendance_bonus_noleave = CASE
       WHEN v_emp.type_code='full_time' AND v_ft_salary > 0
-           AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0
+           AND v_leave_deduct = 0 AND v_leave_double_deduct = 0 AND v_leave_hours_deduct = 0 AND v_emp.allow_attendance_bonus_noleave
         THEN v_config.attendance_bonus_no_leave
       ELSE 0
     END,
