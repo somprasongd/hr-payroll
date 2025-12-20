@@ -9,6 +9,7 @@ GOCACHE_DIR := $(ROOT_DIR)/.cache/go-build
 # ถ้า BUILD_VERSION ไม่ถูกเซ็ตใน .env, ให้ใช้ git tag ล่าสุด (ถ้าไม่มี tag จะ fallback เป็น "latest")
 BUILD_VERSION := $(or ${BUILD_VERSION}, $(shell git describe --tags --abbrev=0 2>/dev/null || echo "latest"))
 BUILD_TIME := $(shell date +"%Y-%m-%dT%H:%M:%S%z")
+CHANGELOG_TAG ?= $(BUILD_VERSION)
 
 .PHONY: run-api
 run-api:
@@ -70,14 +71,15 @@ devdownv:
 
 .PHONY: produp
 produp:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+	docker compose -f docker-compose.prod.yml up -d
 
 .PHONY: produp-build
-produp-build: build-image produp
+produp-build: build-image
+	IMAGE_PREFIX= docker compose -f docker-compose.prod.yml up -d
 
 .PHONY: proddown
 proddown:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+	docker compose -f docker-compose.prod.yml down
 
 .PHONY: mgc
 # Example: make mgc filename=create_customer
@@ -106,3 +108,14 @@ doc:
 # Install swag by using: go install github.com/swaggo/swag/v2/cmd/swag@latest
 dbml:
 	db2dbml postgres $(DB_DSN) -o ./docs/design/schema.dbml
+
+.PHONY: changelog changelog-unreleased changelog-release
+changelog:
+	git cliff -o CHANGELOG.md
+
+changelog-unreleased:
+	git cliff --unreleased --prepend CHANGELOG.md
+
+# Example: make changelog-release CHANGELOG_TAG=v1.0.0
+changelog-release:
+	git cliff --tag $(CHANGELOG_TAG) --prepend CHANGELOG.md

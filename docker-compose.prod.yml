@@ -1,7 +1,6 @@
-version: "3.8"
-
 services:
   db:
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: hrms
@@ -17,39 +16,42 @@ services:
       start_period: 5s
 
   migrate:
-    image: hr-payroll-api:${BUILD_VERSION:-latest}
+    image: ${IMAGE_PREFIX}hr-payroll-api:${BUILD_VERSION:-latest}
     depends_on:
-      # ต้องรันหลังจากที่ db พร้อมทำงานแล้ว
       db:
         condition: service_healthy
-    # สั่ง migrate up
     entrypoint: ["/app/migrate"]
-    command: ["-verbose", "-path=/app/migrations", "-database", "postgres://hrms:hrms_password@db:5432/hr_payroll?sslmode=disable", "up"]
+    command:
+      [
+        "-verbose",
+        "-path=/app/migrations",
+        "-database",
+        "postgres://hrms:hrms_password@db:5432/hr_payroll?sslmode=disable",
+        "up",
+      ]
 
   api:
-    image: hr-payroll-api:${BUILD_VERSION:-latest}
+    image: ${IMAGE_PREFIX}hr-payroll-api:${BUILD_VERSION:-latest}
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      # Note: You may need to create the 'hr_payroll' database manually or via a script
       DB_DSN: postgres://hrms:hrms_password@db:5432/hr_payroll?sslmode=disable
     depends_on:
       db:
-        # ต้องรันหลังจากที่ db พร้อมทำงานแล้ว
         condition: service_healthy
       migrate:
-        # ต้องรันหลังจากที่ migrate ทำงานสำเร็จแล้ว
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/health"]
+      test:
+        ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/health"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
   web:
-    image: hr-payroll-web:${BUILD_VERSION:-latest}
+    image: ${IMAGE_PREFIX}hr-payroll-web:${BUILD_VERSION:-latest}
     restart: unless-stopped
     depends_on:
       api:
@@ -60,6 +62,30 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  pgadmin:
+    image: dpage/pgadmin4:9.11
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin1234
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+
+  postgresus:
+    container_name: postgresus
+    image: rostislavdugin/postgresus:latest
+    restart: unless-stopped
+    ports:
+      - "4005:4005"
+    volumes:
+      - postgresus_data:/postgresus-data
+    depends_on:
+      db:
+        condition: service_healthy
 
   proxy:
     image: nginx:1.27-alpine
@@ -73,6 +99,10 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
+      pgadmin:
+        condition: service_started
 
 volumes:
   postgres_data:
+  pgadmin_data:
+  postgresus_data:

@@ -33,25 +33,25 @@ git clone <repository-url>
 cd hr-payroll
 ```
 
-2. **Setup environment variables**
+1. **Setup environment variables**
 
 ```bash
 cp .env.example .env
 ```
 
-3. **Start the database**
+1. **Start the database**
 
 ```bash
 make devup
 ```
 
-4. **Run database migrations**
+1. **Run database migrations**
 
 ```bash
 make mgu
 ```
 
-5. **Run the application**
+1. **Run the application**
 
 ```bash
 # Run both API and Web concurrently
@@ -88,12 +88,58 @@ make devdown     # Stop services
 make devdownv    # Stop and remove volumes
 ```
 
-### Production
+### Production (Build Locally)
 
 ```bash
 make produp-build  # Build images and start
 make proddown      # Stop services
 ```
+
+### Full Stack (Images)
+
+Use `docker-compose.prod.yml` to run the full stack from prebuilt images (db, migrate, api, web, pgadmin, postgresus, proxy).
+
+```bash
+# Default: pull from GHCR (set IMAGE_PREFIX in .env or export it)
+make produp
+
+# Use locally built images
+make produp-build
+```
+
+Environment variables:
+
+- `BUILD_VERSION` sets the image tag (default: `latest`)
+- `IMAGE_PREFIX` sets the image registry prefix (default: empty for local, set to `ghcr.io/somprasongd/` for registry)
+
+Access:
+
+- Web: http://localhost/
+- API: http://localhost/api/ (proxy)
+- pgAdmin: http://localhost/pgadmin/
+- Postgresus: http://localhost:4005
+
+## 🧾 Changelog
+
+This project uses `git-cliff` with Conventional Commits.
+
+```bash
+# Generate full changelog
+make changelog
+
+# Update Unreleased section
+make changelog-unreleased
+
+# Prepare a release entry
+make changelog-release CHANGELOG_TAG=v1.0.0
+```
+
+Recommended flow:
+
+1. Commit code changes
+2. Run `make changelog-unreleased` and commit `CHANGELOG.md`
+3. For releases, run `make changelog-release CHANGELOG_TAG=vX.Y.Z` and commit
+4. Create git tag after the changelog commit
 
 ## 📚 Features
 

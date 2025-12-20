@@ -1,0 +1,29 @@
+[git]
+conventional_commits = true
+filter_unconventional = false
+tag_pattern = "v[0-9].*"
+commit_parsers = [
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^perf", group = "Changed" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^docs", group = "Docs" },
+  { message = "^build", group = "Build" },
+  { message = "^ci", group = "CI" },
+  { message = "^test", group = "Tests" },
+  { message = "^chore", group = "Chore" },
+  { message = ".*", group = "Other" },
+]
+
+[changelog]
+header = "# Changelog\n\n"
+body = """
+{% if version %}## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}{% else %}## [Unreleased]{% endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}
+- {{ commit.message }} ({{ commit.id | truncate(length=7, end="") }})
+{% endfor %}
+{% endfor %}
+"""
+trim = true
