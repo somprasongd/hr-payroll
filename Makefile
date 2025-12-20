@@ -118,4 +118,4 @@ changelog-unreleased:
 
 # Example: make changelog-release CHANGELOG_TAG=v1.0.0
 changelog-release:
-	git cliff --tag $(CHANGELOG_TAG) --prepend CHANGELOG.md
+	git cliff --unreleased --tag $(CHANGELOG_TAG) --prepend CHANGELOG.md
