@@ -1,6 +1,10 @@
 -- =========================================
--- Multi-Branch Support - Phase 1
--- Create companies, branches, and user role tables
+-- Multi-Branch Support - Core Tables & Seed
+-- 
+-- Consolidated from:
+-- - 20251217215346_create_companies_branches
+-- - 20251218061600_create_superadmin_user
+-- - 20251219064200_add_branches_deleted_at
 -- =========================================
 
 -- ===== 1) Companies Table =====
@@ -38,7 +42,11 @@ CREATE TABLE branches (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_by UUID REFERENCES users(id) ON DELETE SET NULL
+  updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  
+  -- Soft delete support
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
+  deleted_by UUID REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Code unique per company
@@ -48,10 +56,16 @@ CREATE UNIQUE INDEX branches_company_code_uk ON branches (company_id, lower(code
 CREATE UNIQUE INDEX branches_default_uk ON branches (company_id) 
   WHERE is_default = TRUE;
 
+-- Index for efficient filtering of non-deleted branches
+CREATE INDEX branches_deleted_at_idx ON branches (deleted_at) WHERE deleted_at IS NULL;
+
 -- Auto update timestamp
 CREATE TRIGGER tg_branches_set_updated
 BEFORE UPDATE ON branches
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Comment explaining the soft delete logic
+COMMENT ON COLUMN branches.deleted_at IS 'Soft delete timestamp. Branch can only be deleted when status is archived.';
 
 -- ===== 3) User Company Roles =====
 -- Maps users to companies with their role at company level
@@ -82,12 +96,45 @@ CREATE TABLE user_branch_access (
 
 CREATE INDEX user_branch_access_branch_idx ON user_branch_access (branch_id);
 
--- ===== 5) Seed Default Company and Branch =====
+-- ===== 5) Add 'superadmin' to the user_role domain =====
+DO $$
+BEGIN
+  -- Only modify if superadmin is not already in the domain
+  ALTER DOMAIN user_role DROP CONSTRAINT user_role_check;
+  ALTER DOMAIN user_role ADD CONSTRAINT user_role_check CHECK (VALUE IN ('hr','admin','superadmin'));
+EXCEPTION
+  WHEN OTHERS THEN NULL; -- Ignore if already exists
+END $$;
+
+-- Update guard trigger to allow superadmin to create users too
+CREATE OR REPLACE FUNCTION public.users_guard_create_policy() RETURNS trigger AS $$
+DECLARE
+    v_creator_role public.user_role;
+BEGIN
+    IF NEW.created_by IS NULL THEN
+        RAISE EXCEPTION 'created_by is required to identify the creator.';
+    END IF;
+
+    SELECT user_role INTO v_creator_role 
+    FROM public.users 
+    WHERE id = NEW.created_by;
+
+    -- Allow admin OR superadmin to create users
+    IF v_creator_role NOT IN ('admin', 'superadmin') THEN
+        RAISE EXCEPTION 'Access Denied: Only administrators or superadmin can create new users. (User ID % is %)', NEW.created_by, v_creator_role;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ===== 6) Seed Default Company, Branch, and Superadmin User =====
 DO $$
 DECLARE 
   v_admin_id UUID;
   v_company_id UUID;
   v_branch_id UUID;
+  v_superadmin_id UUID;
   v_user RECORD;
 BEGIN
   -- Get admin user for created_by
@@ -123,4 +170,20 @@ BEGIN
   END LOOP;
   
   RAISE NOTICE 'Created default company (%) and branch (%). Migrated all existing users.', v_company_id, v_branch_id;
+  
+  -- Create superadmin user (if not exists)
+  IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'superadmin' AND deleted_at IS NULL) THEN
+    -- Password: 'changeme'
+    INSERT INTO users (username, password_hash, user_role, created_by, updated_by)
+    VALUES ('superadmin', '$argon2id$v=19$m=65536,t=3,p=4$vdCnms0qqpwQwsGkU9tONQ$/wvzZ56+cOqNU2AUQzQxmKAr0x+JrFCL7Qa1YeQxvpg', 'superadmin', v_admin_id, v_admin_id)
+    RETURNING id INTO v_superadmin_id;
+    
+    -- Update to self-reference (superadmin created itself)
+    UPDATE users SET created_by = v_superadmin_id, updated_by = v_superadmin_id
+    WHERE id = v_superadmin_id;
+    
+    RAISE NOTICE 'Created superadmin user with id: % (self-referencing)', v_superadmin_id;
+  ELSE
+    RAISE NOTICE 'Superadmin user already exists.';
+  END IF;
 END $$;

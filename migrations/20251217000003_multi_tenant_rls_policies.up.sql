@@ -1,6 +1,9 @@
 -- =========================================
--- Multi-Branch Support - Phase 3
--- Enable Row Level Security (RLS) Policies
+-- Multi-Branch Support - RLS Policies & Helper Functions
+-- 
+-- Consolidated from:
+-- - 20251217215348_enable_rls_policies
+-- - 20251221000000_scope_pending_cycle_to_branch (RLS policies only)
 -- =========================================
 
 -- ===== Helper function to check if current user is superadmin =====
@@ -187,17 +190,17 @@ CREATE POLICY tenant_isolation_bonus_item ON bonus_item
     AND tenant_branch_allowed(branch_id)
   );
 
--- ===== 14) Salary Raise Cycle =====
+-- ===== 14) Salary Raise Cycle (with branch filter) =====
 ALTER TABLE salary_raise_cycle ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation_salary_raise_cycle ON salary_raise_cycle;
 CREATE POLICY tenant_isolation_salary_raise_cycle ON salary_raise_cycle
-  USING (tenant_company_matches(company_id));
+  USING (tenant_company_matches(company_id) AND tenant_branch_allowed(branch_id));
 
--- ===== 14.1) Salary Raise Item =====
+-- ===== 14.1) Salary Raise Item (with branch filter) =====
 ALTER TABLE salary_raise_item ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_isolation_salary_raise_item ON salary_raise_item;
 CREATE POLICY tenant_isolation_salary_raise_item ON salary_raise_item
-  USING (tenant_company_matches(company_id));
+  USING (tenant_company_matches(company_id) AND tenant_branch_allowed(branch_id));
 
 -- ===== 14.2) Payout PT Item (if exists) =====
 DO $$
@@ -244,16 +247,7 @@ END $$;
 -- ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 -- DROP POLICY IF EXISTS tenant_isolation_users ON users;
 -- CREATE POLICY tenant_isolation_users ON users
---   USING (
---     is_superadmin()
---     OR id = current_setting('app.current_user_id', true)::uuid
---     OR EXISTS (
---       SELECT 1 FROM user_company_roles ucr1
---       JOIN user_company_roles ucr2 ON ucr1.company_id = ucr2.company_id
---       WHERE ucr1.user_id = current_setting('app.current_user_id', true)::uuid
---         AND ucr2.user_id = users.id
---     )
---   );
+--   USING (...);
 
 -- ===== Optional tables =====
 DO $$

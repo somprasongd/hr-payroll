@@ -1,5 +1,5 @@
 -- =========================================
--- Rollback: Add Tenant Columns
+-- Rollback: Multi-Branch Support - Tenant Columns
 -- =========================================
 
 -- Note: This only removes the columns, not the data that was backfilled
@@ -107,10 +107,15 @@ DROP INDEX IF EXISTS org_profile_company_uk;
 DROP INDEX IF EXISTS activity_logs_tenant_idx;
 DROP INDEX IF EXISTS employee_document_company_idx;
 
+-- Document type indexes
+DROP INDEX IF EXISTS employee_document_type_company_idx;
+DROP INDEX IF EXISTS employee_document_type_code_uk;
+
 -- Restore original unique constraints
 CREATE UNIQUE INDEX IF NOT EXISTS department_code_active_uk ON department (lower(code)) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS employee_position_code_active_uk ON employee_position (lower(code)) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS payroll_run_month_uk ON payroll_run (payroll_month_date) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS employee_document_type_code_active_uk ON employee_document_type (lower(code)) WHERE deleted_at IS NULL;
 
 -- Remove columns (note: users.company_id was never added)
 ALTER TABLE employees DROP COLUMN IF EXISTS company_id;
@@ -144,6 +149,10 @@ ALTER TABLE salary_raise_cycle DROP COLUMN IF EXISTS branch_id;
 ALTER TABLE salary_raise_item DROP COLUMN IF EXISTS company_id;
 ALTER TABLE salary_raise_item DROP COLUMN IF EXISTS branch_id;
 DROP INDEX IF EXISTS salary_raise_item_tenant_idx;
+
+-- Document type columns
+ALTER TABLE employee_document_type DROP COLUMN IF EXISTS is_system;
+ALTER TABLE employee_document_type DROP COLUMN IF EXISTS company_id;
 
 -- Drop payout_pt_item tenant columns if exists
 DO $$
@@ -198,5 +207,12 @@ BEGIN
     EXECUTE 'DROP POLICY IF EXISTS tenant_isolation_employee_document ON employee_document';
     ALTER TABLE employee_document DISABLE ROW LEVEL SECURITY;
     ALTER TABLE employee_document DROP COLUMN IF EXISTS company_id;
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'employee_photo') THEN
+    DROP INDEX IF EXISTS employee_photo_company_checksum_uk;
+    CREATE UNIQUE INDEX IF NOT EXISTS employee_photo_checksum_uk ON employee_photo(checksum_md5);
+    DROP INDEX IF EXISTS employee_photo_company_idx;
+    ALTER TABLE employee_photo DROP COLUMN IF EXISTS company_id;
   END IF;
 END $$;
