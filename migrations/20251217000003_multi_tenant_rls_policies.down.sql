@@ -1,5 +1,5 @@
 -- =========================================
--- Rollback: RLS Policies
+-- Rollback: Multi-Branch Support - RLS Policies
 -- =========================================
 
 -- Drop policies

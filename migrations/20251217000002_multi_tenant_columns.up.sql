@@ -1,6 +1,9 @@
 -- =========================================
--- Multi-Branch Support - Phase 2
--- Add tenant columns to existing tables
+-- Multi-Branch Support - Tenant Columns & Backfill
+-- 
+-- Consolidated from:
+-- - 20251217215347_add_tenant_columns
+-- - 20251219120400_add_document_type_tenant
 -- =========================================
 
 -- IMPORTANT: Disable all triggers during migration to avoid restrictions
@@ -387,7 +390,7 @@ BEGIN
   END IF;
 END $$;
 
--- ===== 18) Employee Document table (if exists) =====
+-- ===== 19) Employee Document table (if exists) =====
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'employee_document') THEN
@@ -404,7 +407,7 @@ BEGIN
   END IF;
 END $$;
 
--- ===== 19) Employee Photo table (if exists) =====
+-- ===== 20) Employee Photo table (if exists) =====
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'employee_photo') THEN
@@ -427,6 +430,39 @@ BEGIN
       ON employee_photo(company_id, checksum_md5);
   END IF;
 END $$;
+
+-- ===== 21) Employee Document Type - Hybrid Support =====
+-- System types (is_system=true, company_id=null): managed by superadmin, visible to all
+-- Custom types (is_system=false, company_id=uuid): managed by company admin, visible to that company only
+
+ALTER TABLE employee_document_type 
+  ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS is_system BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Mark existing document types as system types (they were created before multi-tenancy)
+UPDATE employee_document_type 
+SET is_system = TRUE 
+WHERE company_id IS NULL;
+
+-- Drop old unique index (code only)
+DROP INDEX IF EXISTS employee_document_type_code_active_uk;
+
+-- Create new unique index: code must be unique per company (or globally for system types)
+-- Using COALESCE to treat NULL company_id as a fixed UUID for system types
+CREATE UNIQUE INDEX IF NOT EXISTS employee_document_type_code_uk 
+  ON employee_document_type (
+    lower(code), 
+    COALESCE(company_id, '00000000-0000-0000-0000-000000000000'::uuid)
+  )
+  WHERE deleted_at IS NULL;
+
+-- Add index for efficient tenant filtering
+CREATE INDEX IF NOT EXISTS employee_document_type_company_idx 
+  ON employee_document_type (company_id) 
+  WHERE deleted_at IS NULL;
+
+COMMENT ON COLUMN employee_document_type.company_id IS 'NULL for system types, company UUID for custom types';
+COMMENT ON COLUMN employee_document_type.is_system IS 'TRUE = system type (superadmin manages), FALSE = custom type (company admin manages)';
 
 -- =========================================
 -- TRIGGERS: Auto-populate tenant columns on INSERT
