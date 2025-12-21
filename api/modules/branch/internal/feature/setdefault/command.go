@@ -35,7 +35,6 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (mediator.NoR
 	}
 
 	companyID := branch.CompanyID
-	branchID := branch.ID
 
 	if err := cmd.Repo.SetDefault(ctx, cmd.ID, cmd.ActorID); err != nil {
 		logger.FromContext(ctx).Error("failed to set default branch", zap.Error(err))
@@ -52,7 +51,7 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (mediator.NoR
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
-		BranchID:   &branchID,
+		BranchID:   nil,
 		Action:     "SET_DEFAULT",
 		EntityName: "BRANCH",
 		EntityID:   updatedBranch.ID.String(),

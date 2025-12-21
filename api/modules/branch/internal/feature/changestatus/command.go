@@ -13,7 +13,6 @@ import (
 	"hrms/shared/events"
 )
 
-
 type Command struct {
 	Repo      repository.Repository
 	Eb        eventbus.EventBus
@@ -72,11 +71,10 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 	}
 
 	companyID := updatedBranch.CompanyID
-	branchID := updatedBranch.ID
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
-		BranchID:   &branchID,
+		BranchID:   nil,
 		Action:     "UPDATE_STATUS",
 		EntityName: "BRANCH",
 		EntityID:   updatedBranch.ID.String(),

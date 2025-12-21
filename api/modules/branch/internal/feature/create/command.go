@@ -13,7 +13,6 @@ import (
 	"hrms/shared/events"
 )
 
-
 type Command struct {
 	Repo    repository.Repository
 	Eb      eventbus.EventBus
@@ -40,11 +39,10 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 	}
 
 	companyID := branch.CompanyID
-	branchID := branch.ID
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
-		BranchID:   &branchID,
+		BranchID:   nil,
 		Action:     "CREATE",
 		EntityName: "BRANCH",
 		EntityID:   branch.ID.String(),
