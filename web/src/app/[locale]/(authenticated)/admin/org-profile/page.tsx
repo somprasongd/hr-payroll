@@ -79,7 +79,11 @@ const getFirstDayOfCurrentMonth = (): string => {
 
 export default function OrgProfilePage() {
   const t = useTranslations('OrgProfile');
-  const firstFieldRef = useRef<HTMLInputElement>(null);
+  // Refs for first input of each tab
+  const companyFirstInputRef = useRef<HTMLInputElement>(null);
+  const addressFirstInputRef = useRef<HTMLInputElement>(null);
+  const contactFirstInputRef = useRef<HTMLInputElement>(null);
+  const slipFirstInputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [activeProfile, setActiveProfile] = useState<OrgProfile | null>(null);
@@ -179,6 +183,28 @@ export default function OrgProfilePage() {
     fetchProfileHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-focus first input when tab changes
+  useEffect(() => {
+    // Use setTimeout to ensure the tab content is rendered
+    const timeoutId = setTimeout(() => {
+      switch (activeTab) {
+        case 'company':
+          companyFirstInputRef.current?.focus();
+          break;
+        case 'address':
+          addressFirstInputRef.current?.focus();
+          break;
+        case 'contact':
+          contactFirstInputRef.current?.focus();
+          break;
+        case 'slip':
+          slipFirstInputRef.current?.focus();
+          break;
+      }
+    }, 50);
+    return () => clearTimeout(timeoutId);
+  }, [activeTab]);
 
   const handleInputChange = (field: keyof OrgProfileFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -447,13 +473,13 @@ export default function OrgProfilePage() {
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    ref={firstFieldRef}
                   />
                   <p className="text-xs text-muted-foreground">{t('effectiveDateHint')}</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="companyName">{t('companyName')} *</Label>
                   <Input
+                    ref={companyFirstInputRef}
                     id="companyName"
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
@@ -488,6 +514,7 @@ export default function OrgProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="addressLine1">{t('addressLine1')}</Label>
                 <Input
+                  ref={addressFirstInputRef}
                   id="addressLine1"
                   value={formData.addressLine1}
                   onChange={(e) => handleInputChange('addressLine1', e.target.value)}
@@ -562,6 +589,7 @@ export default function OrgProfilePage() {
                 <div className="space-y-2">
                   <Label htmlFor="phoneMain">{t('phoneMain')}</Label>
                   <Input
+                    ref={contactFirstInputRef}
                     id="phoneMain"
                     value={formData.phoneMain}
                     onChange={(e) => handleInputChange('phoneMain', e.target.value)}
@@ -606,6 +634,7 @@ export default function OrgProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="slipFooterNote">{t('slipFooterNote')}</Label>
                 <Textarea
+                  ref={slipFirstInputRef}
                   id="slipFooterNote"
                   value={formData.slipFooterNote}
                   onChange={(e) => handleInputChange('slipFooterNote', e.target.value)}

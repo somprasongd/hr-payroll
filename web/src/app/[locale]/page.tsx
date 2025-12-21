@@ -326,6 +326,7 @@ export default function LoginPage() {
                         <Input 
                           placeholder={t('usernamePlaceholder')} 
                           className="pl-10"
+                          onFocus={(e) => e.target.select()}
                           {...field} 
                         />
                       </div>
@@ -347,6 +348,7 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           placeholder={t('passwordPlaceholder')} 
                           className="pl-10 pr-10"
+                          onFocus={(e) => e.target.select()}
                           {...field} 
                         />
                         <button

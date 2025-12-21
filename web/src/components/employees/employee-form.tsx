@@ -1,28 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
-import { Loader2, Upload, X, User } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Upload, User, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
-import { DismissibleAlert } from "@/components/ui/dismissible-alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { EmployeeTypeBadge } from "@/components/common/employee-type-badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,26 +18,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
-  Employee,
   CreateEmployeeRequest,
+  Employee,
   UpdateEmployeeRequest,
   employeeService,
 } from "@/services/employee.service";
 import {
-  masterDataService,
   AllMasterData,
+  masterDataService,
 } from "@/services/master-data.service";
+import { EmployeeTypeBadge } from "../common/employee-type-badge";
 import { AccumulationView } from "./accumulation-view";
 import { DocumentTab } from "./document-tab";
 
@@ -83,6 +82,7 @@ export function EmployeeForm({
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Refs for auto-focus
+  const personalFirstInputRef = React.useRef<HTMLInputElement>(null);
   const employmentInputRef = React.useRef<HTMLInputElement>(null);
   const financialInputRef = React.useRef<HTMLInputElement>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
@@ -226,6 +226,26 @@ export function EmployeeForm({
     };
     fetchMasterData();
   }, []);
+
+  // Auto-focus first input when tab changes
+  React.useEffect(() => {
+    // Use setTimeout to ensure the tab content is rendered
+    const timeoutId = setTimeout(() => {
+      switch (activeTab) {
+        case 'personal':
+          personalFirstInputRef.current?.focus();
+          break;
+        case 'employment':
+          employmentInputRef.current?.focus();
+          break;
+        case 'financial':
+          financialInputRef.current?.focus();
+          break;
+        // accumulation and documents tabs don't have text inputs to focus
+      }
+    }, 50);
+    return () => clearTimeout(timeoutId);
+  }, [activeTab]);
 
   // Photo upload handler
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -745,7 +765,11 @@ export function EmployeeForm({
                           <FormItem>
                             <FormLabel>{t("fields.firstName")}</FormLabel>
                             <FormControl>
-                              <Input {...field} onFocus={handleFocus} />
+                              <Input {...field} onFocus={handleFocus} ref={(e) => {
+                              field.ref(e);
+                              // @ts-ignore
+                              personalFirstInputRef.current = e;
+                            }} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
