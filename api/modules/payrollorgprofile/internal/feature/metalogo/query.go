@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/payrollorgprofile/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -32,6 +33,9 @@ func NewHandler(repo repository.Repository) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
+	if _, ok := contextx.TenantFromContext(ctx); !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
 	rec, err := h.repo.GetLogo(ctx, q.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {

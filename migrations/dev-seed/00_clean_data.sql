@@ -43,8 +43,8 @@ DELETE FROM employees WHERE 1=1;
 DELETE FROM department WHERE 1=1;
 DELETE FROM employee_position WHERE 1=1;
 
--- Document types (Corrected table name)
-DELETE FROM employee_document_type WHERE 1=1;
+-- Document types (Only delete non-system types)
+DELETE FROM employee_document_type WHERE is_system = false;
 
 -- User access
 DELETE FROM user_branch_access WHERE user_id NOT IN (

@@ -10,6 +10,7 @@ import (
 
 	"hrms/modules/payrollorgprofile/internal/dto"
 	"hrms/modules/payrollorgprofile/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -37,6 +38,9 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	// date already defaulted in endpoint; keep guard for safety
 	if q.Date.IsZero() {
 		q.Date = time.Now()
+	}
+	if _, ok := contextx.TenantFromContext(ctx); !ok {
+		return nil, errs.Unauthorized("missing tenant context")
 	}
 	rec, err := h.repo.GetEffective(ctx, q.Date)
 	if err != nil {

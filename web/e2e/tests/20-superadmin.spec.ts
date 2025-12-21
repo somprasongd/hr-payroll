@@ -45,4 +45,22 @@ test.describe('ระบบ Super Admin (Super Admin Portal)', () => {
     // 3. ควรถูกเตะกลับหรือแสดง 403 (พฤติกรรมปกติคือเด้งไป Dashboard หรือ Home)
     await expect(page).not.toHaveURL(/super-admin\/companies/);
   });
+
+  // Test 3: Super Admin Document Types
+  test('Super Admin ควรเห็นเฉพาะ System Document Types เท่านั้น', async ({ page, context, loginPage }) => {
+    await context.clearCookies();
+    await loginPage.goto();
+    await loginPage.fullLogin(testUsers.superadmin.username, testUsers.superadmin.password, 'DEFAULT', 'สำนักงานใหญ่');
+
+    await page.goto('/th/super-admin/document-types');
+    await page.waitForLoadState('networkidle');
+
+    // ตรวจสอบว่าเห็นรายการที่เป็น System (เช่น Passport, Visa)
+    await expect(page.getByText(/Passport/i).first()).toBeVisible();
+    await expect(page.getByText(/Visa/i).first()).toBeVisible();
+
+    // ตรวจสอบว่าไม่เห็นรายการของ Company (ที่เพิ่ง seed ไป เช่น social_security, diploma)
+    await expect(page.getByText(/Social Security Card|บัตรประกันสังคม/i)).not.toBeVisible();
+    await expect(page.getByText(/Diploma|วุฒิการศึกษา/i)).not.toBeVisible();
+  });
 });
