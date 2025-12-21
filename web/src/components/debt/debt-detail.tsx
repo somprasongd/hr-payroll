@@ -156,28 +156,30 @@ export function DebtDetail({ id }: DebtDetailProps) {
               <CardTitle>{t('fields.installments')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('fields.payrollMonth')}</TableHead>
-                    <TableHead>{t('fields.amount')}</TableHead>
-                    <TableHead>{t('fields.status')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.installments.map((inst) => (
-                    <TableRow key={inst.id}>
-                      <TableCell>{inst.payrollMonthDate ? format(new Date(inst.payrollMonthDate), 'MM/yyyy') : '-'}</TableCell>
-                      <TableCell>{inst.amount.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge variant={inst.status === 'approved' ? 'default' : 'secondary'}>
-                          {t(`installmentStatus.${inst.status}`)}
-                        </Badge>
-                      </TableCell>
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('fields.payrollMonth')}</TableHead>
+                      <TableHead>{t('fields.amount')}</TableHead>
+                      <TableHead>{t('fields.status')}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {data.installments.map((inst) => (
+                      <TableRow key={inst.id}>
+                        <TableCell>{inst.payrollMonthDate ? format(new Date(inst.payrollMonthDate), 'MM/yyyy') : '-'}</TableCell>
+                        <TableCell>{inst.amount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={inst.status === 'approved' ? 'default' : 'secondary'}>
+                            {t(`installmentStatus.${inst.status}`)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         )}

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus, FileText, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Plus, FileText, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,20 +14,8 @@ import {
   deleteSystemDocumentType,
   SystemDocumentType,
 } from '@/services/superadmin.service';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
+import { ColumnDef } from '@tanstack/react-table';
 import {
   Dialog,
   DialogContent,
@@ -184,6 +172,38 @@ export default function SystemDocumentTypesPage() {
     return locale === 'th' ? type.nameTh : type.nameEn;
   };
 
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<SystemDocumentType>[] = useMemo(() => [
+    {
+      accessorKey: 'code',
+      header: tDocTypes('fields.code'),
+      cell: ({ row }) => <span className="font-mono">{row.original.code}</span>,
+    },
+    {
+      accessorKey: 'nameTh',
+      header: tDocTypes('fields.nameTh'),
+    },
+    {
+      accessorKey: 'nameEn',
+      header: tDocTypes('fields.nameEn'),
+    },
+  ], [tDocTypes]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<SystemDocumentType>[] = useMemo(() => [
+    {
+      label: tCommon('edit'),
+      icon: <Pencil className="h-4 w-4" />,
+      onClick: openEdit,
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: openDelete,
+    },
+  ], [tCommon]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -202,63 +222,13 @@ export default function SystemDocumentTypesPage() {
         </Button>
       </div>
 
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{tDocTypes('fields.code')}</TableHead>
-              <TableHead>{tDocTypes('fields.nameTh')}</TableHead>
-              <TableHead>{tDocTypes('fields.nameEn')}</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
-                  {tCommon('loading')}
-                </TableCell>
-              </TableRow>
-            ) : types.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
-                  {tDocTypes('noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              types.map((type) => (
-                <TableRow key={type.id}>
-                  <TableCell className="font-mono">{type.code}</TableCell>
-                  <TableCell>{type.nameTh}</TableCell>
-                  <TableCell>{type.nameEn}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEdit(type)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          {tCommon('edit')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => openDelete(type)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {tCommon('delete')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <GenericDataTable
+        data={types}
+        columns={columns}
+        loading={loading}
+        emptyStateText={tDocTypes('noData')}
+        actions={actions}
+      />
 
       {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

@@ -410,7 +410,7 @@ export default function SettingsPage() {
                 {t('historyDescription')}
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-4">
+            <div className="mt-4 border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -869,7 +869,7 @@ export default function SettingsPage() {
                   </Button>
                 </div>
                 
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-md">
                   <Table>
                     <TableHeader>
                       <TableRow>

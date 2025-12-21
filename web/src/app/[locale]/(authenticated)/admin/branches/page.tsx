@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Building2, MoreHorizontal, Pencil, Star, Pause, Archive, Play, Trash2 } from 'lucide-react';
+import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,15 +45,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { GenericDataTable } from '@/components/common/generic-data-table';
 
 type StatusAction = 'suspend' | 'archive' | 'activate';
 
@@ -230,6 +224,102 @@ export default function BranchesPage() {
   const canActivate = (branch: Branch) => branch.status === 'suspended' || branch.status === 'archived';
   const canDelete = (branch: Branch) => branch.status === 'archived' && !branch.isDefault;
 
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<Branch>[] = useMemo(() => [
+    {
+      accessorKey: 'code',
+      header: t('fields.code'),
+      cell: ({ row }) => <span className="font-medium">{row.original.code}</span>,
+    },
+    {
+      accessorKey: 'name',
+      header: t('fields.name'),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.name}
+          {row.original.isDefault && (
+            <Badge variant="secondary" className="text-xs">
+              <Star className="h-3 w-3 mr-1" />
+              {t('default')}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: t('fields.status'),
+      cell: ({ row }) => (
+        <Badge variant={getStatusBadgeVariant(row.original.status)}>
+          {t(`status.${row.original.status}`)}
+        </Badge>
+      ),
+    },
+    {
+      id: 'actions',
+      header: () => <div className="w-[100px]">{tCommon('actions')}</div>,
+      cell: ({ row }) => {
+        const branch = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {canEdit(branch) && (
+                <DropdownMenuItem onClick={() => openEdit(branch)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  {tCommon('edit')}
+                </DropdownMenuItem>
+              )}
+              {!branch.isDefault && branch.status === 'active' && (
+                <DropdownMenuItem onClick={() => handleSetDefault(branch)}>
+                  <Star className="h-4 w-4 mr-2" />
+                  {t('setDefault')}
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuSeparator />
+              
+              {canSuspend(branch) && (
+                <DropdownMenuItem onClick={() => openStatusChange(branch, 'suspend')}>
+                  <Pause className="h-4 w-4 mr-2" />
+                  {t('statusChange.suspend')}
+                </DropdownMenuItem>
+              )}
+              {canArchive(branch) && (
+                <DropdownMenuItem onClick={() => openStatusChange(branch, 'archive')}>
+                  <Archive className="h-4 w-4 mr-2" />
+                  {t('statusChange.archive')}
+                </DropdownMenuItem>
+              )}
+              {canActivate(branch) && (
+                <DropdownMenuItem onClick={() => openStatusChange(branch, 'activate')}>
+                  <Play className="h-4 w-4 mr-2" />
+                  {t('statusChange.activate')}
+                </DropdownMenuItem>
+              )}
+              {canDelete(branch) && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => openDeleteConfirm(branch)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {tCommon('delete')}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ], [t, tCommon]);
+
   const openDeleteConfirm = (branch: Branch) => {
     setSelectedBranch(branch);
     setIsDeleteOpen(true);
@@ -305,112 +395,12 @@ export default function BranchesPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('fields.code')}</TableHead>
-              <TableHead>{t('fields.name')}</TableHead>
-              <TableHead>{t('fields.status')}</TableHead>
-              <TableHead className="w-[100px]">{tCommon('actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
-                  {tCommon('loading')}
-                </TableCell>
-              </TableRow>
-            ) : branches.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
-                  {t('noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              branches.map((branch) => (
-                <TableRow key={branch.id}>
-                  <TableCell className="font-medium">{branch.code}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {branch.name}
-                      {branch.isDefault && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Star className="h-3 w-3 mr-1" />
-                          {t('default')}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(branch.status)}>
-                      {t(`status.${branch.status}`)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {canEdit(branch) && (
-                          <DropdownMenuItem onClick={() => openEdit(branch)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            {tCommon('edit')}
-                          </DropdownMenuItem>
-                        )}
-                        {!branch.isDefault && branch.status === 'active' && (
-                          <DropdownMenuItem onClick={() => handleSetDefault(branch)}>
-                            <Star className="h-4 w-4 mr-2" />
-                            {t('setDefault')}
-                          </DropdownMenuItem>
-                        )}
-                        
-                        <DropdownMenuSeparator />
-                        
-                        {/* Status change options */}
-                        {canSuspend(branch) && (
-                          <DropdownMenuItem onClick={() => openStatusChange(branch, 'suspend')}>
-                            <Pause className="h-4 w-4 mr-2" />
-                            {t('statusChange.suspend')}
-                          </DropdownMenuItem>
-                        )}
-                        {canArchive(branch) && (
-                          <DropdownMenuItem onClick={() => openStatusChange(branch, 'archive')}>
-                            <Archive className="h-4 w-4 mr-2" />
-                            {t('statusChange.archive')}
-                          </DropdownMenuItem>
-                        )}
-                        {canActivate(branch) && (
-                          <DropdownMenuItem onClick={() => openStatusChange(branch, 'activate')}>
-                            <Play className="h-4 w-4 mr-2" />
-                            {t('statusChange.activate')}
-                          </DropdownMenuItem>
-                        )}
-                        {canDelete(branch) && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => openDeleteConfirm(branch)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              {tCommon('delete')}
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <GenericDataTable
+        data={branches}
+        columns={columns}
+        loading={loading}
+        emptyStateText={t('noData')}
+      />
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>

@@ -347,6 +347,7 @@ export default function OrgProfilePage() {
               <DialogTitle>{t('configurationHistory')}</DialogTitle>
               <DialogDescription>{t('historyDescription')}</DialogDescription>
             </DialogHeader>
+            <div className="border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -380,6 +381,7 @@ export default function OrgProfilePage() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

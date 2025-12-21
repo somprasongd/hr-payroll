@@ -1,27 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Building2, MoreHorizontal, Pencil, XCircle } from 'lucide-react';
+import { Plus, Building2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from '@/i18n/routing';
 import { listCompanies, Company } from '@/services/superadmin.service';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 
 export default function CompaniesPage() {
@@ -64,6 +52,38 @@ export default function CompaniesPage() {
     }
   };
 
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<Company>[] = useMemo(() => [
+    {
+      accessorKey: 'code',
+      header: t('companies.fields.code'),
+      cell: ({ row }) => <span className="font-medium">{row.original.code}</span>,
+    },
+    {
+      accessorKey: 'name',
+      header: t('companies.fields.name'),
+    },
+    {
+      accessorKey: 'status',
+      header: t('companies.fields.status'),
+      cell: ({ row }) => getStatusBadge(row.original.status),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: t('companies.fields.createdAt'),
+      cell: ({ row }) => format(new Date(row.original.createdAt), 'dd/MM/yyyy'),
+    },
+  ], [t]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<Company>[] = useMemo(() => [
+    {
+      label: tCommon('edit'),
+      icon: <Pencil className="h-4 w-4" />,
+      href: (company) => `/super-admin/companies/${company.id}`,
+    },
+  ], [tCommon]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -84,62 +104,13 @@ export default function CompaniesPage() {
         </Button>
       </div>
 
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('companies.fields.code')}</TableHead>
-              <TableHead>{t('companies.fields.name')}</TableHead>
-              <TableHead>{t('companies.fields.status')}</TableHead>
-              <TableHead>{t('companies.fields.createdAt')}</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  {tCommon('loading')}
-                </TableCell>
-              </TableRow>
-            ) : companies.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  {t('companies.noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              companies.map((company) => (
-                <TableRow key={company.id}>
-                  <TableCell className="font-medium">{company.code}</TableCell>
-                  <TableCell>{company.name}</TableCell>
-                  <TableCell>{getStatusBadge(company.status)}</TableCell>
-                  <TableCell>
-                    {format(new Date(company.createdAt), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/super-admin/companies/${company.id}`}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            {tCommon('edit')}
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <GenericDataTable
+        data={companies}
+        columns={columns}
+        loading={loading}
+        emptyStateText={t('companies.noData')}
+        actions={actions}
+      />
     </div>
   );
 }

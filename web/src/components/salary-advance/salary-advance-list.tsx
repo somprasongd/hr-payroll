@@ -1,17 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
   Select, 
   SelectContent, 
@@ -19,14 +10,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, MoreHorizontal, Filter, Plus, X, Trash2, Pencil, Search, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, Plus, Trash2, Pencil, RotateCcw } from "lucide-react";
+import { ColumnDef } from '@tanstack/react-table';
 import { salaryAdvanceService, SalaryAdvance } from '@/services/salary-advance-service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
@@ -43,12 +29,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Combobox } from "@/components/ui/combobox";
 import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
 import { useBranchChange } from '@/hooks/use-branch-change';
 import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
 
 export function SalaryAdvanceList() {
   const t = useTranslations('SalaryAdvance');
@@ -112,7 +98,12 @@ export function SalaryAdvanceList() {
   };
 
   useEffect(() => {
-    fetchData();
+    if (employeeFilter !== 'all') {
+      fetchData();
+    } else {
+      setData([]);
+      setLoading(false);
+    }
   }, [page, statusFilter, employeeFilter]);
 
   const handleDelete = async () => {
@@ -141,6 +132,53 @@ export function SalaryAdvanceList() {
     setEmployeeFilter('all');
     setPage(1);
   };
+
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<SalaryAdvance>[] = useMemo(() => [
+    {
+      accessorKey: 'advanceDate',
+      header: t('advanceDate'),
+      cell: ({ row }) => format(new Date(row.original.advanceDate), 'dd/MM/yyyy'),
+    },
+    {
+      accessorKey: 'amount',
+      header: t('amount'),
+      cell: ({ row }) => row.original.amount.toLocaleString(),
+    },
+    {
+      accessorKey: 'payrollMonthDate',
+      header: t('payrollMonth'),
+      cell: ({ row }) => format(new Date(row.original.payrollMonthDate), 'MM/yyyy'),
+    },
+    {
+      accessorKey: 'status',
+      header: t('status'),
+      cell: ({ row }) => (
+        <Badge variant={row.original.status === 'processed' ? 'default' : 'secondary'}>
+          {t(`status${row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}`)}
+        </Badge>
+      ),
+    },
+  ], [t]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<SalaryAdvance>[] = useMemo(() => [
+    {
+      label: tCommon('edit'),
+      icon: <Pencil className="h-4 w-4" />,
+      onClick: (item) => setEditItem(item),
+      condition: (item) => item.status === 'pending' && user?.role === 'admin',
+      showInDropdown: true,
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: (item) => setDeleteItem(item),
+      condition: (item) => item.status === 'pending' && user?.role === 'admin',
+      showInDropdown: true,
+    },
+  ], [tCommon, user]);
 
   return (
     <div className="space-y-6">
