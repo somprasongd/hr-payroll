@@ -54,6 +54,12 @@ CREATE INDEX IF NOT EXISTS employees_company_idx ON employees (company_id);
 CREATE INDEX IF NOT EXISTS employees_branch_idx ON employees (branch_id);
 CREATE INDEX IF NOT EXISTS employees_tenant_idx ON employees (company_id, branch_id);
 
+-- Update employee_number uniqueness to be scoped by company
+DROP INDEX IF EXISTS employees_empno_active_uk;
+CREATE UNIQUE INDEX IF NOT EXISTS employees_company_empno_active_uk
+  ON employees (company_id, lower(employee_number))
+  WHERE employment_end_date IS NULL AND deleted_at IS NULL;
+
 -- ===== 3) Department table =====
 ALTER TABLE department ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
 

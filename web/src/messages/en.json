@@ -429,7 +429,8 @@
       "email": "Invalid email address",
       "positive": "Value must be positive"
     },
-    "submitError": "Failed to save employee. Please try again."
+    "submitError": "Failed to save employee. Please try again.",
+    "employeeNumberDuplicate": "This employee number is already in use. Please use a different one."
   },
   "Accumulation": {
     "title": "Accumulation",

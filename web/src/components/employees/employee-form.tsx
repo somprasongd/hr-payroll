@@ -348,10 +348,15 @@ export function EmployeeForm({
       setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (error: any) {
       console.error(error);
-      const errorMessage =
-        error?.response?.data?.message || error?.message || t("submitError");
-      setSubmitError(errorMessage);
-      setSubmitSuccess(false);
+      // Check for 409 Conflict (duplicate employee number)
+      // Support both axios error (response.status) and ApiError (statusCode)
+      const statusCode = error?.response?.status || error?.statusCode;
+      if (statusCode === 409) {
+        setSubmitError(t('employeeNumberDuplicate'));
+      } else {
+        const errorMessage = error?.response?.data?.message || error?.message || t('submitError');
+        setSubmitError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
