@@ -51,11 +51,10 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (mediator.NoR
 	}
 
 	companyID := branch.CompanyID
-	branchID := branch.ID
 	cmd.Eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
-		BranchID:   &branchID,
+		BranchID:   nil,
 		Action:     "DELETE",
 		EntityName: "BRANCH",
 		EntityID:   branch.ID.String(),
