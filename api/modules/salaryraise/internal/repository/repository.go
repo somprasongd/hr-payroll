@@ -110,8 +110,22 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 	offsetPlaceholder := len(args) + 2
 	q := fmt.Sprintf(`
 SELECT id, period_start_date, period_end_date, status, created_at, updated_at, deleted_at,
-  COALESCE((SELECT COUNT(1) FROM salary_raise_item sri WHERE sri.cycle_id = src.id),0) AS total_employees,
-  COALESCE((SELECT SUM(raise_amount) FROM salary_raise_item sri WHERE sri.cycle_id = src.id),0) AS total_raise_amount
+  COALESCE((
+    SELECT COUNT(1)
+    FROM salary_raise_item sri
+    JOIN employees e ON e.id = sri.employee_id
+    WHERE sri.cycle_id = src.id
+      AND e.company_id = src.company_id
+      AND e.branch_id = src.branch_id
+  ),0) AS total_employees,
+  COALESCE((
+    SELECT SUM(sri.raise_amount)
+    FROM salary_raise_item sri
+    JOIN employees e ON e.id = sri.employee_id
+    WHERE sri.cycle_id = src.id
+      AND e.company_id = src.company_id
+      AND e.branch_id = src.branch_id
+  ),0) AS total_raise_amount
 FROM salary_raise_cycle src
 WHERE %s
 ORDER BY created_at DESC

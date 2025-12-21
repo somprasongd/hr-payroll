@@ -194,9 +194,78 @@ Access at: `http://localhost:8080/swagger/`
 
 ## 🏢 Multi-Tenancy
 
-- **Row-Level Security (RLS)** on all tenant-specific tables
-- **Automatic tenant assignment** via BEFORE INSERT triggers
-- **Tenant middleware** sets context from JWT claims
+ระบบรองรับ Multi-Company และ Multi-Branch โดยใช้ **Row-Level Security (RLS)** และ **Application-Level Filtering**
+
+### Tenant Context
+
+ทุก API request ต้องส่ง Headers:
+
+- `X-Company-ID`: UUID ของบริษัท
+- `X-Branch-ID`: UUID ของสาขา
+
+```go
+// TenantMiddleware ใน middleware/tenant.go
+tenant := contextx.TenantInfo{
+    CompanyID: companyID,
+    BranchID:  branchID,
+    IsAdmin:   isAdmin,
+}
+ctx := contextx.TenantToContext(c.Context(), tenant)
+```
+
+### Tables with company_id + branch_id (14 ตาราง)
+
+| ตาราง                | Tenant Filter    | INSERT      | หมายเหตุ                          |
+| -------------------- | ---------------- | ----------- | --------------------------------- |
+| `employees`          | ✅ Direct        | ✅ Explicit | Primary tenant table              |
+| `payroll_run`        | ✅ Direct        | ✅ Explicit | -                                 |
+| `payroll_run_item`   | ✅ Via employees | ⚡ Trigger  | Auto-copy from payroll_run        |
+| `worklog_ft`         | ✅ Via employees | ✅ Explicit | -                                 |
+| `worklog_pt`         | ✅ Via employees | ✅ Explicit | -                                 |
+| `payout_pt`          | ✅ Direct        | ✅ Explicit | -                                 |
+| `payout_pt_item`     | ⚡ Via payout    | ⚡ Trigger  | Auto-copy from payout_pt          |
+| `salary_advance`     | ✅ Via employees | ✅ Explicit | -                                 |
+| `debt_txn`           | ✅ Direct        | ✅ Explicit | -                                 |
+| `bonus_cycle`        | ✅ Direct        | ✅ Explicit | -                                 |
+| `bonus_item`         | ✅ Via employees | ⚡ Trigger  | Auto-copy from bonus_cycle        |
+| `salary_raise_cycle` | ✅ Direct        | ✅ Explicit | -                                 |
+| `salary_raise_item`  | ✅ Via employees | ⚡ Trigger  | Auto-copy from salary_raise_cycle |
+| `activity_logs`      | ✅ Direct        | ✅ Explicit | Optional (system logs)            |
+
+### Tables with company_id only (8 ตาราง)
+
+| ตาราง                  | Tenant Filter | INSERT      | หมายเหตุ                |
+| ---------------------- | ------------- | ----------- | ----------------------- |
+| `department`           | ✅ Direct     | ✅ Explicit | Master data             |
+| `employee_position`    | ✅ Direct     | ✅ Explicit | Master data             |
+| `payroll_config`       | ✅ Direct     | ✅ Explicit | Company-level config    |
+| `payroll_accumulation` | ✅ Direct     | ⚡ Trigger  | Auto-copy from employee |
+| `payroll_org_profile`  | ✅ Direct     | ✅ Explicit | Company profile         |
+| `payroll_org_logo`     | ✅ Direct     | ✅ Explicit | Company logo            |
+| `employee_document`    | ✅ Direct     | ✅ Explicit | -                       |
+| `employee_photo`       | ✅ Direct     | ✅ Explicit | -                       |
+
+### Legend
+
+- ✅ **Direct**: Filter directly on table's company_id/branch_id
+- ✅ **Via employees**: JOIN with employees table for tenant filtering
+- ⚡ **Trigger**: Auto-populated by database BEFORE INSERT trigger
+
+### Database Triggers
+
+```sql
+-- Auto-populate tenant columns from parent table
+CREATE TRIGGER tg_bonus_item_set_tenant
+BEFORE INSERT ON bonus_item FOR EACH ROW
+EXECUTE FUNCTION bonus_item_set_tenant();
+
+-- Auto-populate tenant columns from employees table
+CREATE TRIGGER tg_worklog_ft_set_tenant
+BEFORE INSERT ON worklog_ft FOR EACH ROW
+EXECUTE FUNCTION set_tenant_from_employee();
+```
+
+### RLS Functions
 
 ```sql
 tenant_company_matches(company_id UUID) → BOOLEAN

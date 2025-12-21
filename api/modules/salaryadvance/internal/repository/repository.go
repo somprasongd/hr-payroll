@@ -25,6 +25,8 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 
 type Record struct {
 	ID           uuid.UUID  `db:"id"`
+	CompanyID    uuid.UUID  `db:"company_id"`
+	BranchID     uuid.UUID  `db:"branch_id"`
 	EmployeeID   uuid.UUID  `db:"employee_id"`
 	PayrollMonth time.Time  `db:"payroll_month_date"`
 	AdvanceDate  time.Time  `db:"advance_date"`

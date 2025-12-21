@@ -51,7 +51,7 @@ func (m *Module) Init(_ eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	admin := r.Group("/admin/company", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
+	admin := r.Group("/admin/company", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
 
 	// Register CQRS endpoints
 	get.NewEndpoint(admin, m.repo)
