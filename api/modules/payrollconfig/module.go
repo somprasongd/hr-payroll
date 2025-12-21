@@ -2,6 +2,7 @@ package payrollconfig
 
 import (
 	"hrms/modules/payrollconfig/internal/feature/create"
+	"hrms/modules/payrollconfig/internal/feature/createdirect"
 	"hrms/modules/payrollconfig/internal/feature/effective"
 	"hrms/modules/payrollconfig/internal/feature/list"
 	"hrms/modules/payrollconfig/internal/repository"
@@ -10,6 +11,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -36,6 +38,10 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*effective.Query, *effective.Response](effective.NewHandler(m.repo))
 	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eb))
+
+	// Register contract handler for company creation (bypasses tenant context)
+	mediator.Register[*contracts.CreatePayrollConfigDirectCommand, *contracts.CreatePayrollConfigDirectResponse](createdirect.NewHandler(m.repo, eb))
+
 	return nil
 }
 

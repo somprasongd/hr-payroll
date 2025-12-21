@@ -2,6 +2,7 @@ package payrollorgprofile
 
 import (
 	"hrms/modules/payrollorgprofile/internal/feature/create"
+	"hrms/modules/payrollorgprofile/internal/feature/createdirect"
 	"hrms/modules/payrollorgprofile/internal/feature/downloadlogo"
 	"hrms/modules/payrollorgprofile/internal/feature/effective"
 	"hrms/modules/payrollorgprofile/internal/feature/get"
@@ -14,6 +15,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -44,6 +46,10 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*uploadlogo.Command, *uploadlogo.Response](uploadlogo.NewHandler(m.repo, eb))
 	mediator.Register[*downloadlogo.Query, *downloadlogo.Response](downloadlogo.NewHandler(m.repo))
 	mediator.Register[*metalogo.Query, *metalogo.Response](metalogo.NewHandler(m.repo))
+
+	// Register contract handler for company creation (bypasses tenant context)
+	mediator.Register[*contracts.CreateOrgProfileDirectCommand, *contracts.CreateOrgProfileDirectResponse](createdirect.NewHandler(m.repo))
+
 	return nil
 }
 
