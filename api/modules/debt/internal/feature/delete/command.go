@@ -50,7 +50,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if rec.Status != "pending" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete non-pending transaction")
 	}
-	if err := h.repo.SoftDelete(ctx, cmd.ID, cmd.Actor); err != nil {
+	if err := h.repo.SoftDelete(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("debt transaction not found")
 		}

@@ -11,6 +11,7 @@ import (
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -31,7 +32,11 @@ type getHandler struct{}
 func NewGetHandler() *getHandler { return &getHandler{} }
 
 func (h *getHandler) Handle(ctx context.Context, q *GetQuery) (*GetResponse, error) {
-	item, err := q.Repo.GetItemDetail(ctx, q.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+	item, err := q.Repo.GetItemDetail(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll item not found")

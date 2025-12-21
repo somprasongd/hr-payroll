@@ -10,6 +10,7 @@ import (
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -31,7 +32,11 @@ var _ mediator.RequestHandler[*Query, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	run, err := q.Repo.Get(ctx, q.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+	run, err := q.Repo.Get(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll run not found")

@@ -50,7 +50,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	}
 	item := dto.FromRecord(*rec)
 	if rec.TxnType == "loan" || rec.TxnType == "other" {
-		children, err := h.repo.GetInstallments(ctx, rec.ID)
+		children, err := h.repo.GetInstallments(ctx, tenant, rec.ID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			logger.FromContext(ctx).Error("failed to load installments", zap.Error(err))
 			return nil, errs.Internal("failed to load installments")
