@@ -91,7 +91,7 @@ export function EditRaiseItemDialog({ item, open, onOpenChange, onSuccess }: Edi
   const raiseAmount = form.watch('raiseAmount');
 
   // Get wage cap from config or default to 15000
-  const wageCap = payrollConfig?.socialSecurityWageCap || 15000;
+  const wageCap = payrollConfig?.socialSecurityWageCap || 17500;
 
   // Calculate new salary for preview
   const newSalary = currentSalary + (form.watch('raiseAmount') || 0);
