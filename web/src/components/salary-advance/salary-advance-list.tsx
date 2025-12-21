@@ -1,17 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
   Select, 
   SelectContent, 
@@ -19,14 +10,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, MoreHorizontal, Filter, Plus, X, Trash2, Pencil, Search, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, Plus, Trash2, Pencil, RotateCcw } from "lucide-react";
+import { ColumnDef } from '@tanstack/react-table';
 import { salaryAdvanceService, SalaryAdvance } from '@/services/salary-advance-service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
@@ -43,11 +29,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Combobox } from "@/components/ui/combobox";
 import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
 import { useBranchChange } from '@/hooks/use-branch-change';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
 
 export function SalaryAdvanceList() {
   const t = useTranslations('SalaryAdvance');
@@ -111,7 +97,12 @@ export function SalaryAdvanceList() {
   };
 
   useEffect(() => {
-    fetchData();
+    if (employeeFilter !== 'all') {
+      fetchData();
+    } else {
+      setData([]);
+      setLoading(false);
+    }
   }, [page, statusFilter, employeeFilter]);
 
   const handleDelete = async () => {
@@ -140,6 +131,53 @@ export function SalaryAdvanceList() {
     setEmployeeFilter('all');
     setPage(1);
   };
+
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<SalaryAdvance>[] = useMemo(() => [
+    {
+      accessorKey: 'advanceDate',
+      header: t('advanceDate'),
+      cell: ({ row }) => format(new Date(row.original.advanceDate), 'dd/MM/yyyy'),
+    },
+    {
+      accessorKey: 'amount',
+      header: t('amount'),
+      cell: ({ row }) => row.original.amount.toLocaleString(),
+    },
+    {
+      accessorKey: 'payrollMonthDate',
+      header: t('payrollMonth'),
+      cell: ({ row }) => format(new Date(row.original.payrollMonthDate), 'MM/yyyy'),
+    },
+    {
+      accessorKey: 'status',
+      header: t('status'),
+      cell: ({ row }) => (
+        <Badge variant={row.original.status === 'processed' ? 'default' : 'secondary'}>
+          {t(`status${row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}`)}
+        </Badge>
+      ),
+    },
+  ], [t]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<SalaryAdvance>[] = useMemo(() => [
+    {
+      label: tCommon('edit'),
+      icon: <Pencil className="h-4 w-4" />,
+      onClick: (item) => setEditItem(item),
+      condition: (item) => item.status === 'pending' && user?.role === 'admin',
+      showInDropdown: true,
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: (item) => setDeleteItem(item),
+      condition: (item) => item.status === 'pending' && user?.role === 'admin',
+      showInDropdown: true,
+    },
+  ], [tCommon, user]);
 
   return (
     <div className="space-y-6">
@@ -213,77 +251,18 @@ export function SalaryAdvanceList() {
         />
       )}
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('advanceDate')}</TableHead>
-              <TableHead>{t('amount')}</TableHead>
-              <TableHead>{t('payrollMonth')}</TableHead>
-              <TableHead>{t('status')}</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {employeeFilter === 'all' ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                  {t('selectEmployeeToView') || 'กรุณาเลือกพนักงานเพื่อดูข้อมูล'}
-                </TableCell>
-              </TableRow>
-            ) : loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  {tCommon('loading')}
-                </TableCell>
-              </TableRow>
-            ) : !data || data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  {tCommon('noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{format(new Date(item.advanceDate), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell>{item.amount.toLocaleString()}</TableCell>
-                  <TableCell>{format(new Date(item.payrollMonthDate), 'MM/yyyy')}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.status === 'processed' ? 'default' : 'secondary'}>
-                      {t(`status${item.status.charAt(0).toUpperCase() + item.status.slice(1)}`)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {item.status === 'pending' && user?.role === 'admin' && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditItem(item)}>
-                            <Pencil className="w-4 h-4 mr-2" />
-                            {tCommon('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={() => setDeleteItem(item)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {tCommon('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <GenericDataTable
+        data={employeeFilter === 'all' ? [] : data}
+        columns={columns}
+        loading={employeeFilter !== 'all' && loading}
+        emptyStateText={employeeFilter === 'all' ? (t('selectEmployeeToView') || 'กรุณาเลือกพนักงานเพื่อดูข้อมูล') : tCommon('noData')}
+        actions={actions}
+        pagination={employeeFilter !== 'all' ? {
+          currentPage: page,
+          totalPages,
+          onPageChange: setPage,
+        } : undefined}
+      />
 
       <CreateSalaryAdvanceDialog 
         open={createOpen} 

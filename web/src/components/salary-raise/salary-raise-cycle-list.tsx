@@ -1,28 +1,15 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { format } from 'date-fns';
-import { Loader2, Eye, MoreHorizontal, Filter, Plus, X, Trash2, RotateCcw } from 'lucide-react';
+import { Eye, Filter, Plus, Trash2, RotateCcw } from 'lucide-react';
+import { ColumnDef } from '@tanstack/react-table';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
 import { CreateCycleDialog } from './create-cycle-dialog';
 import { salaryRaiseService, SalaryRaiseCycle } from '@/services/salary-raise.service';
 
@@ -44,7 +31,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Pagination } from '@/components/ui/pagination';
 import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function SalaryRaiseCycleList() {
@@ -60,7 +46,6 @@ export function SalaryRaiseCycleList() {
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  // ... (rest of state and functions)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 13 }, (_, i) => currentYear - 10 + i);
 
@@ -156,6 +141,59 @@ export function SalaryRaiseCycleList() {
     }
   };
 
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<SalaryRaiseCycle>[] = useMemo(() => [
+    {
+      accessorKey: 'period',
+      header: t('fields.period'),
+      cell: ({ row }) => (
+        <span>
+          {format(new Date(row.original.periodStartDate), 'dd/MM/yyyy')} - {format(new Date(row.original.periodEndDate), 'dd/MM/yyyy')}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: t('fields.status'),
+      cell: ({ row }) => getStatusBadge(row.original.status),
+    },
+    {
+      accessorKey: 'totalEmployees',
+      header: () => <div className="text-right">{t('fields.totalEmployees')}</div>,
+      cell: ({ row }) => <div className="text-right">{row.original.totalEmployees || 0}</div>,
+    },
+    {
+      accessorKey: 'totalRaiseAmount',
+      header: () => <div className="text-right">{t('fields.totalRaiseAmount')}</div>,
+      cell: ({ row }) => (
+        <div className="text-right">
+          {row.original.totalRaiseAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: t('fields.createdAt'),
+      cell: ({ row }) => format(new Date(row.original.createdAt), 'dd/MM/yyyy HH:mm'),
+    },
+  ], [t]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<SalaryRaiseCycle>[] = useMemo(() => [
+    {
+      label: t('actions.view'),
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (cycle) => router.push(`/salary-raise/${cycle.id}`),
+    },
+    {
+      label: t('actions.delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: handleDeleteClick,
+      condition: (cycle) => cycle.status === 'pending' || cycle.status === 'rejected',
+    },
+  ], [t, router]);
+
   return (
     <div className="space-y-6">
 
@@ -233,80 +271,17 @@ export function SalaryRaiseCycleList() {
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('fields.period')}</TableHead>
-              <TableHead>{t('fields.status')}</TableHead>
-              <TableHead className="text-right">{t('fields.totalEmployees')}</TableHead>
-              <TableHead className="text-right">{t('fields.totalRaiseAmount')}</TableHead>
-              <TableHead>{t('fields.createdAt')}</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />
-                  {tCommon('loading')}
-                </TableCell>
-              </TableRow>
-            ) : (cycles?.length || 0) === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  {t('noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              cycles.map((cycle) => (
-                <TableRow key={cycle.id}>
-                  <TableCell>
-                    {format(new Date(cycle.periodStartDate), 'dd/MM/yyyy')} - {format(new Date(cycle.periodEndDate), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell>{getStatusBadge(cycle.status)}</TableCell>
-                  <TableCell className="text-right">{cycle.totalEmployees || 0}</TableCell>
-                  <TableCell className="text-right">
-                    {cycle.totalRaiseAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(cycle.createdAt), 'dd/MM/yyyy HH:mm')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => router.push(`/salary-raise/${cycle.id}`)}
-                        title={t('actions.view')}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      {(cycle.status === 'pending' || cycle.status === 'rejected') && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleDeleteClick(cycle)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title={t('actions.delete')}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
+      <GenericDataTable
+        data={cycles}
+        columns={columns}
+        loading={loading}
+        emptyStateText={t('noData')}
+        actions={actions}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange,
+        }}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

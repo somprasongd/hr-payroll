@@ -338,7 +338,7 @@ export default function BonusDetailPage() {
         </div>
       </div>
 
-      <div className="border rounded-lg bg-white">
+      <div className="border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>

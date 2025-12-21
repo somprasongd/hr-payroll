@@ -103,6 +103,17 @@ mgv:
 mgf:
 	docker run --rm --network host -v $(ROOT_DIR)migrations:/migrations migrate/migrate -path=/migrations/ -database "$(DB_DSN)" force $(VERSION)
 
+.PHONY: db-seed
+db-seed:
+	for f in migrations/dev-seed/[0-9]*.sql; do \
+		echo "Running $$f..."; \
+		docker exec -i hr-payroll-db-1 psql -U postgres -d hr-payroll-dev < "$$f"; \
+	done
+
+.PHONY: db-seed-clear
+db-seed-clear:
+	docker exec -i hr-payroll-db-1 psql -U postgres -d hr-payroll-dev < migrations/dev-seed/00_clean_data.sql
+
 .PHONY: doc
 # Install swag by using: go install github.com/swaggo/swag/v2/cmd/swag@latest
 doc:

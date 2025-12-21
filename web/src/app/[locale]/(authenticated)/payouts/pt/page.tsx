@@ -1,12 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, X, RotateCcw, Eye, Trash2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Plus, Filter, RotateCcw, Eye, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -14,23 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { payoutPtService, PayoutPt } from '@/services/payout-pt.service';
 import { employeeService } from '@/services/employee.service';
 import { Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
-import { Pagination } from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -43,6 +32,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useTenantStore } from '@/store/tenant-store';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
+import { ColumnDef } from '@tanstack/react-table';
 
 
 export default function PayoutPtListPage() {
@@ -80,6 +71,7 @@ export default function PayoutPtListPage() {
       fetchPayouts();
     } else {
       setPayouts([]);
+      setLoading(false);
     }
   }, [status, employeeId, currentPage]);
 
@@ -154,6 +146,52 @@ export default function PayoutPtListPage() {
       setDeleteId(null);
     }
   };
+
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<PayoutPt>[] = useMemo(() => [
+    {
+      accessorKey: 'createdAt',
+      header: t('fields.createdAt'),
+      cell: ({ row }) => 
+        row.original.createdAt && !isNaN(new Date(row.original.createdAt).getTime()) 
+          ? format(new Date(row.original.createdAt), 'dd/MM/yyyy HH:mm') 
+          : '-',
+    },
+    {
+      accessorKey: 'itemCount',
+      header: t('fields.itemCount'),
+    },
+    {
+      accessorKey: 'totalHours',
+      header: t('fields.totalHours'),
+    },
+    {
+      accessorKey: 'amount',
+      header: t('fields.amountTotal'),
+      cell: ({ row }) => (row.original.amount || 0).toLocaleString(),
+    },
+    {
+      accessorKey: 'status',
+      header: t('fields.status'),
+      cell: ({ row }) => getStatusBadge(row.original.status),
+    },
+  ], [t]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<PayoutPt>[] = useMemo(() => [
+    {
+      label: t('actions.view'),
+      icon: <Eye className="h-4 w-4" />,
+      href: (payout) => `/payouts/pt/${payout.id}`,
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: (payout) => setDeleteId(payout.id),
+      condition: (payout) => payout.status === 'to_pay',
+    },
+  ], [t, tCommon]);
 
   return (
     <div className="space-y-6">
@@ -230,81 +268,17 @@ export default function PayoutPtListPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('fields.createdAt')}</TableHead>
-              <TableHead>{t('fields.itemCount')}</TableHead>
-              <TableHead>{t('fields.totalHours')}</TableHead>
-              <TableHead>{t('fields.amountTotal')}</TableHead>
-              <TableHead>{t('fields.status')}</TableHead>
-              <TableHead className="text-right"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {!employeeId ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                  {t('filters.selectEmployee') || 'Please select an employee to view payouts'}
-                </TableCell>
-              </TableRow>
-            ) : loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                  {tCommon('loading')}
-                </TableCell>
-              </TableRow>
-            ) : payouts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                  {t('noData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              payouts.map((payout) => {
-                return (
-                  <TableRow key={payout.id}>
-                    <TableCell>
-                      {payout.createdAt && !isNaN(new Date(payout.createdAt).getTime()) 
-                        ? format(new Date(payout.createdAt), 'dd/MM/yyyy HH:mm') 
-                        : '-'}
-                    </TableCell>
-                    <TableCell>{payout.itemCount}</TableCell>
-                    <TableCell>{payout.totalHours}</TableCell>
-                    <TableCell>{(payout.amount || 0).toLocaleString()}</TableCell>
-                    <TableCell>{getStatusBadge(payout.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link href={`/payouts/pt/${payout.id}`}>
-                          <Button variant="ghost" size="icon" title={t('actions.view')}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        {payout.status === 'to_pay' && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteId(payout.id)}
-                            title={tCommon('delete')}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
+      <GenericDataTable
+        data={employeeId ? payouts : []}
+        columns={columns}
+        loading={employeeId ? loading : false}
+        emptyStateText={!employeeId ? (t('filters.selectEmployee') || 'Please select an employee to view payouts') : t('noData')}
+        actions={actions}
+        pagination={employeeId ? {
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange,
+        } : undefined}
       />
 
       {/* Delete Confirmation Dialog */}

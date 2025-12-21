@@ -139,3 +139,74 @@ Supported languages:
 - 🇲🇲 Burmese (`my`)
 
 Translation files: `src/messages/`
+
+## 📊 Table Components
+
+### GenericDataTable
+
+A reusable table component located at `src/components/common/generic-data-table.tsx` that provides:
+
+- Consistent table styling and behavior
+- Loading states
+- Empty states with customizable text
+- Pagination support
+- Row actions (buttons or dropdown menus)
+- Sorting support via TanStack Table
+
+**Usage:**
+
+```tsx
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
+import { ColumnDef } from '@tanstack/react-table';
+
+const columns: ColumnDef<MyDataType>[] = [...];
+const actions: ActionConfig<MyDataType>[] = [...];
+
+<GenericDataTable
+  data={data}
+  columns={columns}
+  loading={loading}
+  emptyStateText="No data found"
+  actions={actions}
+  pagination={{ currentPage, totalPages, onPageChange }}
+/>
+```
+
+### Pages Using GenericDataTable
+
+| Page                          | Component                             |
+| ----------------------------- | ------------------------------------- |
+| `/employees`                  | `employees/page.tsx`                  |
+| `/payroll`                    | `payroll/page.tsx`                    |
+| `/payroll/[id]`               | `payroll/[id]/page.tsx`               |
+| `/bonuses`                    | `bonuses/page.tsx`                    |
+| `/worklogs/ft`                | `worklogs/ft/page.tsx`                |
+| `/worklogs/pt`                | `worklogs/pt/page.tsx`                |
+| `/debt`                       | `debt-list.tsx`                       |
+| `/salary-raise`               | `salary-raise-cycle-list.tsx`         |
+| `/salary-advance`             | `salary-advance-list.tsx`             |
+| `/payouts/pt`                 | `payouts/pt/page.tsx`                 |
+| `/admin/branches`             | `admin/branches/page.tsx`             |
+| `/admin/departments`          | `master-data-list.tsx`                |
+| `/admin/positions`            | `master-data-list.tsx`                |
+| `/admin/document-types`       | `document-type-list.tsx`              |
+| `/admin/activity-logs`        | `activity-log-list.tsx`               |
+| `/admin/users`                | `user-list.tsx`                       |
+| `/super-admin/companies`      | `super-admin/companies/page.tsx`      |
+| `/super-admin/document-types` | `super-admin/document-types/page.tsx` |
+
+### Special Cases (Not Using GenericDataTable)
+
+The following pages use raw `Table` components directly due to special requirements:
+
+| Page                 | Reason                                         |
+| -------------------- | ---------------------------------------------- |
+| `/payouts/pt/create` | Checkbox selection for worklogs                |
+| `/payouts/pt/[id]`   | Complex read-only detail view with nested data |
+| `/salary-raise/[id]` | Editable cells for raise amounts               |
+| `/bonuses/[id]`      | Editable cells for bonus amounts               |
+| `/debt/[id]`         | Sub-table for installment history              |
+| `/admin/settings`    | Editable tax bracket table                     |
+| `/admin/org-profile` | History log table with special formatting      |
+
+> **Note:** All special case tables MUST use consistent styling with GenericDataTable by wrapping the `<Table>` component with `<div className="border rounded-md">`.
