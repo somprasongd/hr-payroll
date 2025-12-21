@@ -52,7 +52,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	var payout *repository.Payout
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
-		if err := cmd.Repo.ValidateWorklogs(ctxTx, cmd.EmployeeID, cmd.WorklogIDs); err != nil {
+		if err := cmd.Repo.ValidateWorklogs(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs); err != nil {
 			return errs.BadRequest(err.Error())
 		}
 		var err error

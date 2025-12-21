@@ -127,8 +127,14 @@ func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid
 	// Check company access for the cycle
 	q := `SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at 
 	      FROM bonus_cycle WHERE id=$1 AND company_id=$2 AND deleted_at IS NULL LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at 
+	      FROM bonus_cycle WHERE id=$1 AND company_id=$2 AND branch_id=$3 AND deleted_at IS NULL LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var c Cycle
-	if err := db.GetContext(ctx, &c, q, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &c, q, args...); err != nil {
 		return nil, nil, err
 	}
 	items, err := r.ListItems(ctx, tenant, id, "")
@@ -153,13 +159,22 @@ RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date
 
 func (r Repository) UpdateStatus(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, status string, actor uuid.UUID) (*Cycle, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE bonus_cycle
 SET status=$1, updated_by=$2
 WHERE id=$3 AND company_id=$4 AND deleted_at IS NULL
 RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
+	args := []interface{}{status, actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE bonus_cycle
+SET status=$1, updated_by=$2
+WHERE id=$3 AND company_id=$4 AND branch_id=$5 AND deleted_at IS NULL
+RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at`
+		args = append(args, tenant.BranchID)
+	}
 	var c Cycle
-	if err := db.GetContext(ctx, &c, q, status, actor, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &c, q, args...); err != nil {
 		return nil, err
 	}
 	return &c, nil
@@ -167,7 +182,13 @@ RETURNING id, payroll_month_date, bonus_year, period_start_date, period_end_date
 
 func (r Repository) DeleteCycle(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	res, err := db.ExecContext(ctx, `UPDATE bonus_cycle SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND company_id=$3 AND deleted_at IS NULL`, actor, id, tenant.CompanyID)
+	q := `UPDATE bonus_cycle SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND company_id=$3 AND deleted_at IS NULL`
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `UPDATE bonus_cycle SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND company_id=$3 AND branch_id=$4 AND deleted_at IS NULL`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
@@ -218,7 +239,7 @@ ORDER BY e.employee_number ASC, employee_name`, fullNameExpr, where)
 func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Item, *Cycle, error) {
 	db := r.dbCtx(ctx)
 	// Join employees to check company access
-	const q = `SELECT bi.id, bi.cycle_id, bi.employee_id,
+	q := `SELECT bi.id, bi.cycle_id, bi.employee_id,
        (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name,
        e.employee_number AS employee_number,
        e.photo_id AS photo_id,
@@ -228,8 +249,22 @@ FROM bonus_item bi
 JOIN employees e ON e.id = bi.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
 WHERE bi.id=$1 AND e.company_id=$2 LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `SELECT bi.id, bi.cycle_id, bi.employee_id,
+       concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name,
+       e.employee_number AS employee_number,
+       e.photo_id AS photo_id,
+       bi.tenure_days, bi.current_salary, bi.late_minutes, bi.leave_days, bi.leave_double_days, bi.leave_hours, bi.ot_hours,
+       bi.bonus_months, bi.bonus_amount, bi.updated_at
+FROM bonus_item bi
+JOIN employees e ON e.id = bi.employee_id
+LEFT JOIN person_title pt ON pt.id = e.title_id
+WHERE bi.id=$1 AND e.company_id=$2 AND e.branch_id=$3 LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var it Item
-	if err := db.GetContext(ctx, &it, q, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, nil, err
 	}
 	cycle, _, err := r.Get(ctx, tenant, it.CycleID)
@@ -259,15 +294,20 @@ func (r Repository) UpdateItem(ctx context.Context, tenant contextx.TenantInfo, 
 	}
 	args = append(args, id, tenant.CompanyID)
 	setClause := strings.Join(sets, ",")
+	branchClause := ""
+	if tenant.HasBranchID() {
+		branchClause = fmt.Sprintf(" AND e.branch_id=$%d", argIdx+2)
+		args = append(args, tenant.BranchID)
+	}
 	q := fmt.Sprintf(`
 UPDATE bonus_item 
 SET %s 
 FROM employees e
-WHERE bonus_item.id=$%d AND bonus_item.employee_id = e.id AND e.company_id=$%d
+WHERE bonus_item.id=$%d AND bonus_item.employee_id = e.id AND e.company_id=$%d%s
 RETURNING bonus_item.id, bonus_item.cycle_id, bonus_item.employee_id,
        (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = bonus_item.employee_id) AS employee_name,
        bonus_item.tenure_days, bonus_item.current_salary, bonus_item.late_minutes, bonus_item.leave_days, bonus_item.leave_double_days, bonus_item.leave_hours, bonus_item.ot_hours,
-       bonus_item.bonus_months, bonus_item.bonus_amount, bonus_item.updated_at`, setClause, argIdx, argIdx+1)
+       bonus_item.bonus_months, bonus_item.bonus_amount, bonus_item.updated_at`, setClause, argIdx, argIdx+1, branchClause)
 	var out Item
 	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err

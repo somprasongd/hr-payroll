@@ -113,15 +113,26 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 
 func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT sa.*,
   (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
 FROM salary_advance sa
 JOIN employees e ON e.id = sa.employee_id
 WHERE sa.id=$1 AND e.company_id=$2 AND sa.deleted_at IS NULL
 LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT sa.*,
+  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
+FROM salary_advance sa
+JOIN employees e ON e.id = sa.employee_id
+WHERE sa.id=$1 AND e.company_id=$2 AND e.branch_id=$3 AND sa.deleted_at IS NULL
+LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -129,23 +140,26 @@ LIMIT 1`
 
 func (r Repository) Create(ctx context.Context, tenant contextx.TenantInfo, rec Record, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
-	// Validate employee belongs to company
-	var count int
-	if err := db.GetContext(ctx, &count, "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2", rec.EmployeeID, tenant.CompanyID); err != nil {
+	// Validate employee belongs to tenant and capture branch
+	var branchID uuid.UUID
+	q := "SELECT branch_id FROM employees WHERE id=$1 AND company_id=$2"
+	args := []interface{}{rec.EmployeeID, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q += " AND branch_id=$3"
+		args = append(args, tenant.BranchID)
+	}
+	if err := db.GetContext(ctx, &branchID, q, args...); err != nil {
 		return nil, err
 	}
-	if count == 0 {
-		return nil, fmt.Errorf("employee not found within this company")
-	}
 
-	const q = `
+	const insertQ = `
 INSERT INTO salary_advance (
-  employee_id, payroll_month_date, advance_date, amount, status,
+  employee_id, company_id, branch_id, payroll_month_date, advance_date, amount, status,
   created_by, updated_by
-) VALUES ($1,$2,$3,$4,'pending',$5,$5)
+) VALUES ($1,$2,$3,$4,$5,$6,'pending',$7,$7)
 RETURNING *`
 	var out Record
-	if err := db.GetContext(ctx, &out, q, rec.EmployeeID, rec.PayrollMonth, rec.AdvanceDate, rec.Amount, actor); err != nil {
+	if err := db.GetContext(ctx, &out, insertQ, rec.EmployeeID, tenant.CompanyID, branchID, rec.PayrollMonth, rec.AdvanceDate, rec.Amount, actor); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -153,15 +167,26 @@ RETURNING *`
 
 func (r Repository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, rec Record, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE salary_advance
 SET advance_date=$1, payroll_month_date=$2, amount=$3, updated_by=$4
 FROM employees e
 WHERE salary_advance.id=$5 AND salary_advance.employee_id = e.id AND e.company_id=$6 
   AND salary_advance.deleted_at IS NULL AND salary_advance.status='pending'
 RETURNING salary_advance.*`
+	args := []interface{}{rec.AdvanceDate, rec.PayrollMonth, rec.Amount, actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE salary_advance
+SET advance_date=$1, payroll_month_date=$2, amount=$3, updated_by=$4
+FROM employees e
+WHERE salary_advance.id=$5 AND salary_advance.employee_id = e.id AND e.company_id=$6 AND e.branch_id=$7
+  AND salary_advance.deleted_at IS NULL AND salary_advance.status='pending'
+RETURNING salary_advance.*`
+		args = append(args, tenant.BranchID)
+	}
 	var out Record
-	if err := db.GetContext(ctx, &out, q, rec.AdvanceDate, rec.PayrollMonth, rec.Amount, actor, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -169,13 +194,23 @@ RETURNING salary_advance.*`
 
 func (r Repository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE salary_advance
 SET deleted_at = now(), deleted_by=$1
 FROM employees e
 WHERE salary_advance.id=$2 AND salary_advance.employee_id = e.id AND e.company_id=$3
   AND salary_advance.deleted_at IS NULL AND salary_advance.status='pending'`
-	res, err := db.ExecContext(ctx, q, actor, id, tenant.CompanyID)
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE salary_advance
+SET deleted_at = now(), deleted_by=$1
+FROM employees e
+WHERE salary_advance.id=$2 AND salary_advance.employee_id = e.id AND e.company_id=$3 AND e.branch_id=$4
+  AND salary_advance.deleted_at IS NULL AND salary_advance.status='pending'`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

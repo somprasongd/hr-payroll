@@ -12,6 +12,7 @@ import (
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -43,6 +44,11 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	if cmd.Status != "" {
 		cmd.Status = strings.TrimSpace(cmd.Status)
 		if cmd.Status != "pending" && cmd.Status != "approved" {
@@ -62,7 +68,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		payDate = &parsed
 	}
 
-	run, err := cmd.Repo.Get(ctx, cmd.ID)
+	run, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll run not found")
@@ -80,13 +86,13 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	var updated *repository.Run
 	if cmd.Status == "approved" {
-		updated, err = cmd.Repo.Approve(ctx, cmd.ID, cmd.ActorID)
+		updated, err = cmd.Repo.Approve(ctx, tenant, cmd.ID, cmd.ActorID)
 	} else {
 		newStatus := run.Status
 		if cmd.Status != "" {
 			newStatus = cmd.Status
 		}
-		updated, err = cmd.Repo.UpdateStatus(ctx, cmd.ID, newStatus, payDate, cmd.ActorID)
+		updated, err = cmd.Repo.UpdateStatus(ctx, tenant, cmd.ID, newStatus, payDate, cmd.ActorID)
 	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

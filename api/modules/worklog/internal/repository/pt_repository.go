@@ -119,12 +119,20 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 
 func (r PTRepository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT wl.* FROM worklog_pt wl
 JOIN employees e ON e.id = wl.employee_id
 WHERE wl.id=$1 AND e.company_id=$2 AND wl.deleted_at IS NULL LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT wl.* FROM worklog_pt wl
+JOIN employees e ON e.id = wl.employee_id
+WHERE wl.id=$1 AND e.company_id=$2 AND e.branch_id=$3 AND wl.deleted_at IS NULL LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var rec PTRecord
-	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -148,14 +156,20 @@ func (r PTRepository) Insert(ctx context.Context, tenant contextx.TenantInfo, re
 	db := r.dbCtx(ctx)
 	// Validate employee belongs to company
 	var count int
-	if err := db.GetContext(ctx, &count, "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2", rec.EmployeeID, tenant.CompanyID); err != nil {
+	q := "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2"
+	args := []interface{}{rec.EmployeeID, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q += " AND branch_id=$3"
+		args = append(args, tenant.BranchID)
+	}
+	if err := db.GetContext(ctx, &count, q, args...); err != nil {
 		return nil, err
 	}
 	if count == 0 {
 		return nil, fmt.Errorf("employee not found in this company")
 	}
 
-	const q = `
+	const insertQ = `
 INSERT INTO worklog_pt (
   employee_id, work_date,
   morning_in, morning_out,
@@ -164,7 +178,7 @@ INSERT INTO worklog_pt (
 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
 RETURNING *`
 	var out PTRecord
-	if err := db.GetContext(ctx, &out, q,
+	if err := db.GetContext(ctx, &out, insertQ,
 		rec.EmployeeID, rec.WorkDate,
 		rec.MorningIn, rec.MorningOut,
 		rec.EveningIn, rec.EveningOut,
@@ -177,7 +191,7 @@ RETURNING *`
 
 func (r PTRepository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, rec PTRecord) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE worklog_pt
 SET work_date=$1,
     morning_in=$2, morning_out=$3,
@@ -187,13 +201,27 @@ SET work_date=$1,
 FROM employees e
 WHERE worklog_pt.id=$8 AND worklog_pt.employee_id = e.id AND e.company_id=$9 AND worklog_pt.deleted_at IS NULL
 RETURNING worklog_pt.*`
-	var out PTRecord
-	if err := db.GetContext(ctx, &out, q,
+	args := []interface{}{
 		rec.WorkDate,
 		rec.MorningIn, rec.MorningOut,
 		rec.EveningIn, rec.EveningOut,
 		rec.Status, rec.UpdatedBy, id, tenant.CompanyID,
-	); err != nil {
+	}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_pt
+SET work_date=$1,
+    morning_in=$2, morning_out=$3,
+    evening_in=$4, evening_out=$5,
+    status=$6,
+    updated_by=$7
+FROM employees e
+WHERE worklog_pt.id=$8 AND worklog_pt.employee_id = e.id AND e.company_id=$9 AND e.branch_id=$10 AND worklog_pt.deleted_at IS NULL
+RETURNING worklog_pt.*`
+		args = append(args, tenant.BranchID)
+	}
+	var out PTRecord
+	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -201,12 +229,21 @@ RETURNING worklog_pt.*`
 
 func (r PTRepository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE worklog_pt
 SET deleted_at=now(), deleted_by=$1
 FROM employees e
 WHERE worklog_pt.id=$2 AND worklog_pt.employee_id=e.id AND e.company_id=$3 AND worklog_pt.deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id, tenant.CompanyID)
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_pt
+SET deleted_at=now(), deleted_by=$1
+FROM employees e
+WHERE worklog_pt.id=$2 AND worklog_pt.employee_id=e.id AND e.company_id=$3 AND e.branch_id=$4 AND worklog_pt.deleted_at IS NULL`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

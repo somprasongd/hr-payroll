@@ -117,12 +117,20 @@ LIMIT $%d OFFSET $%d
 
 func (r FTRepository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*FTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT wl.* FROM worklog_ft wl
 JOIN employees e ON e.id = wl.employee_id
 WHERE wl.id=$1 AND e.company_id=$2 AND wl.deleted_at IS NULL LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT wl.* FROM worklog_ft wl
+JOIN employees e ON e.id = wl.employee_id
+WHERE wl.id=$1 AND e.company_id=$2 AND e.branch_id=$3 AND wl.deleted_at IS NULL LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var rec FTRecord
-	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -152,19 +160,25 @@ func (r FTRepository) Insert(ctx context.Context, tenant contextx.TenantInfo, re
 	db := r.dbCtx(ctx)
 	// Validate employee belongs to company
 	var count int
-	if err := db.GetContext(ctx, &count, "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2", rec.EmployeeID, tenant.CompanyID); err != nil {
+	q := "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2"
+	args := []interface{}{rec.EmployeeID, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q += " AND branch_id=$3"
+		args = append(args, tenant.BranchID)
+	}
+	if err := db.GetContext(ctx, &count, q, args...); err != nil {
 		return nil, err
 	}
 	if count == 0 {
 		return nil, fmt.Errorf("employee not found in this company")
 	}
 
-	const q = `
+	const insertQ = `
 INSERT INTO worklog_ft (employee_id, entry_type, work_date, quantity, status, created_by, updated_by)
 VALUES ($1,$2,$3,$4,$5,$6,$7)
 RETURNING *`
 	var out FTRecord
-	if err := db.GetContext(ctx, &out, q,
+	if err := db.GetContext(ctx, &out, insertQ,
 		rec.EmployeeID, rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.CreatedBy, rec.UpdatedBy); err != nil {
 		return nil, err
 	}
@@ -174,15 +188,24 @@ RETURNING *`
 func (r FTRepository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, rec FTRecord) (*FTRecord, error) {
 	db := r.dbCtx(ctx)
 	// Ensure worklog belongs to an employee of this company
-	const q = `
+	q := `
 UPDATE worklog_ft
 SET entry_type=$1, work_date=$2, quantity=$3, status=$4, updated_by=$5
 FROM employees e
 WHERE worklog_ft.id=$6 AND worklog_ft.employee_id = e.id AND e.company_id=$7 AND worklog_ft.deleted_at IS NULL
 RETURNING worklog_ft.*`
+	args := []interface{}{rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.UpdatedBy, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_ft
+SET entry_type=$1, work_date=$2, quantity=$3, status=$4, updated_by=$5
+FROM employees e
+WHERE worklog_ft.id=$6 AND worklog_ft.employee_id = e.id AND e.company_id=$7 AND e.branch_id=$8 AND worklog_ft.deleted_at IS NULL
+RETURNING worklog_ft.*`
+		args = append(args, tenant.BranchID)
+	}
 	var out FTRecord
-	if err := db.GetContext(ctx, &out, q,
-		rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.UpdatedBy, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -190,12 +213,21 @@ RETURNING worklog_ft.*`
 
 func (r FTRepository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE worklog_ft
 SET deleted_at = now(), deleted_by=$1
 FROM employees e
 WHERE worklog_ft.id=$2 AND worklog_ft.employee_id = e.id AND e.company_id=$3 AND worklog_ft.deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id, tenant.CompanyID)
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_ft
+SET deleted_at = now(), deleted_by=$1
+FROM employees e
+WHERE worklog_ft.id=$2 AND worklog_ft.employee_id = e.id AND e.company_id=$3 AND e.branch_id=$4 AND worklog_ft.deleted_at IS NULL`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

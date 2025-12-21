@@ -61,7 +61,11 @@ type UpdateRequest struct {
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
-	itemDetail, err := cmd.Repo.GetItemDetail(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+	itemDetail, err := cmd.Repo.GetItemDetail(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll item not found")
@@ -71,7 +75,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 	item := &itemDetail.Item
 	// ensure parent run pending
-	run, err := cmd.Repo.Get(ctx, item.RunID)
+	run, err := cmd.Repo.Get(ctx, tenant, item.RunID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to load payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to load run for item")
@@ -192,7 +196,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	var updated *repository.Item
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		updated, err = cmd.Repo.UpdateItem(ctxTx, cmd.ID, cmd.ActorID, fields)
+		updated, err = cmd.Repo.UpdateItem(ctxTx, tenant, cmd.ID, cmd.ActorID, fields)
 		return err
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to update payroll item", zap.Error(err))

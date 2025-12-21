@@ -9,6 +9,7 @@ import (
 
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -41,7 +42,12 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		return nil, errs.BadRequest("employeeId is required")
 	}
 
-	rows, err := h.repo.PendingInstallmentsByEmployee(ctx, q.EmployeeID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	rows, err := h.repo.PendingInstallmentsByEmployee(ctx, tenant, q.EmployeeID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to load pending installments", zap.Error(err))
 		return nil, errs.Internal("failed to load pending installments")

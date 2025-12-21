@@ -232,10 +232,12 @@ func (r Repository) GetIDDocumentTypeCode(ctx context.Context, id uuid.UUID) (st
 
 func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT 
   e.id,
   e.employee_number,
+  e.company_id,
+  e.branch_id,
   e.title_id,
   e.first_name,
   e.last_name,
@@ -276,8 +278,14 @@ FROM employees e
 LEFT JOIN person_title pt ON pt.id = e.title_id
 WHERE e.id = $1 AND e.company_id = $2 AND e.deleted_at IS NULL
 LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = strings.Replace(q, "WHERE e.id = $1 AND e.company_id = $2 AND e.deleted_at IS NULL",
+			"WHERE e.id = $1 AND e.company_id = $2 AND e.branch_id = $3 AND e.deleted_at IS NULL", 1)
+		args = append(args, tenant.BranchID)
+	}
 	var rec DetailRecord
-	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -410,7 +418,7 @@ INSERT INTO employees (
 
 func (r Repository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE employees SET
   employee_number=:employee_number,
   title_id=:title_id,
@@ -448,6 +456,13 @@ UPDATE employees SET
   updated_by=:updated_by
 WHERE id=:id AND company_id=:company_id AND deleted_at IS NULL
 RETURNING *`
+	if tenant.HasBranchID() {
+		q = strings.Replace(q,
+			"WHERE id=:id AND company_id=:company_id AND deleted_at IS NULL",
+			"WHERE id=:id AND company_id=:company_id AND branch_id=:branch_id AND deleted_at IS NULL",
+			1,
+		)
+	}
 
 	stmt, err := db.PrepareNamedContext(ctx, q)
 	if err != nil {
@@ -493,6 +508,9 @@ RETURNING *`
 		"allow_attendance_bonus_noleave": payload.AllowAttendanceBonusNoLeave,
 		"updated_by":                     actor,
 	}
+	if tenant.HasBranchID() {
+		params["branch_id"] = tenant.BranchID
+	}
 
 	var rec DetailRecord
 	if err := stmt.GetContext(ctx, &rec, params); err != nil {
@@ -503,8 +521,13 @@ RETURNING *`
 
 func (r Repository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND company_id = $3 AND deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id, tenant.CompanyID)
+	q := `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND company_id = $3 AND deleted_at IS NULL`
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND company_id = $3 AND branch_id = $4 AND deleted_at IS NULL`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

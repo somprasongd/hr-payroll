@@ -180,6 +180,21 @@ func parseDateString(s string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("cannot parse date: %s", s)
 }
 
+func (r Repository) fetchEmployeeBranch(ctx context.Context, tenant contextx.TenantInfo, employeeID uuid.UUID) (uuid.UUID, error) {
+	db := r.dbCtx(ctx)
+	q := "SELECT branch_id FROM employees WHERE id=$1 AND company_id=$2"
+	args := []interface{}{employeeID, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q += " AND branch_id=$3"
+		args = append(args, tenant.BranchID)
+	}
+	var branchID uuid.UUID
+	if err := db.GetContext(ctx, &branchID, q, args...); err != nil {
+		return uuid.Nil, err
+	}
+	return branchID, nil
+}
+
 func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, empID *uuid.UUID, txnType, status string, startDate, endDate *time.Time) (ListResult, error) {
 	offset := (page - 1) * limit
 	var where []string
@@ -262,110 +277,168 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 
 func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT t.*,
   (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
 JOIN employees e ON e.id = t.employee_id
 WHERE t.id=$1 AND e.company_id=$2 AND t.deleted_at IS NULL LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT t.*,
+  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+FROM debt_txn t
+JOIN employees e ON e.id = t.employee_id
+WHERE t.id=$1 AND e.company_id=$2 AND e.branch_id=$3 AND t.deleted_at IS NULL LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, id, tenant.CompanyID); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
-func (r Repository) GetInstallments(ctx context.Context, parent uuid.UUID) ([]Record, error) {
+func (r Repository) GetInstallments(ctx context.Context, tenant contextx.TenantInfo, parent uuid.UUID) ([]Record, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT t.*,
   (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
-WHERE t.parent_id=$1 AND t.deleted_at IS NULL
+WHERE t.parent_id=$1 AND t.company_id=$2 AND t.deleted_at IS NULL
 ORDER BY t.payroll_month_date`
+	args := []interface{}{parent, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT t.*,
+  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+FROM debt_txn t
+WHERE t.parent_id=$1 AND t.company_id=$2 AND t.branch_id=$3 AND t.deleted_at IS NULL
+ORDER BY t.payroll_month_date`
+		args = append(args, tenant.BranchID)
+	}
 	var rows []Record
-	if err := db.SelectContext(ctx, &rows, q, parent); err != nil {
+	if err := db.SelectContext(ctx, &rows, q, args...); err != nil {
 		return nil, err
 	}
 	return rows, nil
 }
 
-func (r Repository) PendingInstallmentsByEmployee(ctx context.Context, emp uuid.UUID) ([]Record, error) {
+func (r Repository) PendingInstallmentsByEmployee(ctx context.Context, tenant contextx.TenantInfo, emp uuid.UUID) ([]Record, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT t.*,
   (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
 WHERE t.employee_id=$1
   AND t.txn_type='installment'
   AND t.status='pending'
+  AND t.company_id=$2
   AND t.deleted_at IS NULL
 ORDER BY t.payroll_month_date`
+	args := []interface{}{emp, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT t.*,
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+FROM debt_txn t
+WHERE t.employee_id=$1
+  AND t.txn_type='installment'
+  AND t.status='pending'
+  AND t.company_id=$2
+  AND t.branch_id=$3
+  AND t.deleted_at IS NULL
+ORDER BY t.payroll_month_date`
+		args = append(args, tenant.BranchID)
+	}
 	var rows []Record
-	if err := db.SelectContext(ctx, &rows, q, emp); err != nil {
+	if err := db.SelectContext(ctx, &rows, q, args...); err != nil {
 		return nil, err
 	}
 	return rows, nil
 }
 
-func (r Repository) InsertParent(ctx context.Context, rec Record, actor uuid.UUID) (*Record, error) {
+func (r Repository) InsertParent(ctx context.Context, tenant contextx.TenantInfo, rec Record, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
+	branchID, err := r.fetchEmployeeBranch(ctx, tenant, rec.EmployeeID)
+	if err != nil {
+		return nil, err
+	}
 	const q = `
 INSERT INTO debt_txn (
-  employee_id, txn_date, txn_type, other_desc, amount, reason, status, created_by, updated_by
-) VALUES ($1,$2,$3,$4,$5,$6,'pending',$7,$7)
+  employee_id, company_id, branch_id, txn_date, txn_type, other_desc, amount, reason, status, created_by, updated_by
+) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending',$9,$9)
 RETURNING *`
 	var out Record
 	if err := db.GetContext(ctx, &out, q,
-		rec.EmployeeID, rec.TxnDate, rec.TxnType, rec.OtherDesc, rec.Amount, rec.Reason, actor); err != nil {
+		rec.EmployeeID, tenant.CompanyID, branchID, rec.TxnDate, rec.TxnType, rec.OtherDesc, rec.Amount, rec.Reason, actor); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (r Repository) InsertInstallments(ctx context.Context, parent uuid.UUID, employeeID uuid.UUID, rows []Record, actor uuid.UUID) error {
+func (r Repository) InsertInstallments(ctx context.Context, tenant contextx.TenantInfo, parent uuid.UUID, employeeID uuid.UUID, rows []Record, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
+	branchID, err := r.fetchEmployeeBranch(ctx, tenant, employeeID)
+	if err != nil {
+		return err
+	}
 	const q = `
 INSERT INTO debt_txn (
-  employee_id, txn_date, txn_type, amount, reason, payroll_month_date, status, parent_id, created_by, updated_by
-) VALUES ($1,$2,'installment',$3,$4,$5,'pending',$6,$7,$7)`
+  employee_id, company_id, branch_id, txn_date, txn_type, amount, reason, payroll_month_date, status, parent_id, created_by, updated_by
+) VALUES ($1,$2,$3,$4,'installment',$5,$6,$7,'pending',$8,$9,$9)`
 	for _, rec := range rows {
 		if _, err := db.ExecContext(ctx, q,
-			employeeID, rec.TxnDate, rec.Amount, rec.Reason, rec.PayrollMonth, parent, actor); err != nil {
+			employeeID, tenant.CompanyID, branchID, rec.TxnDate, rec.Amount, rec.Reason, rec.PayrollMonth, parent, actor); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (r Repository) Approve(ctx context.Context, id uuid.UUID, actor uuid.UUID) (*Record, error) {
+func (r Repository) Approve(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE debt_txn SET status='approved', updated_by=$1 WHERE id=$2 AND deleted_at IS NULL AND status='pending' RETURNING *`
+	q := `UPDATE debt_txn SET status='approved', updated_by=$1 WHERE id=$2 AND company_id=$3 AND deleted_at IS NULL AND status='pending' RETURNING *`
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `UPDATE debt_txn SET status='approved', updated_by=$1 WHERE id=$2 AND company_id=$3 AND branch_id=$4 AND deleted_at IS NULL AND status='pending' RETURNING *`
+		args = append(args, tenant.BranchID)
+	}
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, actor, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
-func (r Repository) InsertRepayment(ctx context.Context, rec Record, actor uuid.UUID) (*Record, error) {
+func (r Repository) InsertRepayment(ctx context.Context, tenant contextx.TenantInfo, rec Record, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
+	branchID, err := r.fetchEmployeeBranch(ctx, tenant, rec.EmployeeID)
+	if err != nil {
+		return nil, err
+	}
 	const q = `
 INSERT INTO debt_txn (
-  employee_id, txn_date, txn_type, amount, reason, status, created_by, updated_by
-) VALUES ($1,$2,'repayment',$3,$4,'approved',$5,$5)
+  employee_id, company_id, branch_id, txn_date, txn_type, amount, reason, status, created_by, updated_by
+) VALUES ($1,$2,$3,$4,'repayment',$5,$6,'approved',$7,$7)
 RETURNING *`
 	var out Record
-	if err := db.GetContext(ctx, &out, q, rec.EmployeeID, rec.TxnDate, rec.Amount, rec.Reason, actor); err != nil {
+	if err := db.GetContext(ctx, &out, q, rec.EmployeeID, tenant.CompanyID, branchID, rec.TxnDate, rec.Amount, rec.Reason, actor); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r Repository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE debt_txn SET deleted_at = now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL AND status='pending'`
-	res, err := db.ExecContext(ctx, q, actor, id)
+	q := `UPDATE debt_txn SET deleted_at = now(), deleted_by=$1 WHERE id=$2 AND company_id=$3 AND deleted_at IS NULL AND status='pending'`
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `UPDATE debt_txn SET deleted_at = now(), deleted_by=$1 WHERE id=$2 AND company_id=$3 AND branch_id=$4 AND deleted_at IS NULL AND status='pending'`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

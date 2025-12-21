@@ -152,8 +152,6 @@ SELECT id, payroll_month_date, period_start_date, pay_date, status,
          SELECT bc.bonus_year
          FROM bonus_cycle bc
          WHERE bc.payroll_month_date = payroll_run.payroll_month_date
-           AND bc.company_id = payroll_run.company_id
-           AND bc.branch_id = payroll_run.branch_id
            AND bc.deleted_at IS NULL
          ORDER BY CASE bc.status WHEN 'approved' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END,
                   bc.created_at DESC

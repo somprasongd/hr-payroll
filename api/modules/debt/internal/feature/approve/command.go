@@ -69,7 +69,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var updated *repository.Record
 	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		updated, err = h.repo.Approve(ctxTx, cmd.ID, cmd.Actor)
+		updated, err = h.repo.Approve(ctxTx, tenant, cmd.ID, cmd.Actor)
 		return err
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
