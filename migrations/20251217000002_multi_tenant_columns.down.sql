@@ -86,6 +86,7 @@ DROP FUNCTION IF EXISTS tenant_company_matches(UUID);
 DROP INDEX IF EXISTS employees_company_idx;
 DROP INDEX IF EXISTS employees_branch_idx;
 DROP INDEX IF EXISTS employees_tenant_idx;
+DROP INDEX IF EXISTS employees_company_empno_active_uk;
 DROP INDEX IF EXISTS department_company_idx;
 DROP INDEX IF EXISTS department_company_code_active_uk;
 DROP INDEX IF EXISTS employee_position_company_idx;
@@ -112,6 +113,9 @@ DROP INDEX IF EXISTS employee_document_type_company_idx;
 DROP INDEX IF EXISTS employee_document_type_code_uk;
 
 -- Restore original unique constraints
+CREATE UNIQUE INDEX IF NOT EXISTS employees_empno_active_uk
+  ON employees (lower(employee_number))
+  WHERE employment_end_date IS NULL AND deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS department_code_active_uk ON department (lower(code)) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS employee_position_code_active_uk ON employee_position (lower(code)) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS payroll_run_month_uk ON payroll_run (payroll_month_date) WHERE deleted_at IS NULL;
