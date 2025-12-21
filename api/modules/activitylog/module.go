@@ -3,6 +3,8 @@ package activitylog
 import (
 	"hrms/modules/activitylog/internal/feature/filteroptions"
 	"hrms/modules/activitylog/internal/feature/list"
+	"hrms/modules/activitylog/internal/feature/superadminfilteroptions"
+	"hrms/modules/activitylog/internal/feature/superadminlist"
 	"hrms/modules/activitylog/internal/repository"
 	"hrms/modules/activitylog/internal/subscriber"
 	"hrms/shared/common/eventbus"
@@ -38,6 +40,10 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler())
 	mediator.Register[*filteroptions.Query, *filteroptions.Response](filteroptions.NewHandler())
 
+	// Super admin handlers
+	mediator.Register[*superadminlist.Query, *superadminlist.Response](superadminlist.NewHandler())
+	mediator.Register[*superadminfilteroptions.Query, *superadminfilteroptions.Response](superadminfilteroptions.NewHandler())
+
 	// Subscribe to events
 	sub := subscriber.NewLogSubscriber(m.repo)
 	eb.Subscribe("LogEvent", sub.HandleLogActivity)
@@ -50,4 +56,9 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	g := r.Group("/admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
 	list.NewEndpoint(g, m.repo)
 	filteroptions.NewEndpoint(g, m.repo)
+
+	// Super admin only (no TenantMiddleware - for system-level logs)
+	sa := r.Group("/super-admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("superadmin"))
+	superadminlist.NewEndpoint(sa, m.repo)
+	superadminfilteroptions.NewEndpoint(sa, m.repo)
 }

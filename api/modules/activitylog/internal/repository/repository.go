@@ -172,3 +172,111 @@ func (r *Repository) GetDistinctFilters(ctx context.Context, tenant contextx.Ten
 
 	return &FilterOptions{Actions: actions, Entities: entities}, nil
 }
+
+// ListSystemLogs returns activity logs where company_id IS NULL AND branch_id IS NULL (system-level logs)
+func (r *Repository) ListSystemLogs(ctx context.Context, filter ListFilter, page, limit int) ([]entity.ActivityLog, int, error) {
+	db := r.dbCtx(ctx)
+	offset := (page - 1) * limit
+
+	var where []string
+	var args []interface{}
+
+	// Only system-level logs (no company, no branch)
+	where = append(where, "l.company_id IS NULL")
+	where = append(where, "l.branch_id IS NULL")
+
+	if filter.Action != "" {
+		args = append(args, filter.Action)
+		where = append(where, fmt.Sprintf("l.action = $%d", len(args)))
+	}
+	if filter.Entity != "" {
+		args = append(args, filter.Entity)
+		where = append(where, fmt.Sprintf("l.entity = $%d", len(args)))
+	}
+
+	if filter.UserName != "" {
+		args = append(args, "%"+filter.UserName+"%")
+		where = append(where, fmt.Sprintf("u.username ILIKE $%d", len(args)))
+	}
+
+	if filter.FromDate != "" {
+		args = append(args, filter.FromDate)
+		where = append(where, fmt.Sprintf("l.created_at >= $%d", len(args)))
+	}
+	if filter.ToDate != "" {
+		args = append(args, filter.ToDate+" 23:59:59")
+		where = append(where, fmt.Sprintf("l.created_at <= $%d", len(args)))
+	}
+
+	whereClause := ""
+	if len(where) > 0 {
+		whereClause = "WHERE " + strings.Join(where, " AND ")
+	}
+
+	totalQuery := fmt.Sprintf(`
+		SELECT COUNT(*) 
+		FROM activity_logs l 
+		LEFT JOIN users u ON l.user_id = u.id 
+		%s
+	`, whereClause)
+
+	var total int
+	if err := db.GetContext(ctx, &total, totalQuery, args...); err != nil {
+		return nil, 0, err
+	}
+
+	args = append(args, limit, offset)
+	query := fmt.Sprintf(`
+		SELECT
+			l.id,
+			l.user_id,
+			l.action,
+			l.entity,
+			l.entity_id,
+			COALESCE(l.details, '{}'::jsonb) AS details,
+			l.created_at,
+			COALESCE(u.username, 'Unknown') as user_name
+		FROM activity_logs l
+		LEFT JOIN users u ON l.user_id = u.id
+		%s
+		ORDER BY l.created_at DESC
+		LIMIT $%d OFFSET $%d
+	`, whereClause, len(args)-1, len(args))
+
+	var logs []entity.ActivityLog
+	if err := db.SelectContext(ctx, &logs, query, args...); err != nil {
+		return nil, 0, err
+	}
+
+	if logs == nil {
+		logs = []entity.ActivityLog{}
+	}
+
+	return logs, total, nil
+}
+
+// GetSystemDistinctFilters returns filter options for system-level logs (company_id IS NULL AND branch_id IS NULL)
+func (r *Repository) GetSystemDistinctFilters(ctx context.Context) (*FilterOptions, error) {
+	db := r.dbCtx(ctx)
+
+	var actions []string
+	actionsQuery := `SELECT DISTINCT action FROM activity_logs WHERE company_id IS NULL AND branch_id IS NULL ORDER BY action`
+	if err := db.SelectContext(ctx, &actions, actionsQuery); err != nil {
+		return nil, err
+	}
+
+	var entities []string
+	entitiesQuery := `SELECT DISTINCT entity FROM activity_logs WHERE company_id IS NULL AND branch_id IS NULL ORDER BY entity`
+	if err := db.SelectContext(ctx, &entities, entitiesQuery); err != nil {
+		return nil, err
+	}
+
+	if actions == nil {
+		actions = []string{}
+	}
+	if entities == nil {
+		entities = []string{}
+	}
+
+	return &FilterOptions{Actions: actions, Entities: entities}, nil
+}
