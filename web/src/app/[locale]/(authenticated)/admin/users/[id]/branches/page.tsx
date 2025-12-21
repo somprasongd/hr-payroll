@@ -7,7 +7,7 @@ import { ArrowLeft, Save, Building2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import { 
   getBranches, 
   getUserBranches, 
@@ -26,6 +26,7 @@ export default function UserBranchesPage() {
   const t = useTranslations('UserBranches');
   const tCommon = useTranslations('Common');
   const { toast } = useToast();
+  const router = useRouter();
 
   const [username, setUsername] = useState<string>('');
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
@@ -134,6 +135,9 @@ export default function UserBranchesPage() {
         title: tCommon('success'), 
         description: t('saveSuccess') 
       });
+      
+      // Redirect back to users list
+      router.push('/admin/users');
     } catch (error) {
       console.error('Failed to save:', error);
       toast({ 
@@ -188,16 +192,10 @@ export default function UserBranchesPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={selectedBranchIds.size === allBranches.length ? handleReset : handleSelectAll}
+                onClick={handleSelectAll}
+                disabled={selectedBranchIds.size === allBranches.length}
               >
-                {selectedBranchIds.size === allBranches.length ? (
-                  <>
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    {tCommon('reset')}
-                  </>
-                ) : (
-                  t('selectAll')
-                )}
+                {t('selectAll')}
               </Button>
             </div>
           </div>
@@ -236,10 +234,13 @@ export default function UserBranchesPage() {
       </Card>
 
       <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={handleReset}>
+          <RotateCcw className="h-4 w-4 mr-2" />
+          {tCommon('reset')}
+        </Button>
         <Button variant="outline" asChild>
           <Link href="/admin/users">{tCommon('cancel')}</Link>
         </Button>
-
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
           {saving ? tCommon('saving') : tCommon('save')}

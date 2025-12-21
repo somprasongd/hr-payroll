@@ -100,7 +100,12 @@ interface ConfigFormData {
 
 export default function SettingsPage() {
   const t = useTranslations('Settings');
-  const firstFieldRef = useRef<HTMLInputElement>(null);
+  // Refs for first input of each tab
+  const ratesFirstInputRef = useRef<HTMLInputElement>(null);
+  const bonusesFirstInputRef = useRef<HTMLInputElement>(null);
+  const utilitiesFirstInputRef = useRef<HTMLInputElement>(null);
+  const socialFirstInputRef = useRef<HTMLInputElement>(null);
+  const taxFirstInputRef = useRef<HTMLInputElement>(null);
   const [activeConfig, setActiveConfig] = useState<PayrollConfig | null>(null);
   const [configHistory, setConfigHistory] = useState<PayrollConfig[]>([]);
   const [formData, setFormData] = useState<ConfigFormData>({
@@ -353,12 +358,30 @@ export default function SettingsPage() {
     fetchConfigHistory();
   }, []);
 
-  // Auto-focus first field when page loads
+  // Auto-focus first input when tab changes
   useEffect(() => {
-    if (firstFieldRef.current) {
-      firstFieldRef.current.focus();
-    }
-  }, []);
+    // Use setTimeout to ensure the tab content is rendered
+    const timeoutId = setTimeout(() => {
+      switch (activeTab) {
+        case 'rates':
+          ratesFirstInputRef.current?.focus();
+          break;
+        case 'bonuses':
+          bonusesFirstInputRef.current?.focus();
+          break;
+        case 'utilities':
+          utilitiesFirstInputRef.current?.focus();
+          break;
+        case 'social':
+          socialFirstInputRef.current?.focus();
+          break;
+        case 'tax':
+          taxFirstInputRef.current?.focus();
+          break;
+      }
+    }, 50);
+    return () => clearTimeout(timeoutId);
+  }, [activeTab]);
 
   if (loading && !activeConfig) {
     return (
@@ -483,7 +506,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="hourlyRate">{t('hourlyRate')}</Label>
                 <Input
-                  ref={firstFieldRef}
+                  ref={ratesFirstInputRef}
                   id="hourlyRate"
                   type="number"
                   step="0.01"
@@ -535,6 +558,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="attendanceBonusNoLate">{t('bonusNoLate')}</Label>
                 <Input
+                  ref={bonusesFirstInputRef}
                   id="attendanceBonusNoLate"
                   type="number"
                   step="0.01"
@@ -588,6 +612,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="waterRatePerUnit">{t('waterRate')}</Label>
                 <Input
+                  ref={utilitiesFirstInputRef}
                   id="waterRatePerUnit"
                   type="number"
                   step="0.01"
@@ -642,6 +667,7 @@ export default function SettingsPage() {
                 <Label htmlFor="socialSecurityRateEmployee">{t('employeeRate')}</Label>
                 <div className="relative">
                   <Input
+                    ref={socialFirstInputRef}
                     id="socialSecurityRateEmployee"
                     type="number"
                     step="0.01"
@@ -723,6 +749,7 @@ export default function SettingsPage() {
                     <Label htmlFor="taxStandardExpenseRate">{t('taxStandardExpenseRate')}</Label>
                     <div className="relative">
                       <Input
+                        ref={taxFirstInputRef}
                         id="taxStandardExpenseRate"
                         type="number"
                         step="1"
