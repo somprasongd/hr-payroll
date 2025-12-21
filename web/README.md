@@ -108,17 +108,21 @@ npm run test:e2e:report   # View HTML report
 
 ## 🛠️ Tech Stack
 
-| Category      | Technology            |
-| ------------- | --------------------- |
-| Framework     | Next.js 16            |
-| React         | React 19              |
-| Styling       | TailwindCSS 4         |
-| State         | Zustand               |
-| Data Fetching | TanStack Query        |
-| Forms         | React Hook Form + Zod |
-| UI Components | Radix UI + shadcn/ui  |
-| i18n          | next-intl             |
-| Testing       | Playwright            |
+| Category      | Technology                       |
+| ------------- | -------------------------------- |
+| Framework     | Next.js 16 (App Router)          |
+| React         | React 19                         |
+| Language      | TypeScript                       |
+| Styling       | TailwindCSS 4                    |
+| UI Components | Radix UI + shadcn/ui             |
+| State         | Zustand                          |
+| Data Fetching | TanStack Query (v5) & Table (v8) |
+| Forms         | React Hook Form + Zod            |
+| i18n          | next-intl (th, en, my)           |
+| HTTP Client   | Axios                            |
+| Charts        | Recharts                         |
+| Testing       | Playwright (E2E)                 |
+| PWA           | @ducanh2912/next-pwa             |
 
 ## 📦 Available Scripts
 

@@ -114,6 +114,14 @@ db-seed seed:
 db-seed-clear:
 	psql "$(DB_DSN)" -f migrations/dev-seed/00_clean_data.sql
 
+.PHONY: test-e2e
+test-e2e:
+	cd web && npx playwright test
+
+.PHONY: test-e2e-ui
+test-e2e-ui:
+	cd web && npx playwright test --ui
+
 .PHONY: doc
 # Install swag by using: go install github.com/swaggo/swag/v2/cmd/swag@latest
 doc:
