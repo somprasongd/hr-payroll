@@ -473,7 +473,7 @@ export function EmployeeForm({
       const currentSsoDeclaredWage = form.getValues("ssoDeclaredWage") || 0;
       if (ssoContribute && isFullTime && (!isEditing || employeeTypeChanged || ssoJustEnabled) && currentSsoDeclaredWage === 0) {
         const currentBasePayAmount = form.getValues("basePayAmount");
-        const wageCap = payrollConfig.socialSecurityWageCap || 15000;
+        const wageCap = payrollConfig.socialSecurityWageCap || 17500;
         const wage = Math.min(currentBasePayAmount || 0, wageCap);
         form.setValue("ssoDeclaredWage", wage);
       }

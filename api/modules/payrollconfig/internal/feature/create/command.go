@@ -179,7 +179,7 @@ const (
 	defaultTaxStandardExpenseCap      = 100000.00
 	defaultTaxPersonalAllowanceAmount = 60000.00
 	defaultWithholdingTaxRateService  = 0.03
-	defaultSocialSecurityWageCap      = 15000.00
+	defaultSocialSecurityWageCap      = 17500.00
 	defaultWorkHoursPerDay            = 8.0
 	defaultLateRatePerMinute          = 5.0
 	defaultLateGraceMinutes           = 15

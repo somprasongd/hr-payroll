@@ -124,7 +124,7 @@ export default function SettingsPage() {
     internetFeeMonthly: 0,
     socialSecurityRateEmployee: 5, // Default 5%
     socialSecurityRateEmployer: 5, // Default 5%
-    socialSecurityWageCap: 15000,
+    socialSecurityWageCap: 17500,
     // Tax defaults for Section 40(1)
     taxApplyStandardExpense: true,
     taxStandardExpenseRate: 50, // 50%
@@ -184,7 +184,7 @@ export default function SettingsPage() {
         internetFeeMonthly: data.internetFeeMonthly || 0,
         socialSecurityRateEmployee: (data.socialSecurityRateEmployee || 0.05) * 100, // Convert to %
         socialSecurityRateEmployer: (data.socialSecurityRateEmployer || 0.05) * 100, // Convert to %
-        socialSecurityWageCap: data.socialSecurityWageCap || 15000,
+        socialSecurityWageCap: data.socialSecurityWageCap || 17500,
         // Tax config for Section 40(1)
         taxApplyStandardExpense: data.taxApplyStandardExpense ?? true,
         taxStandardExpenseRate: (data.taxStandardExpenseRate ?? 0.5) * 100, // Convert to %
@@ -785,7 +785,7 @@ export default function SettingsPage() {
                   value={formData.socialSecurityWageCap}
                   onChange={(e) => handleInputChange('socialSecurityWageCap', parseFloat(e.target.value) || 0)}
                   onFocus={handleInputFocus}
-                  placeholder="15000.00"
+                  placeholder="17500.00"
                 />
                 <p className="text-xs text-gray-500">{t('ssoWageCapHint')}</p>
               </div>
