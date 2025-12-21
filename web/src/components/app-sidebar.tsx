@@ -14,7 +14,8 @@ import {
   Settings2,
   Banknote,
   Building2,
-  FileText
+  FileText,
+  ClipboardList
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/routing"
@@ -305,6 +306,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Link href="/super-admin/document-types">
                     <FileText />
                     <span>{tNav('documentTypes')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/super-admin/activity-logs')} tooltip="Activity Logs">
+                  <Link href="/super-admin/activity-logs">
+                    <ClipboardList />
+                    <span>{tMenu('activityLogs')}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
