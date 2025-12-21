@@ -825,6 +825,8 @@
   "SalaryRaise": {
     "title": "Salary Raise Management",
     "description": "Manage annual salary adjustments and raise cycles",
+    "noData": "No cycles found",
+    "noItemsFound": "No items found",
     "listTitle": "Salary Raise Cycles",
     "createTitle": "Create New Cycle",
     "detailTitle": "Cycle Details",

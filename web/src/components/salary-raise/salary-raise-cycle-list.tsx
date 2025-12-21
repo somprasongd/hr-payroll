@@ -256,7 +256,7 @@ export function SalaryRaiseCycleList() {
             ) : (cycles?.length || 0) === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  No cycles found
+                  {t('noData')}
                 </TableCell>
               </TableRow>
             ) : (

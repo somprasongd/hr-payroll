@@ -9,7 +9,7 @@
     "rememberMe": "จำฉันไว้ในระบบ",
     "login": "เข้าสู่ระบบ",
     "loggingIn": "กำลังเข้าสู่ระบบ...",
-    "copyright": "© 2024 Your Company. All Rights Reserved",
+    "copyright": "© 2024 บริษัทของคุณ สงวนลิขสิทธิ์",
     "validation": {
       "usernameRequired": "กรุณากรอกชื่อผู้ใช้งาน",
       "usernameLength": "ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 3 ตัวอักษร",
@@ -96,11 +96,11 @@
     "worklogFT": "พนักงานประจำ",
     "worklogPT": "พาร์ทไทม์",
     "payoutPT": "จ่ายล่วงหน้า (พาร์ทไทม์)",
-    "leaveManagement": "การลันเดียว",
-    "payrollExpenses": "ยอดเงินเดือน & ค่าใช้",
+    "leaveManagement": "จัดการวันลา",
+    "payrollExpenses": "เงินเดือนและค่าใช้จ่าย",
     "reports": "รายงาน",
-    "humanResources": "โมนีส",
-    "systemManagement": "ธุรกรรมการจัน",
+    "humanResources": "ทรัพยากรบุคคล",
+    "systemManagement": "การจัดการระบบ",
     "settings": "การตั้งค่า",
     "users": "การจัดการผู้ใช้งาน",
     "salaryRaise": "ปรับเงินเดือน",
@@ -820,6 +820,8 @@
   "SalaryRaise": {
     "title": "การจัดการปรับเงินเดือน",
     "description": "จัดการรอบการปรับเงินเดือนและกำหนดอัตราการปรับเงินเดือนพนักงาน",
+    "noData": "ไม่พบข้อมูลรอบการปรับเงินเดือน",
+    "noItemsFound": "ไม่พบรายการปรับเงินเดือน",
     "listTitle": "การปรับเงินเดือน",
     "createTitle": "สร้างรอบใหม่",
     "detailTitle": "รายละเอียดรอบ",
@@ -1439,7 +1441,7 @@
     "confirm": "ยืนยัน"
   },
   "SuperAdmin": {
-    "title": "Super Admin",
+    "title": "ผู้ดูแลระบบสูงสุด",
     "companies": {
       "title": "จัดการบริษัท",
       "description": "ดูและจัดการบริษัทลูกค้าทั้งหมดในระบบ",
