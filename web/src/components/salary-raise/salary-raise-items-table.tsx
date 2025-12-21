@@ -58,7 +58,7 @@ export function SalaryRaiseItemsTable({ items, cycleStatus, onRefresh }: SalaryR
             {items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={isEditable ? 9 : 8} className="h-24 text-center">
-                  No items found
+                  {t('noItemsFound')}
                 </TableCell>
               </TableRow>
             ) : (
