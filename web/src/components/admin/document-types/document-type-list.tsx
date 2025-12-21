@@ -169,7 +169,7 @@ export function DocumentTypeList({ refreshKey = 0 }: DocumentTypeListProps) {
   return (
     <>
       <GenericDataTable
-        data={data}
+        data={sortedData}
         columns={columns}
         loading={isLoading}
         emptyStateText={t('noData')}

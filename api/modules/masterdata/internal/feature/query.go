@@ -5,10 +5,10 @@ import (
 
 	"hrms/modules/masterdata/internal/repository"
 	"hrms/shared/common/contextx"
+	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -38,10 +38,11 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	resp := &Response{}
 
 	// Get company ID from tenant context
-	var companyID uuid.UUID
-	if tenant, ok := contextx.TenantFromContext(ctx); ok {
-		companyID = tenant.CompanyID
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
 	}
+	companyID := tenant.CompanyID
 
 	loadAll := q.Only == ""
 	if loadAll || q.Only == "person_titles" {
