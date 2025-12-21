@@ -242,7 +242,11 @@ func (r Repository) Create(ctx context.Context, payload UpsertPayload, actor uui
 	if err != nil {
 		return nil, err
 	}
+	return r.CreateDirect(ctx, companyID, payload, actor)
+}
 
+// CreateDirect creates an org profile with an explicit companyID (used when creating a new company)
+func (r Repository) CreateDirect(ctx context.Context, companyID uuid.UUID, payload UpsertPayload, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 WITH next_version AS (

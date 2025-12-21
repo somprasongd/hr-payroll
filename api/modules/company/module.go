@@ -43,7 +43,9 @@ func (m *Module) Init(_ eventbus.EventBus) error {
 	// Register contract handlers for superadmin module to use via mediator
 	mediator.Register[*contracts.ListAllCompaniesQuery, *contracts.ListAllCompaniesResponse](listall.NewHandler(m.repo))
 	mediator.Register[*contracts.GetCompanyByIDQuery, *contracts.GetCompanyByIDResponse](getbyid.NewHandler(m.repo))
-	mediator.Register[*contracts.CreateCompanyCommand, *contracts.CreateCompanyResponse](createcompany.NewHandler(m.repo))
+	mediator.Register[*contracts.CreateCompanyCommand, *contracts.CreateCompanyResponse](
+		createcompany.NewHandler(m.repo, m.ctx.Transactor),
+	)
 	mediator.Register[*contracts.UpdateCompanyByIDCommand, *contracts.UpdateCompanyByIDResponse](updatebyid.NewHandler(m.repo))
 	mediator.Register[*contracts.CreateDefaultBranchCommand, *contracts.CreateDefaultBranchResponse](createdefaultbranch.NewHandler(m.repo))
 

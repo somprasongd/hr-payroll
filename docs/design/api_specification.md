@@ -47,6 +47,18 @@ Content-Type: application/json
 - Record ที่เป็น child → copy จาก parent table
 - Record อื่นๆ → ใช้ DEFAULT company/branch
 
+**Company Creation Auto-Setup:**
+
+เมื่อสร้าง Company ใหม่ผ่าน Super Admin API ระบบจะสร้าง records ต่อไปนี้อัตโนมัติ:
+
+| Record                | Description           | Default Values                                                     |
+| --------------------- | --------------------- | ------------------------------------------------------------------ |
+| `branches`            | สาขาหลัก (Default HQ) | code: 00000, name: สำนักงานใหญ่, is_default: true                  |
+| `payroll_org_profile` | ข้อมูลองค์กร          | company_name: ใช้ชื่อบริษัท, start_date: วันที่ 1 ของเดือนปัจจุบัน |
+| `payroll_config`      | ตั้งค่า Payroll       | SSO: 5%/17500, Tax: default brackets, อื่นๆ: 0                     |
+
+> **หมายเหตุ:** หากสร้าง record ใดล้มเหลว ทั้ง transaction จะ rollback และไม่สร้าง company
+
 **Required Request Headers:**
 
 API ที่ต้องการ tenant context จะต้องส่ง headers ดังนี้:

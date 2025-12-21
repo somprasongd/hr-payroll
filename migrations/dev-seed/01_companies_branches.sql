@@ -9,13 +9,52 @@ DO $$
 DECLARE
   v_default_company_id UUID;
   v_admin_id UUID;
+  v_current_month_start DATE;
 BEGIN
   SELECT id INTO v_default_company_id FROM companies WHERE code = 'DEFAULT' LIMIT 1;
   SELECT id INTO v_admin_id FROM users WHERE username = 'admin' AND deleted_at IS NULL LIMIT 1;
+  v_current_month_start := date_trunc('month', CURRENT_DATE)::date;
 
   -- Backfill company_id to existing profiles/configs if they are NULL
   UPDATE payroll_org_profile SET company_id = v_default_company_id WHERE company_id IS NULL;
   UPDATE payroll_config SET company_id = v_default_company_id WHERE company_id IS NULL;
+  
+  -- Create payroll_org_profile for DEFAULT if not exists
+  IF NOT EXISTS (SELECT 1 FROM payroll_org_profile WHERE company_id = v_default_company_id) THEN
+    INSERT INTO payroll_org_profile (
+      company_id, effective_daterange,
+      company_name, status, created_by, updated_by
+    ) VALUES (
+      v_default_company_id, daterange(v_current_month_start, NULL, '[)'),
+      'บริษัท ทดสอบ จำกัด', 'active', v_admin_id, v_admin_id
+    );
+  END IF;
+  
+  -- Create payroll_config for DEFAULT if not exists
+  IF NOT EXISTS (SELECT 1 FROM payroll_config WHERE company_id = v_default_company_id) THEN
+    INSERT INTO payroll_config (
+      company_id, effective_daterange,
+      hourly_rate, ot_hourly_rate,
+      attendance_bonus_no_late, attendance_bonus_no_leave,
+      housing_allowance, water_rate_per_unit, electricity_rate_per_unit,
+      internet_fee_monthly,
+      social_security_rate_employee, social_security_rate_employer, social_security_wage_cap,
+      tax_apply_standard_expense, tax_standard_expense_rate, tax_standard_expense_cap,
+      tax_apply_personal_allowance, tax_personal_allowance_amount, tax_progressive_brackets,
+      withholding_tax_rate_service,
+      status, note, created_by, updated_by
+    ) VALUES (
+      v_default_company_id, daterange(v_current_month_start, NULL, '[)'),
+      60.00, 60.00,
+      500.00, 1000.00,
+      1000.00, 10.00, 6.00, 80.00,
+      0.05, 0.05, 17500.00,
+      TRUE, 0.50, 100000.00,
+      TRUE, 60000.00, '[{"min":0,"max":150000,"rate":0},{"min":150001,"max":300000,"rate":0.05},{"min":300001,"max":500000,"rate":0.10},{"min":500001,"max":750000,"rate":0.15},{"min":750001,"max":1000000,"rate":0.20},{"min":1000001,"max":2000000,"rate":0.25},{"min":2000001,"max":5000000,"rate":0.30},{"min":5000001,"max":null,"rate":0.35}]'::jsonb,
+      0.03,
+      'active', 'ค่าเริ่มต้นสำหรับบริษัท DEFAULT', v_admin_id, v_admin_id
+    );
+  END IF;
   
   -- Create default branch for DEFAULT if not exists (Handled by migration but safety check)
   -- Create second branch for DEFAULT
@@ -113,7 +152,7 @@ BEGIN
       80.00, 80.00,     -- Higher rates
       600.00, 1200.00,  -- Higher bonuses
       1500.00, 12.00, 7.00, 100.00,
-      0.05, 0.05, 15000.00,
+      0.05, 0.05, 17500.00,
       TRUE, 0.50, 100000.00,
       TRUE, 60000.00, '[{"min":0,"max":150000,"rate":0},{"min":150001,"max":300000,"rate":0.05},{"min":300001,"max":500000,"rate":0.10},{"min":500001,"max":750000,"rate":0.15},{"min":750001,"max":1000000,"rate":0.20},{"min":1000001,"max":2000000,"rate":0.25},{"min":2000001,"max":5000000,"rate":0.30},{"min":5000001,"max":null,"rate":0.35}]'::jsonb,
       0.03,
