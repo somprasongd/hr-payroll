@@ -27,6 +27,8 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 
 type Record struct {
 	ID           uuid.UUID  `db:"id" json:"id"`
+	CompanyID    uuid.UUID  `db:"company_id" json:"company_id"`
+	BranchID     uuid.UUID  `db:"branch_id" json:"branch_id"`
 	EmployeeID   uuid.UUID  `db:"employee_id" json:"employee_id"`
 	TxnDate      time.Time  `db:"txn_date" json:"txn_date"`
 	TxnType      string     `db:"txn_type" json:"txn_type"`
@@ -267,7 +269,7 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 	}
 
 	countArgs := args[:len(args)-2]
-	countQ := fmt.Sprintf(`SELECT COUNT(1) FROM debt_txn t WHERE %s`, whereClause)
+	countQ := fmt.Sprintf(`SELECT COUNT(1) FROM debt_txn t JOIN employees e ON e.id = t.employee_id WHERE %s`, whereClause)
 	var total int
 	if err := r.dbCtx(ctx).GetContext(ctx, &total, countQ, countArgs...); err != nil {
 		return ListResult{}, err

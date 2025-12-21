@@ -50,7 +50,7 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/worklogs", middleware.Auth(m.tokenSvc))
+	group := r.Group("/worklogs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	// FT
 	ftGroup := group.Group("/ft")
 	ft.Register(ftGroup, m.repo.FTRepo, m.ctx.Transactor, m.eb)

@@ -57,5 +57,5 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	// delete run = admin only
 	delete.NewEndpoint(runGroup.Group("", middleware.RequireRoles("admin")), m.repo, m.eb)
 
-	items.Register(runGroup, r.Group("/payroll-items", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr")), m.repo, m.ctx.Transactor)
+	items.Register(runGroup, r.Group("/payroll-items", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr")), m.repo, m.ctx.Transactor)
 }

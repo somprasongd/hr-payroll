@@ -21,6 +21,8 @@ type FTRepository struct {
 
 type FTRecord struct {
 	ID         uuid.UUID  `db:"id"`
+	CompanyID  uuid.UUID  `db:"company_id"`
+	BranchID   uuid.UUID  `db:"branch_id"`
 	EmployeeID uuid.UUID  `db:"employee_id"`
 	EntryType  string     `db:"entry_type"`
 	WorkDate   time.Time  `db:"work_date"`
@@ -158,28 +160,25 @@ SELECT EXISTS (
 
 func (r FTRepository) Insert(ctx context.Context, tenant contextx.TenantInfo, rec FTRecord) (*FTRecord, error) {
 	db := r.dbCtx(ctx)
-	// Validate employee belongs to company
-	var count int
-	q := "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2"
+	// Validate employee belongs to company and get branch
+	var branchID uuid.UUID
+	q := "SELECT branch_id FROM employees WHERE id=$1 AND company_id=$2"
 	args := []interface{}{rec.EmployeeID, tenant.CompanyID}
 	if tenant.HasBranchID() {
 		q += " AND branch_id=$3"
 		args = append(args, tenant.BranchID)
 	}
-	if err := db.GetContext(ctx, &count, q, args...); err != nil {
-		return nil, err
-	}
-	if count == 0 {
+	if err := db.GetContext(ctx, &branchID, q, args...); err != nil {
 		return nil, fmt.Errorf("employee not found in this company")
 	}
 
 	const insertQ = `
-INSERT INTO worklog_ft (employee_id, entry_type, work_date, quantity, status, created_by, updated_by)
-VALUES ($1,$2,$3,$4,$5,$6,$7)
+INSERT INTO worklog_ft (employee_id, company_id, branch_id, entry_type, work_date, quantity, status, created_by, updated_by)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
 RETURNING *`
 	var out FTRecord
 	if err := db.GetContext(ctx, &out, insertQ,
-		rec.EmployeeID, rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.CreatedBy, rec.UpdatedBy); err != nil {
+		rec.EmployeeID, tenant.CompanyID, branchID, rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.CreatedBy, rec.UpdatedBy); err != nil {
 		return nil, err
 	}
 	return &out, nil

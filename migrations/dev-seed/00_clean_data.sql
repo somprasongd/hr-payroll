@@ -9,8 +9,12 @@ DELETE FROM payroll_run_item WHERE 1=1;
 DELETE FROM payroll_run WHERE 1=1;
 
 -- Payout PT items and payouts
+ALTER TABLE payout_pt DISABLE TRIGGER ALL;
+ALTER TABLE payout_pt_item DISABLE TRIGGER ALL;
 DELETE FROM payout_pt_item WHERE 1=1;
 DELETE FROM payout_pt WHERE 1=1;
+ALTER TABLE payout_pt_item ENABLE TRIGGER ALL;
+ALTER TABLE payout_pt ENABLE TRIGGER ALL;
 
 -- Bonus items and cycles
 DELETE FROM bonus_item WHERE 1=1;

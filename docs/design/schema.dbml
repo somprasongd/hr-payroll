@@ -14,9 +14,9 @@ Table "users" {
   "password_hash" text [not null]
   "user_role" text [not null, default: 'hr']
   "created_at" timestamptz [not null, default: `now()`]
-  "created_by" uuid [not null, default: '019b2a48-1837-7e63-99c3-880213d66c36']
+  "created_by" uuid [not null, default: '019b3b5d-e3dc-7616-b0b0-33bf4bee44c7']
   "updated_at" timestamptz [not null, default: `now()`]
-  "updated_by" uuid [not null, default: '019b2a48-1837-7e63-99c3-880213d66c36']
+  "updated_by" uuid [not null, default: '019b3b5d-e3dc-7616-b0b0-33bf4bee44c7']
   "deleted_at" timestamptz
   "deleted_by" uuid
 
@@ -57,7 +57,7 @@ Table "auth_refresh_tokens" {
 Table "payroll_config" {
   "id" uuid [pk, not null, default: `uuidv7()`]
   "effective_daterange" daterange [not null]
-  "version_no" int8 [unique, not null, increment]
+  "version_no" int8 [not null, increment]
   "hourly_rate" numeric(12,2) [not null]
   "ot_hourly_rate" numeric(12,2) [not null]
   "attendance_bonus_no_late" numeric(12,2) [not null]
@@ -85,9 +85,10 @@ Table "payroll_config" {
   "company_id" uuid [not null]
 
   Indexes {
+    (company_id, version_no) [type: btree, name: "payroll_config_company_version_uk"]
     company_id [type: btree, name: "payroll_config_company_idx"]
     effective_daterange [type: gist, name: "payroll_config_effective_daterange_idx"]
-    effective_daterange [type: gist, name: "payroll_config_no_overlap"]
+    (company_id, effective_daterange) [type: gist, name: "payroll_config_no_overlap"]
   }
 }
 
@@ -149,9 +150,15 @@ Table "employee_photo" {
   "content_type" text [not null]
   "file_size_bytes" int8 [not null]
   "data" bytea [not null]
-  "checksum_md5" text [unique, not null]
+  "checksum_md5" text [not null]
   "created_at" timestamptz [not null, default: `now()`]
   "created_by" uuid [not null]
+  "company_id" uuid [not null]
+
+  Indexes {
+    (company_id, checksum_md5) [type: btree, name: "employee_photo_company_checksum_uk"]
+    company_id [type: btree, name: "employee_photo_company_idx"]
+  }
 }
 
 Table "employees" {
@@ -184,6 +191,8 @@ Table "employees" {
   "allow_electric" bool [not null, default: false]
   "allow_internet" bool [not null, default: false]
   "allow_doctor_fee" bool [not null, default: false]
+  "allow_attendance_bonus_nolate" bool [not null, default: false]
+  "allow_attendance_bonus_noleave" bool [not null, default: false]
   "deleted_at" timestamptz
   "deleted_by" uuid
   "created_at" timestamptz [not null, default: `now()`]
@@ -324,11 +333,13 @@ Table "salary_raise_cycle" {
   "deleted_at" timestamptz
   "deleted_by" uuid
   "company_id" uuid [not null]
+  "branch_id" uuid [unique, not null]
 
   Indexes {
     company_id [type: btree, name: "salary_raise_cycle_company_idx"]
     created_at [type: btree, name: "salary_raise_cycle_created_idx"]
     status [type: btree, name: "salary_raise_cycle_status_idx"]
+    (company_id, branch_id) [type: btree, name: "salary_raise_cycle_tenant_idx"]
   }
 }
 
@@ -353,12 +364,13 @@ Table "salary_raise_item" {
   "updated_at" timestamptz [not null, default: `now()`]
   "updated_by" uuid [not null]
   "company_id" uuid [not null]
+  "branch_id" uuid [not null]
 
   Indexes {
     (cycle_id, employee_id) [type: btree, name: "salary_raise_item_one_per_emp_per_cycle"]
-    company_id [type: btree, name: "salary_raise_item_company_idx"]
     cycle_id [type: btree, name: "salary_raise_item_cycle_idx"]
     employee_id [type: btree, name: "salary_raise_item_emp_idx"]
+    (company_id, branch_id) [type: btree, name: "salary_raise_item_tenant_idx"]
   }
 }
 
@@ -368,7 +380,7 @@ Table "bonus_cycle" {
   "created_by" uuid [not null]
   "updated_at" timestamptz [not null, default: `now()`]
   "updated_by" uuid [not null]
-  "payroll_month_date" date [unique, not null]
+  "payroll_month_date" date [not null]
   "period_start_date" date [not null]
   "period_end_date" date [not null]
   "bonus_year" int4 [not null, default: `(EXTRACT(year FROM CURRENT_DATE))::integer`]
@@ -376,9 +388,10 @@ Table "bonus_cycle" {
   "deleted_at" timestamptz
   "deleted_by" uuid
   "company_id" uuid [not null]
-  "branch_id" uuid [not null]
+  "branch_id" uuid [unique, not null]
 
   Indexes {
+    (branch_id, payroll_month_date) [type: btree, name: "bonus_cycle_month_branch_approved_uk"]
     created_at [type: btree, name: "bonus_cycle_created_idx"]
     payroll_month_date [type: btree, name: "bonus_cycle_month_idx"]
     status [type: btree, name: "bonus_cycle_status_idx"]
@@ -592,7 +605,7 @@ Table "payroll_org_logo" {
 Table "payroll_org_profile" {
   "id" uuid [pk, not null, default: `uuidv7()`]
   "effective_daterange" daterange [not null]
-  "version_no" int8 [unique, not null, increment]
+  "version_no" int8 [not null, increment]
   "company_name" text [not null]
   "address_line1" text
   "address_line2" text
@@ -614,6 +627,7 @@ Table "payroll_org_profile" {
   "company_id" uuid [not null]
 
   Indexes {
+    (company_id, version_no) [type: btree, name: "payroll_org_profile_company_version_uk"]
     company_id [type: btree, name: "payroll_org_profile_company_idx"]
     effective_daterange [type: gist, name: "payroll_org_profile_effective_idx"]
     (company_id, effective_daterange) [type: gist, name: "payroll_org_profile_no_overlap"]
@@ -631,6 +645,12 @@ Table "employee_document_type" {
   "updated_by" uuid [not null]
   "deleted_at" timestamptz
   "deleted_by" uuid
+  "company_id" uuid [note: 'NULL for system types, company UUID for custom types']
+  "is_system" bool [not null, default: false, note: 'TRUE = system type (superadmin manages), FALSE = custom type (company admin manages)']
+
+  Indexes {
+    company_id [type: btree, name: "employee_document_type_company_idx"]
+  }
 }
 
 Table "employee_document" {
@@ -704,6 +724,12 @@ Table "branches" {
   "created_by" uuid
   "updated_at" timestamptz [not null, default: `now()`]
   "updated_by" uuid
+  "deleted_at" timestamptz [note: 'Soft delete timestamp. Branch can only be deleted when status is archived.']
+  "deleted_by" uuid
+
+  Indexes {
+    deleted_at [type: btree, name: "branches_deleted_at_idx"]
+  }
 }
 
 Table "user_company_roles" {
@@ -765,6 +791,8 @@ Ref "branches_company_id_fkey":"companies"."id" < "branches"."company_id" [delet
 
 Ref "branches_created_by_fkey":"users"."id" < "branches"."created_by" [delete: set null]
 
+Ref "branches_deleted_by_fkey":"users"."id" < "branches"."deleted_by" [delete: set null]
+
 Ref "branches_updated_by_fkey":"users"."id" < "branches"."updated_by" [delete: set null]
 
 Ref "companies_created_by_fkey":"users"."id" < "companies"."created_by" [delete: set null]
@@ -805,11 +833,15 @@ Ref "employee_document_employee_id_fkey":"employees"."id" < "employee_document".
 
 Ref "employee_document_updated_by_fkey":"users"."id" < "employee_document"."updated_by"
 
+Ref "employee_document_type_company_id_fkey":"companies"."id" < "employee_document_type"."company_id" [delete: cascade]
+
 Ref "employee_document_type_created_by_fkey":"users"."id" < "employee_document_type"."created_by"
 
 Ref "employee_document_type_deleted_by_fkey":"users"."id" < "employee_document_type"."deleted_by"
 
 Ref "employee_document_type_updated_by_fkey":"users"."id" < "employee_document_type"."updated_by"
+
+Ref "employee_photo_company_id_fkey":"companies"."id" < "employee_photo"."company_id" [delete: set null]
 
 Ref "employee_photo_created_by_fkey":"users"."id" < "employee_photo"."created_by"
 
@@ -929,6 +961,8 @@ Ref "salary_advance_employee_id_fkey":"employees"."id" < "salary_advance"."emplo
 
 Ref "salary_advance_updated_by_fkey":"users"."id" < "salary_advance"."updated_by"
 
+Ref "salary_raise_cycle_branch_id_fkey":"branches"."id" < "salary_raise_cycle"."branch_id" [delete: set null]
+
 Ref "salary_raise_cycle_company_id_fkey":"companies"."id" < "salary_raise_cycle"."company_id" [delete: set null]
 
 Ref "salary_raise_cycle_created_by_fkey":"users"."id" < "salary_raise_cycle"."created_by"
@@ -936,6 +970,8 @@ Ref "salary_raise_cycle_created_by_fkey":"users"."id" < "salary_raise_cycle"."cr
 Ref "salary_raise_cycle_deleted_by_fkey":"users"."id" < "salary_raise_cycle"."deleted_by"
 
 Ref "salary_raise_cycle_updated_by_fkey":"users"."id" < "salary_raise_cycle"."updated_by"
+
+Ref "salary_raise_item_branch_id_fkey":"branches"."id" < "salary_raise_item"."branch_id" [delete: set null]
 
 Ref "salary_raise_item_company_id_fkey":"companies"."id" < "salary_raise_item"."company_id" [delete: set null]
 

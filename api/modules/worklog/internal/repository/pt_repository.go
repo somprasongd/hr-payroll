@@ -21,6 +21,8 @@ type PTRepository struct {
 
 type PTRecord struct {
 	ID             uuid.UUID  `db:"id"`
+	CompanyID      uuid.UUID  `db:"company_id"`
+	BranchID       uuid.UUID  `db:"branch_id"`
 	EmployeeID     uuid.UUID  `db:"employee_id"`
 	WorkDate       time.Time  `db:"work_date"`
 	MorningIn      *string    `db:"morning_in"`
@@ -154,32 +156,29 @@ SELECT EXISTS (
 
 func (r PTRepository) Insert(ctx context.Context, tenant contextx.TenantInfo, rec PTRecord) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
-	// Validate employee belongs to company
-	var count int
-	q := "SELECT COUNT(1) FROM employees WHERE id=$1 AND company_id=$2"
+	// Validate employee belongs to company and get branch
+	var branchID uuid.UUID
+	q := "SELECT branch_id FROM employees WHERE id=$1 AND company_id=$2"
 	args := []interface{}{rec.EmployeeID, tenant.CompanyID}
 	if tenant.HasBranchID() {
 		q += " AND branch_id=$3"
 		args = append(args, tenant.BranchID)
 	}
-	if err := db.GetContext(ctx, &count, q, args...); err != nil {
-		return nil, err
-	}
-	if count == 0 {
+	if err := db.GetContext(ctx, &branchID, q, args...); err != nil {
 		return nil, fmt.Errorf("employee not found in this company")
 	}
 
 	const insertQ = `
 INSERT INTO worklog_pt (
-  employee_id, work_date,
+  employee_id, company_id, branch_id, work_date,
   morning_in, morning_out,
   evening_in, evening_out,
   status, created_by, updated_by
-) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 RETURNING *`
 	var out PTRecord
 	if err := db.GetContext(ctx, &out, insertQ,
-		rec.EmployeeID, rec.WorkDate,
+		rec.EmployeeID, tenant.CompanyID, branchID, rec.WorkDate,
 		rec.MorningIn, rec.MorningOut,
 		rec.EveningIn, rec.EveningOut,
 		rec.Status, rec.CreatedBy, rec.UpdatedBy,
