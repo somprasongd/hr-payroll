@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 
 	"hrms/modules/branch/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -27,11 +26,6 @@ type CreateRequest struct {
 // @Router /admin/branches [post]
 func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
 	router.Post("/", func(c fiber.Ctx) error {
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		var req CreateRequest
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
@@ -42,11 +36,10 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Repo:    repo,
-			Eb:      eb,
-			Code:    req.Code,
-			Name:    req.Name,
-			ActorID: user.ID,
+			Repo: repo,
+			Eb:   eb,
+			Code: req.Code,
+			Name: req.Name,
 		})
 		if err != nil {
 			return err

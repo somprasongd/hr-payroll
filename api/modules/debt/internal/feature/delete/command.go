@@ -59,6 +59,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	}
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "DELETE",
 		EntityName: "DEBT_TRANSACTION",
 		EntityID:   cmd.ID.String(),

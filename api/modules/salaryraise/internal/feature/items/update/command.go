@@ -23,20 +23,22 @@ type Command struct {
 	RaisePercent *float64 `json:"raisePercent"`
 	RaiseAmount  *float64 `json:"raiseAmount"`
 	NewSSOWage   *float64 `json:"newSsoWage"`
-	ActorID      uuid.UUID
-	Repo         repository.Repository
-	Eb           eventbus.EventBus
 }
 
 type Response struct {
 	repository.Item
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -44,7 +46,12 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	_, cycle, err := cmd.Repo.GetItem(ctx, tenant, cmd.ID)
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
+	_, cycle, err := h.repo.GetItem(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("raise item not found")
@@ -58,7 +65,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if cmd.RaisePercent == nil && cmd.RaiseAmount == nil && cmd.NewSSOWage == nil {
 		return nil, errs.BadRequest("no fields to update")
 	}
-	updated, err := cmd.Repo.UpdateItem(ctx, tenant, cmd.ID, cmd.RaisePercent, cmd.RaiseAmount, cmd.NewSSOWage, cmd.ActorID)
+	updated, err := h.repo.UpdateItem(ctx, tenant, cmd.ID, cmd.RaisePercent, cmd.RaiseAmount, cmd.NewSSOWage, user.ID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to update raise item", zap.Error(err))
 		return nil, errs.Internal("failed to update raise item")
@@ -77,9 +84,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		details["new_sso_wage"] = *cmd.NewSSOWage
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+	h.eb.Publish(events.LogEvent{
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE_ITEM",
 		EntityName: "SALARY_RAISE_ITEM",
 		EntityID:   updated.ID.String(),

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"go.uber.org/zap"
 
 	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -26,9 +26,6 @@ type Command struct {
 	PayDateRaw      string                `json:"payDate"`
 	SSORateEmp      float64               `json:"socialSecurityRateEmployee"`
 	SSORateEmployer float64               `json:"socialSecurityRateEmployer"`
-	CompanyID       uuid.UUID             `json:"-"`
-	BranchID        uuid.UUID             `json:"-"`
-	ActorID         uuid.UUID             `json:"-"`
 	Repo            repository.Repository `json:"-"`
 	Tx              transactor.Transactor `json:"-"`
 	Eb              eventbus.EventBus     `json:"-"`
@@ -46,6 +43,16 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	payrollMonth, err := parseDate(cmd.PayrollMonthRaw, "payrollMonthDate")
 	if err != nil {
 		return nil, err
@@ -77,7 +84,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var created *repository.Run
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = cmd.Repo.Create(ctxTx, run, cmd.CompanyID, cmd.BranchID, cmd.ActorID)
+		created, err = cmd.Repo.Create(ctxTx, run, tenant.CompanyID, tenant.BranchID, user.ID)
 		return err
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to create payroll run", zap.Error(err))
@@ -89,7 +96,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "PAYROLL_RUN",
 		EntityID:   created.ID.String(),

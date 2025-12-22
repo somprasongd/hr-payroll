@@ -82,6 +82,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "APPROVE",
 		EntityName: "DEBT_PLAN",
 		EntityID:   cmd.ID.String(),

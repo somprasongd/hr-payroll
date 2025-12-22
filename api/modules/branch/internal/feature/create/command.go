@@ -3,10 +3,10 @@ package create
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/branch/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -14,11 +14,10 @@ import (
 )
 
 type Command struct {
-	Repo    repository.Repository
-	Eb      eventbus.EventBus
-	Code    string
-	Name    string
-	ActorID uuid.UUID
+	Repo repository.Repository
+	Eb   eventbus.EventBus
+	Code string
+	Name string
 }
 
 type Response struct {
@@ -32,7 +31,12 @@ func NewHandler() *commandHandler {
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	branch, err := cmd.Repo.Create(ctx, cmd.Code, cmd.Name, cmd.ActorID)
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
+	branch, err := cmd.Repo.Create(ctx, cmd.Code, cmd.Name, user.ID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to create branch", zap.Error(err))
 		return nil, errs.Internal("failed to create branch")
@@ -40,7 +44,7 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 
 	companyID := branch.CompanyID
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
 		CompanyID:  &companyID,
 		BranchID:   nil,
 		Action:     "CREATE",

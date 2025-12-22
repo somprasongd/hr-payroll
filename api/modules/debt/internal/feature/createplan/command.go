@@ -119,6 +119,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "DEBT_PLAN",
 		EntityID:   createdParent.ID.String(),

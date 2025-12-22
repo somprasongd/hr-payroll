@@ -20,9 +20,8 @@ import (
 )
 
 type Command struct {
-	Payload   RequestBody
-	CompanyID uuid.UUID
-	ActorID   uuid.UUID
+	Payload RequestBody
+	ActorID uuid.UUID
 }
 
 type Response struct {
@@ -50,7 +49,6 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
-	cmd.CompanyID = tenant.CompanyID
 
 	applyDefaults(&cmd.Payload)
 
@@ -63,7 +61,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var created *repository.Record
 	err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = h.repo.Create(ctxTx, recPayload, cmd.CompanyID, cmd.ActorID)
+		created, err = h.repo.Create(ctxTx, recPayload, tenant.CompanyID, cmd.ActorID)
 		return err
 	})
 	if err != nil {
@@ -73,7 +71,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
-		CompanyID:  &cmd.CompanyID,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "CREATE",
 		EntityName: "PAYROLL_CONFIG",
 		EntityID:   created.ID.String(),

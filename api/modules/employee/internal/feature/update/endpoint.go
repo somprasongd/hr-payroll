@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/employee/internal/feature/create"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -43,15 +42,9 @@ func NewEndpoint(router fiber.Router) {
 			return err
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
 			ID:      id,
 			Payload: req,
-			ActorID: user.ID,
 		})
 		if err != nil {
 			return err

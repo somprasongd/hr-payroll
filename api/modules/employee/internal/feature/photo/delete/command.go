@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -20,9 +21,6 @@ import (
 
 type Command struct {
 	EmployeeID uuid.UUID
-	ActorID    uuid.UUID
-	CompanyID  uuid.UUID
-	BranchID   uuid.UUID
 }
 
 type Handler struct {
@@ -38,10 +36,20 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
+
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
 	var prevPhotoID *uuid.UUID
 	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
 		var err error
-		prevPhotoID, err = h.repo.ClearEmployeePhoto(ctxWithTx, cmd.EmployeeID, cmd.ActorID)
+		prevPhotoID, err = h.repo.ClearEmployeePhoto(ctxWithTx, cmd.EmployeeID, user.ID)
 		if err != nil {
 			return err
 		}
@@ -55,9 +63,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		if prevPhotoID != nil {
 			hook(func(ctx context.Context) error {
 				h.eb.Publish(events.LogEvent{
-					ActorID:    cmd.ActorID,
-					CompanyID:  &cmd.CompanyID,
-					BranchID:   &cmd.BranchID,
+					ActorID:    user.ID,
+					CompanyID:  &tenant.CompanyID,
+					BranchID:   tenant.BranchIDPtr(),
 					Action:     "DELETE",
 					EntityName: "EMPLOYEE_PHOTO",
 					EntityID:   prevPhotoID.String(),

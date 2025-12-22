@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/payrollrun/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -37,13 +36,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
 		req.ID = id
-		req.ActorID = user.ID
-		req.ActorRole = user.Role
 		req.Repo = repo
 		req.Tx = tx
 		req.Eb = eb

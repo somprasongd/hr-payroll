@@ -3,7 +3,6 @@ package create
 import (
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -27,14 +26,9 @@ func NewEndpoint(router fiber.Router) {
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
 			Payload: req,
-			ActorID: user.ID,
 		})
 		if err != nil {
 			return err

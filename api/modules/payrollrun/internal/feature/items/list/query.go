@@ -1,12 +1,9 @@
-package items
+package itemslist
 
 import (
 	"context"
 	"math"
-	"strconv"
-	"strings"
 
-	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
@@ -16,8 +13,6 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
-	"hrms/shared/common/response"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 type ListQuery struct {
@@ -37,6 +32,8 @@ type ListResponse struct {
 type listHandler struct{}
 
 func NewListHandler() *listHandler { return &listHandler{} }
+
+var _ mediator.RequestHandler[*ListQuery, *ListResponse] = (*listHandler)(nil)
 
 func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, error) {
 	if q.Page < 1 {
@@ -75,48 +72,4 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 			TotalItems:  res.Total,
 		},
 	}, nil
-}
-
-// @Summary List payroll items
-// @Description รายการสลิปเงินเดือนใน run
-// @Tags Payroll Run
-// @Produce json
-// @Param id path string true "run id"
-// @Param page query int false "page"
-// @Param limit query int false "limit"
-// @Param search query string false "employee name"
-// @Security BearerAuth
-// @Success 200 {object} ListResponse
-// @Failure 400
-// @Failure 401
-// @Failure 403
-// @Failure 404
-// @Router /payroll-runs/{id}/items [get]
-func Register(runRouter fiber.Router, itemRouter fiber.Router, repo repository.Repository, tx transactor.Transactor) {
-	runRouter.Get("/:id/items", func(c fiber.Ctx) error {
-		runID, err := uuid.Parse(c.Params("id"))
-		if err != nil {
-			return errs.BadRequest("invalid run id")
-		}
-		page, _ := strconv.Atoi(c.Query("page", "1"))
-		limit, _ := strconv.Atoi(c.Query("limit", "20"))
-		search := c.Query("search")
-		empType := strings.TrimSpace(c.Query("employeeTypeCode"))
-
-		resp, err := mediator.Send[*ListQuery, *ListResponse](c.Context(), &ListQuery{
-			RunID:            runID,
-			Page:             page,
-			Limit:            limit,
-			Search:           search,
-			EmployeeTypeCode: empType,
-			Repo:             repo,
-		})
-		if err != nil {
-			return err
-		}
-		return response.JSON(c, fiber.StatusOK, resp)
-	})
-
-	RegisterUpdateItem(itemRouter, repo, tx)
-	RegisterGet(itemRouter, repo)
 }

@@ -21,7 +21,6 @@ import (
 type Command struct {
 	EmployeeID uuid.UUID   `json:"employeeId"`
 	WorklogIDs []uuid.UUID `json:"worklogIds"`
-	Actor      uuid.UUID
 	Repo       repository.Repository
 	Tx         transactor.Transactor
 	Eb         eventbus.EventBus
@@ -50,13 +49,18 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	var payout *repository.Payout
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		if err := cmd.Repo.ValidateWorklogs(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs); err != nil {
 			return errs.BadRequest(err.Error())
 		}
 		var err error
-		payout, err = cmd.Repo.Create(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs, cmd.Actor)
+		payout, err = cmd.Repo.Create(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs, user.ID)
 		return err
 	}); err != nil {
 		var appErr *errs.AppError
@@ -68,8 +72,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Internal("failed to create payout")
 	}
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "PAYOUT_PT",
 		EntityID:   payout.ID.String(),

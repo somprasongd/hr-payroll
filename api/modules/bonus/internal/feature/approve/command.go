@@ -22,13 +22,11 @@ import (
 )
 
 type Command struct {
-	ID        uuid.UUID
-	Status    string
-	Actor     uuid.UUID
-	ActorRole string
-	Repo      repository.Repository
-	Tx        transactor.Transactor
-	Eb        eventbus.EventBus
+	ID     uuid.UUID
+	Status string
+	Repo   repository.Repository
+	Tx     transactor.Transactor
+	Eb     eventbus.EventBus
 }
 
 type Response struct {
@@ -48,15 +46,20 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	cmd.Status = strings.TrimSpace(cmd.Status)
 	if cmd.Status != "approved" && cmd.Status != "rejected" {
 		return nil, errs.BadRequest("status must be approved or rejected")
 	}
-	if cmd.ActorRole == "hr" {
+	if user.Role == "hr" {
 		return nil, errs.Forbidden("HR is not allowed to change status")
 	}
 
-	updated, err := cmd.Repo.UpdateStatus(ctx, tenant, cmd.ID, cmd.Status, cmd.Actor)
+	updated, err := cmd.Repo.UpdateStatus(ctx, tenant, cmd.ID, cmd.Status, user.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			logger.FromContext(ctx).Warn("bonus cycle not found or status cannot change", zap.Error(err), zap.String("status", cmd.Status))
@@ -66,8 +69,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Internal("failed to update status")
 	}
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE_STATUS",
 		EntityName: "BONUS_CYCLE",
 		EntityID:   cmd.ID.String(),

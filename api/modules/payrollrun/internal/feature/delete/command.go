@@ -19,10 +19,9 @@ import (
 )
 
 type Command struct {
-	ID    uuid.UUID
-	Actor uuid.UUID
-	Repo  repository.Repository
-	Eb    eventbus.EventBus
+	ID   uuid.UUID
+	Repo repository.Repository
+	Eb   eventbus.EventBus
 }
 
 type Handler struct{}
@@ -36,6 +35,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if !ok {
 		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
 	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
 	run, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -47,7 +51,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if run.Status == "approved" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete approved run")
 	}
-	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
+	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("payroll run not found or not deletable")
 		}
@@ -56,7 +60,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	}
 
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "DELETE",
 		EntityName: "PAYROLL_RUN",
 		EntityID:   cmd.ID.String(),
