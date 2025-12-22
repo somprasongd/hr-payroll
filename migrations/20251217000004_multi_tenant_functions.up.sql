@@ -806,9 +806,24 @@ BEGIN
   LEFT JOIN employee_position ep ON ep.id = e.position_id
   WHERE e.id = p_employee_id;
 
-  IF v_emp IS NULL THEN RETURN; END IF;
+  -- ถ้าหาไม่เจอ (hard delete) ให้ลบ item ออกจากงวดนี้แล้วหยุด
+  IF v_emp IS NULL THEN
+    DELETE FROM payroll_run_item
+    WHERE run_id = p_run_id AND employee_id = p_employee_id;
+    RETURN;
+  END IF;
   IF v_emp.company_id IS DISTINCT FROM v_run.company_id THEN RETURN; END IF;
   IF v_emp.branch_id IS DISTINCT FROM v_run.branch_id THEN RETURN; END IF;
+
+  -- ถ้าพนักงานถูกลบ หรือสิ้นสุดการจ้างก่อนวันเริ่มงวด ให้ลบ item ออกแล้วหยุด
+  IF v_emp.deleted_at IS NOT NULL
+     OR (v_emp.employment_end_date IS NOT NULL AND v_emp.employment_end_date < v_run.period_start_date) THEN
+    DELETE FROM payroll_run_item
+    WHERE run_id = p_run_id AND employee_id = p_employee_id
+      AND company_id = v_run.company_id
+      AND branch_id = v_run.branch_id;
+    RETURN;
+  END IF;
 
   SELECT *
   INTO v_config
@@ -1087,20 +1102,61 @@ DECLARE
   r_run RECORD;
   v_company UUID;
   v_branch UUID;
+  v_emp_id UUID;
+  v_end_date DATE;
+  v_deleted_at TIMESTAMPTZ;
 BEGIN
   v_company := COALESCE(NEW.company_id, OLD.company_id);
   v_branch := COALESCE(NEW.branch_id, OLD.branch_id);
+  v_emp_id := COALESCE(NEW.id, OLD.id);
+  v_end_date := COALESCE(NEW.employment_end_date, OLD.employment_end_date);
+  v_deleted_at := COALESCE(NEW.deleted_at, OLD.deleted_at);
 
   FOR r_run IN 
-    SELECT id FROM payroll_run WHERE status = 'pending' AND deleted_at IS NULL
+    SELECT id, period_start_date
+    FROM payroll_run
+    WHERE status = 'pending' AND deleted_at IS NULL
       AND company_id = v_company
       AND branch_id = v_branch
   LOOP
-    PERFORM recalculate_payroll_item(r_run.id, COALESCE(NEW.id, OLD.id));
+    -- ถ้าสิ้นสุดการจ้างก่อนเริ่มงวด หรือถูกลบ ให้ลบรายการออก
+    IF v_deleted_at IS NOT NULL
+       OR (v_end_date IS NOT NULL AND v_end_date < r_run.period_start_date) THEN
+      DELETE FROM payroll_run_item
+      WHERE run_id = r_run.id
+        AND employee_id = v_emp_id
+        AND company_id = v_company
+        AND branch_id = v_branch;
+      CONTINUE;
+    END IF;
+
+    PERFORM recalculate_payroll_item(r_run.id, v_emp_id);
   END LOOP;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ปรับ Trigger ให้รองรับกรณีลบหรือพ้นสภาพ (soft/hard delete)
+DROP TRIGGER IF EXISTS tg_sync_payroll_emp ON employees;
+CREATE TRIGGER tg_sync_payroll_emp
+AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage, withhold_tax,
+  allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+  allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
+  provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
+  department_id, position_id, bank_name, bank_account_no, employee_type_id,
+  employment_end_date, deleted_at, company_id, branch_id
+ON employees
+FOR EACH ROW
+EXECUTE FUNCTION sync_payroll_on_employee_change();
+
+DROP TRIGGER IF EXISTS tg_sync_payroll_emp_delete ON employees;
+CREATE TRIGGER tg_sync_payroll_emp_delete
+AFTER DELETE ON employees
+FOR EACH ROW
+EXECUTE FUNCTION sync_payroll_on_employee_change();
 
 -- Worklog change: constrain to same tenant
 CREATE OR REPLACE FUNCTION public.sync_payroll_on_worklog_change() RETURNS trigger AS $$
