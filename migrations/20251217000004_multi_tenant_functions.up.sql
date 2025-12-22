@@ -259,6 +259,7 @@ DECLARE
   v_tax_prev NUMERIC(14,2) := 0;
   v_income_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
+  v_loan_prev NUMERIC(14,2) := 0;
   v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
   v_electric_prev NUMERIC(12,2);
@@ -948,6 +949,10 @@ BEGIN
   FROM payroll_accumulation
   WHERE employee_id = v_emp.id AND accum_type = 'pf' AND accum_year IS NULL;
 
+  SELECT COALESCE(amount, 0) INTO v_loan_prev
+  FROM payroll_accumulation
+  WHERE employee_id = v_emp.id AND company_id = v_run.company_id AND accum_type = 'loan_outstanding';
+
   -- Doctor fee allowance keeps any existing value for this run/employee
   IF v_emp.allow_doctor_fee THEN
     SELECT COALESCE(doctor_fee, 0)
@@ -1061,6 +1066,7 @@ BEGIN
     income_accum_prev = COALESCE(v_income_prev,0),
     pf_accum_prev = COALESCE(v_pf_prev,0),
     pf_month_amount = v_pf_amount,
+    loan_outstanding_prev = COALESCE(v_loan_prev,0),
     water_rate_per_unit = v_config.water_rate_per_unit,
     electricity_rate_per_unit = v_config.electricity_rate_per_unit,
     internet_amount = CASE WHEN v_emp.allow_internet THEN v_config.internet_fee_monthly ELSE 0 END,
