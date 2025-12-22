@@ -47,7 +47,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	}
 	q.Status = strings.TrimSpace(q.Status)
 	if q.Status == "" {
-		q.Status = "active"
+		q.Status = "all"
 	}
 	q.EmployeeTypeID = strings.TrimSpace(q.EmployeeTypeID)
 	q.EmployeeTypeCode = strings.TrimSpace(strings.ToLower(q.EmployeeTypeCode))

@@ -87,7 +87,7 @@ ON CONFLICT (code) DO NOTHING;
 CREATE TABLE employees (
   id UUID PRIMARY KEY DEFAULT uuidv7(),
 
-  employee_number TEXT NOT NULL,                      -- ป้อนเอง, unique เฉพาะคนยังทำงานและไม่ถูกลบ
+  employee_number TEXT NOT NULL,                      -- ป้อนเอง, unique เฉพาะ "ยังไม่ถูกลบ" 
 
   title_id UUID NOT NULL REFERENCES person_title(id) ON DELETE RESTRICT,
   first_name  TEXT NOT NULL,
@@ -150,10 +150,10 @@ CREATE TABLE employees (
   )
 );
 
--- ห้ามซ้ำ employee_number เฉพาะ "ยังทำงานอยู่" และ "ยังไม่ถูกลบ"
+-- ห้ามซ้ำ employee_number เฉพาะ "ยังไม่ถูกลบ" (พ้นสภาพแล้วกลับมาทำได้)
 CREATE UNIQUE INDEX employees_empno_active_uk
 ON employees (lower(employee_number))
-WHERE employment_end_date IS NULL AND deleted_at IS NULL;
+WHERE deleted_at IS NULL;
 
 -- สะดวกค้นหา
 CREATE INDEX employees_doc_idx ON employees (id_document_type_id, id_document_number);

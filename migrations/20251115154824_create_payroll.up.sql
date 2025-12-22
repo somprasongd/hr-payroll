@@ -960,7 +960,20 @@ BEGIN
   LEFT JOIN employee_position ep ON ep.id = e.position_id
   WHERE e.id = p_employee_id;
 
-  IF v_emp IS NULL THEN RETURN; END IF;
+  -- ถ้าไม่มีข้อมูลพนักงานแล้ว (ถูก hard delete) ให้ลบ item ทิ้งและหยุด
+  IF v_emp IS NULL THEN
+    DELETE FROM payroll_run_item
+    WHERE run_id = p_run_id AND employee_id = p_employee_id;
+    RETURN;
+  END IF;
+
+  -- ถ้าพนักงานถูกลบหรือสิ้นสุดการจ้างก่อนวันเริ่มงวด ให้ลบ item ออกและหยุด
+  IF v_emp.deleted_at IS NOT NULL
+     OR (v_emp.employment_end_date IS NOT NULL AND v_emp.employment_end_date < v_run.period_start_date) THEN
+    DELETE FROM payroll_run_item
+    WHERE run_id = p_run_id AND employee_id = p_employee_id;
+    RETURN;
+  END IF;
 
   -- 3. คำนวณตามสูตร (Logic เดียวกับ payroll_run_generate_items)
   
@@ -1224,25 +1237,52 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.sync_payroll_on_employee_change() RETURNS trigger AS $$
 DECLARE
   r_run RECORD;
+  v_emp_id UUID;
+  v_end_date DATE;
+  v_deleted_at TIMESTAMPTZ;
 BEGIN
+  v_emp_id := COALESCE(NEW.id, OLD.id);
+  v_end_date := COALESCE(NEW.employment_end_date, OLD.employment_end_date);
+  v_deleted_at := COALESCE(NEW.deleted_at, OLD.deleted_at);
+
   -- หา Payroll Run ที่ยัง Pending อยู่
   FOR r_run IN 
-    SELECT id FROM payroll_run WHERE status = 'pending' AND deleted_at IS NULL
+    SELECT id, period_start_date FROM payroll_run WHERE status = 'pending' AND deleted_at IS NULL
   LOOP
+    -- ถ้าสิ้นสุดการจ้างก่อนเริ่มงวด หรือถูกลบ ให้ลบรายการออก
+    IF v_deleted_at IS NOT NULL
+       OR (v_end_date IS NOT NULL AND v_end_date < r_run.period_start_date) THEN
+      DELETE FROM payroll_run_item
+      WHERE run_id = r_run.id AND employee_id = v_emp_id;
+      CONTINUE;
+    END IF;
+
     -- สั่งคำนวณใหม่เฉพาะพนักงานคนนี้
-    PERFORM recalculate_payroll_item(r_run.id, NEW.id);
+    PERFORM recalculate_payroll_item(r_run.id, v_emp_id);
   END LOOP;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS tg_sync_payroll_emp ON employees;
 CREATE TRIGGER tg_sync_payroll_emp
 AFTER UPDATE OF base_pay_amount, sso_contribute, sso_declared_wage, withhold_tax,
   allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
   allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
   provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
-  department_id, position_id, bank_name, bank_account_no, employee_type_id
+  department_id, position_id, bank_name, bank_account_no, employee_type_id,
+  employment_end_date, deleted_at
 ON employees
+FOR EACH ROW
+EXECUTE FUNCTION sync_payroll_on_employee_change();
+
+-- รองรับการลบพนักงาน (hard delete) ให้ตัดรายการออกจาก payroll pending ด้วย
+DROP TRIGGER IF EXISTS tg_sync_payroll_emp_delete ON employees;
+CREATE TRIGGER tg_sync_payroll_emp_delete
+AFTER DELETE ON employees
 FOR EACH ROW
 EXECUTE FUNCTION sync_payroll_on_employee_change();
 

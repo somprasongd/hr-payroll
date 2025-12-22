@@ -30,7 +30,7 @@ func NewEndpoint(router fiber.Router) {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
 		search := c.Query("search")
-		status := c.Query("status", "active")
+		status := c.Query("status", "all")
 		employeeTypeID := c.Query("employeeTypeId")
 		employeeTypeCode := c.Query("employeeTypeCode")
 
