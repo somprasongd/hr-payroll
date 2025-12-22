@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/salaryraise/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -42,10 +41,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
 
 		start, err := parseDatePtr(req.PeriodStart)
 		if err != nil {
@@ -61,10 +56,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 			StartDate: start,
 			EndDate:   end,
 			Status:    req.Status,
-			ActorID:   user.ID,
-			ActorRole: user.Role,
-			Repo:      repo,
-			Eb:        eb,
 		})
 		if err != nil {
 			return err

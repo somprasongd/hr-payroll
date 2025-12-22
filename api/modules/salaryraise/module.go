@@ -19,18 +19,18 @@ import (
 )
 
 type Module struct {
-	ctx        *module.ModuleContext
-	repo       repository.Repository
-	tokenSvc   *jwt.TokenService
-	eb         eventbus.EventBus
+	ctx      *module.ModuleContext
+	repo     repository.Repository
+	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:        ctx,
-		repo:       repo,
-		tokenSvc:   tokenSvc,
+		ctx:      ctx,
+		repo:     repo,
+		tokenSvc: tokenSvc,
 	}
 }
 
@@ -41,9 +41,9 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler())
 	mediator.Register[*get.Query, *get.Response](get.NewHandler())
 	mediator.Register[*create.Command, *create.Response](create.NewHandler())
-	mediator.Register[*update.Command, *update.Response](update.NewHandler())
+	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.eb))
 	mediator.Register[*itemslist.Query, *itemslist.Response](itemslist.NewHandler())
-	mediator.Register[*itemsupdate.Command, *itemsupdate.Response](itemsupdate.NewHandler())
+	mediator.Register[*itemsupdate.Command, *itemsupdate.Response](itemsupdate.NewHandler(m.repo, m.eb))
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler())
 	return nil
 }

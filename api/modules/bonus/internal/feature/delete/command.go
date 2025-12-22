@@ -20,10 +20,9 @@ import (
 )
 
 type Command struct {
-	ID    uuid.UUID
-	Actor uuid.UUID
-	Repo  repository.Repository
-	Eb    eventbus.EventBus
+	ID   uuid.UUID
+	Repo repository.Repository
+	Eb   eventbus.EventBus
 }
 
 type Handler struct{}
@@ -38,6 +37,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
 	}
 
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
+
 	cycle, _, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -49,7 +53,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if cycle.Status == "approved" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete approved cycle")
 	}
-	if err := cmd.Repo.DeleteCycle(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
+	if err := cmd.Repo.DeleteCycle(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("bonus cycle not found")
 		}
@@ -57,8 +61,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		return mediator.NoResponse{}, errs.Internal("failed to delete bonus cycle")
 	}
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "DELETE",
 		EntityName: "BONUS_CYCLE",
 		EntityID:   cmd.ID.String(),

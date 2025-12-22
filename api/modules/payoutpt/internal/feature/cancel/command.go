@@ -19,10 +19,9 @@ import (
 )
 
 type Command struct {
-	ID    uuid.UUID
-	Actor uuid.UUID
-	Repo  repository.Repository
-	Eb    eventbus.EventBus
+	ID   uuid.UUID
+	Repo repository.Repository
+	Eb   eventbus.EventBus
 }
 
 type Handler struct{}
@@ -37,6 +36,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
 	}
 
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
+
 	payout, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -48,7 +52,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if payout.Status != "to_pay" {
 		return mediator.NoResponse{}, errs.BadRequest("only to_pay payouts can be cancelled")
 	}
-	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
+	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("payout not found or already cancelled")
 		}
@@ -56,9 +60,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		return mediator.NoResponse{}, errs.Internal("failed to cancel payout")
 	}
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
-		Action:     "DELETE", // Or STATUS_CHANGE? Delete implies removal. Soft delete is delete action.
+		BranchID:   tenant.BranchIDPtr(),
+		Action:     "DELETE",
 		EntityName: "PAYOUT_PT",
 		EntityID:   cmd.ID.String(),
 		Details: map[string]interface{}{

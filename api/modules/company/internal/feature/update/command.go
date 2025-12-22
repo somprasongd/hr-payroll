@@ -3,18 +3,15 @@ package update
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"hrms/modules/company/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 )
 
-
 type Command struct {
-	Repo    repository.Repository
-	Code    string
-	Name    string
-	ActorID uuid.UUID
+	Repo repository.Repository
+	Code string
+	Name string
 }
 
 type Response struct {
@@ -28,7 +25,12 @@ func NewHandler() *commandHandler {
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	company, err := cmd.Repo.Update(ctx, cmd.Code, cmd.Name, cmd.ActorID)
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
+	company, err := cmd.Repo.Update(ctx, cmd.Code, cmd.Name, user.ID)
 	if err != nil {
 		return nil, errs.Internal("failed to update company")
 	}

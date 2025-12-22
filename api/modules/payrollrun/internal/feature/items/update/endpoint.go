@@ -4,43 +4,44 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/salaryraise/internal/repository"
+	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
-	"hrms/shared/common/response"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
-// @Summary Update salary raise item
-// @Tags Salary Raise
+// @Summary Adjust payroll item
+// @Description แก้ไขยอดในสลิป (เฉพาะรันที่ไม่ approved)
+// @Tags Payroll Run
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "item id"
-// @Param request body Command true "payload"
-// @Success 200 {object} Response
+// @Param request body UpdateRequest true "payload"
+// @Success 200 {object} UpdateResponse
 // @Failure 400
 // @Failure 401
 // @Failure 403
 // @Failure 404
-// @Router /salary-raise-items/{id} [patch]
+// @Router /payroll-items/{id} [patch]
 func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
-	router.Patch("/:id", func(c fiber.Ctx) error {
-		id, err := uuid.Parse(c.Params("id"))
+	router.Patch("/:itemId", func(c fiber.Ctx) error {
+		itemID, err := uuid.Parse(c.Params("itemId"))
 		if err != nil {
 			return errs.BadRequest("invalid item id")
 		}
-		var req Command
+		var req UpdateRequest
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-		req.ID = id
-
-		resp, err := mediator.Send[*Command, *Response](c.Context(), &req)
+		_, err = mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &UpdateCommand{
+			ID:      itemID,
+			Payload: req,
+		})
 		if err != nil {
 			return err
 		}
-		return response.JSON(c, fiber.StatusOK, resp.Item)
+		return c.SendStatus(fiber.StatusNoContent)
 	})
 }

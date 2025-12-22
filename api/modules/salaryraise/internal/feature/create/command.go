@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/salaryraise/internal/dto"
 	"hrms/modules/salaryraise/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -20,9 +20,6 @@ import (
 type Command struct {
 	PeriodStart string                `json:"periodStartDate"`
 	PeriodEnd   string                `json:"periodEndDate"`
-	CompanyID   uuid.UUID             `json:"-"`
-	BranchID    uuid.UUID             `json:"-"`
-	ActorID     uuid.UUID             `json:"-"`
 	Repo        repository.Repository `json:"-"`
 	Tx          transactor.Transactor `json:"-"`
 	Eb          eventbus.EventBus     `json:"-"`
@@ -58,6 +55,16 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	if cmd.ParsedPeriodStart.IsZero() || cmd.ParsedPeriodEnd.IsZero() {
 		return nil, errs.BadRequest("periodStartDate and periodEndDate are required")
 	}
@@ -68,7 +75,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var cycle *repository.Cycle
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.CompanyID, cmd.BranchID, cmd.ActorID)
+		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, tenant.CompanyID, tenant.BranchID, user.ID)
 		return err
 	}); err != nil {
 		if repository.IsUniqueViolation(err, "salary_raise_cycle_pending_branch_uk") {
@@ -79,8 +86,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
-		CompanyID:  &cmd.CompanyID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "SALARY_RAISE_CYCLE",
 		EntityID:   cycle.ID.String(),

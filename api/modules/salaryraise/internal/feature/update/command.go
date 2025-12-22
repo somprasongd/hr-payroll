@@ -27,26 +27,32 @@ type Command struct {
 	StartDate *time.Time
 	EndDate   *time.Time
 	Status    *string
-	ActorID   uuid.UUID
-	ActorRole string
-	Repo      repository.Repository
-	Eb        eventbus.EventBus
 }
 
 type Response struct {
 	dto.Cycle
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
 	}
 
 	if cmd.StartDate == nil && cmd.EndDate == nil && cmd.Status == nil {
@@ -55,7 +61,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	if cmd.Status != nil {
 		status := strings.TrimSpace(strings.ToLower(*cmd.Status))
-		if cmd.ActorRole == "hr" {
+		if user.Role == "hr" { // Assuming user.Role is available from contextx.UserFromContext
 			return nil, errs.Forbidden("HR is not allowed to change status")
 		}
 		if status != "approved" && status != "rejected" {
@@ -68,7 +74,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.BadRequest("periodEndDate must be on or after periodStartDate")
 	}
 
-	updated, err := cmd.Repo.UpdateCycle(ctx, tenant, cmd.ID, cmd.StartDate, cmd.EndDate, cmd.Status, cmd.ActorID)
+	updated, err := h.repo.UpdateCycle(ctx, tenant, cmd.ID, cmd.StartDate, cmd.EndDate, cmd.Status, user.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("cycle not found")
@@ -92,9 +98,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		details["end_date"] = cmd.EndDate.Format("2006-01-02")
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+	h.eb.Publish(events.LogEvent{
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE",
 		EntityName: "SALARY_RAISE_CYCLE",
 		EntityID:   updated.ID.String(),

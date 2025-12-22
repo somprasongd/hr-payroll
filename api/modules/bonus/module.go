@@ -18,18 +18,18 @@ import (
 )
 
 type Module struct {
-	ctx        *module.ModuleContext
-	repo       repository.Repository
-	tokenSvc   *jwt.TokenService
-	eb         eventbus.EventBus
+	ctx      *module.ModuleContext
+	repo     repository.Repository
+	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:        ctx,
-		repo:       repo,
-		tokenSvc:   tokenSvc,
+		ctx:      ctx,
+		repo:     repo,
+		tokenSvc: tokenSvc,
 	}
 }
 
@@ -55,7 +55,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	items.RegisterList(group, m.repo)
 
 	itemGroup := r.Group("/bonus-items", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr"))
-	items.RegisterUpdate(itemGroup, m.repo)
+	items.RegisterUpdate(itemGroup, m.repo, m.eb)
 
 	admin := group.Group("", middleware.RequireRoles("admin"))
 	approve.NewEndpoint(admin, m.repo, m.ctx.Transactor, m.eb)

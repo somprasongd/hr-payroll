@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -93,16 +92,6 @@ func NewEndpoint(router fiber.Router) {
 			fileName = "document"
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
-		tenant, ok := contextx.TenantFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing tenant context")
-		}
-
 		// Parse optional fields
 		var documentNumber *string
 		if dn := c.FormValue("documentNumber"); dn != "" {
@@ -139,9 +128,6 @@ func NewEndpoint(router fiber.Router) {
 			IssueDate:      issueDate,
 			ExpiryDate:     expiryDate,
 			Notes:          notes,
-			ActorID:        user.ID,
-			CompanyID:      tenant.CompanyID,
-			BranchID:       tenant.BranchID,
 		})
 		if err != nil {
 			return err

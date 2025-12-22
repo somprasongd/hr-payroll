@@ -35,3 +35,11 @@ func TenantFromContext(ctx context.Context) (TenantInfo, bool) {
 func (t TenantInfo) HasBranchID() bool {
 	return t.BranchID != uuid.Nil
 }
+
+// BranchIDPtr returns a pointer to BranchID if it's not Nil, otherwise nil
+func (t TenantInfo) BranchIDPtr() *uuid.UUID {
+	if t.BranchID == uuid.Nil {
+		return nil
+	}
+	return &t.BranchID
+}

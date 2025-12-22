@@ -24,7 +24,6 @@ import (
 
 type CreateCommand struct {
 	Payload CreateRequest
-	ActorID uuid.UUID
 	Repo    repository.FTRepository
 	Tx      transactor.Transactor
 	Eb      eventbus.EventBus
@@ -44,6 +43,11 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	parsedDate, err := validateFTPayload(&cmd.Payload)
 	if err != nil {
 		return nil, err
@@ -56,8 +60,8 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		WorkDate:   parsedDate,
 		Quantity:   cmd.Payload.Quantity,
 		Status:     "pending",
-		CreatedBy:  cmd.ActorID,
-		UpdatedBy:  cmd.ActorID,
+		CreatedBy:  user.ID,
+		UpdatedBy:  user.ID,
 	}
 
 	var created *repository.FTRecord
@@ -90,8 +94,9 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	}
 
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "WORKLOG_FT",
 		EntityID:   created.ID.String(),
@@ -157,14 +162,8 @@ func registerCreate(router fiber.Router, repo repository.FTRepository, tx transa
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		resp, err := mediator.Send[*CreateCommand, *CreateResponse](c.Context(), &CreateCommand{
 			Payload: req,
-			ActorID: user.ID,
 			Repo:    repo,
 			Tx:      tx,
 			Eb:      eb,

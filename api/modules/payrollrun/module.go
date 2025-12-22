@@ -4,7 +4,9 @@ import (
 	"hrms/modules/payrollrun/internal/feature/create"
 	"hrms/modules/payrollrun/internal/feature/delete"
 	"hrms/modules/payrollrun/internal/feature/get"
-	"hrms/modules/payrollrun/internal/feature/items"
+	itemsget "hrms/modules/payrollrun/internal/feature/items/get"
+	itemslist "hrms/modules/payrollrun/internal/feature/items/list"
+	itemsupdate "hrms/modules/payrollrun/internal/feature/items/update"
 	"hrms/modules/payrollrun/internal/feature/list"
 	"hrms/modules/payrollrun/internal/feature/update"
 	"hrms/modules/payrollrun/internal/repository"
@@ -18,18 +20,18 @@ import (
 )
 
 type Module struct {
-	ctx        *module.ModuleContext
-	repo       repository.Repository
-	tokenSvc   *jwt.TokenService
-	eb         eventbus.EventBus
+	ctx      *module.ModuleContext
+	repo     repository.Repository
+	tokenSvc *jwt.TokenService
+	eb       eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:        ctx,
-		repo:       repo,
-		tokenSvc:   tokenSvc,
+		ctx:      ctx,
+		repo:     repo,
+		tokenSvc: tokenSvc,
 	}
 }
 
@@ -42,9 +44,9 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*create.Command, *create.Response](create.NewHandler())
 	mediator.Register[*update.Command, *update.Response](update.NewHandler())
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler())
-	mediator.Register[*items.ListQuery, *items.ListResponse](items.NewListHandler())
-	mediator.Register[*items.UpdateCommand, *items.UpdateResponse](items.NewUpdateHandler())
-	mediator.Register[*items.GetQuery, *items.GetResponse](items.NewGetHandler())
+	mediator.Register[*itemslist.ListQuery, *itemslist.ListResponse](itemslist.NewListHandler())
+	mediator.Register[*itemsupdate.UpdateCommand, *itemsupdate.UpdateResponse](itemsupdate.NewUpdateHandler(m.repo, m.ctx.Transactor, m.eb))
+	mediator.Register[*itemsget.GetQuery, *itemsget.GetResponse](itemsget.NewGetHandler())
 	return nil
 }
 
@@ -57,5 +59,8 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	// delete run = admin only
 	delete.NewEndpoint(runGroup.Group("", middleware.RequireRoles("admin")), m.repo, m.eb)
 
-	items.Register(runGroup, r.Group("/payroll-items", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr")), m.repo, m.ctx.Transactor)
+	itemslist.NewEndpoint(runGroup, m.repo)
+	itemGroup := r.Group("/payroll-items", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr"))
+	itemsget.NewEndpoint(itemGroup, m.repo)
+	itemsupdate.NewEndpoint(itemGroup, m.repo, m.ctx.Transactor, m.eb)
 }

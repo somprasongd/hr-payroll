@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -25,9 +26,6 @@ type Command struct {
 	ContentType string
 	Data        []byte
 	Size        int64
-	CompanyID   uuid.UUID
-	BranchID    uuid.UUID
-	ActorID     uuid.UUID
 }
 
 type Response struct {
@@ -50,6 +48,16 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	if len(cmd.Data) == 0 {
 		return nil, errs.BadRequest("file is empty")
 	}
@@ -64,13 +72,13 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	checksum := hex.EncodeToString(sum[:])
 
 	rec, err := h.repo.InsertPhoto(ctx, repository.PhotoRecord{
-		CompanyID:     cmd.CompanyID,
+		CompanyID:     tenant.CompanyID,
 		FileName:      cmd.FileName,
 		ContentType:   cmd.ContentType,
 		FileSizeBytes: cmd.Size,
 		Data:          cmd.Data,
 		ChecksumMD5:   checksum,
-		CreatedBy:     cmd.ActorID,
+		CreatedBy:     user.ID,
 	})
 	if err != nil {
 		if repository.IsUniqueViolation(err) {
@@ -81,9 +89,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
-		CompanyID:  &cmd.CompanyID,
-		BranchID:   &cmd.BranchID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPLOAD",
 		EntityName: "EMPLOYEE_PHOTO",
 		EntityID:   rec.ID.String(),

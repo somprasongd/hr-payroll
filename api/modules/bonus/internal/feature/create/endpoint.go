@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 
 	"hrms/modules/bonus/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -34,17 +33,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		if err := req.ParseDates(); err != nil {
 			return err
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-		tenant, ok := contextx.TenantFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing tenant context")
-		}
-		req.CompanyID = tenant.CompanyID
-		req.BranchID = tenant.BranchID
-		req.ActorID = user.ID
 		req.Repo = repo
 		req.Tx = tx
 		req.Eb = eb

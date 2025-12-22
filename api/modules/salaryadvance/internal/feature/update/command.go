@@ -24,7 +24,6 @@ import (
 type Command struct {
 	ID      uuid.UUID
 	Payload Request
-	ActorID uuid.UUID
 }
 
 type Response struct {
@@ -59,6 +58,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	advDate, payrollMonth, err := validate(cmd.Payload)
 	if err != nil {
 		return nil, err
@@ -85,7 +89,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var updated *repository.Record
 	err = h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		updated, err = h.repo.Update(ctxTx, tenant, cmd.ID, rec, cmd.ActorID)
+		updated, err = h.repo.Update(ctxTx, tenant, cmd.ID, rec, user.ID)
 		return err
 	})
 	if err != nil {
@@ -97,8 +101,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE",
 		EntityName: "SALARY_ADVANCE",
 		EntityID:   updated.ID.String(),

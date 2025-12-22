@@ -26,7 +26,6 @@ import (
 type UpdateCommand struct {
 	ID      uuid.UUID
 	Payload UpdateRequest
-	ActorID uuid.UUID
 	Repo    repository.PTRepository
 	Tx      transactor.Transactor
 	Eb      eventbus.EventBus
@@ -55,6 +54,11 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	current, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -80,7 +84,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		EveningIn:  eveningIn,
 		EveningOut: eveningOut,
 		Status:     status,
-		UpdatedBy:  cmd.ActorID,
+		UpdatedBy:  user.ID,
 	}
 
 	var updated *repository.PTRecord
@@ -118,8 +122,9 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE",
 		EntityName: "WORKLOG_PT",
 		EntityID:   updated.ID.String(),
@@ -210,15 +215,9 @@ func registerUpdate(router fiber.Router, repo repository.PTRepository, tx transa
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		resp, err := mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &UpdateCommand{
 			ID:      id,
 			Payload: req,
-			ActorID: user.ID,
 			Repo:    repo,
 			Tx:      tx,
 			Eb:      eb,

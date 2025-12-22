@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -17,9 +18,6 @@ import (
 
 type Command struct {
 	DocumentID uuid.UUID
-	ActorID    uuid.UUID
-	CompanyID  uuid.UUID
-	BranchID   uuid.UUID
 }
 
 type Handler struct {
@@ -34,7 +32,17 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	err := h.repo.SoftDeleteDocument(ctx, cmd.DocumentID, cmd.ActorID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
+
+	err := h.repo.SoftDeleteDocument(ctx, cmd.DocumentID, user.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("document not found")
@@ -43,9 +51,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
-		CompanyID:  &cmd.CompanyID,
-		BranchID:   &cmd.BranchID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "DELETE",
 		EntityName: "EMPLOYEE_DOCUMENT",
 		EntityID:   cmd.DocumentID.String(),

@@ -1,39 +1,46 @@
-package items
+package itemsupdate
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"time"
 
-	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"hrms/modules/payrollrun/internal/dto"
 	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
-	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/events"
 )
 
 type UpdateCommand struct {
-	ID      uuid.UUID
+	ID      uuid.UUID `json:"-"`
 	Payload UpdateRequest
-	ActorID uuid.UUID
-	Repo    repository.Repository
-	Tx      transactor.Transactor
 }
 
 type UpdateResponse struct {
-	dto.Item
+	Item *repository.Item `json:"item"`
 }
 
-type updateHandler struct{}
+type updateHandler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
-func NewUpdateHandler() *updateHandler { return &updateHandler{} }
+func NewUpdateHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *updateHandler {
+	return &updateHandler{
+		repo: repo,
+		tx:   tx,
+		eb:   eb,
+	}
+}
 
 type UpdateRequest struct {
 	SalaryAmount            *float64                  `json:"salaryAmount"`
@@ -65,23 +72,28 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
-	itemDetail, err := cmd.Repo.GetItemDetail(ctx, tenant, cmd.ID)
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
+	itemDetail, err := h.repo.GetItemDetail(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll item not found")
 		}
-		logger.FromContext(ctx).Error("failed to load payroll item", zap.Error(err))
 		return nil, errs.Internal("failed to load payroll item")
 	}
 	item := &itemDetail.Item
 	// ensure parent run pending
-	run, err := cmd.Repo.Get(ctx, tenant, item.RunID)
+	run, err := h.repo.Get(ctx, tenant, item.RunID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to load payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to load run for item")
 	}
 	if run.Status != "pending" {
-		return nil, errs.BadRequest("can adjust items only when run is pending")
+		return nil, errs.BadRequest("only pending run can be adjusted")
 	}
 
 	// Validate employee settings to prevent overriding disabled benefits/deductions.
@@ -194,56 +206,25 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 
 	var updated *repository.Item
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		updated, err = cmd.Repo.UpdateItem(ctxTx, tenant, cmd.ID, cmd.ActorID, fields)
+		updated, err = h.repo.UpdateItem(ctxTx, tenant, cmd.ID, user.ID, fields)
 		return err
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to update payroll item", zap.Error(err))
 		return nil, errs.Internal("failed to update payroll item")
 	}
 
-	return &UpdateResponse{Item: dto.FromItem(*updated)}, nil
-}
-
-// @Summary Adjust payroll item
-// @Description แก้ไขยอดในสลิป (เฉพาะรันที่ไม่ approved)
-// @Tags Payroll Run
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "item id"
-// @Param request body UpdateRequest true "payload"
-// @Success 200 {object} UpdateResponse
-// @Failure 400
-// @Failure 401
-// @Failure 403
-// @Failure 404
-// @Router /payroll-items/{id} [patch]
-func RegisterUpdateItem(router fiber.Router, repo repository.Repository, tx transactor.Transactor) {
-	router.Patch("/:itemId", func(c fiber.Ctx) error {
-		itemID, err := uuid.Parse(c.Params("itemId"))
-		if err != nil {
-			return errs.BadRequest("invalid item id")
-		}
-		var req UpdateRequest
-		if err := c.Bind().Body(&req); err != nil {
-			return errs.BadRequest("invalid request body")
-		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-		_, err = mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &UpdateCommand{
-			ID:      itemID,
-			Payload: req,
-			ActorID: user.ID,
-			Repo:    repo,
-			Tx:      tx,
-		})
-		if err != nil {
-			return err
-		}
-		return c.SendStatus(fiber.StatusNoContent)
+	h.eb.Publish(events.LogEvent{
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
+		Action:     "UPDATE_ITEM",
+		EntityName: "PAYROLL_RUN_ITEM",
+		EntityID:   updated.ID.String(),
+		Details:    fields,
+		Timestamp:  time.Now(),
 	})
+
+	return &UpdateResponse{Item: updated}, nil
 }

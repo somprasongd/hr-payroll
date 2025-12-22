@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -38,9 +39,6 @@ type Command struct {
 	IssueDate      *time.Time
 	ExpiryDate     *time.Time
 	Notes          *string
-	ActorID        uuid.UUID
-	CompanyID      uuid.UUID
-	BranchID       uuid.UUID
 }
 
 type Response struct {
@@ -66,6 +64,16 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	if len(cmd.Data) == 0 {
 		return nil, errs.BadRequest("file is empty")
 	}
@@ -98,7 +106,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		IssueDate:      cmd.IssueDate,
 		ExpiryDate:     cmd.ExpiryDate,
 		Notes:          cmd.Notes,
-	}, cmd.ActorID)
+	}, user.ID)
 	if err != nil {
 		if repository.IsUniqueViolation(err) {
 			return nil, errs.Conflict("duplicate document (same file already uploaded for this employee)")
@@ -108,9 +116,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
-		CompanyID:  &cmd.CompanyID,
-		BranchID:   &cmd.BranchID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPLOAD",
 		EntityName: "EMPLOYEE_DOCUMENT",
 		EntityID:   rec.ID.String(),

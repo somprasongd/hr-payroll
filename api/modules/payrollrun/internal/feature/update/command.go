@@ -22,14 +22,12 @@ import (
 )
 
 type Command struct {
-	ID        uuid.UUID
-	Status    string  `json:"status"`
-	PayDate   *string `json:"payDate"`
-	ActorID   uuid.UUID
-	ActorRole string
-	Repo      repository.Repository
-	Tx        transactor.Transactor
-	Eb        eventbus.EventBus
+	ID      uuid.UUID             `json:"-"`
+	Status  string                `json:"status"`
+	PayDate *string               `json:"payDate"`
+	Repo    repository.Repository `json:"-"`
+	Tx      transactor.Transactor `json:"-"`
+	Eb      eventbus.EventBus     `json:"-"`
 }
 
 type Response struct {
@@ -47,6 +45,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
 	}
 
 	if cmd.Status != "" {
@@ -80,19 +83,19 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.BadRequest("approved run cannot be modified")
 	}
 
-	if cmd.Status == "approved" && cmd.ActorRole != "admin" {
+	if cmd.Status == "approved" && user.Role != "admin" {
 		return nil, errs.Forbidden("only admin can approve payroll run")
 	}
 
 	var updated *repository.Run
 	if cmd.Status == "approved" {
-		updated, err = cmd.Repo.Approve(ctx, tenant, cmd.ID, cmd.ActorID)
+		updated, err = cmd.Repo.Approve(ctx, tenant, cmd.ID, user.ID)
 	} else {
 		newStatus := run.Status
 		if cmd.Status != "" {
 			newStatus = cmd.Status
 		}
-		updated, err = cmd.Repo.UpdateStatus(ctx, tenant, cmd.ID, newStatus, payDate, cmd.ActorID)
+		updated, err = cmd.Repo.UpdateStatus(ctx, tenant, cmd.ID, newStatus, payDate, user.ID)
 	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -112,7 +115,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	if len(details) > 0 {
 		cmd.Eb.Publish(events.LogEvent{
-			ActorID:    cmd.ActorID,
+			ActorID:    user.ID,
+			CompanyID:  &tenant.CompanyID,
+			BranchID:   tenant.BranchIDPtr(),
 			Action:     "UPDATE",
 			EntityName: "PAYROLL_RUN",
 			EntityID:   updated.ID.String(),

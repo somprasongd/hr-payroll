@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/bonus/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -23,15 +22,11 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 		if err != nil {
 			return errs.BadRequest("invalid id")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
+
 		if _, err := mediator.Send[*Command, mediator.NoResponse](c.Context(), &Command{
-			ID:    id,
-			Actor: user.ID,
-			Repo:  repo,
-			Eb:    eb,
+			ID:   id,
+			Repo: repo,
+			Eb:   eb,
 		}); err != nil {
 			return err
 		}

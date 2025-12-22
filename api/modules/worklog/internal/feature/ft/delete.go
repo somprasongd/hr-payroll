@@ -20,10 +20,9 @@ import (
 )
 
 type DeleteCommand struct {
-	ID    uuid.UUID
-	Actor uuid.UUID
-	Repo  repository.FTRepository
-	Eb    eventbus.EventBus
+	ID   uuid.UUID
+	Repo repository.FTRepository
+	Eb   eventbus.EventBus
 }
 
 type deleteHandler struct{}
@@ -34,6 +33,11 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
 	}
 
 	rec, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
@@ -47,7 +51,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 	if rec.Status != "pending" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete non-pending worklog")
 	}
-	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, cmd.Actor); err != nil {
+	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
 		}
@@ -56,8 +60,9 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 	}
 
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "DELETE",
 		EntityName: "WORKLOG_FT",
 		EntityID:   cmd.ID.String(),
@@ -84,15 +89,10 @@ func registerDelete(router fiber.Router, repo repository.FTRepository, eb eventb
 		if err != nil {
 			return errs.BadRequest("invalid id")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
 		if _, err := mediator.Send[*DeleteCommand, mediator.NoResponse](c.Context(), &DeleteCommand{
-			ID:    id,
-			Actor: user.ID,
-			Repo:  repo,
-			Eb:    eb,
+			ID:   id,
+			Repo: repo,
+			Eb:   eb,
 		}); err != nil {
 			return err
 		}

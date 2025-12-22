@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/payoutpt/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -25,16 +24,12 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		if err != nil {
 			return errs.BadRequest("invalid payout id")
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
+
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			ID:    id,
-			Actor: user.ID,
-			Repo:  repo,
-			Tx:    tx,
-			Eb:    eb,
+			ID:   id,
+			Repo: repo,
+			Tx:   tx,
+			Eb:   eb,
 		})
 		if err != nil {
 			return err

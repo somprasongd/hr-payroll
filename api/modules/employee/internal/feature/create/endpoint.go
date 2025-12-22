@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/employee/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -143,21 +142,8 @@ func NewEndpoint(router fiber.Router) {
 			return err
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
-		tenant, ok := contextx.TenantFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing tenant context")
-		}
-
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Payload:   req,
-			CompanyID: tenant.CompanyID,
-			BranchID:  tenant.BranchID,
-			ActorID:   user.ID,
+			Payload: req,
 		})
 		if err != nil {
 			return err
