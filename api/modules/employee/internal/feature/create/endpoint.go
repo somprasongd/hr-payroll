@@ -71,6 +71,14 @@ type RequestBody struct {
 }
 
 func (p RequestBody) ToDetailRecord() repository.DetailRecord {
+	var ssoDeclaredWage *float64
+	if p.SSOContribute {
+		ssoDeclaredWage = p.SSODeclaredWage
+	} else {
+		// DB constraint: when sso_contribute is false, wage must be NULL/0
+		ssoDeclaredWage = nil
+	}
+
 	return repository.DetailRecord{
 		EmployeeNumber:              p.EmployeeNumber,
 		TitleID:                     p.TitleID,
@@ -90,7 +98,7 @@ func (p RequestBody) ToDetailRecord() repository.DetailRecord {
 		BankName:                    p.BankName,
 		BankAccountNo:               p.BankAccountNo,
 		SSOContribute:               p.SSOContribute,
-		SSODeclaredWage:             p.SSODeclaredWage,
+		SSODeclaredWage:             ssoDeclaredWage,
 		ProvidentFundContribute:     p.ProvidentFundContribute,
 		ProvidentFundRateEmployee:   p.ProvidentFundRateEmployee,
 		ProvidentFundRateEmployer:   p.ProvidentFundRateEmployer,
