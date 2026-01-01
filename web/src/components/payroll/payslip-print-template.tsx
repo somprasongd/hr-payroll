@@ -297,7 +297,7 @@ const SlipHalf = ({
         <div style={styles.slipTitle}>
           <div style={styles.slipTitleBox}>ใบจ่ายเงินเดือน</div>
           <div style={{ fontSize: '10px', ...styles.gray }}>PAY SLIP</div>
-          <div style={styles.slipType}>{isPending ? 'รายการรออนุมัติ' : (isOriginal ? 'ต้นฉบับ မူရင်း' : 'สำเนา မိတ္တူ')}</div>
+          <div style={styles.slipType}>{isPending ? 'รายการรออนุมัติ ခွင့်ပြုချက်စောင့်နေ' : (isOriginal ? 'ต้นฉบับ မူရင်း' : 'สำเนา မိတ္တူ')}</div>
         </div>
       </div>
 

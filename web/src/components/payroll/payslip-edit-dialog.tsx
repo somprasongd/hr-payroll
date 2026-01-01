@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, Plus, Trash2, RotateCcw, Printer } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, RotateCcw, Printer, Eye } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 
 import {
@@ -122,6 +122,9 @@ export function PayslipEditDialog({
   const [printing, setPrinting] = useState(false);
   const [printOriginal, setPrintOriginal] = useState(true);
   const [printCopy, setPrintCopy] = useState(true);
+  
+  // Preview state
+  const [showPreview, setShowPreview] = useState(false);
   
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -1141,6 +1144,24 @@ export function PayslipEditDialog({
                       <Button
                         variant="outline"
                         onClick={async () => {
+                          // Fetch logo if not already loaded
+                          if (orgProfile?.logo_id && !logoUrl) {
+                            try {
+                              const url = await orgProfileService.fetchLogoWithCache(orgProfile.logo_id);
+                              setLogoUrl(url);
+                            } catch {
+                              setLogoUrl(null);
+                            }
+                          }
+                          setShowPreview(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        ดูตัวอย่าง
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
                           setPrinting(true);
                           // Fetch logo if not already loaded
                           if (orgProfile?.logo_id && !logoUrl) {
@@ -1220,6 +1241,56 @@ export function PayslipEditDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview Dialog */}
+      {detail && payrollMonthDate && periodStartDate && (
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                ตัวอย่างใบจ่ายเงินเดือน - {detail.employeeName}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {/* Scrollable preview content */}
+            <div className="flex-1 overflow-y-auto border rounded-lg bg-gray-100 p-4">
+              <div className="bg-white shadow-lg mx-auto" style={{ maxWidth: '210mm' }}>
+                <PayslipPrintTemplate
+                  payslip={detail}
+                  orgProfile={orgProfile}
+                  logoUrl={logoUrl || undefined}
+                  bonusYear={bonusYear}
+                  payrollMonthDate={payrollMonthDate}
+                  periodStartDate={periodStartDate}
+                  printOriginal={isApproved ? printOriginal : true}
+                  printCopy={isApproved ? printCopy : false}
+                  isPending={!isApproved}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setShowPreview(false)}>
+                ปิด
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowPreview(false);
+                  setPrinting(true);
+                  setTimeout(() => {
+                    handlePrint();
+                    setPrinting(false);
+                  }, 100);
+                }}
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                พิมพ์
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }

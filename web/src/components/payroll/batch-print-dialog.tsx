@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Printer, Check, X, CheckSquare, Square } from 'lucide-react';
+import { Printer, Check, X, CheckSquare, Square, Eye } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 
 import {
@@ -61,6 +61,10 @@ export function BatchPrintDialog({
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [printing, setPrinting] = useState(false);
+
+  // Preview state
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
@@ -171,6 +175,26 @@ export function BatchPrintDialog({
     }
   };
 
+  // Preview handler
+  const onPreviewClick = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setPreviewLoading(true);
+    
+    try {
+      const selectedItemIds = Array.from(selectedIds);
+      const details = await Promise.all(
+        selectedItemIds.map(id => payrollService.getPayslipDetail(id))
+      );
+      setPayslipsForPrint(details);
+      setShowPreview(true);
+    } catch (error) {
+      console.error('Failed to fetch payslip details for preview:', error);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -276,6 +300,23 @@ export function BatchPrintDialog({
               {tCommon('cancel')}
             </Button>
             <Button
+              variant="outline"
+              onClick={onPreviewClick}
+              disabled={selectedIds.size === 0 || previewLoading}
+            >
+              {previewLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent mr-2" />
+                  กำลังโหลด...
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  ดูตัวอย่าง
+                </>
+              )}
+            </Button>
+            <Button
               onClick={onPrintClick}
               disabled={selectedIds.size === 0 || loading || printing}
             >
@@ -314,6 +355,54 @@ export function BatchPrintDialog({
           ))}
         </div>
       </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              ตัวอย่างใบจ่ายเงินเดือน ({payslipsForPrint.length} คน)
+            </DialogTitle>
+          </DialogHeader>
+          
+          {/* Scrollable preview content */}
+          <div className="flex-1 overflow-y-auto border rounded-lg bg-gray-100 p-4">
+            <div className="space-y-4">
+              {payslipsForPrint.map((payslip) => (
+                <div key={payslip.id} className="bg-white shadow-lg mx-auto" style={{ maxWidth: '210mm' }}>
+                  <PayslipPrintTemplate
+                    payslip={payslip}
+                    orgProfile={orgProfile}
+                    logoUrl={logoUrl || undefined}
+                    bonusYear={bonusYear}
+                    payrollMonthDate={payrollMonthDate}
+                    periodStartDate={periodStartDate}
+                    printOriginal={isPending ? true : printOriginal}
+                    printCopy={isPending ? false : printCopy}
+                    isPending={isPending}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowPreview(false)}>
+              ปิด
+            </Button>
+            <Button
+              onClick={() => {
+                setShowPreview(false);
+                onPrintClick();
+              }}
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              พิมพ์ทั้งหมด
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
