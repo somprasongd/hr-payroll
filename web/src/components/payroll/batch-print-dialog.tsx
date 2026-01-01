@@ -32,6 +32,7 @@ interface BatchPrintDialogProps {
   bonusYear?: number | null;
   payrollMonthDate: string;
   periodStartDate: string;
+  isPending?: boolean;
 }
 
 export function BatchPrintDialog({
@@ -43,6 +44,7 @@ export function BatchPrintDialog({
   bonusYear,
   payrollMonthDate,
   periodStartDate,
+  isPending = false,
 }: BatchPrintDialogProps) {
   const t = useTranslations('Payroll');
   const tCommon = useTranslations('Common');
@@ -205,34 +207,36 @@ export function BatchPrintDialog({
             </div>
           </div>
 
-          {/* Print Options */}
-          <div className="flex items-center gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
-            <span className="text-sm text-gray-600">พิมพ์:</span>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="printOriginal"
-                checked={printOriginal}
-                onCheckedChange={(checked) => {
-                  // Only allow unchecking if copy is checked
-                  if (!checked && !printCopy) return;
-                  setPrintOriginal(checked === true);
-                }}
-              />
-              <label htmlFor="printOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
+          {/* Print Options - Only show when not pending */}
+          {!isPending && (
+            <div className="flex items-center gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
+              <span className="text-sm text-gray-600">พิมพ์:</span>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="printOriginal"
+                  checked={printOriginal}
+                  onCheckedChange={(checked) => {
+                    // Only allow unchecking if copy is checked
+                    if (!checked && !printCopy) return;
+                    setPrintOriginal(checked === true);
+                  }}
+                />
+                <label htmlFor="printOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="printCopy"
+                  checked={printCopy}
+                  onCheckedChange={(checked) => {
+                    // Only allow unchecking if original is checked
+                    if (!checked && !printOriginal) return;
+                    setPrintCopy(checked === true);
+                  }}
+                />
+                <label htmlFor="printCopy" className="text-sm cursor-pointer">สำเนา</label>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="printCopy"
-                checked={printCopy}
-                onCheckedChange={(checked) => {
-                  // Only allow unchecking if original is checked
-                  if (!checked && !printOriginal) return;
-                  setPrintCopy(checked === true);
-                }}
-              />
-              <label htmlFor="printCopy" className="text-sm cursor-pointer">สำเนา</label>
-            </div>
-          </div>
+          )}
 
           {/* Employee List */}
           <div className="h-[400px] border rounded-lg overflow-y-auto">
@@ -303,8 +307,9 @@ export function BatchPrintDialog({
               bonusYear={bonusYear}
               payrollMonthDate={payrollMonthDate}
               periodStartDate={periodStartDate}
-              printOriginal={printOriginal}
-              printCopy={printCopy}
+              printOriginal={isPending ? true : printOriginal}
+              printCopy={isPending ? false : printCopy}
+              isPending={isPending}
             />
           ))}
         </div>

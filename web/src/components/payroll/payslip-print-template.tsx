@@ -17,6 +17,7 @@ interface PayslipPrintTemplateProps {
   periodStartDate: string;
   printOriginal?: boolean;
   printCopy?: boolean;
+  isPending?: boolean;
 }
 
 // Format number with Thai locale
@@ -251,6 +252,7 @@ const SlipHalf = ({
   payrollMonthDate,
   periodStartDate,
   isOriginal,
+  isPending,
 }: PayslipPrintTemplateProps & { isOriginal: boolean }) => {
   const payrollDate = new Date(payrollMonthDate);
   const periodStart = new Date(periodStartDate);
@@ -295,7 +297,7 @@ const SlipHalf = ({
         <div style={styles.slipTitle}>
           <div style={styles.slipTitleBox}>ใบจ่ายเงินเดือน</div>
           <div style={{ fontSize: '10px', ...styles.gray }}>PAY SLIP</div>
-          <div style={styles.slipType}>{isOriginal ? 'ต้นฉบับ မူရင်း' : 'สำเนา မိတ္တူ'}</div>
+          <div style={styles.slipType}>{isPending ? 'รายการรออนุมัติ' : (isOriginal ? 'ต้นฉบับ မူရင်း' : 'สำเนา မိတ္တူ')}</div>
         </div>
       </div>
 
@@ -442,7 +444,7 @@ const SlipHalf = ({
 // Main component
 export const PayslipPrintTemplate = forwardRef<HTMLDivElement, PayslipPrintTemplateProps>(
   function PayslipPrintTemplate(props, ref) {
-    const { printOriginal = true, printCopy = true, ...otherProps } = props;
+    const { printOriginal = true, printCopy = true, isPending = false, ...otherProps } = props;
     
     return (
       <div
@@ -455,11 +457,18 @@ export const PayslipPrintTemplate = forwardRef<HTMLDivElement, PayslipPrintTempl
           fontFamily: 'Arial, sans-serif',
         }}
       >
-        {/* Original - Full Page */}
-        {printOriginal && <SlipHalf {...otherProps} isOriginal={true} />}
-        
-        {/* Copy - Full Page */}
-        {printCopy && <SlipHalf {...otherProps} isOriginal={false} />}
+        {/* For pending status, print only one page with pending label */}
+        {isPending ? (
+          <SlipHalf {...otherProps} isOriginal={true} isPending={true} />
+        ) : (
+          <>
+            {/* Original - Full Page */}
+            {printOriginal && <SlipHalf {...otherProps} isOriginal={true} isPending={false} />}
+            
+            {/* Copy - Full Page */}
+            {printCopy && <SlipHalf {...otherProps} isOriginal={false} isPending={false} />}
+          </>
+        )}
       </div>
     );
   }

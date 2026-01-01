@@ -277,13 +277,11 @@ export default function PayrollDetailPage() {
             {t('actions.approve')}
           </Button>
         )}
-        {/* Batch Print Button - Only when approved */}
-        {isApproved && (
-          <Button variant="outline" onClick={() => setBatchPrintDialogOpen(true)}>
-            <Printer className="h-4 w-4 mr-2" />
-            {t('print.batchButton')}
-          </Button>
-        )}
+        {/* Batch Print Button - Available for pending and approved */}
+        <Button variant="outline" onClick={() => setBatchPrintDialogOpen(true)}>
+          <Printer className="h-4 w-4 mr-2" />
+          {t('print.batchButton')}
+        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -450,6 +448,7 @@ export default function PayrollDetailPage() {
           bonusYear={run.bonusYear}
           payrollMonthDate={run.payrollMonthDate}
           periodStartDate={run.periodStartDate}
+          isPending={isPending}
         />
       )}
     </div>

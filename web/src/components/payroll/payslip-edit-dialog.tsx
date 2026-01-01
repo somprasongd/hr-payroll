@@ -1105,37 +1105,39 @@ export function PayslipEditDialog({
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  {/* Print Button - Only when approved */}
-                  {isApproved && detail && payrollMonthDate && periodStartDate && (
+                  {/* Print Button - Available for both pending and approved */}
+                  {detail && payrollMonthDate && periodStartDate && (
                     <>
-                      {/* Print Options */}
-                      <div className="flex items-center gap-3 mr-2">
-                        <span className="text-sm text-gray-500">พิมพ์:</span>
-                        <div className="flex items-center gap-1">
-                          <Checkbox
-                            id="dialogPrintOriginal"
-                            checked={printOriginal}
-                            onCheckedChange={(checked) => {
-                              if (!checked && !printCopy) return;
-                              setPrintOriginal(checked === true);
-                            }}
-                            className="h-4 w-4"
-                          />
-                          <label htmlFor="dialogPrintOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
+                      {/* Print Options - Only show checkboxes when approved */}
+                      {isApproved && (
+                        <div className="flex items-center gap-3 mr-2">
+                          <span className="text-sm text-gray-500">พิมพ์:</span>
+                          <div className="flex items-center gap-1">
+                            <Checkbox
+                              id="dialogPrintOriginal"
+                              checked={printOriginal}
+                              onCheckedChange={(checked) => {
+                                if (!checked && !printCopy) return;
+                                setPrintOriginal(checked === true);
+                              }}
+                              className="h-4 w-4"
+                            />
+                            <label htmlFor="dialogPrintOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Checkbox
+                              id="dialogPrintCopy"
+                              checked={printCopy}
+                              onCheckedChange={(checked) => {
+                                if (!checked && !printOriginal) return;
+                                setPrintCopy(checked === true);
+                              }}
+                              className="h-4 w-4"
+                            />
+                            <label htmlFor="dialogPrintCopy" className="text-sm cursor-pointer">สำเนา</label>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Checkbox
-                            id="dialogPrintCopy"
-                            checked={printCopy}
-                            onCheckedChange={(checked) => {
-                              if (!checked && !printOriginal) return;
-                              setPrintCopy(checked === true);
-                            }}
-                            className="h-4 w-4"
-                          />
-                          <label htmlFor="dialogPrintCopy" className="text-sm cursor-pointer">สำเนา</label>
-                        </div>
-                      </div>
+                      )}
                       <Button
                         variant="outline"
                         onClick={async () => {
@@ -1155,7 +1157,7 @@ export function PayslipEditDialog({
                             setPrinting(false);
                           }, 300);
                         }}
-                        disabled={printing || (!printOriginal && !printCopy)}
+                        disabled={printing || (isApproved && !printOriginal && !printCopy)}
                       >
                         <Printer className="h-4 w-4 mr-2" />
                         {t('print.button')}
@@ -1170,8 +1172,9 @@ export function PayslipEditDialog({
                             bonusYear={bonusYear}
                             payrollMonthDate={payrollMonthDate}
                             periodStartDate={periodStartDate}
-                            printOriginal={printOriginal}
-                            printCopy={printCopy}
+                            printOriginal={isApproved ? printOriginal : true}
+                            printCopy={isApproved ? printCopy : false}
+                            isPending={!isApproved}
                           />
                         </div>
                       </div>
