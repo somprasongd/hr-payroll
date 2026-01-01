@@ -61,7 +61,7 @@ type UpdateRequest struct {
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
-	item, err := cmd.Repo.GetItem(ctx, cmd.ID)
+	itemDetail, err := cmd.Repo.GetItemDetail(ctx, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll item not found")
@@ -69,6 +69,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		logger.FromContext(ctx).Error("failed to load payroll item", zap.Error(err))
 		return nil, errs.Internal("failed to load payroll item")
 	}
+	item := &itemDetail.Item
 	// ensure parent run pending
 	run, err := cmd.Repo.Get(ctx, item.RunID)
 	if err != nil {
@@ -106,7 +107,9 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	if item.AdvanceAmount == 0 && cmd.Payload.AdvanceRepayAmount != nil && *cmd.Payload.AdvanceRepayAmount > 0 {
 		return nil, errs.BadRequest("cannot repay advance when advanceAmount is 0")
 	}
-	if item.LoanOutstandingTotal <= 0 && cmd.Payload.LoanRepayments != nil && len(*cmd.Payload.LoanRepayments) > 0 {
+	// Allow updating existing loan repayments, but block adding new ones when outstanding is 0
+	hasExistingLoanRepayments := len(itemDetail.LoanRepayments) > 0
+	if item.LoanOutstandingTotal <= 0 && !hasExistingLoanRepayments && cmd.Payload.LoanRepayments != nil && len(*cmd.Payload.LoanRepayments) > 0 {
 		return nil, errs.BadRequest("cannot repay loan when outstanding is 0")
 	}
 
