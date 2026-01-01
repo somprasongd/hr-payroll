@@ -104,12 +104,14 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 
 	// Business rules
-	if item.AdvanceAmount == 0 && cmd.Payload.AdvanceRepayAmount != nil && *cmd.Payload.AdvanceRepayAmount > 0 {
+	// Allow updating existing advance repay, but block adding new ones when advance amount is 0
+	hasExistingAdvanceRepay := itemDetail.AdvanceRepayAmount > 0
+	if itemDetail.AdvanceAmount == 0 && !hasExistingAdvanceRepay && cmd.Payload.AdvanceRepayAmount != nil && *cmd.Payload.AdvanceRepayAmount > 0 {
 		return nil, errs.BadRequest("cannot repay advance when advanceAmount is 0")
 	}
 	// Allow updating existing loan repayments, but block adding new ones when outstanding is 0
 	hasExistingLoanRepayments := len(itemDetail.LoanRepayments) > 0
-	if item.LoanOutstandingTotal <= 0 && !hasExistingLoanRepayments && cmd.Payload.LoanRepayments != nil && len(*cmd.Payload.LoanRepayments) > 0 {
+	if itemDetail.LoanOutstandingTotal <= 0 && !hasExistingLoanRepayments && cmd.Payload.LoanRepayments != nil && len(*cmd.Payload.LoanRepayments) > 0 {
 		return nil, errs.BadRequest("cannot repay loan when outstanding is 0")
 	}
 
