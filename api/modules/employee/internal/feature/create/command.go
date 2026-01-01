@@ -2,6 +2,7 @@ package create
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strings"
 
@@ -49,10 +50,26 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, err
 	}
 
+	docCode, err := h.repo.GetIDDocumentTypeCode(ctx, cmd.Payload.IDDocumentTypeID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.BadRequest("invalid idDocumentTypeId")
+		}
+		return nil, errs.Internal("failed to fetch document type")
+	}
+
+	if strings.ToLower(docCode) == "other" {
+		if cmd.Payload.IDDocumentOtherDescription == nil || strings.TrimSpace(*cmd.Payload.IDDocumentOtherDescription) == "" {
+			return nil, errs.BadRequest("idDocumentOtherDescription is required when document type is 'other'")
+		}
+	} else {
+		cmd.Payload.IDDocumentOtherDescription = nil
+	}
+
 	recPayload := cmd.Payload.ToDetailRecord()
 
 	var created *repository.DetailRecord
-	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
+	err = h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
 		var err error
 		created, err = h.repo.Create(ctxWithTx, recPayload, cmd.ActorID)
 		if err != nil {
@@ -66,34 +83,37 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 				EntityName: "EMPLOYEE",
 				EntityID:   created.ID.String(),
 				Details: map[string]interface{}{
-					"employeeNumber":            created.EmployeeNumber,
-					"titleId":                   created.TitleID,
-					"firstName":                 created.FirstName,
-					"lastName":                  created.LastName,
-					"idDocumentTypeId":          created.IDDocumentTypeID,
-					"idDocumentNumber":          created.IDDocumentNumber,
-					"phone":                     created.Phone,
-					"email":                     created.Email,
-					"employeeTypeId":            created.EmployeeTypeID,
-					"departmentId":              created.DepartmentID,
-					"positionId":                created.PositionID,
-					"basePayAmount":             created.BasePayAmount,
-					"employmentStartDate":       created.EmploymentStartDate,
-					"employmentEndDate":         created.EmploymentEndDate,
-					"bankName":                  created.BankName,
-					"bankAccountNo":             created.BankAccountNo,
-					"ssoContribute":             created.SSOContribute,
-					"ssoDeclaredWage":           created.SSODeclaredWage,
-					"providentFundContribute":   created.ProvidentFundContribute,
-					"providentFundRateEmployee": created.ProvidentFundRateEmployee,
-					"providentFundRateEmployer": created.ProvidentFundRateEmployer,
-					"withholdTax":               created.WithholdTax,
-					"allowHousing":              created.AllowHousing,
-					"allowWater":                created.AllowWater,
-					"allowElectric":             created.AllowElectric,
-					"allowInternet":             created.AllowInternet,
-					"allowDoctorFee":            created.AllowDoctorFee,
-					"status":                    created.Status,
+					"employeeNumber":             created.EmployeeNumber,
+					"titleId":                    created.TitleID,
+					"firstName":                  created.FirstName,
+					"lastName":                   created.LastName,
+					"nickname":                   created.Nickname,
+					"idDocumentTypeId":           created.IDDocumentTypeID,
+					"idDocumentNumber":           created.IDDocumentNumber,
+					"idDocumentOtherDescription": created.IDDocumentOtherDescription,
+					"phone":                      created.Phone,
+					"email":                      created.Email,
+					"employeeTypeId":             created.EmployeeTypeID,
+					"departmentId":               created.DepartmentID,
+					"positionId":                 created.PositionID,
+					"basePayAmount":              created.BasePayAmount,
+					"employmentStartDate":        created.EmploymentStartDate,
+					"employmentEndDate":          created.EmploymentEndDate,
+					"bankName":                   created.BankName,
+					"bankAccountNo":              created.BankAccountNo,
+					"ssoContribute":              created.SSOContribute,
+					"ssoDeclaredWage":            created.SSODeclaredWage,
+					"ssoHospitalName":            created.SSOHospitalName,
+					"providentFundContribute":    created.ProvidentFundContribute,
+					"providentFundRateEmployee":  created.ProvidentFundRateEmployee,
+					"providentFundRateEmployer":  created.ProvidentFundRateEmployer,
+					"withholdTax":                created.WithholdTax,
+					"allowHousing":               created.AllowHousing,
+					"allowWater":                 created.AllowWater,
+					"allowElectric":              created.AllowElectric,
+					"allowInternet":              created.AllowInternet,
+					"allowDoctorFee":             created.AllowDoctorFee,
+					"status":                     created.Status,
 				},
 				Timestamp: created.CreatedAt,
 			})

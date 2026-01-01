@@ -11,6 +11,7 @@ import { Loader2, Upload, X, User } from "lucide-react";
 import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmployeeTypeBadge } from "@/components/common/employee-type-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -78,6 +79,7 @@ export function EmployeeForm({
   const [masterData, setMasterData] = useState<AllMasterData | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Refs for auto-focus
@@ -108,6 +110,8 @@ export function EmployeeForm({
     lastName: z.string().min(1, t("validation.required")),
     idDocumentTypeId: z.string().min(1, t("validation.required")),
     idDocumentNumber: z.string().min(1, t("validation.required")),
+    idDocumentOtherDescription: z.string().optional(),
+    nickname: z.string().optional(),
     phone: z.string().optional(),
     email: z.string().email(t("validation.email")).optional().or(z.literal("")),
 
@@ -127,6 +131,7 @@ export function EmployeeForm({
     // Benefits
     ssoContribute: z.boolean().default(false),
     ssoDeclaredWage: z.coerce.number().optional(),
+    ssoHospitalName: z.string().optional(),
     providentFundContribute: z.boolean().default(false),
     providentFundRateEmployee: z.coerce.number().optional(),
     providentFundRateEmployer: z.coerce.number().optional(),
@@ -140,6 +145,23 @@ export function EmployeeForm({
     allowDoctorFee: z.boolean().default(false),
     allowAttendanceBonusNoLate: z.boolean().default(false),
     allowAttendanceBonusNoLeave: z.boolean().default(false),
+  }).superRefine((data, ctx) => {
+    const selectedDocType = masterData?.idDocumentTypes?.find(
+      (t) => (t.id || t.ID) === data.idDocumentTypeId
+    );
+    const isOther =
+      (selectedDocType?.code || selectedDocType?.Code || "").toLowerCase() ===
+      "other";
+
+    if (isOther) {
+      if (!data.idDocumentOtherDescription || data.idDocumentOtherDescription.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("validation.required"),
+          path: ["idDocumentOtherDescription"],
+        });
+      }
+    }
   });
 
   type EmployeeFormValues = z.infer<typeof employeeSchema>;
@@ -152,6 +174,8 @@ export function EmployeeForm({
       lastName: initialData?.lastName || "",
       idDocumentTypeId: initialData?.idDocumentTypeId || "",
       idDocumentNumber: initialData?.idDocumentNumber || "",
+      idDocumentOtherDescription: initialData?.idDocumentOtherDescription || "",
+      nickname: initialData?.nickname || "",
       phone: initialData?.phone || "",
       email: initialData?.email || "",
       employeeNumber: initialData?.employeeNumber || "",
@@ -168,6 +192,7 @@ export function EmployeeForm({
       ssoContribute: initialData?.ssoContribute || false,
       // Use 0 when ssoContribute is false, otherwise use API value
       ssoDeclaredWage: initialData?.ssoContribute ? (initialData?.ssoDeclaredWage || 0) : 0,
+      ssoHospitalName: initialData?.ssoHospitalName || "",
       providentFundContribute: initialData?.providentFundContribute || false,
       providentFundRateEmployee:
         (initialData?.providentFundRateEmployee || 0) * 100,
@@ -298,11 +323,15 @@ export function EmployeeForm({
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await onSubmit(transformedData as any);
+      setSubmitSuccess(true);
+      // Clear success message after 5 seconds
+      setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (error: any) {
       console.error(error);
       const errorMessage =
         error?.response?.data?.message || error?.message || t("submitError");
       setSubmitError(errorMessage);
+      setSubmitSuccess(false);
     } finally {
       setLoading(false);
     }
@@ -314,6 +343,7 @@ export function EmployeeForm({
   const employeeTypeId = form.watch("employeeTypeId");
   const firstName = form.watch("firstName");
   const lastName = form.watch("lastName");
+  const nickname = form.watch("nickname");
   const employeeNumber = form.watch("employeeNumber");
 
   // Fetch Payroll Config for default hourly rate
@@ -342,6 +372,30 @@ export function EmployeeForm({
     };
     fetchConfig();
   }, [payrollConfig]);
+
+  const selectedDocType = masterData?.idDocumentTypes?.find(
+    (t) => t.id === form.watch("idDocumentTypeId")
+  );
+  const watchIdDocumentTypeId = form.watch("idDocumentTypeId");
+  const isIdDocumentOther = React.useMemo(() => {
+    if (!masterData?.idDocumentTypes) return false;
+    const otherType = masterData.idDocumentTypes.find(
+      (t) => (t.code || t.Code || "").toLowerCase() === "other"
+    );
+    return watchIdDocumentTypeId === (otherType?.id || otherType?.ID);
+  }, [watchIdDocumentTypeId, masterData?.idDocumentTypes]);
+
+  useEffect(() => {
+    // Only clear if master data is loaded and we know for sure it's not "other"
+    if (
+      watchIdDocumentTypeId &&
+      masterData?.idDocumentTypes &&
+      masterData.idDocumentTypes.length > 0 &&
+      !isIdDocumentOther
+    ) {
+      form.setValue("idDocumentOtherDescription", "");
+    }
+  }, [watchIdDocumentTypeId, isIdDocumentOther, masterData?.idDocumentTypes, form.setValue]);
 
   useEffect(() => {
     if (masterData?.employeeTypes && employeeTypeId && payrollConfig) {
@@ -441,6 +495,7 @@ export function EmployeeForm({
         "lastName",
         "idDocumentTypeId",
         "idDocumentNumber",
+        "idDocumentOtherDescription",
         "phone",
         "email"
       );
@@ -493,11 +548,22 @@ export function EmployeeForm({
           {submitError && (
             <DismissibleAlert
               variant="error"
-              title="Error"
+              title={tCommon("error")}
               onDismiss={() => setSubmitError(null)}
               autoDismiss={false}
             >
               {submitError}
+            </DismissibleAlert>
+          )}
+
+          {submitSuccess && (
+            <DismissibleAlert
+              variant="success"
+              title={tCommon("success")}
+              onDismiss={() => setSubmitSuccess(false)}
+              autoDismiss={true}
+            >
+              {tCommon("saveSuccess")}
             </DismissibleAlert>
           )}
 
@@ -516,7 +582,7 @@ export function EmployeeForm({
                   {t("fields.firstName")} - {t("fields.lastName")}:
                 </span>
                 <span className="font-medium">
-                  {firstName || "-"} {lastName || ""}
+                  {firstName || "-"} {lastName || ""}{nickname ? ` (${nickname})` : ""}
                 </span>
               </div>
               <div className="hidden md:block w-px h-4 bg-border" />
@@ -525,13 +591,13 @@ export function EmployeeForm({
                   {t("fields.employeeType")}:
                 </span>
                 <span className="font-medium">
-                  {masterData?.employeeTypes?.find(
-                    (t) => t.id === employeeTypeId
-                  )?.name ||
-                    masterData?.employeeTypes?.find(
+                  {(() => {
+                    const empType = masterData?.employeeTypes?.find(
                       (t) => t.id === employeeTypeId
-                    )?.Name ||
-                    "-"}
+                    );
+                    const typeName = empType?.name || empType?.Name || "";
+                    return <EmployeeTypeBadge typeName={typeName} />;
+                  })()}
                 </span>
               </div>
             </div>
@@ -631,7 +697,7 @@ export function EmployeeForm({
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-4 lg:col-span-2">
                       <FormField
                         control={form.control}
                         name="titleId"
@@ -671,7 +737,7 @@ export function EmployeeForm({
                         )}
                       />
                     </div>
-                    <div className="md:col-span-5">
+                    <div className="md:col-span-8 lg:col-span-4">
                       <FormField
                         control={form.control}
                         name="firstName"
@@ -686,7 +752,7 @@ export function EmployeeForm({
                         )}
                       />
                     </div>
-                    <div className="md:col-span-5">
+                    <div className="md:col-span-6 lg:col-span-3">
                       <FormField
                         control={form.control}
                         name="lastName"
@@ -701,29 +767,173 @@ export function EmployeeForm({
                         )}
                       />
                     </div>
+                    <div className="md:col-span-6 lg:col-span-3">
+                      <FormField
+                        control={form.control}
+                        name="nickname"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.nickname")}</FormLabel>
+                            <FormControl>
+                              <Input {...field} onFocus={handleFocus} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="idDocumentTypeId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.idCardType")}</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-4 lg:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="idDocumentTypeId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.idCardType")}</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={t("placeholders.selectType")}
+                                  />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {masterData.idDocumentTypes?.map(
+                                  (item, index) => (
+                                    <SelectItem
+                                      key={`${item.id}-${index}`}
+                                      value={item.id}
+                                    >
+                                      {item.name ||
+                                        item.Name ||
+                                        item.code ||
+                                        item.Code ||
+                                        item.id ||
+                                        item.ID ||
+                                        "Unknown"}
+                                    </SelectItem>
+                                  )
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="md:col-span-8 lg:col-span-4">
+                      {isIdDocumentOther && (
+                        <FormField
+                          control={form.control}
+                          name="idDocumentOtherDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {t("fields.idDocumentOtherDescription")}
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} onFocus={handleFocus} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+                    <div className="md:col-span-12 lg:col-span-6">
+                      <FormField
+                        control={form.control}
+                        name="idDocumentNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.idCardNumber")}</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={t("placeholders.selectType")}
-                                />
-                              </SelectTrigger>
+                              <Input {...field} onFocus={handleFocus} />
                             </FormControl>
-                            <SelectContent>
-                              {masterData.idDocumentTypes?.map(
-                                (item, index) => (
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-6 lg:col-start-3 lg:col-span-4">
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.phone")}</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="tel"
+                                onFocus={handleFocus}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="md:col-span-6 lg:col-span-6">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.email")}</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="email"
+                                onFocus={handleFocus}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="employment">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t("employmentInfo")}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-6 lg:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="employeeTypeId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.employeeType")}</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={t("placeholders.selectType")}
+                                  />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {masterData.employeeTypes?.map((item, index) => (
                                   <SelectItem
                                     key={`${item.id}-${index}`}
                                     value={item.id}
@@ -736,199 +946,65 @@ export function EmployeeForm({
                                       item.ID ||
                                       "Unknown"}
                                   </SelectItem>
-                                )
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="idDocumentNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.idCardNumber")}</FormLabel>
-                          <FormControl>
-                            <Input {...field} onFocus={handleFocus} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="md:col-span-6 lg:col-span-4">
+                      <FormField
+                        control={form.control}
+                        name="employeeNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.employeeNumber")}</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                disabled={isEditing}
+                                onFocus={handleFocus}
+                                ref={(e) => {
+                                  field.ref(e);
+                                  if (activeTab === "employment") {
+                                    // @ts-ignore
+                                    employmentInputRef.current = e;
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.phone")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="tel"
-                              onFocus={handleFocus}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.email")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="email"
-                              onFocus={handleFocus}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="employment">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("employmentInfo")}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="employeeTypeId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.employeeType")}</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={t("placeholders.selectType")}
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {masterData.employeeTypes?.map((item, index) => (
-                                <SelectItem
-                                  key={`${item.id}-${index}`}
-                                  value={item.id}
-                                >
-                                  {item.name ||
-                                    item.Name ||
-                                    item.code ||
-                                    item.Code ||
-                                    item.id ||
-                                    item.ID ||
-                                    "Unknown"}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="employeeNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.employeeNumber")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              disabled={isEditing}
-                              onFocus={handleFocus}
-                              ref={(e) => {
-                                field.ref(e);
-                                if (activeTab === "employment") {
-                                  // @ts-ignore
-                                  employmentInputRef.current = e;
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="departmentId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.department")}</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={t(
-                                    "placeholders.selectDepartment"
-                                  )}
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {masterData?.departments?.map((item, index) => (
-                                <SelectItem
-                                  key={`${item.id}-${index}`}
-                                  value={item.id}
-                                >
-                                  {item.name ||
-                                    item.Name ||
-                                    item.code ||
-                                    item.Code ||
-                                    "Unknown"}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="positionId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.position")}</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={t("placeholders.selectPosition")}
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {masterData?.employeePositions?.map(
-                                (item, index) => (
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-6 lg:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="departmentId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.department")}</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={t(
+                                      "placeholders.selectDepartment"
+                                    )}
+                                  />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {masterData?.departments?.map((item, index) => (
                                   <SelectItem
                                     key={`${item.id}-${index}`}
                                     value={item.id}
@@ -939,52 +1015,99 @@ export function EmployeeForm({
                                       item.Code ||
                                       "Unknown"}
                                   </SelectItem>
-                                )
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="md:col-span-6 lg:col-span-4">
+                      <FormField
+                        control={form.control}
+                        name="positionId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.position")}</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={t("placeholders.selectPosition")}
+                                  />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {masterData?.employeePositions?.map(
+                                  (item, index) => (
+                                    <SelectItem
+                                      key={`${item.id}-${index}`}
+                                      value={item.id}
+                                    >
+                                      {item.name ||
+                                        item.Name ||
+                                        item.code ||
+                                        item.Code ||
+                                        "Unknown"}
+                                    </SelectItem>
+                                  )
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="employmentStartDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.startDate")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="date"
-                              onFocus={handleFocus}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="employmentEndDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.endDate")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              type="date"
-                              onFocus={handleFocus}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-6 lg:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="employmentStartDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.startDate")}</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="date"
+                                onFocus={handleFocus}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-6 lg:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="employmentEndDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.endDate")}</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                type="date"
+                                onFocus={handleFocus}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1052,7 +1175,7 @@ export function EmployeeForm({
 
                   <div className="space-y-4">
                     <h3 className="font-medium">Social Security & Tax</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <FormField
                         control={form.control}
                         name="ssoContribute"
@@ -1081,6 +1204,23 @@ export function EmployeeForm({
                                 {...field}
                                 type="number"
                                 step="0.01"
+                                disabled={!form.watch("ssoContribute")}
+                                onFocus={handleFocus}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ssoHospitalName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.ssoHospitalName")}</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
                                 disabled={!form.watch("ssoContribute")}
                                 onFocus={handleFocus}
                               />

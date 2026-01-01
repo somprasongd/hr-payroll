@@ -37,22 +37,22 @@ type Cycle struct {
 }
 
 type Item struct {
-	ID             uuid.UUID `db:"id"`
-	CycleID        uuid.UUID `db:"cycle_id"`
-	EmployeeID     uuid.UUID `db:"employee_id"`
-	EmployeeName   string    `db:"employee_name"`
-	EmployeeNumber string    `db:"employee_number"`
+	ID             uuid.UUID  `db:"id"`
+	CycleID        uuid.UUID  `db:"cycle_id"`
+	EmployeeID     uuid.UUID  `db:"employee_id"`
+	EmployeeName   string     `db:"employee_name"`
+	EmployeeNumber string     `db:"employee_number"`
 	PhotoID        *uuid.UUID `db:"photo_id"`
-	TenureDays     int       `db:"tenure_days"`
-	CurrentSalary  float64   `db:"current_salary"`
-	LateMinutes    int       `db:"late_minutes"`
-	LeaveDays      float64   `db:"leave_days"`
-	LeaveDouble    float64   `db:"leave_double_days"`
-	LeaveHours     float64   `db:"leave_hours"`
-	OtHours        float64   `db:"ot_hours"`
-	BonusMonths    float64   `db:"bonus_months"`
-	BonusAmount    float64   `db:"bonus_amount"`
-	UpdatedAt      time.Time `db:"updated_at"`
+	TenureDays     int        `db:"tenure_days"`
+	CurrentSalary  float64    `db:"current_salary"`
+	LateMinutes    int        `db:"late_minutes"`
+	LeaveDays      float64    `db:"leave_days"`
+	LeaveDouble    float64    `db:"leave_double_days"`
+	LeaveHours     float64    `db:"leave_hours"`
+	OtHours        float64    `db:"ot_hours"`
+	BonusMonths    float64    `db:"bonus_months"`
+	BonusAmount    float64    `db:"bonus_amount"`
+	UpdatedAt      time.Time  `db:"updated_at"`
 }
 
 type ListResult struct {
@@ -167,7 +167,7 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
 	db := r.dbCtx(ctx)
 	where := "bi.cycle_id = $1"
 	args := []interface{}{cycleID}
-	fullNameExpr := "concat_ws(' ', pt.name_th, e.first_name, e.last_name)"
+	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where += fmt.Sprintf(" AND (%s ILIKE $%d)", fullNameExpr, len(args))
@@ -193,7 +193,7 @@ ORDER BY e.employee_number ASC, employee_name`, fullNameExpr, where)
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, error) {
 	db := r.dbCtx(ctx)
 	const q = `SELECT bi.id, bi.cycle_id, bi.employee_id,
-       concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name,
+       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name,
        e.employee_number AS employee_number,
        e.photo_id AS photo_id,
        bi.tenure_days, bi.current_salary, bi.late_minutes, bi.leave_days, bi.leave_double_days, bi.leave_hours, bi.ot_hours,
@@ -234,7 +234,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, months *float6
 	args = append(args, id)
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE bonus_item SET %s WHERE id=$%d RETURNING id, cycle_id, employee_id,
-       (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = bonus_item.employee_id) AS employee_name,
+       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = bonus_item.employee_id) AS employee_name,
        tenure_days, current_salary, late_minutes, leave_days, leave_double_days, leave_hours, ot_hours,
        bonus_months, bonus_amount, updated_at`, setClause, argIdx)
 	var out Item

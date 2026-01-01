@@ -252,48 +252,48 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 }
 
 type Item struct {
-	ID                      uuid.UUID `db:"id"`
-	RunID                   uuid.UUID `db:"run_id"`
-	EmployeeID              uuid.UUID `db:"employee_id"`
-	EmployeeName            string    `db:"employee_name"`
-	EmployeeTypeName        *string   `db:"employee_type_name"`
-	EmployeeTypeCode        string    `db:"employee_type_code"`
-	EmployeeNumber          string    `db:"employee_number"`
+	ID                      uuid.UUID  `db:"id"`
+	RunID                   uuid.UUID  `db:"run_id"`
+	EmployeeID              uuid.UUID  `db:"employee_id"`
+	EmployeeName            string     `db:"employee_name"`
+	EmployeeTypeName        *string    `db:"employee_type_name"`
+	EmployeeTypeCode        string     `db:"employee_type_code"`
+	EmployeeNumber          string     `db:"employee_number"`
 	PhotoID                 *uuid.UUID `db:"photo_id"`
-	DepartmentName          *string   `db:"department_name"`
-	PositionName            *string   `db:"position_name"`
-	BankName                *string   `db:"bank_name"`
-	BankAccount             *string   `db:"bank_account_no"`
-	SalaryAmount            float64   `db:"salary_amount"`
-	PTHoursWorked           float64   `db:"pt_hours_worked"`
-	PTHourlyRate            float64   `db:"pt_hourly_rate"`
-	OtHours                 float64   `db:"ot_hours"`
-	OtAmount                float64   `db:"ot_amount"`
-	BonusAmount             float64   `db:"bonus_amount"`
-	LeaveCompensationAmount float64   `db:"leave_compensation_amount"`
-	IncomeTotal             float64   `db:"income_total"`
-	IncomeAccumPrev         float64   `db:"income_accum_prev"`
-	IncomeAccumTotal        float64   `db:"income_accum_total"`
-	LeaveDaysQty            float64   `db:"leave_days_qty"`
-	LeaveDaysDeduction      float64   `db:"leave_days_deduction"`
-	LateMinutesQty          int       `db:"late_minutes_qty"`
-	LateMinutesDeduction    float64   `db:"late_minutes_deduction"`
-	SsoMonthAmount          float64   `db:"sso_month_amount"`
-	TaxMonthAmount          float64   `db:"tax_month_amount"`
-	NetPay                  float64   `db:"net_pay"`
-	Status                  string    `db:"status"`
-	DeductionTotal          float64   `db:"deduction_total"`
-	AdvanceAmount           float64   `db:"advance_amount"`
-	LoanOutstandingTotal    float64   `db:"loan_outstanding_total"`
-	DoctorFee               float64   `db:"doctor_fee"`
-	SsoContribute           bool      `db:"sso_contribute"`
-	ProvidentFundContrib    bool      `db:"provident_fund_contribute"`
-	WithholdTax             bool      `db:"withhold_tax"`
-	AllowHousing            bool      `db:"allow_housing"`
-	AllowWater              bool      `db:"allow_water"`
-	AllowElectric           bool      `db:"allow_electric"`
-	AllowInternet           bool      `db:"allow_internet"`
-	AllowDoctorFee          bool      `db:"allow_doctor_fee"`
+	DepartmentName          *string    `db:"department_name"`
+	PositionName            *string    `db:"position_name"`
+	BankName                *string    `db:"bank_name"`
+	BankAccount             *string    `db:"bank_account_no"`
+	SalaryAmount            float64    `db:"salary_amount"`
+	PTHoursWorked           float64    `db:"pt_hours_worked"`
+	PTHourlyRate            float64    `db:"pt_hourly_rate"`
+	OtHours                 float64    `db:"ot_hours"`
+	OtAmount                float64    `db:"ot_amount"`
+	BonusAmount             float64    `db:"bonus_amount"`
+	LeaveCompensationAmount float64    `db:"leave_compensation_amount"`
+	IncomeTotal             float64    `db:"income_total"`
+	IncomeAccumPrev         float64    `db:"income_accum_prev"`
+	IncomeAccumTotal        float64    `db:"income_accum_total"`
+	LeaveDaysQty            float64    `db:"leave_days_qty"`
+	LeaveDaysDeduction      float64    `db:"leave_days_deduction"`
+	LateMinutesQty          int        `db:"late_minutes_qty"`
+	LateMinutesDeduction    float64    `db:"late_minutes_deduction"`
+	SsoMonthAmount          float64    `db:"sso_month_amount"`
+	TaxMonthAmount          float64    `db:"tax_month_amount"`
+	NetPay                  float64    `db:"net_pay"`
+	Status                  string     `db:"status"`
+	DeductionTotal          float64    `db:"deduction_total"`
+	AdvanceAmount           float64    `db:"advance_amount"`
+	LoanOutstandingTotal    float64    `db:"loan_outstanding_total"`
+	DoctorFee               float64    `db:"doctor_fee"`
+	SsoContribute           bool       `db:"sso_contribute"`
+	ProvidentFundContrib    bool       `db:"provident_fund_contribute"`
+	WithholdTax             bool       `db:"withhold_tax"`
+	AllowHousing            bool       `db:"allow_housing"`
+	AllowWater              bool       `db:"allow_water"`
+	AllowElectric           bool       `db:"allow_electric"`
+	AllowInternet           bool       `db:"allow_internet"`
+	AllowDoctorFee          bool       `db:"allow_doctor_fee"`
 }
 
 type ItemListResult struct {
@@ -308,7 +308,7 @@ func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit 
 	var args []interface{}
 	where = append(where, "run_id = $1")
 	args = append(args, runID)
-	fullNameExpr := "concat_ws(' ', pt.name_th, e.first_name, e.last_name)"
+	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where = append(where, fmt.Sprintf("(%s ILIKE $%d OR e.employee_number ILIKE $%d)", fullNameExpr, len(args), len(args)))
@@ -378,7 +378,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	args = append(args, id)
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE payroll_run_item SET %s WHERE id=$%d RETURNING id, run_id, employee_id,
-       (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
+       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT photo_id FROM employees e WHERE e.id = payroll_run_item.employee_id) AS photo_id,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
@@ -406,7 +406,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
-	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
        e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
@@ -471,7 +471,7 @@ type ItemDetail struct {
 func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetail, error) {
 	db := r.dbCtx(ctx)
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
-       concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
        e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,

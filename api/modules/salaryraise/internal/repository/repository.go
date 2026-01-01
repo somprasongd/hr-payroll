@@ -205,7 +205,7 @@ RETURNING id, period_start_date, period_end_date, status, created_at, updated_at
 func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, *Cycle, error) {
 	db := r.dbCtx(ctx)
 	const qi = `SELECT sri.id, sri.cycle_id, sri.employee_id,
-       concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name,
+       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name,
        e.employee_number AS employee_number,
        e.photo_id AS photo_id,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
@@ -244,7 +244,7 @@ func (r Repository) ListItems(ctx context.Context, cycleID uuid.UUID, search str
 	db := r.dbCtx(ctx)
 	where := "sri.cycle_id = $1"
 	args := []interface{}{cycleID}
-	fullNameExpr := "concat_ws(' ', pt.name_th, e.first_name, e.last_name)"
+	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where += fmt.Sprintf(" AND (%s ILIKE $%d)", fullNameExpr, len(args))
@@ -298,7 +298,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, percent, amoun
 	args = append(args, id)
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE salary_raise_item SET %s WHERE id=$%d RETURNING id, cycle_id, employee_id,
-       (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = salary_raise_item.employee_id) AS employee_name,
+       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = salary_raise_item.employee_id) AS employee_name,
        (SELECT photo_id FROM employees e WHERE e.id = salary_raise_item.employee_id) AS photo_id,
        tenure_days, current_salary, current_sso_wage,
        raise_percent, raise_amount, new_salary, new_sso_wage,

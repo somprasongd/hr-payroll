@@ -331,6 +331,8 @@
       "title": "Title",
       "idCardType": "ID Document Type",
       "idCardNumber": "ID Document Number",
+      "idDocumentOtherDescription": "ID Document Other Description",
+      "nickname": "Nickname",
       "phone": "Phone",
       "email": "Email",
       "employeeType": "Employee Type",
@@ -341,6 +343,7 @@
       "accountNo": "Account Number",
       "sso": "Social Security",
       "ssoWage": "SSO Declared Wage",
+      "ssoHospitalName": "SSO Hospital Name",
       "pvd": "Provident Fund",
       "pvdRateEmployee": "PVD Employee Rate (%)",
       "pvdRateEmployer": "PVD Employer Rate (%)",
@@ -742,6 +745,7 @@
     "noData": "No data",
     "confirmDeleteTitle": "Confirm Delete",
     "confirmDeleteDescription": "Are you sure you want to delete this item? This action cannot be undone.",
+    "saveSuccess": "Saved successfully",
     "actions": "Actions"
   },
   "Payouts": {

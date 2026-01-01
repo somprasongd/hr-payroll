@@ -42,8 +42,10 @@ type DetailRecord struct {
 	TitleName                   *string    `db:"title_name"`
 	FirstName                   string     `db:"first_name"`
 	LastName                    string     `db:"last_name"`
+	Nickname                    *string    `db:"nickname"`
 	IDDocumentTypeID            uuid.UUID  `db:"id_document_type_id"`
 	IDDocumentNumber            string     `db:"id_document_number"`
+	IDDocumentOtherDescription  *string    `db:"id_document_other_description"`
 	Phone                       *string    `db:"phone"`
 	Email                       *string    `db:"email"`
 	PhotoID                     *uuid.UUID `db:"photo_id"`
@@ -57,6 +59,7 @@ type DetailRecord struct {
 	BankAccountNo               *string    `db:"bank_account_no"`
 	SSOContribute               bool       `db:"sso_contribute"`
 	SSODeclaredWage             *float64   `db:"sso_declared_wage"`
+	SSOHospitalName             *string    `db:"sso_hospital_name"`
 	ProvidentFundContribute     bool       `db:"provident_fund_contribute"`
 	ProvidentFundRateEmployee   float64    `db:"provident_fund_rate_employee"`
 	ProvidentFundRateEmployer   float64    `db:"provident_fund_rate_employer"`
@@ -146,7 +149,7 @@ func (r Repository) List(ctx context.Context, page, limit int, search, status, e
 SELECT 
   e.id,
   e.employee_number,
-  (pt.name_th || e.first_name || ' ' || e.last_name) AS full_name_th,
+  (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS full_name_th,
   pt.name_th AS title_name,
   et.name_th AS employee_type_name,
   e.phone,
@@ -203,6 +206,16 @@ func (r Repository) FindEmployeeTypeIDByCode(ctx context.Context, code string) (
 	return &id, nil
 }
 
+func (r Repository) GetIDDocumentTypeCode(ctx context.Context, id uuid.UUID) (string, error) {
+	db := r.dbCtx(ctx)
+	var code string
+	const q = `SELECT code FROM id_document_type WHERE id=$1 LIMIT 1`
+	if err := db.GetContext(ctx, &code, q, id); err != nil {
+		return "", err
+	}
+	return code, nil
+}
+
 func (r Repository) Get(ctx context.Context, id uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
@@ -212,8 +225,10 @@ SELECT
   e.title_id,
   e.first_name,
   e.last_name,
+  e.nickname,
   e.id_document_type_id,
   e.id_document_number,
+  e.id_document_other_description,
   e.phone,
   e.email,
   e.photo_id,
@@ -227,6 +242,7 @@ SELECT
   e.bank_account_no,
   e.sso_contribute,
   e.sso_declared_wage,
+  e.sso_hospital_name,
   e.provident_fund_contribute,
   e.provident_fund_rate_employee,
   e.provident_fund_rate_employer,
@@ -294,24 +310,24 @@ func (r Repository) Create(ctx context.Context, payload DetailRecord, actor uuid
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO employees (
-  employee_number, title_id, first_name, last_name,
-  id_document_type_id, id_document_number,
+  employee_number, title_id, first_name, last_name, nickname,
+  id_document_type_id, id_document_number, id_document_other_description,
   phone, email, photo_id, employee_type_id, department_id, position_id, base_pay_amount,
   employment_start_date, employment_end_date,
   bank_name, bank_account_no,
-  sso_contribute, sso_declared_wage,
+  sso_contribute, sso_declared_wage, sso_hospital_name,
   provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
   withhold_tax,
   allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
   allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
   created_by, updated_by
 ) VALUES (
-  :employee_number, :title_id, :first_name, :last_name,
-  :id_document_type_id, :id_document_number,
+  :employee_number, :title_id, :first_name, :last_name, :nickname,
+  :id_document_type_id, :id_document_number, :id_document_other_description,
   :phone, :email, :photo_id, :employee_type_id, :department_id, :position_id, :base_pay_amount,
   :employment_start_date, :employment_end_date,
   :bank_name, :bank_account_no,
-  :sso_contribute, :sso_declared_wage,
+  :sso_contribute, :sso_declared_wage, :sso_hospital_name,
   :provident_fund_contribute, :provident_fund_rate_employee, :provident_fund_rate_employer,
   :withhold_tax,
   :allow_housing, :allow_water, :allow_electric, :allow_internet, :allow_doctor_fee,
@@ -334,8 +350,10 @@ INSERT INTO employees (
 		"title_id":                       payload.TitleID,
 		"first_name":                     payload.FirstName,
 		"last_name":                      payload.LastName,
+		"nickname":                       payload.Nickname,
 		"id_document_type_id":            payload.IDDocumentTypeID,
 		"id_document_number":             payload.IDDocumentNumber,
+		"id_document_other_description":  payload.IDDocumentOtherDescription,
 		"phone":                          payload.Phone,
 		"email":                          payload.Email,
 		"photo_id":                       payload.PhotoID,
@@ -349,6 +367,7 @@ INSERT INTO employees (
 		"bank_account_no":                payload.BankAccountNo,
 		"sso_contribute":                 payload.SSOContribute,
 		"sso_declared_wage":              payload.SSODeclaredWage,
+		"sso_hospital_name":              payload.SSOHospitalName,
 		"provident_fund_contribute":      payload.ProvidentFundContribute,
 		"provident_fund_rate_employee":   payload.ProvidentFundRateEmployee,
 		"provident_fund_rate_employer":   payload.ProvidentFundRateEmployer,
@@ -379,8 +398,10 @@ UPDATE employees SET
   title_id=:title_id,
   first_name=:first_name,
   last_name=:last_name,
+  nickname=:nickname,
   id_document_type_id=:id_document_type_id,
   id_document_number=:id_document_number,
+  id_document_other_description=:id_document_other_description,
   phone=:phone,
   email=:email,
   photo_id=:photo_id,
@@ -394,6 +415,7 @@ UPDATE employees SET
   bank_account_no=:bank_account_no,
   sso_contribute=:sso_contribute,
   sso_declared_wage=:sso_declared_wage,
+  sso_hospital_name=:sso_hospital_name,
   provident_fund_contribute=:provident_fund_contribute,
   provident_fund_rate_employee=:provident_fund_rate_employee,
   provident_fund_rate_employer=:provident_fund_rate_employer,
@@ -421,8 +443,10 @@ RETURNING *`
 		"title_id":                       payload.TitleID,
 		"first_name":                     payload.FirstName,
 		"last_name":                      payload.LastName,
+		"nickname":                       payload.Nickname,
 		"id_document_type_id":            payload.IDDocumentTypeID,
 		"id_document_number":             payload.IDDocumentNumber,
+		"id_document_other_description":  payload.IDDocumentOtherDescription,
 		"phone":                          payload.Phone,
 		"email":                          payload.Email,
 		"photo_id":                       payload.PhotoID,
@@ -436,6 +460,7 @@ RETURNING *`
 		"bank_account_no":                payload.BankAccountNo,
 		"sso_contribute":                 payload.SSOContribute,
 		"sso_declared_wage":              payload.SSODeclaredWage,
+		"sso_hospital_name":              payload.SSOHospitalName,
 		"provident_fund_contribute":      payload.ProvidentFundContribute,
 		"provident_fund_rate_employee":   payload.ProvidentFundRateEmployee,
 		"provident_fund_rate_employer":   payload.ProvidentFundRateEmployer,

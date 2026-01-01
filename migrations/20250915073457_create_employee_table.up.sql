@@ -92,9 +92,11 @@ CREATE TABLE employees (
   title_id UUID NOT NULL REFERENCES person_title(id) ON DELETE RESTRICT,
   first_name  TEXT NOT NULL,
   last_name   TEXT NOT NULL,
+  nickname    TEXT NULL,
 
   id_document_type_id UUID NOT NULL REFERENCES id_document_type(id) ON DELETE RESTRICT,
   id_document_number  TEXT NOT NULL,
+  id_document_other_description TEXT NULL,
 
   phone TEXT NULL,
   email TEXT NULL,
@@ -116,6 +118,7 @@ CREATE TABLE employees (
 
   sso_contribute    BOOLEAN NOT NULL DEFAULT FALSE,
   sso_declared_wage NUMERIC(12,2),
+  sso_hospital_name TEXT NULL,
 
   provident_fund_contribute    BOOLEAN NOT NULL DEFAULT FALSE,
     -- อัตรากองทุนสำรองเลี้ยงชีพ: เก็บแบบทศนิยม (เช่น 0.05 = 5%)
@@ -206,6 +209,31 @@ BEFORE INSERT OR UPDATE ON employees
 FOR EACH ROW
 EXECUTE FUNCTION employees_wage_validate();
 
+-- ตรวจสอบประเภทบัตร (id_document_type)
+CREATE OR REPLACE FUNCTION employees_id_document_validate()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE v_code TEXT;
+BEGIN
+  SELECT code INTO v_code FROM id_document_type WHERE id = NEW.id_document_type_id;
+
+  IF v_code = 'other' THEN
+    -- ถ้าเป็น 'other' ต้องกรอกคำอธิบาย
+    IF NEW.id_document_other_description IS NULL OR btrim(NEW.id_document_other_description) = '' THEN
+      RAISE EXCEPTION 'When id_document_type is "other", id_document_other_description must be provided';
+    END IF;
+  ELSE
+    -- ถ้าไม่ใช่ 'other' ต้องเป็น NULL เท่านั้น
+    NEW.id_document_other_description := NULL;
+  END IF;
+
+  RETURN NEW;
+END$$;
+
+CREATE TRIGGER tg_employees_id_document_validate
+BEFORE INSERT OR UPDATE ON employees
+FOR EACH ROW
+EXECUTE FUNCTION employees_id_document_validate();
+
 -- View หลัก: ใช้ตารางเดียว (updatable) เหมาะสำหรับ SELECT/UPDATE/DELETE ผ่านวิว
 CREATE OR REPLACE VIEW v_employees_active AS
 SELECT
@@ -222,9 +250,11 @@ SELECT
   e.employee_number,
   pt.code AS title_code, pt.name_th AS title_name_th,
   e.first_name, e.last_name,
-  (pt.name_th || e.first_name || ' ' || e.last_name) AS full_name_th,
+  e.nickname,
+  (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS full_name_th,
   idt.code AS id_document_type_code, idt.name_th AS id_document_type_name_th,
   e.id_document_number,
+  e.id_document_other_description,
   e.phone, e.email,
   e.photo_id,
   et.code AS employee_type_code, et.name_th AS employee_type_name_th,
@@ -244,6 +274,7 @@ SELECT
   e.employment_start_date,
   e.bank_name, e.bank_account_no,
   e.sso_contribute, e.sso_declared_wage,
+  e.sso_hospital_name,
   e.provident_fund_contribute, e.provident_fund_rate_employee, e.provident_fund_rate_employer,
   e.withhold_tax,
   e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet,

@@ -39,8 +39,10 @@ type RequestBody struct {
 	TitleID                     uuid.UUID    `json:"titleId"`
 	FirstName                   string       `json:"firstName"`
 	LastName                    string       `json:"lastName"`
+	Nickname                    *string      `json:"nickname"`
 	IDDocumentTypeID            uuid.UUID    `json:"idDocumentTypeId"`
 	IDDocumentNumber            string       `json:"idDocumentNumber"`
+	IDDocumentOtherDescription  *string      `json:"idDocumentOtherDescription"`
 	Phone                       *string      `json:"phone"`
 	Email                       *string      `json:"email"`
 	PhotoID                     OptionalUUID `json:"photoId"`
@@ -54,6 +56,7 @@ type RequestBody struct {
 	BankAccountNo               *string      `json:"bankAccountNo"`
 	SSOContribute               bool         `json:"ssoContribute"`
 	SSODeclaredWage             *float64     `json:"ssoDeclaredWage"`
+	SSOHospitalName             *string      `json:"ssoHospitalName"`
 	ProvidentFundContribute     bool         `json:"providentFundContribute"`
 	ProvidentFundRateEmployee   float64      `json:"providentFundRateEmployee"`
 	ProvidentFundRateEmployer   float64      `json:"providentFundRateEmployer"`
@@ -84,8 +87,10 @@ func (p RequestBody) ToDetailRecord() repository.DetailRecord {
 		TitleID:                     p.TitleID,
 		FirstName:                   p.FirstName,
 		LastName:                    p.LastName,
+		Nickname:                    p.Nickname,
 		IDDocumentTypeID:            p.IDDocumentTypeID,
 		IDDocumentNumber:            p.IDDocumentNumber,
+		IDDocumentOtherDescription:  p.IDDocumentOtherDescription,
 		Phone:                       p.Phone,
 		Email:                       p.Email,
 		PhotoID:                     p.PhotoID.Ptr(),
@@ -99,6 +104,7 @@ func (p RequestBody) ToDetailRecord() repository.DetailRecord {
 		BankAccountNo:               p.BankAccountNo,
 		SSOContribute:               p.SSOContribute,
 		SSODeclaredWage:             ssoDeclaredWage,
+		SSOHospitalName:             p.SSOHospitalName,
 		ProvidentFundContribute:     p.ProvidentFundContribute,
 		ProvidentFundRateEmployee:   p.ProvidentFundRateEmployee,
 		ProvidentFundRateEmployer:   p.ProvidentFundRateEmployer,

@@ -52,10 +52,26 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, err
 	}
 
+	docCode, err := h.repo.GetIDDocumentTypeCode(ctx, cmd.Payload.IDDocumentTypeID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.BadRequest("invalid idDocumentTypeId")
+		}
+		return nil, errs.Internal("failed to fetch document type")
+	}
+
+	if strings.ToLower(docCode) == "other" {
+		if cmd.Payload.IDDocumentOtherDescription == nil || strings.TrimSpace(*cmd.Payload.IDDocumentOtherDescription) == "" {
+			return nil, errs.BadRequest("idDocumentOtherDescription is required when document type is 'other'")
+		}
+	} else {
+		cmd.Payload.IDDocumentOtherDescription = nil
+	}
+
 	recPayload := cmd.Payload.ToDetailRecord()
 
 	var updated *repository.DetailRecord
-	err := h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
+	err = h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
 		prev, err := h.repo.Get(ctxWithTx, cmd.ID)
 		if err != nil {
 			return err
@@ -79,34 +95,37 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 				EntityName: "EMPLOYEE",
 				EntityID:   cmd.ID.String(),
 				Details: map[string]interface{}{
-					"employeeNumber":            updated.EmployeeNumber,
-					"titleId":                   updated.TitleID,
-					"firstName":                 updated.FirstName,
-					"lastName":                  updated.LastName,
-					"idDocumentTypeId":          updated.IDDocumentTypeID,
-					"idDocumentNumber":          updated.IDDocumentNumber,
-					"phone":                     updated.Phone,
-					"email":                     updated.Email,
-					"employeeTypeId":            updated.EmployeeTypeID,
-					"departmentId":              updated.DepartmentID,
-					"positionId":                updated.PositionID,
-					"basePayAmount":             updated.BasePayAmount,
-					"employmentStartDate":       updated.EmploymentStartDate,
-					"employmentEndDate":         updated.EmploymentEndDate,
-					"bankName":                  updated.BankName,
-					"bankAccountNo":             updated.BankAccountNo,
-					"ssoContribute":             updated.SSOContribute,
-					"ssoDeclaredWage":           updated.SSODeclaredWage,
-					"providentFundContribute":   updated.ProvidentFundContribute,
-					"providentFundRateEmployee": updated.ProvidentFundRateEmployee,
-					"providentFundRateEmployer": updated.ProvidentFundRateEmployer,
-					"withholdTax":               updated.WithholdTax,
-					"allowHousing":              updated.AllowHousing,
-					"allowWater":                updated.AllowWater,
-					"allowElectric":             updated.AllowElectric,
-					"allowInternet":             updated.AllowInternet,
-					"allowDoctorFee":            updated.AllowDoctorFee,
-					"status":                    updated.Status,
+					"employeeNumber":             updated.EmployeeNumber,
+					"titleId":                    updated.TitleID,
+					"firstName":                  updated.FirstName,
+					"lastName":                   updated.LastName,
+					"nickname":                   updated.Nickname,
+					"idDocumentTypeId":           updated.IDDocumentTypeID,
+					"idDocumentNumber":           updated.IDDocumentNumber,
+					"idDocumentOtherDescription": updated.IDDocumentOtherDescription,
+					"phone":                      updated.Phone,
+					"email":                      updated.Email,
+					"employeeTypeId":             updated.EmployeeTypeID,
+					"departmentId":               updated.DepartmentID,
+					"positionId":                 updated.PositionID,
+					"basePayAmount":              updated.BasePayAmount,
+					"employmentStartDate":        updated.EmploymentStartDate,
+					"employmentEndDate":          updated.EmploymentEndDate,
+					"bankName":                   updated.BankName,
+					"bankAccountNo":              updated.BankAccountNo,
+					"ssoContribute":              updated.SSOContribute,
+					"ssoDeclaredWage":            updated.SSODeclaredWage,
+					"ssoHospitalName":            updated.SSOHospitalName,
+					"providentFundContribute":    updated.ProvidentFundContribute,
+					"providentFundRateEmployee":  updated.ProvidentFundRateEmployee,
+					"providentFundRateEmployer":  updated.ProvidentFundRateEmployer,
+					"withholdTax":                updated.WithholdTax,
+					"allowHousing":               updated.AllowHousing,
+					"allowWater":                 updated.AllowWater,
+					"allowElectric":              updated.AllowElectric,
+					"allowInternet":              updated.AllowInternet,
+					"allowDoctorFee":             updated.AllowDoctorFee,
+					"status":                     updated.Status,
 				},
 				Timestamp: time.Now(),
 			})

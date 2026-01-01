@@ -214,7 +214,7 @@ func (r Repository) List(ctx context.Context, page, limit int, empID *uuid.UUID,
 
 	q := fmt.Sprintf(`
 SELECT t.*,
-  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name,
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name,
   COALESCE((
     SELECT json_agg(child ORDER BY child.payroll_month_date)
     FROM debt_txn child
@@ -253,7 +253,7 @@ func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT t.*,
-  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
 WHERE t.id=$1 AND t.deleted_at IS NULL LIMIT 1`
 	var rec Record
@@ -282,7 +282,7 @@ func (r Repository) PendingInstallmentsByEmployee(ctx context.Context, emp uuid.
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT t.*,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
 WHERE t.employee_id=$1
   AND t.txn_type='installment'

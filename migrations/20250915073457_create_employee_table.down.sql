@@ -7,10 +7,12 @@ DROP VIEW IF EXISTS v_employees_active_enriched CASCADE;
 DROP VIEW IF EXISTS v_employees_active CASCADE;
 
 /* 2. Drop triggers on employees */
+DROP TRIGGER IF EXISTS tg_employees_id_document_validate ON employees;
 DROP TRIGGER IF EXISTS tg_employees_wage_validate ON employees;
 DROP TRIGGER IF EXISTS tg_employees_set_updated ON employees;
 
 /* 3. Drop trigger functions that were defined here */
+DROP FUNCTION IF EXISTS employees_id_document_validate() CASCADE;
 DROP FUNCTION IF EXISTS employees_wage_validate() CASCADE;
 
 /* 4. Drop indexes on employees (and lookup tables) */

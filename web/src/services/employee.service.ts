@@ -10,6 +10,8 @@ export interface Employee {
   lastName: string;
   idDocumentTypeId: string;
   idDocumentNumber: string;
+  idDocumentOtherDescription?: string;
+  nickname?: string;
   phone?: string;
   email?: string;
   photoId?: string;
@@ -23,6 +25,7 @@ export interface Employee {
   bankAccountNo?: string;
   ssoContribute: boolean;
   ssoDeclaredWage?: number;
+  ssoHospitalName?: string;
   providentFundContribute: boolean;
   providentFundRateEmployee?: number;
   providentFundRateEmployer?: number;
@@ -56,6 +59,8 @@ export interface CreateEmployeeRequest {
   lastName: string;
   idDocumentTypeId: string;
   idDocumentNumber: string;
+  idDocumentOtherDescription?: string;
+  nickname?: string;
   phone?: string;
   email?: string;
   photoId?: string;
@@ -68,6 +73,7 @@ export interface CreateEmployeeRequest {
   bankAccountNo?: string;
   ssoContribute: boolean;
   ssoDeclaredWage?: number;
+  ssoHospitalName?: string;
   providentFundContribute: boolean;
   providentFundRateEmployee?: number;
   providentFundRateEmployer?: number;
@@ -92,6 +98,8 @@ export interface UpdateEmployeeRequest {
   lastName?: string;
   idDocumentTypeId?: string;
   idDocumentNumber?: string;
+  idDocumentOtherDescription?: string;
+  nickname?: string;
   phone?: string;
   email?: string;
   photoId?: string;
@@ -104,6 +112,7 @@ export interface UpdateEmployeeRequest {
   bankAccountNo?: string;
   ssoContribute?: boolean;
   ssoDeclaredWage?: number;
+  ssoHospitalName?: string;
   withholdTax?: boolean;
   allowHousing?: boolean;
   allowWater?: boolean;

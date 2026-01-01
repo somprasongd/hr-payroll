@@ -331,6 +331,8 @@
       "title": "คำนำหน้า",
       "idCardType": "ประเภทบัตร",
       "idCardNumber": "เลขที่บัตร",
+      "idDocumentOtherDescription": "คำอธิบาย สำหรับประเภทบัตรอื่นๆ",
+      "nickname": "ชื่อเล่น",
       "phone": "เบอร์โทรศัพท์",
       "email": "อีเมล",
       "employeeType": "ประเภทพนักงาน",
@@ -341,6 +343,7 @@
       "accountNo": "เลขที่บัญชี",
       "sso": "ประกันสังคม",
       "ssoWage": "ฐานเงินเดือนประกันสังคม",
+      "ssoHospitalName": "ชื่อโรงพยาบาลประกันสังคม",
       "pvd": "กองทุนสำรองเลี้ยงชีพ",
       "pvdRateEmployee": "อัตราสะสมลูกจ้าง (%)",
       "pvdRateEmployer": "อัตราสมทบนายจ้าง (%)",
@@ -736,6 +739,7 @@
     "filter": "ตัวกรอง",
     "confirmDeleteTitle": "ยืนยันการลบ",
     "confirmDeleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "saveSuccess": "บันทึกข้อมูลสำเร็จ",
     "actions": "การกระทำ"
   },
   "Payouts": {

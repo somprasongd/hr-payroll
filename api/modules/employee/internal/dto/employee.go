@@ -36,8 +36,10 @@ type Detail struct {
 	TitleName                   *string    `json:"titleName,omitempty"`
 	FirstName                   string     `json:"firstName"`
 	LastName                    string     `json:"lastName"`
+	Nickname                    *string    `json:"nickname,omitempty"`
 	IDDocumentTypeID            uuid.UUID  `json:"idDocumentTypeId"`
 	IDDocumentNumber            string     `json:"idDocumentNumber"`
+	IDDocumentOtherDescription  *string    `json:"idDocumentOtherDescription,omitempty"`
 	Phone                       *string    `json:"phone,omitempty"`
 	Email                       *string    `json:"email,omitempty"`
 	PhotoID                     *uuid.UUID `json:"photoId,omitempty"`
@@ -51,6 +53,7 @@ type Detail struct {
 	BankAccountNo               *string    `json:"bankAccountNo,omitempty"`
 	SSOContribute               bool       `json:"ssoContribute"`
 	SSODeclaredWage             *float64   `json:"ssoDeclaredWage,omitempty"`
+	SSOHospitalName             *string    `json:"ssoHospitalName,omitempty"`
 	ProvidentFundContribute     bool       `json:"providentFundContribute"`
 	ProvidentFundRateEmployee   float64    `json:"providentFundRateEmployee"`
 	ProvidentFundRateEmployer   float64    `json:"providentFundRateEmployer"`
@@ -111,6 +114,9 @@ func FromDetailRecord(r repository.DetailRecord) Detail {
 		BankAccountNo:               r.BankAccountNo,
 		SSOContribute:               r.SSOContribute,
 		SSODeclaredWage:             r.SSODeclaredWage,
+		Nickname:                    r.Nickname,
+		IDDocumentOtherDescription:  r.IDDocumentOtherDescription,
+		SSOHospitalName:             r.SSOHospitalName,
 		ProvidentFundContribute:     r.ProvidentFundContribute,
 		ProvidentFundRateEmployee:   r.ProvidentFundRateEmployee,
 		ProvidentFundRateEmployer:   r.ProvidentFundRateEmployer,

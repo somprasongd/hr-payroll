@@ -12,6 +12,7 @@ import { FilterBar } from '@/components/common/filter-bar';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { ActionDropdown } from '@/components/common/action-dropdown';
 import { EmployeePhoto } from '@/components/common/employee-photo';
+import { EmployeeTypeBadge } from '@/components/common/employee-type-badge';
 
 export default function EmployeesPage() {
   const t = useTranslations('Employees');
@@ -124,14 +125,7 @@ export default function EmployeesPage() {
       accessorFn: (row: Employee) => row,
       cell: (info: any) => {
         const employee = info.getValue() as Employee;
-        // Match by name since API sends employeeTypeName, not employeeTypeId
-        const empType = employeeTypes.find(type => type.name === employee.employeeTypeName);
-
-        if (empType?.code) {
-          const translationKey = `employeeTypes.${empType.code}`;
-          return t(translationKey);
-        }
-        return employee.employeeTypeName || '-';
+        return <EmployeeTypeBadge typeName={employee.employeeTypeName} />;
       },
     },
     {

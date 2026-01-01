@@ -20,6 +20,8 @@ import {
 import { GenericDataTable } from '@/components/common/generic-data-table';
 import { PayslipEditDialog } from '@/components/payroll/payslip-edit-dialog';
 import { BatchPrintDialog } from '@/components/payroll/batch-print-dialog';
+import { ActionDropdown } from '@/components/common/action-dropdown';
+import { EmployeeTypeBadge } from '@/components/common/employee-type-badge';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { EmployeePhoto } from '@/components/common/employee-photo';
 import { useAuthStore } from '@/store/auth-store';
@@ -156,14 +158,7 @@ export default function PayrollDetailPage() {
   };
 
   const getEmployeeTypeBadge = (typeCode: string) => {
-    const isFT = typeCode === 'full_time';
-    return (
-      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold shrink-0 ${
-        isFT ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'
-      }`}>
-        {isFT ? 'FT' : 'PT'}
-      </span>
-    );
+    return <EmployeeTypeBadge typeCode={typeCode} />;
   };
 
   const isPending = run?.status === 'pending';
