@@ -542,7 +542,8 @@
         "startDate": "วันที่เริ่มต้น",
         "endDate": "วันที่สิ้นสุด",
         "entryType": "ประเภท",
-        "quantity": "จำนวน"
+        "quantity": "จำนวน",
+        "leaveDuration": "ช่วงเวลาลา"
       },
       "placeholders": {
         "selectEmployee": "เลือกพนักงาน",

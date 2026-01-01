@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { DateInput } from '@/components/ui/date-input';
@@ -40,6 +41,7 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
   const [workDate, setWorkDate] = useState('');
   const [entryType, setEntryType] = useState<'late' | 'leave_day' | 'leave_hours' | 'ot' | 'leave_double'>('late');
   const [quantity, setQuantity] = useState('');
+  const [leaveDuration, setLeaveDuration] = useState<'full' | 'half'>('full');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -67,13 +69,19 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
       setWorkDate(format(new Date(), 'yyyy-MM-dd'));
     }
 
-    // If switching to fixed quantity type, set quantity to 1
+    // If switching to fixed quantity type, set quantity based on duration
     if (isFixedQuantityType(newType)) {
-      setQuantity('1');
+      setQuantity(leaveDuration === 'full' ? '1' : '0.5');
     } else if (isFixedQuantityType(entryType)) {
       // If switching away from fixed quantity type, clear quantity
       setQuantity('');
     }
+  };
+
+  // Handle leave duration change
+  const handleLeaveDurationChange = (duration: 'full' | 'half') => {
+    setLeaveDuration(duration);
+    setQuantity(duration === 'full' ? '1' : '0.5');
   };
 
   // Handle date change with validation
@@ -99,12 +107,21 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
       setWorkDate(worklog.workDate);
       setEntryType(worklog.entryType);
       setQuantity(worklog.quantity.toString());
+      // Set leave duration based on existing quantity
+      if (isFixedQuantityType(worklog.entryType)) {
+        if (worklog.quantity === 1) {
+          setLeaveDuration('full');
+        } else if (worklog.quantity === 0.5) {
+          setLeaveDuration('half');
+        }
+      }
     } else if (mode === 'create') {
       // Use last selected employee or empty
       setEmployeeId(lastSelectedEmployeeId || '');
       setWorkDate(format(new Date(), 'yyyy-MM-dd'));
       setEntryType('late');
       setQuantity('');
+      setLeaveDuration('full');
     }
     setErrors({});
     setSubmitError(null);
@@ -161,7 +178,7 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
         
         // Clear form but keep employee and type, move to next date
         setWorkDate(newWorkDate);
-        setQuantity('');
+        setQuantity(isFixedQuantityType(entryType) ? (leaveDuration === 'full' ? '1' : '0.5') : '');
         setErrors({});
         // Don't close dialog - let user continue adding entries
       } else {
@@ -295,24 +312,47 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
               </div>
             )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="quantity">
-                {t('fields.quantity')} ({getQuantityUnit()})
-              </Label>
-              <Input
-                id="quantity"
-                type="number"
-                step="0.01"
-                min="0"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder={t('placeholders.quantity')}
-                className={errors.quantity ? 'border-red-500' : ''}
-                disabled={isFixedQuantityType(entryType)}
-                readOnly={isFixedQuantityType(entryType)}
-              />
-              {errors.quantity && <p className="text-sm text-red-500">{errors.quantity}</p>}
-            </div>
+            {/* Quantity field - different UI for fixed quantity types */}
+            {isFixedQuantityType(entryType) ? (
+              <div className="grid gap-2">
+                <Label>{t('fields.leaveDuration')}</Label>
+                <RadioGroup
+                  value={leaveDuration}
+                  onValueChange={(value) => handleLeaveDurationChange(value as 'full' | 'half')}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="half" id="half" />
+                    <Label htmlFor="half" className="cursor-pointer font-normal">
+                      ครึ่งวัน (0.5)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="full" id="full" />
+                    <Label htmlFor="full" className="cursor-pointer font-normal">
+                      เต็มวัน (1)
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                <Label htmlFor="quantity">
+                  {t('fields.quantity')} ({getQuantityUnit()})
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder={t('placeholders.quantity')}
+                  className={errors.quantity ? 'border-red-500' : ''}
+                />
+                {errors.quantity && <p className="text-sm text-red-500">{errors.quantity}</p>}
+              </div>
+            )}
           </div>
 
           <DialogFooter>

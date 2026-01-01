@@ -542,7 +542,8 @@
         "startDate": "Start Date",
         "endDate": "End Date",
         "entryType": "Type",
-        "quantity": "Quantity"
+        "quantity": "Quantity",
+        "leaveDuration": "Leave Duration"
       },
       "placeholders": {
         "selectEmployee": "Select employee",

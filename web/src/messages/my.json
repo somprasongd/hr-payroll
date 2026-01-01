@@ -495,7 +495,8 @@
         "startDate": "စတင်ရက်",
         "endDate": "ပြီးဆုံးရက်",
         "entryType": "အမျိုးအစား",
-        "quantity": "ပမာဏ"
+        "quantity": "ပမာဏ",
+        "leaveDuration": "ခွင့်ကာလ"
       },
       "placeholders": {
         "selectEmployee": "ဝန်ထမ်း ရွေးပါ",
