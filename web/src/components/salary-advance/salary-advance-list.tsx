@@ -47,6 +47,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
+import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
 
 export function SalaryAdvanceList() {
   const t = useTranslations('SalaryAdvance');
@@ -209,6 +210,7 @@ export function SalaryAdvanceList() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('employee')}</TableHead>
               <TableHead>{t('advanceDate')}</TableHead>
               <TableHead>{t('amount')}</TableHead>
               <TableHead>{t('payrollMonth')}</TableHead>
@@ -217,27 +219,26 @@ export function SalaryAdvanceList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {employeeFilter === 'all' ? (
+            {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                  {t('selectEmployeeToView') || 'กรุณาเลือกพนักงานเพื่อดูข้อมูล'}
-                </TableCell>
-              </TableRow>
-            ) : loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   {tCommon('loading')}
                 </TableCell>
               </TableRow>
             ) : !data || data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   {tCommon('noData')}
                 </TableCell>
               </TableRow>
             ) : (
-              data.map((item) => (
+              data.map((item) => {
+                const emp = employees.find(e => e.id === item.employeeId);
+                return (
                 <TableRow key={item.id}>
+                  <TableCell>
+                    {emp ? <EmployeeCellDisplay employee={emp} /> : '-'}
+                  </TableCell>
                   <TableCell>{format(new Date(item.advanceDate), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>{item.amount.toLocaleString()}</TableCell>
                   <TableCell>{format(new Date(item.payrollMonthDate), 'MM/yyyy')}</TableCell>
@@ -271,7 +272,8 @@ export function SalaryAdvanceList() {
                     )}
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

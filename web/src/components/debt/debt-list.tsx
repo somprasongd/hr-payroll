@@ -20,6 +20,7 @@ import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { ActionDropdown } from '@/components/common/action-dropdown';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
+import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
 
 import { CreateRepaymentDialog } from './create-repayment-dialog';
 import {
@@ -95,30 +96,29 @@ export function DebtList() {
   };
 
   const fetchData = async () => {
+    // Allow fetching all employees when no filter is selected
     if (employeeFilter === 'all') {
-      setData([]);
-      setTotalPages(1);
-      setLoading(false);
       setOutstandingDebt(0);
       setPendingInstallments(0);
-      return;
     }
 
     try {
       setLoading(true);
       
-      // Fetch debt summary and pending installments in parallel
-      await Promise.all([
-        fetchDebtSummary(employeeFilter),
-        fetchPendingInstallments(employeeFilter)
-      ]);
+      // Fetch debt summary and pending installments only when employee is selected
+      if (employeeFilter !== 'all') {
+        await Promise.all([
+          fetchDebtSummary(employeeFilter),
+          fetchPendingInstallments(employeeFilter)
+        ]);
+      }
       
       const response = await debtService.getDebtTxns({
         page,
         limit: 10,
         status: statusFilter === 'all' ? undefined : statusFilter,
         type: typeFilter === 'all' ? undefined : typeFilter,
-        employeeId: employeeFilter,
+        employeeId: employeeFilter === 'all' ? undefined : employeeFilter,
       });
       // Filter out installment type transactions as they are child records
       const filteredData = (response.data || []).filter(item => item.txnType !== 'installment');
@@ -170,6 +170,17 @@ export function DebtList() {
   };
 
   const columns = [
+    {
+      id: 'employee',
+      header: () => t('fields.employee'),
+      accessorFn: (row: DebtTxn) => row,
+      cell: (info: any) => {
+        const item = info.getValue() as DebtTxn;
+        const emp = employees.find(e => e.id === item.employeeId);
+        if (!emp) return '-';
+        return <EmployeeCellDisplay employee={emp} />;
+      },
+    },
     {
       id: 'txnDate',
       header: () => t('fields.txnDate'),
@@ -357,7 +368,7 @@ export function DebtList() {
         data={data}
         columns={columns}
         loading={loading}
-        emptyStateText={employeeFilter === 'all' ? t('selectEmployeeToView') : tCommon('noData')}
+        emptyStateText={tCommon('noData')}
         actions={actions}
         pagination={{
           currentPage: page,

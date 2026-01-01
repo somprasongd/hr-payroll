@@ -17,6 +17,7 @@ import {
 import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
+import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
 import {
   Table,
   TableBody,
@@ -67,11 +68,7 @@ export default function PayoutPtListPage() {
   }, []);
 
   useEffect(() => {
-    if (employeeId) {
-      fetchPayouts();
-    } else {
-      setPayouts([]);
-    }
+    fetchPayouts();
   }, [status, employeeId, currentPage]);
 
   const fetchEmployees = async () => {
@@ -84,7 +81,6 @@ export default function PayoutPtListPage() {
   };
 
   const fetchPayouts = async () => {
-    if (!employeeId) return;
     setLoading(true);
     try {
       const params: any = {
@@ -92,7 +88,7 @@ export default function PayoutPtListPage() {
         page: currentPage
       };
       if (status !== 'all') params.status = status;
-      params.employeeId = employeeId;
+      if (employeeId) params.employeeId = employeeId;
 
       const data = await payoutPtService.getPayouts(params);
       setPayouts(data.data || []);
@@ -225,6 +221,7 @@ export default function PayoutPtListPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('fields.employee')}</TableHead>
               <TableHead>{t('fields.createdAt')}</TableHead>
               <TableHead>{t('fields.itemCount')}</TableHead>
               <TableHead>{t('fields.totalHours')}</TableHead>
@@ -234,28 +231,26 @@ export default function PayoutPtListPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!employeeId ? (
+            {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                  {t('filters.selectEmployee') || 'Please select an employee to view payouts'}
-                </TableCell>
-              </TableRow>
-            ) : loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                   {tCommon('loading')}
                 </TableCell>
               </TableRow>
             ) : payouts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                   {t('noData')}
                 </TableCell>
               </TableRow>
             ) : (
               payouts.map((payout) => {
+                const emp = employees.find(e => e.id === payout.employeeId);
                 return (
                   <TableRow key={payout.id}>
+                    <TableCell>
+                      {emp ? <EmployeeCellDisplay employee={emp} /> : '-'}
+                    </TableCell>
                     <TableCell>
                       {payout.createdAt && !isNaN(new Date(payout.createdAt).getTime()) 
                         ? format(new Date(payout.createdAt), 'dd/MM/yyyy HH:mm') 

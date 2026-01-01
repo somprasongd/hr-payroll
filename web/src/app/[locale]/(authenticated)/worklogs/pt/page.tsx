@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
+import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
 import { GenericDataTable } from '@/components/common/generic-data-table';
 import { Badge } from '@/components/ui/badge';
 import { DateInput } from '@/components/ui/date-input';
@@ -89,13 +90,6 @@ export default function PTWorklogsPage() {
   };
 
   const fetchWorklogs = async () => {
-    if (!employeeFilter) {
-      setWorklogs([]);
-      setTotalPages(1);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     try {
       const response = await ptWorklogService.getWorklogs({
@@ -233,6 +227,17 @@ export default function PTWorklogsPage() {
   };
 
   const columns = [
+    {
+      id: 'employee',
+      header: t('table.employee'),
+      accessorFn: (row: PTWorklog) => row,
+      cell: (info: any) => {
+        const worklog = info.getValue() as PTWorklog;
+        const emp = employees.find(e => e.id === worklog.employeeId);
+        if (!emp) return '-';
+        return <EmployeeCellDisplay employee={emp} />;
+      },
+    },
     {
       id: 'workDate',
       header: t('table.workDate'),
@@ -386,7 +391,7 @@ export default function PTWorklogsPage() {
         data={worklogs}
         columns={columns}
         loading={loading}
-        emptyStateText={!employeeFilter ? t('placeholders.selectEmployee') : t('noData')}
+        emptyStateText={t('noData')}
         actions={actions}
         pagination={{
           currentPage,
