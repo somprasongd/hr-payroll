@@ -712,7 +712,8 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 หมายเหตุ:
 
-สาเหตุที่แตก effective_daterange (Postgres Type) ออกเป็น startDate และ endDate ใน JSON ก็เพื่อให้ Frontend นำไปแสดงผลได้ง่าย ไม่ต้องมานั่ง Parse String [2025-01-01, 2026-01-01) เอง
+- เบี้ยขยัน (ไม่สาย) จ่ายเมื่อไม่มีการมาสายเลยในงวดนั้น (late minutes = 0 จาก worklog_ft)
+- สาเหตุที่แตก effective_daterange (Postgres Type) ออกเป็น startDate และ endDate ใน JSON ก็เพื่อให้ Frontend นำไปแสดงผลได้ง่าย ไม่ต้องมานั่ง Parse String [2025-01-01, 2026-01-01) เอง
 
 **Error Responses:**
 

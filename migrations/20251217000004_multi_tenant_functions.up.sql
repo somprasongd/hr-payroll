@@ -458,7 +458,7 @@ BEGIN
         COALESCE(v_ot_amount,0) +
         CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
         CASE
-          WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0 AND v_emp.allow_attendance_bonus_nolate
+          WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_mins = 0 AND v_emp.allow_attendance_bonus_nolate
             THEN v_config.attendance_bonus_no_late
           ELSE 0
         END +
@@ -521,7 +521,7 @@ BEGIN
       
       CASE WHEN v_emp.type_code = 'full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
       CASE
-        WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_deduct = 0 AND v_emp.allow_attendance_bonus_nolate
+        WHEN v_emp.type_code = 'full_time' AND v_ft_salary > 0 AND v_late_mins = 0 AND v_emp.allow_attendance_bonus_nolate
           THEN v_config.attendance_bonus_no_late
         ELSE 0
       END,
@@ -997,7 +997,7 @@ BEGIN
       COALESCE(v_ot_amount,0) +
       CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END +
       CASE
-        WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0
+        WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_mins = 0
              AND v_emp.allow_attendance_bonus_nolate
           THEN v_config.attendance_bonus_no_late
         ELSE 0
@@ -1047,7 +1047,7 @@ BEGIN
     
     housing_allowance = CASE WHEN v_emp.type_code='full_time' AND v_emp.allow_housing THEN v_config.housing_allowance ELSE 0 END,
     attendance_bonus_nolate = CASE
-      WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_deduct = 0 AND v_emp.allow_attendance_bonus_nolate
+      WHEN v_emp.type_code='full_time' AND v_ft_salary > 0 AND v_late_mins = 0 AND v_emp.allow_attendance_bonus_nolate
         THEN v_config.attendance_bonus_no_late
       ELSE 0
     END,
