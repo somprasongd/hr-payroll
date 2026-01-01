@@ -140,7 +140,7 @@ export interface EmployeeType {
 }
 
 export const employeeService = {
-  getEmployees: async (params?: { page?: number; limit?: number; search?: string; status?: string; employeeTypeId?: string; employeeTypeCode?: string }) => {
+  getEmployees: async (params?: { page?: number; limit?: number; search?: string; status?: string; employeeTypeId?: string; employeeTypeCode?: string; hasOutstandingDebt?: boolean }) => {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.limit) query.append('limit', params.limit.toString());
@@ -148,6 +148,7 @@ export const employeeService = {
     if (params?.status) query.append('status', params.status);
     if (params?.employeeTypeId && params.employeeTypeId !== 'all') query.append('employeeTypeId', params.employeeTypeId);
     if (params?.employeeTypeCode) query.append('employeeTypeCode', params.employeeTypeCode);
+    if (params?.hasOutstandingDebt) query.append('hasOutstandingDebt', 'true');
     
     return apiClient.get<EmployeeListResponse>(`/employees?${query.toString()}`);
   },

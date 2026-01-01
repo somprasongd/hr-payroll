@@ -1065,6 +1065,9 @@
       "approved": "Approved",
       "all": "All Statuses"
     },
+    "filters": {
+      "hasOutstanding": "Only with outstanding"
+    },
     "installmentStatus": {
       "pending": "Pending Transaction",
       "approved": "Paid"

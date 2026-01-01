@@ -1064,6 +1064,9 @@
       "allStatuses": "ทุกสถานะ",
       "allTypes": "ทุกประเภท"
     },
+    "filters": {
+      "hasOutstanding": "เฉพาะมียอดคงค้าง"
+    },
     "installmentStatus": {
       "pending": "รอทำรายการ",
       "approved": "ชำระแล้ว"

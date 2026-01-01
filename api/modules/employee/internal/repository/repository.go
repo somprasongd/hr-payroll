@@ -102,7 +102,7 @@ type AccumRecord struct {
 	UpdatedBy uuid.UUID `db:"updated_by" json:"updatedBy"`
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, search, status, employeeTypeID string) (ListResult, error) {
+func (r Repository) List(ctx context.Context, page, limit int, search, status, employeeTypeID string, hasOutstandingDebt bool) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -133,6 +133,10 @@ func (r Repository) List(ctx context.Context, page, limit int, search, status, e
 		val := "%" + strings.ToLower(s) + "%"
 		args = append(args, val, val, val)
 		where = append(where, fmt.Sprintf("(LOWER(e.employee_number) LIKE $%d OR LOWER(e.first_name) LIKE $%d OR LOWER(e.last_name) LIKE $%d)", len(args)-2, len(args)-1, len(args)))
+	}
+
+	if hasOutstandingDebt {
+		where = append(where, "EXISTS (SELECT 1 FROM payroll_accumulation pa WHERE pa.employee_id = e.id AND pa.accum_type = 'loan_outstanding' AND pa.amount > 0)")
 	}
 
 	whereClause := strings.Join(where, " AND ")

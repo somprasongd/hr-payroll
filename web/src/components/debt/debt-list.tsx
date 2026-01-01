@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Plus, Trash2, Eye, RotateCcw, Wallet, Clock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Filter, Plus, Trash2, Eye, RotateCcw, Wallet, Clock, Pencil } from "lucide-react";
 import { debtService, DebtTxn } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
@@ -21,6 +22,7 @@ import { ActionDropdown } from '@/components/common/action-dropdown';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
 import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
+import { AccumulationAdjustDialog } from '@/components/employees/accumulation-adjust-dialog';
 
 import { CreateRepaymentDialog } from './create-repayment-dialog';
 import {
@@ -59,16 +61,29 @@ export function DebtList() {
   const [repaymentOpen, setRepaymentOpen] = useState(false);
   const [outstandingDebt, setOutstandingDebt] = useState(0);
   const [pendingInstallments, setPendingInstallments] = useState(0);
+  const [hasOutstandingFilter, setHasOutstandingFilter] = useState(true);
+  const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
 
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [hasOutstandingFilter]);
 
   const fetchEmployees = async () => {
     try {
-      const response = await employeeService.getEmployees({ limit: 100, status: 'active' });
+      const response = await employeeService.getEmployees({ 
+        limit: 100, 
+        status: 'active',
+        hasOutstandingDebt: hasOutstandingFilter || undefined
+      });
       setEmployees(response.data || []);
+      // Reset employee filter if current selection is not in the new list
+      if (employeeFilter !== 'all') {
+        const employeeExists = response.data?.some(e => e.id === employeeFilter);
+        if (!employeeExists) {
+          setEmployeeFilter('all');
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch employees', error);
     }
@@ -166,6 +181,7 @@ export function DebtList() {
     setStatusFilter('all');
     setTypeFilter('all');
     setEmployeeFilter('all');
+    setHasOutstandingFilter(false);
     setPage(1);
   };
 
@@ -274,20 +290,34 @@ export function DebtList() {
       </div>
 
       <div className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm ${!showFilters ? 'hidden md:block' : ''} ${employeeFilter !== 'all' ? 'lg:relative' : ''}`}>
-        <div className="grid grid-cols-6 gap-4">
-          <div className="col-span-6 lg:col-span-3">
-             <EmployeeSelector
-              employees={employees}
-              selectedEmployeeId={employeeFilter}
-              onSelect={setEmployeeFilter}
-              placeholder={t('fields.employee')}
-              searchPlaceholder={tCommon('search')}
-              emptyText={tCommon('noData')}
-            />
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-full lg:w-auto lg:min-w-[400px]">
+               <EmployeeSelector
+                employees={employees}
+                selectedEmployeeId={employeeFilter}
+                onSelect={setEmployeeFilter}
+                placeholder={t('fields.employee')}
+                searchPlaceholder={tCommon('search')}
+                emptyText={tCommon('noData')}
+              />
+            </div>
 
-          <div className="col-span-6 lg:col-span-3 flex flex-col sm:flex-row gap-2">
-            <div className="w-full sm:w-[180px]">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="hasOutstanding"
+                checked={hasOutstandingFilter}
+                onCheckedChange={(checked) => setHasOutstandingFilter(checked === true)}
+              />
+              <label
+                htmlFor="hasOutstanding"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 whitespace-nowrap"
+              >
+                {t('filters.hasOutstanding')}
+              </label>
+            </div>
+
+            <div className="w-full sm:w-[150px]">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('status.allStatuses')} />
@@ -300,7 +330,7 @@ export function DebtList() {
               </Select>
             </div>
 
-            <div className="w-full sm:w-[180px]">
+            <div className="w-full sm:w-[150px]">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('status.allTypes')} />
@@ -313,17 +343,17 @@ export function DebtList() {
                 </SelectContent>
               </Select>
             </div>
-
-            {(statusFilter !== 'all' || typeFilter !== 'all' || employeeFilter !== 'all') && (
-              <button
-                onClick={clearFilters}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                title={tCommon('clearFilter')}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            )}
           </div>
+
+          {(statusFilter !== 'all' || typeFilter !== 'all' || employeeFilter !== 'all' || hasOutstandingFilter) && (
+            <button
+              onClick={clearFilters}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              title={tCommon('clearFilter')}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -343,7 +373,18 @@ export function DebtList() {
               <CardTitle className="text-sm font-medium text-gray-500">
                 {t('summary.outstandingDebt')}
               </CardTitle>
-              <Wallet className="h-4 w-4 text-gray-500" />
+              <div className="flex items-center gap-2">
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => setAdjustDialogOpen(true)}
+                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                    title={tCommon('edit')}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                )}
+                <Wallet className="h-4 w-4 text-gray-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{outstandingDebt.toLocaleString()}</div>
@@ -394,6 +435,20 @@ export function DebtList() {
         onSuccess={fetchData} 
         selectedEmployeeId={employeeFilter}
       />
+
+      {employeeFilter !== 'all' && (
+        <AccumulationAdjustDialog
+          open={adjustDialogOpen}
+          onOpenChange={setAdjustDialogOpen}
+          employeeId={employeeFilter}
+          type="loan_outstanding"
+          currentAmount={outstandingDebt}
+          onSuccess={() => {
+            fetchDebtSummary(employeeFilter);
+            fetchEmployees();
+          }}
+        />
+      )}
     </div>
   );
 }

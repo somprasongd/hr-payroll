@@ -1000,6 +1000,9 @@
       "allStatuses": "အခြေအနေအားလုံး",
       "allTypes": "အမျိုးအစားအားလုံး"
     },
+    "filters": {
+      "hasOutstanding": "ကြွေးမြီကျန်ရှိသူများသာ"
+    },
     "installmentStatus": {
       "pending": "ငွေပေးချေရန် စောင့်ဆိုင်းနေသည်",
       "approved": "ပေးချေပြီး"
