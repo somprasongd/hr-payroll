@@ -30,9 +30,10 @@ import { Badge } from '@/components/ui/badge';
 import { payoutPtService, PayoutPt } from '@/services/payout-pt.service';
 import { employeeService } from '@/services/employee.service';
 import { Employee } from '@/services/employee.service';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { Pagination } from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
+import { DateInput } from '@/components/ui/date-input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +63,8 @@ export default function PayoutPtListPage() {
   // Filters - initialize from URL query
   const [status, setStatus] = useState<string>('all');
   const [employeeId, setEmployeeId] = useState<string>(searchParams.get('employeeId') || '');
+  const [startDate, setStartDate] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState<string>(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
 
   useEffect(() => {
     fetchEmployees();
@@ -69,7 +72,7 @@ export default function PayoutPtListPage() {
 
   useEffect(() => {
     fetchPayouts();
-  }, [status, employeeId, currentPage]);
+  }, [status, employeeId, startDate, endDate, currentPage]);
 
   const fetchEmployees = async () => {
     try {
@@ -89,6 +92,8 @@ export default function PayoutPtListPage() {
       };
       if (status !== 'all') params.status = status;
       if (employeeId) params.employeeId = employeeId;
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
 
       const data = await payoutPtService.getPayouts(params);
       setPayouts(data.data || []);
@@ -114,6 +119,8 @@ export default function PayoutPtListPage() {
   const clearFilters = () => {
     setStatus('all');
     setEmployeeId('');
+    setStartDate(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+    setEndDate(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
     setCurrentPage(1);
   };
 
@@ -203,6 +210,16 @@ export default function PayoutPtListPage() {
                 <SelectItem value="paid">{t('statuses.paid')}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="col-span-1 md:col-span-3 lg:col-span-3">
+            <label className="text-sm font-medium mb-1 block">{t('filters.startDate')}</label>
+            <DateInput value={startDate} onValueChange={setStartDate} />
+          </div>
+
+          <div className="col-span-1 md:col-span-3 lg:col-span-3">
+            <label className="text-sm font-medium mb-1 block">{t('filters.endDate')}</label>
+            <DateInput value={endDate} onValueChange={setEndDate} />
           </div>
         </div>
       </div>

@@ -730,7 +730,9 @@
       "filters": {
         "allStatuses": "အခြေအနေအားလုံး",
         "allEmployees": "ဝန်ထမ်းအားလုံး",
-        "selectEmployee": "ဝန်ထမ်း ရွေးချယ်ပါ"
+        "selectEmployee": "ဝန်ထမ်း ရွေးချယ်ပါ",
+        "startDate": "စတင်ရက်",
+        "endDate": "ပြီးဆုံးရက်"
       },
       "create": {
         "createTitle": "ပေးချေမှု ဖန်တီးပါ",

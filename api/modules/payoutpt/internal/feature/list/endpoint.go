@@ -2,6 +2,7 @@ package list
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -17,6 +18,8 @@ import (
 // @Security BearerAuth
 // @Param employeeId query string false "filter by employee"
 // @Param status query string false "to_pay|paid|all"
+// @Param startDate query string false "filter by start date (YYYY-MM-DD)"
+// @Param endDate query string false "filter by end date (YYYY-MM-DD)"
 // @Param page query int false "page"
 // @Param limit query int false "limit"
 // @Success 200 {object} Response
@@ -33,11 +36,28 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 			}
 		}
 
+		// Parse date filters
+		var startDate, endDate *time.Time
+		if v := c.Query("startDate"); v != "" {
+			if t, err := time.Parse("2006-01-02", v); err == nil {
+				startDate = &t
+			}
+		}
+		if v := c.Query("endDate"); v != "" {
+			if t, err := time.Parse("2006-01-02", v); err == nil {
+				// Set to end of day
+				t = t.Add(24*time.Hour - time.Second)
+				endDate = &t
+			}
+		}
+
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
 			Page:       page,
 			Limit:      limit,
 			Status:     status,
 			EmployeeID: empID,
+			StartDate:  startDate,
+			EndDate:    endDate,
 			Repo:       repo,
 		})
 		if err != nil {

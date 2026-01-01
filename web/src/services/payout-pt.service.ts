@@ -31,6 +31,8 @@ export interface GetPayoutsPtParams {
   limit?: number;
   employeeId?: string;
   status?: 'to_pay' | 'paid';
+  startDate?: string;
+  endDate?: string;
 }
 
 export const payoutPtService = {

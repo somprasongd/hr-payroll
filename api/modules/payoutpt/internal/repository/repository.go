@@ -96,7 +96,7 @@ func (r Repository) ValidateWorklogs(ctx context.Context, employeeID uuid.UUID, 
 	return nil
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, employeeID *uuid.UUID, status string) (ListResult, error) {
+func (r Repository) List(ctx context.Context, page, limit int, employeeID *uuid.UUID, status string, startDate, endDate *time.Time) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	where := "p.deleted_at IS NULL"
@@ -108,6 +108,14 @@ func (r Repository) List(ctx context.Context, page, limit int, employeeID *uuid.
 	if status != "" && status != "all" {
 		where += fmt.Sprintf(" AND p.status=$%d", len(args)+1)
 		args = append(args, status)
+	}
+	if startDate != nil {
+		where += fmt.Sprintf(" AND p.created_at >= $%d", len(args)+1)
+		args = append(args, *startDate)
+	}
+	if endDate != nil {
+		where += fmt.Sprintf(" AND p.created_at <= $%d", len(args)+1)
+		args = append(args, *endDate)
 	}
 	// pagination args appended at the end
 	args = append(args, limit, offset)

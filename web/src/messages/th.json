@@ -771,7 +771,9 @@
       "filters": {
         "allStatuses": "ทุกสถานะ",
         "allEmployees": "พนักงานทั้งหมด",
-        "selectEmployee": "เลือกพนักงาน"
+        "selectEmployee": "เลือกพนักงาน",
+        "startDate": "วันที่เริ่มต้น",
+        "endDate": "วันที่สิ้นสุด"
       },
       "create": {
         "createTitle": "สร้างรายการจ่ายเงิน",

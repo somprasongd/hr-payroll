@@ -3,6 +3,7 @@ package list
 import (
 	"context"
 	"math"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -18,6 +19,8 @@ type Query struct {
 	Limit      int
 	Status     string
 	EmployeeID *uuid.UUID
+	StartDate  *time.Time
+	EndDate    *time.Time
 	Repo       repository.Repository
 }
 
@@ -45,7 +48,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Limit <= 0 || q.Limit > 1000 {
 		q.Limit = 1000
 	}
-	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.Status)
+	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.EmployeeID, q.Status, q.StartDate, q.EndDate)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list payouts", zap.Error(err))
 		return nil, errs.Internal("failed to list payouts")

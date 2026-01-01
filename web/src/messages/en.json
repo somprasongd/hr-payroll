@@ -777,7 +777,9 @@
       "filters": {
         "allStatuses": "All Statuses",
         "allEmployees": "All Employees",
-        "selectEmployee": "Select Employee"
+        "selectEmployee": "Select Employee",
+        "startDate": "Start Date",
+        "endDate": "End Date"
       },
       "create": {
         "createTitle": "Create Payout",
