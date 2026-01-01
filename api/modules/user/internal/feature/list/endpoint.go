@@ -23,7 +23,7 @@ import (
 // @Failure 403
 // @Router /admin/users [get]
 func NewEndpoint(router fiber.Router) {
-	router.Get("/users", func(c fiber.Ctx) error {
+	router.Get("/", func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
 		role := c.Query("role")

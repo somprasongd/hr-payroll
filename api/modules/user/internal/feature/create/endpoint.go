@@ -30,7 +30,7 @@ type RequestBody struct {
 // @Failure 409
 // @Router /admin/users [post]
 func NewEndpoint(router fiber.Router) {
-	router.Post("/users", func(c fiber.Ctx) error {
+	router.Post("/", func(c fiber.Ctx) error {
 		var req RequestBody
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")

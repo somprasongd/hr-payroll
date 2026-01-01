@@ -23,7 +23,7 @@ import (
 // @Failure 404
 // @Router /admin/users/{id} [delete]
 func NewEndpoint(router fiber.Router) {
-	router.Delete("/users/:id", func(c fiber.Ctx) error {
+	router.Delete("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")

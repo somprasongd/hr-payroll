@@ -30,7 +30,7 @@ type RequestBody struct {
 // @Failure 404
 // @Router /admin/users/{id} [patch]
 func NewEndpoint(router fiber.Router) {
-	router.Patch("/users/:id", func(c fiber.Ctx) error {
+	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")

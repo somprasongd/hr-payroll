@@ -52,13 +52,13 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	// Admin user management routes
-	admin := r.Group("/admin", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
-	list.NewEndpoint(admin)
-	create.NewEndpoint(admin)
-	get.NewEndpoint(admin)
-	updaterole.NewEndpoint(admin)
-	resetpassword.NewEndpoint(admin)
-	delete.NewEndpoint(admin)
+	adminUsers := r.Group("/admin/users", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
+	list.NewEndpoint(adminUsers)
+	create.NewEndpoint(adminUsers)
+	get.NewEndpoint(adminUsers)
+	updaterole.NewEndpoint(adminUsers)
+	resetpassword.NewEndpoint(adminUsers)
+	delete.NewEndpoint(adminUsers)
 
 	// User self-service routes
 	meGroup := r.Group("/me", middleware.Auth(m.tokenSvc))

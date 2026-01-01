@@ -30,7 +30,7 @@ type RequestBody struct {
 // @Failure 404
 // @Router /admin/users/{id}/password-reset [post]
 func NewEndpoint(router fiber.Router) {
-	router.Post("/users/:id/password-reset", func(c fiber.Ctx) error {
+	router.Post("/:id/password-reset", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")

@@ -41,8 +41,11 @@ func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	admin := r.Group("/admin/payroll-configs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
+	group := r.Group("/admin/payroll-configs", middleware.Auth(m.tokenSvc))
+	adminOrHR := group.Group("", middleware.RequireRoles("admin", "hr"))
+	effective.NewEndpoint(adminOrHR)
+
+	admin := group.Group("", middleware.RequireRoles("admin"))
 	list.NewEndpoint(admin)
-	effective.NewEndpoint(admin)
 	create.NewEndpoint(admin)
 }

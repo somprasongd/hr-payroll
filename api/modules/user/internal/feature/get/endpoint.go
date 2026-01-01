@@ -23,7 +23,7 @@ import (
 // @Failure 404
 // @Router /admin/users/{id} [get]
 func NewEndpoint(router fiber.Router) {
-	router.Get("/users/:id", func(c fiber.Ctx) error {
+	router.Get("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")
