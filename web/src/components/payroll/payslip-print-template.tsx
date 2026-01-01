@@ -263,6 +263,10 @@ const SlipHalf = ({
   const othersDeductionTotal = payslip.othersDeduction?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
   const loanRepaymentTotal = payslip.loanRepayments?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
 
+  // Get item details for display
+  const othersIncomeDetails = payslip.othersIncome?.filter(item => item.value > 0).map(item => item.name).join(', ') || '';
+  const othersDeductionDetails = payslip.othersDeduction?.filter(item => item.value > 0).map(item => item.name).join(', ') || '';
+
   // Full address
   const fullAddress = [
     orgProfile?.address_line1,
@@ -367,9 +371,16 @@ const SlipHalf = ({
           <div style={styles.gridRow}><RowLabel th="เบี้ยขยัน (ไม่สาย)" my="အလုပ်မနောက်ကျမှု" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.attendanceBonusNoLate)}</div></div>
           <div style={styles.gridRow}><RowLabel th="เบี้ยขยัน (ไม่ลา)" my="အလုပ်မများကျမှု" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.attendanceBonusNoLeave)}</div></div>
           <div style={styles.gridRow}><RowLabel th="ชดเชยวันลา *" my="ခွင်ှပိတ်ရက်ငွေ" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.leaveCompensationAmount)}</div></div>
-          <div style={styles.gridRow}><RowLabel th="อื่นๆ **" my="အခြား" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(othersIncomeTotal)}</div></div>
           <div style={styles.gridRow}><RowLabel th="โบนัส ***" my="ဘိုးနစ်စ်" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.bonusAmount)}</div></div>
           <div style={styles.gridRow}><RowLabel th="ค่าธรรมเนียมแพทย์" my="ဆရားကုန်" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.doctorFee)}</div></div>
+          <div style={styles.gridRow}><RowLabel th="อื่นๆ **" my="အခြား" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(othersIncomeTotal)}</div></div>
+          {/* Others Income Details */}
+          {othersIncomeDetails && (
+            <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '8px', padding: '4px', backgroundColor: '#f9fafb', borderRadius: '2px' }}>
+              <div style={{ fontWeight: 500, marginBottom: '2px' }}>** รายได้อื่นๆ:</div>
+              <div>{othersIncomeDetails}</div>
+            </div>
+          )}
         </div>
 
         {/* Deduction Column */}
@@ -396,6 +407,13 @@ const SlipHalf = ({
           <div style={styles.gridRow}><RowLabel th="เบิกล่วงหน้า" my="ကြိုတင်ငွေထုတ်ခြင်း" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(payslip.advanceRepayAmount)}</div></div>
           <div style={styles.gridRow}><RowLabel th="กู้ยืม" my="ချေးငှား" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(loanRepaymentTotal)}</div></div>
           <div style={styles.gridRow}><RowLabel th="อื่นๆ ****" my="အခြား" /><div style={styles.textCenter}>-</div><div style={styles.textCenter}>-</div><div style={styles.textRight}>{formatNumber(othersDeductionTotal)}</div></div>
+          {/* Others Deduction Details */}
+          {othersDeductionDetails && (
+            <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '8px', padding: '4px', backgroundColor: '#f9fafb', borderRadius: '2px' }}>
+              <div style={{ fontWeight: 500, marginBottom: '2px' }}>**** รายหักอื่นๆ:</div>
+              <div>{othersDeductionDetails}</div>
+            </div>
+          )}
         </div>
       </div>
 
