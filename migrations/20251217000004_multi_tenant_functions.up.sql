@@ -64,83 +64,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- =========================================
--- 2) Fix salary_raise_cycle_after_insert()
--- Insert to salary_raise_item requires company_id
--- =========================================
-CREATE OR REPLACE FUNCTION salary_raise_cycle_after_insert()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
-BEGIN
-  -- สร้างรายการต่อพนักงาน Full-time with company_id from cycle
-  INSERT INTO salary_raise_item (
-    cycle_id, employee_id, company_id, tenure_days,
-    current_salary, current_sso_wage,
-    raise_percent, raise_amount, new_sso_wage,
-    late_minutes, leave_days, leave_double_days, leave_hours, ot_hours,
-    created_by, updated_by
-  )
-  SELECT
-    NEW.id, e.id, NEW.company_id,
-    (DATE(NEW.created_at) - e.employment_start_date) AS tenure_days,
-    e.base_pay_amount, e.sso_declared_wage,
-    0.00, 0.00,            -- เริ่มต้นยังไม่ปรับ
-    e.sso_declared_wage,   -- default new_sso_wage
-    -- ===== Snapshot เบื้องต้นจาก worklog_ft =====
-    COALESCE((
-      SELECT SUM(w.quantity)::INT
-      FROM worklog_ft w
-      WHERE w.employee_id = e.id
-        AND w.entry_type = 'late'
-        AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
-        AND w.deleted_at IS NULL
-        AND w.status IN ('pending', 'approved')
-    ),0) AS late_minutes,
-    COALESCE((
-      SELECT SUM(w.quantity)::NUMERIC(6,2)
-      FROM worklog_ft w
-      WHERE w.employee_id = e.id
-        AND w.entry_type = 'leave_day'
-        AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
-        AND w.deleted_at IS NULL
-        AND w.status IN ('pending', 'approved')
-    ),0.00) AS leave_days,
-    COALESCE((
-      SELECT SUM(w.quantity)::NUMERIC(6,2)
-      FROM worklog_ft w
-      WHERE w.employee_id = e.id
-        AND w.entry_type = 'leave_double'
-        AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
-        AND w.deleted_at IS NULL
-        AND w.status IN ('pending', 'approved')
-    ),0.00) AS leave_double_days,
-    COALESCE((
-      SELECT SUM(w.quantity)::NUMERIC(6,2)
-      FROM worklog_ft w
-      WHERE w.employee_id = e.id
-        AND w.entry_type = 'leave_hours'
-        AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
-        AND w.deleted_at IS NULL
-        AND w.status IN ('pending', 'approved')
-    ),0.00) AS leave_hours,
-    COALESCE((
-      SELECT SUM(w.quantity)::NUMERIC(6,2)
-      FROM worklog_ft w
-      WHERE w.employee_id = e.id
-        AND w.entry_type = 'ot'
-        AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
-        AND w.deleted_at IS NULL
-        AND w.status IN ('pending', 'approved')
-    ),0.00) AS ot_hours,
-    NEW.created_by, NEW.updated_by
-  FROM employees e
-  JOIN employee_type et ON et.id = e.employee_type_id
-  WHERE et.code = 'full_time'
-    AND e.employment_end_date IS NULL
-    AND e.deleted_at IS NULL
-    AND e.company_id = NEW.company_id;  -- Only employees in same company
-
-  RETURN NEW;
-END$$;
 
 -- =========================================
 -- 3) Fix bonus_cycle_after_insert()
@@ -784,6 +707,7 @@ DECLARE
   v_tax_prev NUMERIC(14,2) := 0;
   v_income_prev NUMERIC(14,2) := 0;
   v_pf_prev  NUMERIC(14,2) := 0;
+  v_loan_prev NUMERIC(14,2) := 0;
   v_pf_amount NUMERIC(14,2) := 0;
   v_water_prev NUMERIC(12,2);
   v_electric_prev NUMERIC(12,2);

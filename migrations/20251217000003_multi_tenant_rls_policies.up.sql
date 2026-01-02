@@ -252,11 +252,11 @@ END $$;
 -- ===== Optional tables =====
 DO $$
 BEGIN
-  -- Activity Log
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'activity_log') THEN
-    ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
-    EXECUTE 'DROP POLICY IF EXISTS tenant_isolation_activity_log ON activity_log';
-    EXECUTE 'CREATE POLICY tenant_isolation_activity_log ON activity_log
+  -- Activity Logs
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'activity_logs') THEN
+    ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'DROP POLICY IF EXISTS tenant_isolation_activity_logs ON activity_logs';
+    EXECUTE 'CREATE POLICY tenant_isolation_activity_logs ON activity_logs
       USING (
         company_id IS NULL OR (
           tenant_company_matches(company_id) 

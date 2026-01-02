@@ -60,9 +60,9 @@ BEGIN
     EXECUTE 'DROP POLICY IF EXISTS tenant_isolation_payroll_org_logo ON payroll_org_logo';
     ALTER TABLE payroll_org_logo DISABLE ROW LEVEL SECURITY;
   END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'activity_log') THEN
-    EXECUTE 'DROP POLICY IF EXISTS tenant_isolation_activity_log ON activity_log';
-    ALTER TABLE activity_log DISABLE ROW LEVEL SECURITY;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'activity_logs') THEN
+    EXECUTE 'DROP POLICY IF EXISTS tenant_isolation_activity_logs ON activity_logs';
+    ALTER TABLE activity_logs DISABLE ROW LEVEL SECURITY;
   END IF;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'employee_document') THEN
     EXECUTE 'DROP POLICY IF EXISTS tenant_isolation_employee_document ON employee_document';
