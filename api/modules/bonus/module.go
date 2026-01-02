@@ -37,27 +37,27 @@ func (m *Module) APIVersion() string { return "v1" }
 
 func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
-	mediator.Register[*list.Query, *list.Response](list.NewHandler())
-	mediator.Register[*get.Query, *get.Response](get.NewHandler())
-	mediator.Register[*create.Command, *create.Response](create.NewHandler())
-	mediator.Register[*approve.Command, *approve.Response](approve.NewHandler())
-	mediator.Register[*items.ListQuery, *items.ListResponse](items.NewListHandler())
-	mediator.Register[*items.UpdateCommand, *items.UpdateResponse](items.NewUpdateHandler())
-	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler())
+	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
+	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, m.eb))
+	mediator.Register[*approve.Command, *approve.Response](approve.NewHandler(m.repo, m.ctx.Transactor, m.eb))
+	mediator.Register[*items.ListQuery, *items.ListResponse](items.NewListHandler(m.repo))
+	mediator.Register[*items.UpdateCommand, *items.UpdateResponse](items.NewUpdateHandler(m.repo, m.eb))
+	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, m.eb))
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/bonus-cycles", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr"))
-	list.NewEndpoint(group, m.repo)
-	get.NewEndpoint(group, m.repo)
-	create.NewEndpoint(group, m.repo, m.ctx.Transactor, m.eb)
-	items.RegisterList(group, m.repo)
+	list.NewEndpoint(group)
+	get.NewEndpoint(group)
+	create.NewEndpoint(group)
+	items.RegisterList(group)
 
 	itemGroup := r.Group("/bonus-items", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr"))
-	items.RegisterUpdate(itemGroup, m.repo, m.eb)
+	items.RegisterUpdate(itemGroup)
 
 	admin := group.Group("", middleware.RequireRoles("admin"))
-	approve.NewEndpoint(admin, m.repo, m.ctx.Transactor, m.eb)
-	delete.NewEndpoint(group, m.repo, m.eb)
+	approve.NewEndpoint(admin)
+	delete.NewEndpoint(group)
 }

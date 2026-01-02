@@ -30,7 +30,7 @@ export default function BonusListPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 13 }, (_, i) => currentYear - 10 + i);
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - i);
 
   const fetchCycles = async () => {
     try {
@@ -60,13 +60,15 @@ export default function BonusListPage() {
   };
 
   // Refetch when branch changes
-  useBranchChange(useCallback(() => {
-    fetchCycles();
+  const currentBranchId = useBranchChange(useCallback(() => {
+    setStatusFilter('all');
+    setYearFilter('all');
+    setCurrentPage(1);
   }, []));
 
   useEffect(() => {
     fetchCycles();
-  }, [statusFilter, yearFilter, currentPage]);
+  }, [statusFilter, yearFilter, currentPage, currentBranchId]);
 
   const clearFilters = () => {
     setStatusFilter('all');
@@ -203,6 +205,15 @@ export default function BonusListPage() {
       <FilterBar
         filters={[
           {
+            id: 'year',
+            label: t('filters.year'),
+            type: 'select' as const,
+            options: [
+              { value: 'all', label: t('status.allYears') },
+              ...years.map(year => ({ value: year.toString(), label: year.toString() }))
+            ]
+          },
+          {
             id: 'status',
             label: t('filters.status'),
             type: 'select' as const,
@@ -211,15 +222,6 @@ export default function BonusListPage() {
               { value: 'pending', label: t('status.pending') },
               { value: 'approved', label: t('status.approved') },
               { value: 'rejected', label: t('status.rejected') }
-            ]
-          },
-          {
-            id: 'year',
-            label: t('filters.year'),
-            type: 'select' as const,
-            options: [
-              { value: 'all', label: t('status.allYears') },
-              ...years.map(year => ({ value: year.toString(), label: year.toString() }))
             ]
           }
         ]}

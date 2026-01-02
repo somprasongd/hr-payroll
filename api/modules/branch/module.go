@@ -40,14 +40,14 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
 
 	// Register handlers with mediator
-	mediator.Register[*list.Query, *list.Response](list.NewHandler())
-	mediator.Register[*get.Query, *get.Response](get.NewHandler())
-	mediator.Register[*create.Command, *create.Response](create.NewHandler())
-	mediator.Register[*update.Command, *update.Response](update.NewHandler())
-	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler())
-	mediator.Register[*setdefault.Command, mediator.NoResponse](setdefault.NewHandler())
-	mediator.Register[*changestatus.Command, *changestatus.Response](changestatus.NewHandler())
-	mediator.Register[*employeecount.Query, *employeecount.Response](employeecount.NewHandler())
+	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
+	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.eb))
+	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.eb))
+	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, m.eb))
+	mediator.Register[*setdefault.Command, mediator.NoResponse](setdefault.NewHandler(m.repo, m.eb))
+	mediator.Register[*changestatus.Command, *changestatus.Response](changestatus.NewHandler(m.repo, m.eb))
+	mediator.Register[*employeecount.Query, *employeecount.Response](employeecount.NewHandler(m.repo))
 
 	return nil
 }
@@ -62,14 +62,14 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	)
 
 	// Register CQRS endpoints
-	list.NewEndpoint(admin, m.repo)
-	create.NewEndpoint(admin, m.repo, m.eb)
-	get.NewEndpoint(admin, m.repo)
-	update.NewEndpoint(admin, m.repo, m.eb)
-	delete.NewEndpoint(admin, m.repo, m.eb)
-	setdefault.NewEndpoint(admin, m.repo, m.eb)
-	changestatus.NewEndpoint(admin, m.repo, m.eb)
-	employeecount.NewEndpoint(admin, m.repo)
+	list.NewEndpoint(admin)
+	create.NewEndpoint(admin)
+	get.NewEndpoint(admin)
+	update.NewEndpoint(admin)
+	delete.NewEndpoint(admin)
+	setdefault.NewEndpoint(admin)
+	changestatus.NewEndpoint(admin)
+	employeecount.NewEndpoint(admin)
 }
 
 // GetRepository returns the repository for use by tenant middleware

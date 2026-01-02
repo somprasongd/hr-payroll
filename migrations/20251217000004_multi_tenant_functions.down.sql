@@ -749,6 +749,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS tg_sync_payroll_bonus_cycle ON bonus_cycle;
+DROP FUNCTION IF EXISTS public.sync_payroll_on_bonus_cycle_change();
+
 -- 10. Restore sync_payroll_on_accum_change
 CREATE OR REPLACE FUNCTION public.sync_payroll_on_accum_change() RETURNS trigger AS $$
 DECLARE
@@ -856,6 +859,7 @@ BEGIN
 END$$;
 
 -- 15. Restore get_effective_payroll_config
+DROP FUNCTION IF EXISTS get_effective_payroll_config(DATE, UUID);
 CREATE OR REPLACE FUNCTION get_effective_payroll_config(p_period_month DATE) RETURNS payroll_config LANGUAGE sql AS $$
   SELECT pc.* FROM payroll_config pc
   WHERE pc.effective_daterange @> p_period_month
@@ -946,12 +950,74 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 22. Restore get_effective_org_profile and payroll_run_apply_org_profile
+-- Revert org profile scoping changes
+-- =========================================
+
+-- Restore payroll_run_apply_org_profile trigger function
+CREATE OR REPLACE FUNCTION payroll_run_apply_org_profile()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  v_profile payroll_org_profile%ROWTYPE;
+BEGIN
+  IF NEW.org_profile_id IS NULL THEN
+    -- Revert to global selection without company_id
+    SELECT * INTO v_profile FROM get_effective_org_profile(NEW.payroll_month_date);
+  ELSE
+    SELECT * INTO v_profile FROM payroll_org_profile WHERE id = NEW.org_profile_id;
+  END IF;
+
+  IF v_profile.id IS NULL THEN
+    RAISE EXCEPTION 'ไม่พบ org profile สำหรับวันที่ %', NEW.payroll_month_date;
+  END IF;
+
+  IF NOT (v_profile.effective_daterange @> NEW.payroll_month_date) THEN
+    RAISE EXCEPTION 'org profile % ไม่ครอบคลุมเดือนจ่าย %', v_profile.id, NEW.payroll_month_date;
+  END IF;
+
+  NEW.org_profile_id := v_profile.id;
+  NEW.org_profile_snapshot := jsonb_build_object(
+    'profile_id', v_profile.id,
+    'version_no', v_profile.version_no,
+    'effective_start', lower(v_profile.effective_daterange),
+    'effective_end', upper(v_profile.effective_daterange),
+    'company_name', v_profile.company_name,
+    'address_line1', v_profile.address_line1,
+    'address_line2', v_profile.address_line2,
+    'subdistrict', v_profile.subdistrict,
+    'district', v_profile.district,
+    'province', v_profile.province,
+    'postal_code', v_profile.postal_code,
+    'phone_main', v_profile.phone_main,
+    'phone_alt', v_profile.phone_alt,
+    'email', v_profile.email,
+    'tax_id', v_profile.tax_id,
+    'slip_footer_note', v_profile.slip_footer_note,
+    'logo_id', v_profile.logo_id
+  );
+
+  RETURN NEW;
+END$$;
+
+-- Revert get_effective_org_profile to single parameter
+DROP FUNCTION IF EXISTS get_effective_org_profile(DATE, UUID);
+CREATE OR REPLACE FUNCTION get_effective_org_profile(
+  p_period_month DATE
+) RETURNS payroll_org_profile LANGUAGE sql AS $$
+  SELECT p.*
+  FROM payroll_org_profile p
+  WHERE p.effective_daterange @> p_period_month
+  ORDER BY lower(p.effective_daterange) DESC, p.version_no DESC
+  LIMIT 1;
+$$;
 
 -- =============================================
 -- Restore Unique Indexes (Removing company_id/branch_id from UK)
 -- =============================================
+DROP INDEX IF EXISTS salary_raise_cycle_period_tenant_uk;
 DROP INDEX IF EXISTS salary_raise_cycle_period_uk;
 CREATE UNIQUE INDEX salary_raise_cycle_period_uk ON salary_raise_cycle (period_start_date, period_end_date) WHERE (deleted_at IS NULL);
 
+DROP INDEX IF EXISTS bonus_cycle_period_tenant_uk;
 DROP INDEX IF EXISTS bonus_cycle_period_uk;
 CREATE UNIQUE INDEX bonus_cycle_period_uk ON bonus_cycle (period_start_date, period_end_date) WHERE (deleted_at IS NULL);

@@ -107,11 +107,17 @@ export function EditSalaryAdvanceDialog({
         return;
       }
 
+      // Format payrollMonthDate to YYYY-MM-DD
+      let formattedPayrollMonthDate = values.payrollMonthDate;
+      if (formattedPayrollMonthDate.includes('T')) {
+        formattedPayrollMonthDate = formattedPayrollMonthDate.split('T')[0];
+      }
+
       // Update the payload with payrollMonthDate
       const payload = {
         amount: values.amount,
         advanceDate: values.advanceDate,
-        payrollMonthDate: values.payrollMonthDate,
+        payrollMonthDate: formattedPayrollMonthDate,
       };
 
       await salaryAdvanceService.update(item.id, payload);

@@ -11,24 +11,24 @@ import (
 	"hrms/shared/common/logger"
 )
 
-
 type Query struct {
-	Repo repository.Repository
-	ID   uuid.UUID
+	ID uuid.UUID
 }
 
 type Response struct {
 	Count int `json:"count"`
 }
 
-type queryHandler struct{}
+type queryHandler struct {
+	repo repository.Repository
+}
 
-func NewHandler() *queryHandler {
-	return &queryHandler{}
+func NewHandler(repo repository.Repository) *queryHandler {
+	return &queryHandler{repo: repo}
 }
 
 func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	count, err := q.Repo.GetEmployeeCountByBranch(ctx, q.ID)
+	count, err := h.repo.GetEmployeeCountByBranch(ctx, q.ID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get employee count", zap.Error(err))
 		return nil, errs.Internal("failed to get employee count")

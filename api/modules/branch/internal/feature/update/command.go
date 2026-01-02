@@ -14,8 +14,6 @@ import (
 )
 
 type Command struct {
-	Repo    repository.Repository
-	Eb      eventbus.EventBus
 	ID      uuid.UUID
 	Code    string
 	Name    string
@@ -27,15 +25,18 @@ type Response struct {
 	Branch *repository.Branch `json:"branch"`
 }
 
-type commandHandler struct{}
+type commandHandler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
-func NewHandler() *commandHandler {
-	return &commandHandler{}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandler {
+	return &commandHandler{repo: repo, eb: eb}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	// Rule 2: Cannot edit suspended or archived branches
-	existing, err := cmd.Repo.GetByID(ctx, cmd.ID)
+	existing, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {
 		return nil, errs.NotFound("branch not found")
 	}
@@ -43,14 +44,14 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		return nil, errs.BadRequest("cannot edit suspended or archived branch, use status change endpoint instead")
 	}
 
-	branch, err := cmd.Repo.Update(ctx, cmd.ID, cmd.Code, cmd.Name, cmd.Status, cmd.ActorID)
+	branch, err := h.repo.Update(ctx, cmd.ID, cmd.Code, cmd.Name, cmd.Status, cmd.ActorID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to update branch", zap.Error(err))
 		return nil, errs.NotFound("branch not found")
 	}
 
 	companyID := branch.CompanyID
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
 		BranchID:   nil,

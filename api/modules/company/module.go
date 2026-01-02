@@ -37,8 +37,8 @@ func (m *Module) APIVersion() string { return "v1" }
 
 func (m *Module) Init(_ eventbus.EventBus) error {
 	// Register internal handlers for company module endpoints
-	mediator.Register[*get.Query, *get.Response](get.NewHandler())
-	mediator.Register[*update.Command, *update.Response](update.NewHandler())
+	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
+	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo))
 
 	// Register contract handlers for superadmin module to use via mediator
 	mediator.Register[*contracts.ListAllCompaniesQuery, *contracts.ListAllCompaniesResponse](listall.NewHandler(m.repo))
@@ -56,6 +56,6 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	admin := r.Group("/admin/company", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
 
 	// Register CQRS endpoints
-	get.NewEndpoint(admin, m.repo)
-	update.NewEndpoint(admin, m.repo)
+	get.NewEndpoint(admin)
+	update.NewEndpoint(admin)
 }

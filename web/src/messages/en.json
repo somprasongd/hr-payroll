@@ -572,8 +572,8 @@
         "ot": "Overtime"
       },
       "statuses": {
-        "pending": "Pending",
-        "approved": "Approved"
+        "pending": "Pending Process",
+        "approved": "Processed"
       },
       "units": {
         "minutes": "minutes",
@@ -660,8 +660,8 @@
         "selectEmployee": "Select employee"
       },
       "statuses": {
-        "pending": "Pending",
-        "approved": "Approved",
+        "pending": "Pending Process",
+        "approved": "Processed",
         "to_pay": "To Pay",
         "paid": "Paid"
       },
@@ -1032,7 +1032,12 @@
       "error": "An error occurred. Please try again.",
       "errors": {
         "conflictPending": "A pending bonus cycle already exists (only 1 allowed).",
-        "conflictApproved": "An approved bonus cycle already exists for this month."
+        "conflictApproved": "An approved bonus cycle already exists for this month.",
+        "BONUS_CYCLE_APPROVED_EXISTS": "An approved bonus cycle already exists for this payroll month.",
+        "BONUS_CYCLE_PENDING_EXISTS": "A pending bonus cycle already exists. Please complete that cycle first.",
+        "BONUS_CYCLE_PERIOD_EXISTS": "A bonus cycle with this evaluation period already exists. Please choose a different period.",
+        "BONUS_CYCLE_CREATE_FAILED": "Failed to create bonus cycle. Please try again.",
+        "BONUS_CYCLE_APPROVE_FAILED": "Failed to approve bonus cycle. Please try again."
       }
     },
     "editItem": {

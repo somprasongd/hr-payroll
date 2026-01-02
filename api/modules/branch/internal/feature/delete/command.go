@@ -16,21 +16,21 @@ import (
 )
 
 type Command struct {
-	Repo    repository.Repository
-	Eb      eventbus.EventBus
 	ID      uuid.UUID
 	ActorID uuid.UUID
 }
 
-type commandHandler struct{}
+type commandHandler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
-func NewHandler() *commandHandler {
-	return &commandHandler{}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandler {
+	return &commandHandler{repo: repo, eb: eb}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	// First check the branch status
-	branch, err := cmd.Repo.GetByID(ctx, cmd.ID)
+	branch, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {
 		return mediator.NoResponse{}, errs.NotFound("branch not found")
 	}
@@ -45,13 +45,13 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (mediator.NoR
 		return mediator.NoResponse{}, errs.BadRequest("branch must be archived before deletion")
 	}
 
-	if err := cmd.Repo.Delete(ctx, cmd.ID, cmd.ActorID); err != nil {
+	if err := h.repo.Delete(ctx, cmd.ID, cmd.ActorID); err != nil {
 		logger.FromContext(ctx).Error("failed to delete branch", zap.Error(err))
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete this branch")
 	}
 
 	companyID := branch.CompanyID
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
 		BranchID:   nil,

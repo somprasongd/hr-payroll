@@ -14,8 +14,6 @@ import (
 )
 
 type Command struct {
-	Repo repository.Repository
-	Eb   eventbus.EventBus
 	Code string
 	Name string
 }
@@ -24,10 +22,13 @@ type Response struct {
 	Branch *repository.Branch `json:"branch"`
 }
 
-type commandHandler struct{}
+type commandHandler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
-func NewHandler() *commandHandler {
-	return &commandHandler{}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandler {
+	return &commandHandler{repo: repo, eb: eb}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -36,14 +37,14 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	branch, err := cmd.Repo.Create(ctx, cmd.Code, cmd.Name, user.ID)
+	branch, err := h.repo.Create(ctx, cmd.Code, cmd.Name, user.ID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to create branch", zap.Error(err))
 		return nil, errs.Internal("failed to create branch")
 	}
 
 	companyID := branch.CompanyID
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &companyID,
 		BranchID:   nil,

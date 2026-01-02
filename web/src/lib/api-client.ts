@@ -12,6 +12,7 @@ export interface ApiError {
   message: string;
   statusCode: number;
   errors?: Record<string, string[]>;
+  detail?: string;  // Error code from API for i18n
 }
 
 class ApiClient {
@@ -66,6 +67,7 @@ class ApiClient {
         message: error.response?.data?.message || error.message || 'An error occurred',
         statusCode: error.response?.status || 500,
         errors: error.response?.data?.errors,
+        detail: error.response?.data?.details || error.response?.data?.detail,
       };
     }
 

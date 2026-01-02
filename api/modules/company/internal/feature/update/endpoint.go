@@ -3,7 +3,6 @@ package update
 import (
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/company/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -23,7 +22,7 @@ type UpdateRequest struct {
 // @Param request body UpdateRequest true "company payload"
 // @Success 200 {object} repository.Company
 // @Router /admin/company/current [put]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Put("/current", func(c fiber.Ctx) error {
 		var req UpdateRequest
 		if err := c.Bind().Body(&req); err != nil {
@@ -35,7 +34,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Repo: repo,
 			Code: req.Code,
 			Name: req.Name,
 		})

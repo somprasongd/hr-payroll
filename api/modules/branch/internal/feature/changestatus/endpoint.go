@@ -7,7 +7,6 @@ import (
 	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -32,7 +31,7 @@ type StatusChangeResponse struct {
 // @Param request body StatusChangeRequest true "status payload"
 // @Success 200 {object} StatusChangeResponse
 // @Router /admin/branches/{id}/status [patch]
-func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id/status", func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -55,8 +54,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Repo:      repo,
-			Eb:        eb,
 			ID:        id,
 			NewStatus: req.Status,
 			ActorID:   user.ID,

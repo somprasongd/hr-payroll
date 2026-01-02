@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -17,7 +16,7 @@ import (
 // @Param id path string true "branch ID"
 // @Success 200 {object} repository.Branch
 // @Router /admin/branches/{id} [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -25,8 +24,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 		}
 
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
-			Repo: repo,
-			ID:   id,
+			ID: id,
 		})
 		if err != nil {
 			return err

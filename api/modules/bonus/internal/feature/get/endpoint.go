@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -22,15 +21,14 @@ import (
 // @Failure 403
 // @Failure 404
 // @Router /bonus-cycles/{id} [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")
 		}
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
-			ID:   id,
-			Repo: repo,
+			ID: id,
 		})
 		if err != nil {
 			return err

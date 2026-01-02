@@ -522,8 +522,8 @@
         "ot": "အချိန်ပို"
       },
       "statuses": {
-        "pending": "စောင့်ဆိုင်းဆဲ",
-        "approved": "အတည်ပြုပြီး"
+        "pending": "လုပ်ဆောင်ရန် စောင့်ဆိုင်းဆဲ",
+        "approved": "လုပ်ဆောင်ပြီး"
       },
       "units": {
         "minutes": "မိနစ်",
@@ -610,8 +610,8 @@
         "selectEmployee": "ဝန်ထမ်း ရွေးပါ"
       },
       "statuses": {
-        "pending": "စောင့်ဆိုင်းဆဲ",
-        "approved": "အတည်ပြုပြီး",
+        "pending": "လုပ်ဆောင်ရန် စောင့်ဆိုင်းဆဲ",
+        "approved": "လုပ်ဆောင်ပြီး",
         "to_pay": "ပေးချေဖို့",
         "paid": "ပေးချေပြီး"
       },
@@ -955,7 +955,12 @@
       "error": "အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်။ ထပ်မံကြိုးစားပါ။",
       "errors": {
         "conflictPending": "A pending bonus cycle already exists (only 1 allowed).",
-        "conflictApproved": "An approved bonus cycle already exists for this month."
+        "conflictApproved": "An approved bonus cycle already exists for this month.",
+        "BONUS_CYCLE_APPROVED_EXISTS": "ဤလစာပေးချေသည့်လအတွက် အတည်ပြုပြီးသော ဆုကြေးစက်ဝန်း ရှိပြီးသား",
+        "BONUS_CYCLE_PENDING_EXISTS": "ဆိုင်းငံ့ထားသော ဆုကြေးစက်ဝန်း ရှိပြီးသား။ ကျေးဇူးပြု၍ ၎င်းစက်ဝန်းကို အပြီးသတ်ပါ",
+        "BONUS_CYCLE_PERIOD_EXISTS": "ဤအကဲဖြတ်ကာလဖြင့် ဆုကြေးစက်ဝန်း ရှိပြီးသား။ ကျေးဇူးပြု၍ အခြားကာလကို ရွေးချယ်ပါ",
+        "BONUS_CYCLE_CREATE_FAILED": "ဆုကြေးစက်ဝန်း ဖန်တီးရန် မအောင်မြင်ပါ။ ထပ်မံကြိုးစားပါ",
+        "BONUS_CYCLE_APPROVE_FAILED": "ဆုကြေးစက်ဝန်း အတည်ပြုရန် မအောင်မြင်ပါ။ ထပ်မံကြိုးစားပါ"
       }
     },
     "editItem": {

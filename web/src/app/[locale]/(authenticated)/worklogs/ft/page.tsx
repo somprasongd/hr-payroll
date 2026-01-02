@@ -62,6 +62,7 @@ export default function FTWorklogsPage() {
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [worklogToDelete, setWorklogToDelete] = useState<FTWorklog | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Ensure component is mounted before rendering portals
   useEffect(() => {
@@ -73,13 +74,20 @@ export default function FTWorklogsPage() {
   useBranchChange(useCallback(() => {
     fetchEmployees();
     setEmployeeFilter('');
+    setEntryTypeFilter('');
+    setStatusFilter('');
+    setStartDateFilter(getDefaultStartDate());
+    setEndDateFilter(getDefaultEndDate());
+    setCurrentPage(1);
     setWorklogs([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
   }, []));
 
   useEffect(() => {
     fetchEmployees();
     fetchWorklogs();
-  }, [currentPage, employeeFilter, entryTypeFilter, statusFilter, startDateFilter, endDateFilter]);
+  }, [currentPage, employeeFilter, entryTypeFilter, statusFilter, startDateFilter, endDateFilter, refreshKey]);
 
   // Cleanup on unmount to prevent portal errors
   useEffect(() => {

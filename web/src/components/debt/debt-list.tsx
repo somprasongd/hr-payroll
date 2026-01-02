@@ -64,15 +64,22 @@ export function DebtList() {
   const [pendingInstallments, setPendingInstallments] = useState(0);
   const [hasOutstandingFilter, setHasOutstandingFilter] = useState(true);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
 
   // Refetch when branch changes
   useBranchChange(useCallback(() => {
     fetchEmployees();
     setEmployeeFilter('all');
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setHasOutstandingFilter(true);
+    setPage(1);
     setData([]);
     setOutstandingDebt(0);
     setPendingInstallments(0);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
   }, []));
 
   useEffect(() => {
@@ -164,7 +171,7 @@ export function DebtList() {
 
   useEffect(() => {
     fetchData();
-  }, [page, statusFilter, typeFilter, employeeFilter]);
+  }, [page, statusFilter, typeFilter, employeeFilter, refreshKey]);
 
   const handleDelete = async () => {
     if (!deleteItem) return;

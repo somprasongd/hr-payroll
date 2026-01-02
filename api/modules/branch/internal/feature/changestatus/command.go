@@ -14,8 +14,6 @@ import (
 )
 
 type Command struct {
-	Repo      repository.Repository
-	Eb        eventbus.EventBus
 	ID        uuid.UUID
 	NewStatus string
 	ActorID   uuid.UUID
@@ -26,15 +24,18 @@ type Response struct {
 	EmployeeCount int                `json:"employeeCount"`
 }
 
-type commandHandler struct{}
+type commandHandler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
-func NewHandler() *commandHandler {
-	return &commandHandler{}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandler {
+	return &commandHandler{repo: repo, eb: eb}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	// Get current branch
-	branch, err := cmd.Repo.GetByID(ctx, cmd.ID)
+	branch, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {
 		return nil, errs.NotFound("branch not found")
 	}
@@ -55,7 +56,7 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 	// Get employee count (for warning when archiving)
 	employeeCount := 0
 	if cmd.NewStatus == "archived" {
-		count, err := cmd.Repo.GetEmployeeCountByBranch(ctx, cmd.ID)
+		count, err := h.repo.GetEmployeeCountByBranch(ctx, cmd.ID)
 		if err != nil {
 			logger.FromContext(ctx).Error("failed to get employee count", zap.Error(err))
 		} else {
@@ -64,14 +65,14 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 	}
 
 	// Update status
-	updatedBranch, err := cmd.Repo.UpdateStatus(ctx, cmd.ID, cmd.NewStatus, cmd.ActorID)
+	updatedBranch, err := h.repo.UpdateStatus(ctx, cmd.ID, cmd.NewStatus, cmd.ActorID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to update branch status", zap.Error(err))
 		return nil, errs.Internal("failed to update branch status")
 	}
 
 	companyID := updatedBranch.CompanyID
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
 		BranchID:   nil,

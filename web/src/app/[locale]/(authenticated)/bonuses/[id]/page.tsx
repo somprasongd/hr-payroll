@@ -33,9 +33,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { EditBonusItemDialog } from '@/components/bonus/edit-bonus-item-dialog';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import { formatTenure } from '@/lib/format-tenure';
 import { bonusService, BonusCycle, BonusItem } from '@/services/bonus-service';
-import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 import { useAuthStore } from '@/store/auth-store';
@@ -46,7 +46,6 @@ export default function BonusDetailPage() {
   const tCommon = useTranslations('Common');
   const { id } = useParams();
   const router = useRouter();
-  const { toast } = useToast();
   const { user } = useAuthStore();
   const isHr = user?.role === 'hr';
 
@@ -58,10 +57,12 @@ export default function BonusDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchCycle = async () => {
     try {
       setLoading(true);
+      setErrorMessage(null);
       const [cycleData, itemsData] = await Promise.all([
         bonusService.getCycle(id as string),
         bonusService.getBonusItems(id as string),
@@ -70,10 +71,7 @@ export default function BonusDetailPage() {
       setItems(itemsData || []);
     } catch (error) {
       console.error(error);
-      toast({
-        title: t('create.error'),
-        variant: 'destructive',
-      });
+      setErrorMessage(t('create.error'));
     } finally {
       setLoading(false);
     }
@@ -95,49 +93,62 @@ export default function BonusDetailPage() {
 
   const handleApprove = async () => {
     try {
+      setErrorMessage(null);
       await bonusService.updateCycle(id as string, { status: 'approved' });
-      toast({
-        title: t('status.approved'),
-        variant: 'default',
-      });
       fetchCycle();
-    } catch (error) {
-      toast({
-        title: t('create.error'),
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      // Known error codes from API
+      const knownErrorCodes = [
+        'BONUS_CYCLE_APPROVED_EXISTS',
+        'BONUS_CYCLE_APPROVE_FAILED'
+      ];
+      const detail = error.detail || '';
+      
+      if (knownErrorCodes.includes(detail)) {
+        setErrorMessage(t(`create.errors.${detail}`));
+      } else {
+        setErrorMessage(t('create.error'));
+      }
     }
   };
 
   const handleReject = async () => {
     try {
+      setErrorMessage(null);
       await bonusService.updateCycle(id as string, { status: 'rejected' });
-      toast({
-        title: t('status.rejected'), // Or success message
-        variant: 'default',
-      });
       fetchCycle();
-    } catch (error) {
-      toast({
-        title: t('create.error'),
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      const detail = error.detail || '';
+      const knownErrorCodes = [
+        'BONUS_CYCLE_APPROVED_EXISTS',
+        'BONUS_CYCLE_APPROVE_FAILED'
+      ];
+      
+      if (knownErrorCodes.includes(detail)) {
+        setErrorMessage(t(`create.errors.${detail}`));
+      } else {
+        setErrorMessage(t('create.error'));
+      }
     }
   };
 
   const handleDelete = async () => {
     try {
+      setErrorMessage(null);
       await bonusService.deleteCycle(id as string);
-      toast({
-        title: t('delete.success'),
-        variant: 'default',
-      });
       router.push('/bonuses');
-    } catch (error) {
-      toast({
-        title: t('create.error'),
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      const detail = error.detail || '';
+      const knownErrorCodes = [
+        'BONUS_CYCLE_APPROVED_EXISTS',
+        'BONUS_CYCLE_APPROVE_FAILED'
+      ];
+      
+      if (knownErrorCodes.includes(detail)) {
+        setErrorMessage(t(`create.errors.${detail}`));
+      } else {
+        setErrorMessage(t('create.error'));
+      }
     }
   };
 
@@ -264,6 +275,17 @@ export default function BonusDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Error alert */}
+      {errorMessage && (
+        <DismissibleAlert
+          variant="error"
+          onDismiss={() => setErrorMessage(null)}
+          autoDismiss={false}
+        >
+          {errorMessage}
+        </DismissibleAlert>
+      )}
 
       {/* Shared dialogs for both mobile and desktop */}
       <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>

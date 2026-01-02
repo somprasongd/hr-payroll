@@ -47,7 +47,7 @@ export function SalaryRaiseCycleList() {
   const [showFilters, setShowFilters] = useState(false);
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 13 }, (_, i) => currentYear - 10 + i);
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - i);
 
   const fetchCycles = async () => {
     try {
@@ -74,13 +74,15 @@ export function SalaryRaiseCycleList() {
   };
 
   // Refetch when branch changes
-  useBranchChange(useCallback(() => {
-    fetchCycles();
+  const currentBranchId = useBranchChange(useCallback(() => {
+    setStatusFilter('all');
+    setYearFilter('all');
+    setCurrentPage(1);
   }, []));
 
   useEffect(() => {
     fetchCycles();
-  }, [statusFilter, yearFilter, currentPage]);
+  }, [statusFilter, yearFilter, currentPage, currentBranchId]);
 
   const clearFilters = () => {
     setStatusFilter('all');
@@ -240,20 +242,6 @@ export function SalaryRaiseCycleList() {
 
         <div className="flex flex-col md:flex-row gap-4 md:w-auto lg:w-fit">
           <div className="w-full md:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('fields.status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('status.allStatuses')}</SelectItem>
-                <SelectItem value="pending">{t('status.pending')}</SelectItem>
-                <SelectItem value="approved">{t('status.approved')}</SelectItem>
-                <SelectItem value="rejected">{t('status.rejected')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-full md:w-48">
             <Select value={yearFilter} onValueChange={setYearFilter}>
               <SelectTrigger>
                 <SelectValue placeholder={t('fields.year')} />
@@ -265,6 +253,20 @@ export function SalaryRaiseCycleList() {
                     {year}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full md:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('fields.status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('status.allStatuses')}</SelectItem>
+                <SelectItem value="pending">{t('status.pending')}</SelectItem>
+                <SelectItem value="approved">{t('status.approved')}</SelectItem>
+                <SelectItem value="rejected">{t('status.rejected')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

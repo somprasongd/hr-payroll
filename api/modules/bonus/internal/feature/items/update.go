@@ -26,17 +26,20 @@ type UpdateCommand struct {
 	BonusMonths *float64 `json:"bonusMonths"`
 	BonusAmount *float64 `json:"bonusAmount"`
 	Actor       uuid.UUID
-	Repo        repository.Repository
-	Eb          eventbus.EventBus
 }
 
 type UpdateResponse struct {
 	dto.Item
 }
 
-type updateHandler struct{}
+type updateHandler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
-func NewUpdateHandler() *updateHandler { return &updateHandler{} }
+func NewUpdateHandler(repo repository.Repository, eb eventbus.EventBus) *updateHandler {
+	return &updateHandler{repo: repo, eb: eb}
+}
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -44,7 +47,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	_, cycle, err := cmd.Repo.GetItem(ctx, tenant, cmd.ID)
+	_, cycle, err := h.repo.GetItem(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("bonus item not found")
@@ -58,7 +61,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	if cmd.BonusAmount == nil && cmd.BonusMonths == nil {
 		return nil, errs.BadRequest("no fields to update")
 	}
-	updated, err := cmd.Repo.UpdateItem(ctx, tenant, cmd.ID, cmd.BonusMonths, cmd.BonusAmount, cmd.Actor)
+	updated, err := h.repo.UpdateItem(ctx, tenant, cmd.ID, cmd.BonusMonths, cmd.BonusAmount, cmd.Actor)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to update bonus item", zap.Error(err))
 		return nil, errs.Internal("failed to update bonus item")
@@ -71,7 +74,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		details["bonusAmount"] = *cmd.BonusAmount
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),
@@ -94,7 +97,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 // @Param request body UpdateCommand true "payload"
 // @Success 200 {object} UpdateResponse
 // @Router /bonus-items/{id} [patch]
-func RegisterUpdate(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
+func RegisterUpdate(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -110,8 +113,6 @@ func RegisterUpdate(router fiber.Router, repo repository.Repository, eb eventbus
 		}
 		req.ID = id
 		req.Actor = user.ID
-		req.Repo = repo
-		req.Eb = eb
 
 		resp, err := mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &req)
 		if err != nil {

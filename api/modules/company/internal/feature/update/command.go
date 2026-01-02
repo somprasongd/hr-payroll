@@ -9,7 +9,6 @@ import (
 )
 
 type Command struct {
-	Repo repository.Repository
 	Code string
 	Name string
 }
@@ -18,10 +17,12 @@ type Response struct {
 	Company *repository.Company `json:"company"`
 }
 
-type commandHandler struct{}
+type commandHandler struct {
+	repo repository.Repository
+}
 
-func NewHandler() *commandHandler {
-	return &commandHandler{}
+func NewHandler(repo repository.Repository) *commandHandler {
+	return &commandHandler{repo: repo}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -30,7 +31,7 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	company, err := cmd.Repo.Update(ctx, cmd.Code, cmd.Name, user.ID)
+	company, err := h.repo.Update(ctx, cmd.Code, cmd.Name, user.ID)
 	if err != nil {
 		return nil, errs.Internal("failed to update company")
 	}

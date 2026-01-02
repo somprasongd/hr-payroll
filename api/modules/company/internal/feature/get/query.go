@@ -7,23 +7,22 @@ import (
 	"hrms/shared/common/errs"
 )
 
-
-type Query struct {
-	Repo repository.Repository
-}
+type Query struct{}
 
 type Response struct {
 	Company *repository.Company `json:"company"`
 }
 
-type queryHandler struct{}
+type queryHandler struct {
+	repo repository.Repository
+}
 
-func NewHandler() *queryHandler {
-	return &queryHandler{}
+func NewHandler(repo repository.Repository) *queryHandler {
+	return &queryHandler{repo: repo}
 }
 
 func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	company, err := q.Repo.GetCurrent(ctx)
+	company, err := h.repo.GetCurrent(ctx)
 	if err != nil {
 		return nil, errs.NotFound("company not found")
 	}

@@ -70,18 +70,25 @@ export default function PayoutPtListPage() {
   const [employeeId, setEmployeeId] = useState<string>(searchParams.get('employeeId') || '');
   const [startDate, setStartDate] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState<string>(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Refetch employees when branch changes
   useEffect(() => {
     fetchEmployees();
-    // Reset employee selection when branch changes
+    // Reset all filters when branch changes
     setEmployeeId('');
+    setStatus('all');
+    setStartDate(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+    setEndDate(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+    setCurrentPage(1);
     setPayouts([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
   }, [currentBranchId]);
 
   useEffect(() => {
     fetchPayouts();
-  }, [status, employeeId, startDate, endDate, currentPage]);
+  }, [status, employeeId, startDate, endDate, currentPage, refreshKey]);
 
   const fetchEmployees = async () => {
     try {

@@ -12,7 +12,6 @@ import (
 )
 
 type Query struct {
-	Repo     *repository.Repository
 	Page     int
 	Limit    int
 	Action   string
@@ -33,10 +32,12 @@ type Response struct {
 	Meta Meta                 `json:"meta"`
 }
 
-type queryHandler struct{}
+type queryHandler struct {
+	repo *repository.Repository
+}
 
-func NewHandler() *queryHandler {
-	return &queryHandler{}
+func NewHandler(repo *repository.Repository) *queryHandler {
+	return &queryHandler{repo: repo}
 }
 
 func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) {
@@ -48,7 +49,7 @@ func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) 
 		UserName: q.UserName,
 	}
 
-	logs, total, err := q.Repo.ListSystemLogs(ctx, filter, q.Page, q.Limit)
+	logs, total, err := h.repo.ListSystemLogs(ctx, filter, q.Page, q.Limit)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list system activity logs", zap.Error(err))
 		return nil, errs.Internal("failed to list activity logs")

@@ -4,12 +4,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 type Request struct {
@@ -30,7 +27,7 @@ type Request struct {
 // @Failure 403
 // @Failure 404
 // @Router /bonus-cycles/{id} [patch]
-func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -44,9 +41,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
 			ID:     id,
 			Status: req.Status,
-			Repo:   repo,
-			Tx:     tx,
-			Eb:     eb,
 		})
 		if err != nil {
 			return err

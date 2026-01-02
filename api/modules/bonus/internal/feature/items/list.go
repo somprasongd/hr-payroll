@@ -19,16 +19,17 @@ import (
 type ListQuery struct {
 	CycleID uuid.UUID
 	Search  string
-	Repo    repository.Repository
 }
 
 type ListResponse struct {
 	Data []dto.Item `json:"data"`
 }
 
-type listHandler struct{}
+type listHandler struct {
+	repo repository.Repository
+}
 
-func NewListHandler() *listHandler { return &listHandler{} }
+func NewListHandler(repo repository.Repository) *listHandler { return &listHandler{repo: repo} }
 
 func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -36,7 +37,7 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	items, err := q.Repo.ListItems(ctx, tenant, q.CycleID, q.Search)
+	items, err := h.repo.ListItems(ctx, tenant, q.CycleID, q.Search)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list bonus items", zap.Error(err))
 		return nil, errs.Internal("failed to list bonus items")
@@ -56,7 +57,7 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 // @Param search query string false "search employee name"
 // @Success 200 {object} ListResponse
 // @Router /bonus-cycles/{id}/items [get]
-func RegisterList(router fiber.Router, repo repository.Repository) {
+func RegisterList(router fiber.Router) {
 	router.Get("/:id/items", func(c fiber.Ctx) error {
 		cycleID, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -66,7 +67,6 @@ func RegisterList(router fiber.Router, repo repository.Repository) {
 		resp, err := mediator.Send[*ListQuery, *ListResponse](c.Context(), &ListQuery{
 			CycleID: cycleID,
 			Search:  search,
-			Repo:    repo,
 		})
 		if err != nil {
 			return err

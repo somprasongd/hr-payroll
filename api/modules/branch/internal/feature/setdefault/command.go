@@ -16,39 +16,40 @@ import (
 )
 
 type Command struct {
-	Repo    repository.Repository
-	Eb      eventbus.EventBus
 	ID      uuid.UUID
 	ActorID uuid.UUID
 }
 
-type commandHandler struct{}
+type commandHandler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
-func NewHandler() *commandHandler {
-	return &commandHandler{}
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandler {
+	return &commandHandler{repo: repo, eb: eb}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	branch, err := cmd.Repo.GetByID(ctx, cmd.ID)
+	branch, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {
 		return mediator.NoResponse{}, errs.NotFound("branch not found")
 	}
 
 	companyID := branch.CompanyID
 
-	if err := cmd.Repo.SetDefault(ctx, cmd.ID, cmd.ActorID); err != nil {
+	if err := h.repo.SetDefault(ctx, cmd.ID, cmd.ActorID); err != nil {
 		logger.FromContext(ctx).Error("failed to set default branch", zap.Error(err))
 		return mediator.NoResponse{}, errs.NotFound("branch not found")
 	}
 
-	updatedBranch, err := cmd.Repo.GetByID(ctx, cmd.ID)
+	updatedBranch, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to reload branch after set default", zap.Error(err))
 		updatedBranch = branch
 		updatedBranch.IsDefault = true
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
 		CompanyID:  &companyID,
 		BranchID:   nil,

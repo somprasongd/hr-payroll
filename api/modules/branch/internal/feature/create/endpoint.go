@@ -3,9 +3,7 @@ package create
 import (
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -24,7 +22,7 @@ type CreateRequest struct {
 // @Param request body CreateRequest true "branch payload"
 // @Success 201 {object} repository.Branch
 // @Router /admin/branches [post]
-func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {
 		var req CreateRequest
 		if err := c.Bind().Body(&req); err != nil {
@@ -36,8 +34,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Repo: repo,
-			Eb:   eb,
 			Code: req.Code,
 			Name: req.Name,
 		})

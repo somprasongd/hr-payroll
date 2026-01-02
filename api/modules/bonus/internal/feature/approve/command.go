@@ -24,9 +24,6 @@ import (
 type Command struct {
 	ID     uuid.UUID
 	Status string
-	Repo   repository.Repository
-	Tx     transactor.Transactor
-	Eb     eventbus.EventBus
 }
 
 type Response struct {
@@ -34,11 +31,17 @@ type Response struct {
 	Message string `json:"message"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -59,16 +62,20 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Forbidden("HR is not allowed to change status")
 	}
 
-	updated, err := cmd.Repo.UpdateStatus(ctx, tenant, cmd.ID, cmd.Status, user.ID)
+	updated, err := h.repo.UpdateStatus(ctx, tenant, cmd.ID, cmd.Status, user.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			logger.FromContext(ctx).Warn("bonus cycle not found or status cannot change", zap.Error(err), zap.String("status", cmd.Status))
 			return nil, errs.NotFound("cycle not found or cannot change status")
 		}
+		// Handle unique constraint violations
+		if repository.IsUniqueViolation(err, "bonus_cycle_month_branch_approved_uk") {
+			return nil, errs.Conflict("BONUS_CYCLE_APPROVED_EXISTS")
+		}
 		logger.FromContext(ctx).Error("failed to update bonus cycle status", zap.Error(err), zap.String("status", cmd.Status))
-		return nil, errs.Internal("failed to update status")
+		return nil, errs.Internal("BONUS_CYCLE_APPROVE_FAILED")
 	}
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

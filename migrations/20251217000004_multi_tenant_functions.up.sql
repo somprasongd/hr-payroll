@@ -622,6 +622,21 @@ BEGIN
       updated_at = EXCLUDED.updated_at,
       updated_by = EXCLUDED.updated_by;
 
+    -- 4.5 Loan Outstanding (ตลอดชีพ / accum_year = NULL)
+    -- อัพเดท/เซ็ตค่าหนี้สินคงค้างปัจจุบันของพนักงาน
+    INSERT INTO payroll_accumulation (
+      employee_id, company_id, accum_type, accum_year, amount, updated_at, updated_by
+    )
+    SELECT 
+      pri.employee_id, pri.company_id, 'loan_outstanding', NULL, pri.loan_outstanding_total, now(), NEW.updated_by
+    FROM payroll_run_item pri
+    WHERE pri.run_id = NEW.id
+    ON CONFLICT (employee_id, accum_type, COALESCE(accum_year, -1))
+    DO UPDATE SET 
+      amount = EXCLUDED.amount,  -- Replace with new total, not add
+      updated_at = EXCLUDED.updated_at,
+      updated_by = EXCLUDED.updated_by;
+
   END IF;
 
   RETURN NEW;
@@ -1182,6 +1197,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Sync payroll when bonus cycle status changes (e.g. approved)
+CREATE OR REPLACE FUNCTION public.sync_payroll_on_bonus_cycle_change() RETURNS trigger AS $$
+DECLARE
+  r_item RECORD;
+  r_run RECORD;
+BEGIN
+  -- ทำงานเมื่อเปลี่ยนสถานะ หรือ เมื่อถูก soft delete/restore (ถ้าเป็น approved หรือเคยเป็น approved)
+  IF (NEW.status IS DISTINCT FROM OLD.status) OR (NEW.deleted_at IS DISTINCT FROM OLD.deleted_at) THEN
+    -- วนลูปพนักงานทุกคนในรอบโบนัสนี้
+    FOR r_item IN 
+      SELECT employee_id FROM bonus_item WHERE cycle_id = NEW.id
+    LOOP
+      -- หา Payroll Run ที่ตรงกับเดือนและ tenant และยัง Pending
+      FOR r_run IN 
+        SELECT id FROM payroll_run 
+        WHERE payroll_month_date = NEW.payroll_month_date 
+          AND status = 'pending' AND deleted_at IS NULL
+          AND company_id = NEW.company_id
+          AND branch_id = NEW.branch_id
+      LOOP
+        PERFORM public.recalculate_payroll_item(r_run.id, r_item.employee_id);
+      END LOOP;
+    END LOOP;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tg_sync_payroll_bonus_cycle ON bonus_cycle;
+CREATE TRIGGER tg_sync_payroll_bonus_cycle
+AFTER UPDATE ON bonus_cycle
+FOR EACH ROW
+EXECUTE FUNCTION sync_payroll_on_bonus_cycle_change();
+
 -- Accumulation change: constrain to same tenant
 CREATE OR REPLACE FUNCTION public.sync_payroll_on_accum_change() RETURNS trigger AS $$
 DECLARE
@@ -1426,6 +1475,7 @@ BEGIN
 END$$;
 
 -- Get effective config: scoped to company_id parameter
+DROP FUNCTION IF EXISTS get_effective_payroll_config(DATE);
 CREATE OR REPLACE FUNCTION get_effective_payroll_config(
   p_period_month DATE,
   p_company_id UUID DEFAULT NULL
@@ -1468,6 +1518,18 @@ DROP INDEX IF EXISTS bonus_cycle_month_approved_uk;
 CREATE UNIQUE INDEX bonus_cycle_month_branch_approved_uk
   ON bonus_cycle (branch_id, payroll_month_date)
   WHERE status = 'approved' AND deleted_at IS NULL;
+
+-- salary_raise_cycle: period unique per branch/company
+DROP INDEX IF EXISTS salary_raise_cycle_period_uk;
+CREATE UNIQUE INDEX salary_raise_cycle_period_tenant_uk
+  ON salary_raise_cycle (company_id, branch_id, period_start_date, period_end_date)
+  WHERE deleted_at IS NULL;
+
+-- bonus_cycle: period unique per branch/company
+DROP INDEX IF EXISTS bonus_cycle_period_uk;
+CREATE UNIQUE INDEX bonus_cycle_period_tenant_uk
+  ON bonus_cycle (company_id, branch_id, period_start_date, period_end_date)
+  WHERE deleted_at IS NULL;
 
 -- =========================================
 -- 2) TRIGGER SYNC FUNCTIONS - Add branch filter
@@ -1772,3 +1834,107 @@ BEGIN
 
   RETURN NEW;
 END$$;
+
+-- =========================================
+-- 4) Fix get_effective_org_profile() and payroll_run_apply_org_profile()
+-- Scope to company_id for multi-tenancy
+-- =========================================
+
+-- Update get_effective_org_profile to accept optional company_id
+DROP FUNCTION IF EXISTS get_effective_org_profile(DATE);
+CREATE OR REPLACE FUNCTION get_effective_org_profile(
+  p_period_month DATE,
+  p_company_id UUID DEFAULT NULL
+) RETURNS payroll_org_profile LANGUAGE sql AS $$
+  SELECT p.*
+  FROM payroll_org_profile p
+  WHERE p.effective_daterange @> p_period_month
+    AND (p_company_id IS NULL OR p.company_id = p_company_id)
+  ORDER BY lower(p.effective_daterange) DESC, p.version_no DESC
+  LIMIT 1;
+$$;
+
+-- Update payroll_run_apply_org_profile trigger function to pass company_id
+CREATE OR REPLACE FUNCTION payroll_run_apply_org_profile()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  v_profile payroll_org_profile%ROWTYPE;
+BEGIN
+  -- Always prefer explicitly set org_profile_id if provided
+  IF NEW.org_profile_id IS NULL THEN
+    -- Pass NEW.company_id to ensure we get the profile for the correct tenant
+    SELECT * INTO v_profile FROM get_effective_org_profile(NEW.payroll_month_date, NEW.company_id);
+  ELSE
+    -- If org_profile_id is provided, verify it belongs to the same company
+    SELECT * INTO v_profile FROM payroll_org_profile WHERE id = NEW.org_profile_id AND company_id = NEW.company_id;
+  END IF;
+
+  IF v_profile.id IS NULL THEN
+    RAISE EXCEPTION 'ไม่พบ org profile สำหรับบริษัท % และวันที่ %', NEW.company_id, NEW.payroll_month_date;
+  END IF;
+
+  -- Ensure the profile covers the payroll month
+  IF NOT (v_profile.effective_daterange @> NEW.payroll_month_date) THEN
+    RAISE EXCEPTION 'org profile % ไม่ครอบคลุมเดือนจ่าย %', v_profile.id, NEW.payroll_month_date;
+  END IF;
+
+  NEW.org_profile_id := v_profile.id;
+  NEW.org_profile_snapshot := jsonb_build_object(
+    'profile_id', v_profile.id,
+    'version_no', v_profile.version_no,
+    'effective_start', lower(v_profile.effective_daterange),
+    'effective_end', upper(v_profile.effective_daterange),
+    'company_name', v_profile.company_name,
+    'address_line1', v_profile.address_line1,
+    'address_line2', v_profile.address_line2,
+    'subdistrict', v_profile.subdistrict,
+    'district', v_profile.district,
+    'province', v_profile.province,
+    'postal_code', v_profile.postal_code,
+    'phone_main', v_profile.phone_main,
+    'phone_alt', v_profile.phone_alt,
+    'email', v_profile.email,
+    'tax_id', v_profile.tax_id,
+    'slip_footer_note', v_profile.slip_footer_note,
+    'logo_id', v_profile.logo_id
+  );
+
+  RETURN NEW;
+END$$;
+
+-- Backfill pending payroll runs with the correct company profile snapshot
+WITH effective_profiles AS (
+  SELECT p.*
+  FROM (
+    SELECT *, 
+           ROW_NUMBER() OVER (PARTITION BY company_id, effective_daterange ORDER BY version_no DESC) as rnk
+    FROM payroll_org_profile
+    WHERE status = 'active'
+  ) p
+  WHERE p.rnk = 1
+)
+UPDATE payroll_run pr
+SET org_profile_id = ep.id,
+    org_profile_snapshot = jsonb_build_object(
+      'profile_id', ep.id,
+      'version_no', ep.version_no,
+      'effective_start', lower(ep.effective_daterange),
+      'effective_end', upper(ep.effective_daterange),
+      'company_name', ep.company_name,
+      'address_line1', ep.address_line1,
+      'address_line2', ep.address_line2,
+      'subdistrict', ep.subdistrict,
+      'district', ep.district,
+      'province', ep.province,
+      'postal_code', ep.postal_code,
+      'phone_main', ep.phone_main,
+      'phone_alt', ep.phone_alt,
+      'email', ep.email,
+      'tax_id', ep.tax_id,
+      'slip_footer_note', ep.slip_footer_note,
+      'logo_id', ep.logo_id
+    )
+FROM effective_profiles ep
+WHERE pr.status = 'pending'
+  AND pr.company_id = ep.company_id
+  AND ep.effective_daterange @> pr.payroll_month_date;

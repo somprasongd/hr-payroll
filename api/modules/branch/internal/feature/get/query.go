@@ -11,24 +11,24 @@ import (
 	"hrms/shared/common/logger"
 )
 
-
 type Query struct {
-	Repo repository.Repository
-	ID   uuid.UUID
+	ID uuid.UUID
 }
 
 type Response struct {
 	Branch *repository.Branch `json:"branch"`
 }
 
-type queryHandler struct{}
+type queryHandler struct {
+	repo repository.Repository
+}
 
-func NewHandler() *queryHandler {
-	return &queryHandler{}
+func NewHandler(repo repository.Repository) *queryHandler {
+	return &queryHandler{repo: repo}
 }
 
 func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	branch, err := q.Repo.GetByID(ctx, q.ID)
+	branch, err := h.repo.GetByID(ctx, q.ID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get branch", zap.Error(err))
 		return nil, errs.NotFound("branch not found")

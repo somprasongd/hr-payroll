@@ -17,18 +17,11 @@ import (
 	"hrms/shared/events"
 )
 
-type CreateRequest struct {
+type Command struct {
 	PayrollMonth string `json:"payrollMonthDate"`
 	BonusYear    *int   `json:"bonusYear,omitempty"`
 	PeriodStart  string `json:"periodStartDate"`
 	PeriodEnd    string `json:"periodEndDate"`
-}
-
-type Command struct {
-	Form CreateRequest `json:"form"`
-	Repo repository.Repository
-	Tx   transactor.Transactor
-	Eb   eventbus.EventBus
 
 	ParsedPayrollMonth time.Time `json:"-"`
 	ParsedPeriodStart  time.Time `json:"-"`
@@ -40,31 +33,35 @@ type Response struct {
 	dto.Cycle
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 const dateLayout = "2006-01-02"
 
 func (c *Command) ParseDates() error {
-	payrollMonth, err := time.Parse(dateLayout, c.Form.PayrollMonth)
+	payrollMonth, err := time.Parse(dateLayout, c.PayrollMonth)
 	if err != nil {
 		return errs.BadRequest("payrollMonthDate must be YYYY-MM-DD")
 	}
-	start, err := time.Parse(dateLayout, c.Form.PeriodStart)
+	start, err := time.Parse(dateLayout, c.PeriodStart)
 	if err != nil {
 		return errs.BadRequest("periodStartDate must be YYYY-MM-DD")
 	}
-	end, err := time.Parse(dateLayout, c.Form.PeriodEnd)
+	end, err := time.Parse(dateLayout, c.PeriodEnd)
 	if err != nil {
 		return errs.BadRequest("periodEndDate must be YYYY-MM-DD")
 	}
 	c.ParsedPayrollMonth = payrollMonth
 	c.ParsedPeriodStart = start
 	c.ParsedPeriodEnd = end
-	if c.Form.BonusYear != nil {
-		if *c.Form.BonusYear < 1 {
+	if c.BonusYear != nil {
+		if *c.BonusYear < 1 {
 			return errs.BadRequest("bonusYear must be a positive year")
 		}
-		c.ParsedBonusYear = *c.Form.BonusYear
+		c.ParsedBonusYear = *c.BonusYear
 	} else {
 		c.ParsedBonusYear = payrollMonth.Year()
 	}
@@ -73,7 +70,9 @@ func (c *Command) ParseDates() error {
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -97,23 +96,25 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	var cycle *repository.Cycle
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedBonusYear, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, tenant.CompanyID, tenant.BranchID, user.ID)
+		cycle, err = h.repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedBonusYear, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, tenant.CompanyID, tenant.BranchID, user.ID)
 		return err
 	}); err != nil {
 		switch {
 		case repository.IsUniqueViolation(err, "bonus_cycle_month_branch_approved_uk"):
-			return nil, errs.Conflict("approved bonus cycle for this branch and payroll month already exists")
+			return nil, errs.Conflict("BONUS_CYCLE_APPROVED_EXISTS")
 		case repository.IsUniqueViolation(err, "bonus_cycle_pending_branch_uk"):
-			return nil, errs.Conflict("pending bonus cycle for this branch already exists")
+			return nil, errs.Conflict("BONUS_CYCLE_PENDING_EXISTS")
+		case repository.IsUniqueViolation(err, "bonus_cycle_period_tenant_uk"):
+			return nil, errs.Conflict("BONUS_CYCLE_PERIOD_EXISTS")
 		default:
 			logger.FromContext(ctx).Error("failed to create bonus cycle", zap.Error(err))
-			return nil, errs.Internal("failed to create bonus cycle")
+			return nil, errs.Internal("BONUS_CYCLE_CREATE_FAILED")
 		}
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

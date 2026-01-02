@@ -5,7 +5,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/activitylog/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -24,11 +23,11 @@ import (
 // @Param userName query string false "Filter by username"
 // @Success 200 {object} Response
 // @Router /super-admin/activity-logs [get]
-func NewEndpoint(router fiber.Router, repo *repository.Repository) {
-	router.Get("/", listHandler(repo))
+func NewEndpoint(router fiber.Router) {
+	router.Get("/", listHandler())
 }
 
-func listHandler(repo *repository.Repository) fiber.Handler {
+func listHandler() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "10"))
@@ -41,7 +40,6 @@ func listHandler(repo *repository.Repository) fiber.Handler {
 		}
 
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
-			Repo:     repo,
 			Page:     page,
 			Limit:    limit,
 			Action:   c.Query("action"),

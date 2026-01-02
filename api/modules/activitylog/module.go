@@ -37,12 +37,12 @@ func (m *Module) APIVersion() string {
 
 func (m *Module) Init(eb eventbus.EventBus) error {
 	// Register handlers with mediator
-	mediator.Register[*list.Query, *list.Response](list.NewHandler())
-	mediator.Register[*filteroptions.Query, *filteroptions.Response](filteroptions.NewHandler())
+	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
+	mediator.Register[*filteroptions.Query, *filteroptions.Response](filteroptions.NewHandler(m.repo))
 
 	// Super admin handlers
-	mediator.Register[*superadminlist.Query, *superadminlist.Response](superadminlist.NewHandler())
-	mediator.Register[*superadminfilteroptions.Query, *superadminfilteroptions.Response](superadminfilteroptions.NewHandler())
+	mediator.Register[*superadminlist.Query, *superadminlist.Response](superadminlist.NewHandler(m.repo))
+	mediator.Register[*superadminfilteroptions.Query, *superadminfilteroptions.Response](superadminfilteroptions.NewHandler(m.repo))
 
 	// Subscribe to events
 	sub := subscriber.NewLogSubscriber(m.repo)
@@ -54,11 +54,11 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	// Admin only
 	g := r.Group("/admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
-	list.NewEndpoint(g, m.repo)
-	filteroptions.NewEndpoint(g, m.repo)
+	list.NewEndpoint(g)
+	filteroptions.NewEndpoint(g)
 
 	// Super admin only (no TenantMiddleware - for system-level logs)
 	sa := r.Group("/super-admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("superadmin"))
-	superadminlist.NewEndpoint(sa, m.repo)
-	superadminfilteroptions.NewEndpoint(sa, m.repo)
+	superadminlist.NewEndpoint(sa)
+	superadminfilteroptions.NewEndpoint(sa)
 }

@@ -19,7 +19,6 @@ type Query struct {
 	Limit  int
 	Status string
 	Year   *int
-	Repo   repository.Repository
 }
 
 type Response struct {
@@ -27,11 +26,13 @@ type Response struct {
 	Meta dto.Meta    `json:"meta"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+}
 
 var _ mediator.RequestHandler[*Query, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository) *Handler { return &Handler{repo: repo} }
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Page < 1 {
@@ -46,7 +47,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	res, err := q.Repo.List(ctx, tenant, q.Page, q.Limit, q.Status, q.Year)
+	res, err := h.repo.List(ctx, tenant, q.Page, q.Limit, q.Status, q.Year)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list bonus cycles", zap.Error(err))
 		return nil, errs.Internal("failed to list bonus cycles")

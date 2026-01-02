@@ -4,10 +4,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -28,7 +26,7 @@ type UpdateRequest struct {
 // @Param request body UpdateRequest true "branch payload"
 // @Success 200 {object} repository.Branch
 // @Router /admin/branches/{id} [patch]
-func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
@@ -50,8 +48,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Repo:    repo,
-			Eb:      eb,
 			ID:      id,
 			Code:    req.Code,
 			Name:    req.Name,

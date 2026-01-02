@@ -11,7 +11,21 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Plus, Trash2, Pencil, RotateCcw } from "lucide-react";
+import { Filter, Plus, Trash2, SquarePen, RotateCcw, MoreHorizontal } from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ColumnDef } from '@tanstack/react-table';
 import { salaryAdvanceService, SalaryAdvance } from '@/services/salary-advance-service';
 import { employeeService, Employee } from '@/services/employee.service';
@@ -53,12 +67,17 @@ export function SalaryAdvanceList() {
   const [editItem, setEditItem] = useState<SalaryAdvance | null>(null);
   const [deleteItem, setDeleteItem] = useState<SalaryAdvance | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Refetch when branch changes
   useBranchChange(useCallback(() => {
     fetchEmployees();
     setEmployeeFilter('all');
+    setStatusFilter('all');
+    setPage(1);
     setData([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
   }, []));
 
   useEffect(() => {
@@ -98,13 +117,8 @@ export function SalaryAdvanceList() {
   };
 
   useEffect(() => {
-    if (employeeFilter !== 'all') {
-      fetchData();
-    } else {
-      setData([]);
-      setLoading(false);
-    }
-  }, [page, statusFilter, employeeFilter]);
+    fetchData();
+  }, [page, statusFilter, employeeFilter, refreshKey]);
 
   const handleDelete = async () => {
     if (!deleteItem) return;
@@ -165,7 +179,7 @@ export function SalaryAdvanceList() {
   const actions: ActionConfig<SalaryAdvance>[] = useMemo(() => [
     {
       label: tCommon('edit'),
-      icon: <Pencil className="h-4 w-4" />,
+      icon: <SquarePen className="h-4 w-4" />,
       onClick: (item) => setEditItem(item),
       condition: (item) => item.status === 'pending' && user?.role === 'admin',
       showInDropdown: true,
@@ -295,26 +309,23 @@ export function SalaryAdvanceList() {
                   </TableCell>
                   <TableCell>
                     {item.status === 'pending' && user?.role === 'admin' && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditItem(item)}>
-                            <Pencil className="w-4 h-4 mr-2" />
-                            {tCommon('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={() => setDeleteItem(item)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {tCommon('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setEditItem(item)}
+                        >
+                          <SquarePen className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => setDeleteItem(item)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>

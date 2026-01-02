@@ -61,6 +61,7 @@ export default function PTWorklogsPage() {
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [worklogToDelete, setWorklogToDelete] = useState<PTWorklog | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Ensure component is mounted before rendering portals
   useEffect(() => {
@@ -72,13 +73,19 @@ export default function PTWorklogsPage() {
   useBranchChange(useCallback(() => {
     fetchEmployees();
     setEmployeeFilter('');
+    setStatusFilter('');
+    setStartDateFilter(getDefaultStartDate());
+    setEndDateFilter(getDefaultEndDate());
+    setCurrentPage(1);
     setWorklogs([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
   }, []));
 
   useEffect(() => {
     fetchEmployees();
     fetchWorklogs();
-  }, [currentPage, employeeFilter, statusFilter, startDateFilter, endDateFilter]);
+  }, [currentPage, employeeFilter, statusFilter, startDateFilter, endDateFilter, refreshKey]);
 
   // Cleanup on unmount to prevent portal errors
   useEffect(() => {
@@ -368,8 +375,6 @@ export default function PTWorklogsPage() {
                 <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
                 <SelectItem value="pending">{t('statuses.pending')}</SelectItem>
                 <SelectItem value="approved">{t('statuses.approved')}</SelectItem>
-                <SelectItem value="to_pay">{t('statuses.to_pay')}</SelectItem>
-                <SelectItem value="paid">{t('statuses.paid')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

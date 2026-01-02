@@ -46,6 +46,7 @@ type Record struct {
 	LateRatePerMinute          float64     `db:"late_rate_per_minute"`
 	LateGraceMinutes           int         `db:"late_grace_minutes"`
 	Note                       *string     `db:"note"`
+	CompanyID                  uuid.UUID   `db:"company_id"`
 	CreatedAt                  time.Time   `db:"created_at"`
 	UpdatedAt                  time.Time   `db:"updated_at"`
 }
@@ -91,6 +92,7 @@ SELECT
   late_rate_per_minute,
   late_grace_minutes,
   note,
+  company_id,
   created_at,
   updated_at
 FROM payroll_config
@@ -171,10 +173,10 @@ func (r Repository) Create(ctx context.Context, payload Record, companyID, actor
 	const q = `
 WITH next_version AS (
   SELECT
-    pg_advisory_xact_lock(hashtext(($21::uuid)::text)::bigint) AS locked,
+    pg_advisory_xact_lock(hashtext(($24::uuid)::text)::bigint) AS locked,
     COALESCE(MAX(version_no), 0) + 1 AS version_no
   FROM payroll_config
-  WHERE company_id = $21::uuid
+  WHERE company_id = $24::uuid
 )
 INSERT INTO payroll_config (
   effective_daterange,
@@ -208,7 +210,7 @@ INSERT INTO payroll_config (
 SELECT
   daterange($1, NULL, '[)'),
   next_version.version_no,
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$22,$23,$24,$25,$26
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$25
 FROM next_version
 RETURNING
   id,
