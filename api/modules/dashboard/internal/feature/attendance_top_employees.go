@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/dashboard/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -54,7 +55,12 @@ func NewAttendanceTopEmployeesHandler() *attendanceTopEmployeesHandler {
 }
 
 func (h *attendanceTopEmployeesHandler) Handle(ctx context.Context, q *AttendanceTopEmployeesQuery) (*AttendanceTopEmployeesResponse, error) {
-	entries, err := q.Repo.GetTopEmployeesByAttendance(ctx, q.StartDate, q.EndDate, q.Limit)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	entries, err := q.Repo.GetTopEmployeesByAttendance(ctx, tenant, q.StartDate, q.EndDate, q.Limit)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get top employees by attendance", zap.Error(err))
 		return nil, errs.Internal("failed to get top employees by attendance")

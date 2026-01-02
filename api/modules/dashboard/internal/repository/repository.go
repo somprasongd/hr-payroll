@@ -511,11 +511,29 @@ type TopEmployeeAttendance struct {
 }
 
 // GetTopEmployeesByAttendance retrieves top employees by attendance entry type
-func (r *Repository) GetTopEmployeesByAttendance(ctx context.Context, startDate, endDate time.Time, limit int) ([]TopEmployeeAttendance, error) {
+func (r *Repository) GetTopEmployeesByAttendance(ctx context.Context, tenant contextx.TenantInfo, startDate, endDate time.Time, limit int) ([]TopEmployeeAttendance, error) {
 	db := r.dbCtx(ctx)
 
 	if limit <= 0 {
 		limit = 10
+	}
+
+	args := []interface{}{startDate, endDate}
+
+	where := []string{
+		"wl.deleted_at IS NULL",
+		"wl.work_date >= $1",
+		"wl.work_date <= $2",
+	}
+
+	// Company filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	// Branch filter
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
 	query := fmt.Sprintf(`
@@ -532,19 +550,17 @@ WITH ranked AS (
     FROM worklog_ft wl
     INNER JOIN employees e ON wl.employee_id = e.id AND e.deleted_at IS NULL
     LEFT JOIN person_title pt ON e.title_id = pt.id
-    WHERE wl.deleted_at IS NULL
-        AND wl.work_date >= $1
-        AND wl.work_date <= $2
+    WHERE %s
     GROUP BY wl.employee_id, e.employee_number, e.first_name, e.last_name, pt.name_th, e.photo_id, wl.entry_type
 )
 SELECT employee_id, employee_number, full_name, photo_id, entry_type, total_count, total_qty
 FROM ranked
 WHERE rn <= %d
 ORDER BY entry_type, rn
-`, limit)
+`, strings.Join(where, " AND "), limit)
 
 	var results []TopEmployeeAttendance
-	if err := db.SelectContext(ctx, &results, query, startDate, endDate); err != nil {
+	if err := db.SelectContext(ctx, &results, query, args...); err != nil {
 		return nil, err
 	}
 	return results, nil
