@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -90,7 +91,7 @@ type AttendanceEntry struct {
 }
 
 // GetAttendanceSummary retrieves attendance statistics grouped by period
-func (r *Repository) GetAttendanceSummary(ctx context.Context, startDate, endDate time.Time, groupBy string, departmentID *uuid.UUID) ([]AttendanceEntry, error) {
+func (r *Repository) GetAttendanceSummary(ctx context.Context, startDate, endDate time.Time, groupBy string, departmentID *uuid.UUID, employeeID *uuid.UUID) ([]AttendanceEntry, error) {
 	db := r.dbCtx(ctx)
 
 	periodFormat := "YYYY-MM"
@@ -99,10 +100,19 @@ func (r *Repository) GetAttendanceSummary(ctx context.Context, startDate, endDat
 	}
 
 	args := []interface{}{startDate, endDate}
-	departmentFilter := ""
+	argIndex := 3
+	filters := ""
+
 	if departmentID != nil {
+		filters += fmt.Sprintf(" AND e.department_id = $%d", argIndex)
 		args = append(args, *departmentID)
-		departmentFilter = " AND e.department_id = $3"
+		argIndex++
+	}
+
+	if employeeID != nil {
+		filters += fmt.Sprintf(" AND wl.employee_id = $%d", argIndex)
+		args = append(args, *employeeID)
+		argIndex++
 	}
 
 	query := `
@@ -116,7 +126,7 @@ INNER JOIN employees e ON wl.employee_id = e.id AND e.deleted_at IS NULL
 WHERE wl.deleted_at IS NULL
     AND wl.work_date >= $1
     AND wl.work_date <= $2
-    ` + departmentFilter + `
+    ` + filters + `
 GROUP BY TO_CHAR(wl.work_date, '` + periodFormat + `'), wl.entry_type
 ORDER BY period, entry_type
 `

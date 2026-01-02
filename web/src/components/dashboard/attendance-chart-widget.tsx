@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Loader2,
   Clock3,
+  Users,
 } from "lucide-react";
 import {
   Card,
@@ -17,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Bar,
   BarChart,
@@ -39,15 +40,43 @@ import {
   dashboardService,
   AttendanceSummaryResponse,
 } from "@/services/dashboard.service";
+import { employeeService, Employee } from "@/services/employee.service";
+import { EmployeeSelector } from "@/components/common/employee-selector";
 
 export function AttendanceChartWidget() {
   const t = useTranslations("Dashboard");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const [data, setData] = useState<AttendanceSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"late" | "leave" | "ot">("late");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  // Employee filter state
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [loadingEmployees, setLoadingEmployees] = useState(true);
+
+  // Fetch FT employees on mount
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoadingEmployees(true);
+        const response = await employeeService.getEmployees({ 
+          status: 'active', 
+          employeeTypeCode: 'full_time',
+          limit: 1000,
+        });
+        setEmployees(response.data);
+      } catch (err) {
+        console.error("Failed to fetch employees:", err);
+      } finally {
+        setLoadingEmployees(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
 
   // Get date range for selected year
   const dateRange = useMemo(() => {
@@ -66,6 +95,7 @@ export function AttendanceChartWidget() {
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
         groupBy: "month",
+        employeeId: selectedEmployeeId || undefined,
       });
       setData(response);
       setError(null);
@@ -75,7 +105,7 @@ export function AttendanceChartWidget() {
     } finally {
       setLoading(false);
     }
-  }, [t, dateRange]);
+  }, [t, dateRange, selectedEmployeeId]);
 
   useEffect(() => {
     fetchData();
@@ -103,32 +133,53 @@ export function AttendanceChartWidget() {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
-              {t("attendance.title")}
-            </CardTitle>
-            <CardDescription>
-              {t("attendance.yearlyOverview", { year: selectedYear })}
-            </CardDescription>
+      <CardHeader className="pb-4">
+        <div className="flex flex-col gap-4">
+          {/* Title row with year selector */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-blue-500" />
+                {t("attendance.title")}
+              </CardTitle>
+              <CardDescription>
+                {t("attendance.yearlyOverview", { year: selectedYear })}
+              </CardDescription>
+            </div>
+            <Select
+              value={selectedYear.toString()}
+              onValueChange={(v) => setSelectedYear(parseInt(v))}
+            >
+              <SelectTrigger className="w-[120px]" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select
-            value={selectedYear.toString()}
-            onValueChange={(v) => setSelectedYear(parseInt(v))}
-          >
-            <SelectTrigger className="w-[120px]" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          
+          {/* Employee filter row */}
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+            {loadingEmployees ? (
+              <div className="flex-1 flex items-center justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <EmployeeSelector
+                employees={employees}
+                selectedEmployeeId={selectedEmployeeId}
+                onSelect={setSelectedEmployeeId}
+                placeholder={tCommon("all")}
+                filterType="ft"
+              />
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>

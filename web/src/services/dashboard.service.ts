@@ -112,12 +112,14 @@ export const dashboardService = {
     endDate: string;
     groupBy?: 'month' | 'day';
     departmentId?: string;
+    employeeId?: string;
   }): Promise<AttendanceSummaryResponse> => {
     const query = new URLSearchParams();
     query.append('startDate', params.startDate);
     query.append('endDate', params.endDate);
     if (params.groupBy) query.append('groupBy', params.groupBy);
     if (params.departmentId) query.append('departmentId', params.departmentId);
+    if (params.employeeId) query.append('employeeId', params.employeeId);
     
     return apiClient.get<AttendanceSummaryResponse>(`/dashboard/attendance-summary?${query.toString()}`);
   },

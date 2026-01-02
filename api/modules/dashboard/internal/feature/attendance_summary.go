@@ -21,6 +21,7 @@ type AttendanceSummaryQuery struct {
 	EndDate      time.Time
 	GroupBy      string // "month" or "day"
 	DepartmentID *uuid.UUID
+	EmployeeID   *uuid.UUID
 	Repo         *repository.Repository
 }
 
@@ -70,7 +71,7 @@ func NewAttendanceSummaryHandler() *attendanceSummaryHandler {
 }
 
 func (h *attendanceSummaryHandler) Handle(ctx context.Context, q *AttendanceSummaryQuery) (*AttendanceSummaryResponse, error) {
-	entries, err := q.Repo.GetAttendanceSummary(ctx, q.StartDate, q.EndDate, q.GroupBy, q.DepartmentID)
+	entries, err := q.Repo.GetAttendanceSummary(ctx, q.StartDate, q.EndDate, q.GroupBy, q.DepartmentID, q.EmployeeID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get attendance summary", zap.Error(err))
 		return nil, errs.Internal("failed to get attendance summary")
@@ -187,11 +188,21 @@ func RegisterAttendanceSummary(router fiber.Router, repo *repository.Repository)
 			departmentID = &id
 		}
 
+		var employeeID *uuid.UUID
+		if empStr := c.Query("employeeId"); empStr != "" {
+			id, err := uuid.Parse(empStr)
+			if err != nil {
+				return errs.BadRequest("invalid employeeId")
+			}
+			employeeID = &id
+		}
+
 		resp, err := mediator.Send[*AttendanceSummaryQuery, *AttendanceSummaryResponse](c.Context(), &AttendanceSummaryQuery{
 			StartDate:    startDate,
 			EndDate:      endDate,
 			GroupBy:      groupBy,
 			DepartmentID: departmentID,
+			EmployeeID:   employeeID,
 			Repo:         repo,
 		})
 		if err != nil {
