@@ -347,3 +347,54 @@ WHERE src.deleted_at IS NULL AND src.status = 'pending'
 	}
 	return &result, nil
 }
+
+// TopEmployeeAttendance represents an employee's attendance ranking
+type TopEmployeeAttendance struct {
+	EmployeeID     uuid.UUID `db:"employee_id"`
+	EmployeeNumber string    `db:"employee_number"`
+	FullName       string    `db:"full_name"`
+	PhotoID        *string   `db:"photo_id"`
+	EntryType      string    `db:"entry_type"`
+	TotalCount     int       `db:"total_count"`
+	TotalQty       float64   `db:"total_qty"`
+}
+
+// GetTopEmployeesByAttendance retrieves top employees by attendance entry type
+func (r *Repository) GetTopEmployeesByAttendance(ctx context.Context, startDate, endDate time.Time, limit int) ([]TopEmployeeAttendance, error) {
+	db := r.dbCtx(ctx)
+
+	if limit <= 0 {
+		limit = 10
+	}
+
+	query := fmt.Sprintf(`
+WITH ranked AS (
+    SELECT 
+        wl.employee_id,
+        e.employee_number,
+        CONCAT(COALESCE(pt.name_th, ''), e.first_name, ' ', e.last_name) AS full_name,
+        e.photo_id,
+        wl.entry_type,
+        COUNT(*) AS total_count,
+        COALESCE(SUM(wl.quantity), 0) AS total_qty,
+        ROW_NUMBER() OVER (PARTITION BY wl.entry_type ORDER BY COUNT(*) DESC, COALESCE(SUM(wl.quantity), 0) DESC) AS rn
+    FROM worklog_ft wl
+    INNER JOIN employees e ON wl.employee_id = e.id AND e.deleted_at IS NULL
+    LEFT JOIN person_title pt ON e.title_id = pt.id
+    WHERE wl.deleted_at IS NULL
+        AND wl.work_date >= $1
+        AND wl.work_date <= $2
+    GROUP BY wl.employee_id, e.employee_number, e.first_name, e.last_name, pt.name_th, e.photo_id, wl.entry_type
+)
+SELECT employee_id, employee_number, full_name, photo_id, entry_type, total_count, total_qty
+FROM ranked
+WHERE rn <= %d
+ORDER BY entry_type, rn
+`, limit)
+
+	var results []TopEmployeeAttendance
+	if err := db.SelectContext(ctx, &results, query, startDate, endDate); err != nil {
+		return nil, err
+	}
+	return results, nil
+}

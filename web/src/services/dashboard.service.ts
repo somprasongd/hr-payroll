@@ -132,4 +132,41 @@ export const dashboardService = {
   getFinancialSummary: async (): Promise<FinancialSummaryResponse> => {
     return apiClient.get<FinancialSummaryResponse>('/dashboard/financial-summary');
   },
+
+  getAttendanceTopEmployees: async (params: {
+    periodType: 'month' | 'year';
+    year: number;
+    month?: number;
+    limit?: number;
+  }): Promise<AttendanceTopEmployeesResponse> => {
+    const query = new URLSearchParams();
+    query.append('periodType', params.periodType);
+    query.append('year', params.year.toString());
+    if (params.month) query.append('month', params.month.toString());
+    if (params.limit) query.append('limit', params.limit.toString());
+    
+    return apiClient.get<AttendanceTopEmployeesResponse>(`/dashboard/attendance-top-employees?${query.toString()}`);
+  },
 };
+
+// Top Employees
+export interface TopEmployeeDTO {
+  employeeId: string;
+  employeeNumber: string;
+  fullName: string;
+  photoId: string | null;
+  count: number;
+  total: number;
+}
+
+export interface AttendanceTopEmployeesResponse {
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  late: TopEmployeeDTO[];
+  leaveDay: TopEmployeeDTO[];
+  leaveDouble: TopEmployeeDTO[];
+  leaveHours: TopEmployeeDTO[];
+  ot: TopEmployeeDTO[];
+}

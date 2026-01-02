@@ -36,6 +36,9 @@ func (m *Module) Init(_ registry.ServiceRegistry, _ eventbus.EventBus) error {
 	// Attendance Summary
 	mediator.Register[*feature.AttendanceSummaryQuery, *feature.AttendanceSummaryResponse](feature.NewAttendanceSummaryHandler())
 
+	// Attendance Top Employees
+	mediator.Register[*feature.AttendanceTopEmployeesQuery, *feature.AttendanceTopEmployeesResponse](feature.NewAttendanceTopEmployeesHandler())
+
 	// Payroll Summary
 	mediator.Register[*feature.PayrollSummaryQuery, *feature.PayrollSummaryResponse](feature.NewPayrollSummaryHandler())
 
@@ -50,6 +53,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 
 	feature.RegisterEmployeeSummary(group, m.repo)
 	feature.RegisterAttendanceSummary(group, m.repo)
+	feature.RegisterAttendanceTopEmployees(group, m.repo)
 	feature.RegisterPayrollSummary(group, m.repo)
 	feature.RegisterFinancialSummary(group, m.repo)
 }
