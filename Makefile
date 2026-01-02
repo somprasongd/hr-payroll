@@ -34,6 +34,15 @@ build:
 	-X 'hrms/build.Time=${BUILD_TIME}'" \
 	-o $(BIN_DIR)/hr-payroll-api ./cmd/api
 
+.PHONY: tidy
+tidy:
+	@echo "Tidying shared modules..."
+	@for dir in api/shared/*/; do (cd $$dir && if [ -f go.mod ]; then go mod tidy; fi); done
+	@echo "Tidying service modules..."
+	@for dir in api/modules/*/; do (cd $$dir && if [ -f go.mod ]; then go mod tidy; fi); done
+	@echo "Tidying app module..."
+	@cd api/app && if [ -f go.mod ]; then go mod tidy; fi
+
 .PHONY: image-api
 image-api:
 	docker build \

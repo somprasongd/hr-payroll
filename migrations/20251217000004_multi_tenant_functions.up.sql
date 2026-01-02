@@ -93,7 +93,7 @@ BEGIN
         AND w.entry_type = 'late'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ),0) AS late_minutes,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -102,7 +102,7 @@ BEGIN
         AND w.entry_type = 'leave_day'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ),0.00) AS leave_days,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -111,7 +111,7 @@ BEGIN
         AND w.entry_type = 'leave_double'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ),0.00) AS leave_double_days,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -120,7 +120,7 @@ BEGIN
         AND w.entry_type = 'leave_hours'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ),0.00) AS leave_hours,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -129,7 +129,7 @@ BEGIN
         AND w.entry_type = 'ot'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ),0.00) AS ot_hours,
     NEW.created_by, NEW.updated_by
   FROM employees e
@@ -168,7 +168,7 @@ BEGIN
         AND w.entry_type = 'late'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ), 0) AS late_minutes,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -177,7 +177,7 @@ BEGIN
         AND w.entry_type = 'leave_day'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ), 0.00) AS leave_days,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -186,7 +186,7 @@ BEGIN
         AND w.entry_type = 'leave_double'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ), 0.00) AS leave_double_days,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -195,7 +195,7 @@ BEGIN
         AND w.entry_type = 'leave_hours'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ), 0.00) AS leave_hours,
     COALESCE((
       SELECT SUM(w.quantity)::NUMERIC(6,2)
@@ -204,7 +204,7 @@ BEGIN
         AND w.entry_type = 'ot'
         AND w.work_date BETWEEN NEW.period_start_date AND NEW.period_end_date
         AND w.deleted_at IS NULL
-        AND w.status IN ('pending','approved')
+        AND w.status IN ('pending', 'approved')
     ), 0.00) AS ot_hours,
     0.00, 0.00,  -- เริ่มต้น bonus เดือน/จำนวน เป็น 0
     NEW.created_by, NEW.updated_by
@@ -253,7 +253,7 @@ DECLARE
   v_others_deduction JSONB := '[]'::jsonb;
   v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
-  v_sso_cap NUMERIC(14,2) := 15000.00;
+  v_sso_cap NUMERIC(14,2) := 17500.00;
   v_sso_base NUMERIC(14,2) := 0;
   v_sso_amount NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
@@ -285,7 +285,7 @@ BEGIN
 
   -- คำนวณวันสิ้นงวด
   v_end_date := (NEW.payroll_month_date + interval '1 month' - interval '1 day')::date;
-  v_sso_cap := LEAST(COALESCE(v_config.social_security_wage_cap, 15000.00), 15000.00);
+  v_sso_cap := LEAST(COALESCE(v_config.social_security_wage_cap, 17500.00), 17500.00);
 
   -- 2. วนลูปพนักงานทุกคนที่ Active ใน company/branch เดียวกัน
   FOR v_emp IN 
@@ -326,7 +326,7 @@ BEGIN
       FROM worklog_ft 
       WHERE employee_id = v_emp.id AND entry_type = 'ot' 
         AND work_date BETWEEN NEW.period_start_date AND v_end_date
-        AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+        AND status = 'pending' AND deleted_at IS NULL;
       
       v_ot_amount := v_ot_hours * v_config.ot_hourly_rate;
 
@@ -337,10 +337,10 @@ BEGIN
       FROM worklog_ft 
       WHERE employee_id = v_emp.id AND entry_type = 'late'
         AND work_date BETWEEN NEW.period_start_date AND v_end_date
-        AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+        AND status = 'pending' AND deleted_at IS NULL;
       
-      IF v_late_mins > 15 THEN
-        v_late_deduct := v_late_mins * 5;
+      IF v_late_mins > COALESCE(v_config.late_grace_minutes, 15) THEN
+        v_late_deduct := v_late_mins * COALESCE(v_config.late_rate_per_minute, 5);
       ELSE
         v_late_deduct := 0;
       END IF;
@@ -350,7 +350,7 @@ BEGIN
       FROM worklog_ft 
       WHERE employee_id = v_emp.id AND entry_type = 'leave_day'
         AND work_date BETWEEN NEW.period_start_date AND v_end_date
-        AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+        AND status = 'pending' AND deleted_at IS NULL;
       
       v_leave_deduct := ROUND((v_emp.base_pay_amount / 30.0) * v_leave_days, 2);
 
@@ -359,7 +359,7 @@ BEGIN
       FROM worklog_ft 
       WHERE employee_id = v_emp.id AND entry_type = 'leave_double'
         AND work_date BETWEEN NEW.period_start_date AND v_end_date
-        AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+        AND status = 'pending' AND deleted_at IS NULL;
       
       v_leave_double_deduct := ROUND(((v_emp.base_pay_amount / 30.0) * 2) * v_leave_double_days, 2);
 
@@ -368,9 +368,9 @@ BEGIN
       FROM worklog_ft 
       WHERE employee_id = v_emp.id AND entry_type = 'leave_hours'
         AND work_date BETWEEN NEW.period_start_date AND v_end_date
-        AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+        AND status = 'pending' AND deleted_at IS NULL;
       
-      v_leave_hours_deduct := ROUND(((v_emp.base_pay_amount / 30.0) / 8.0) * v_leave_hours, 2);
+      v_leave_hours_deduct := ROUND(((v_emp.base_pay_amount / 30.0) / COALESCE(v_config.work_hours_per_day, 8.0)) * v_leave_hours, 2);
 
       -- D. การเงินอื่นๆ (Advance, Debt, Bonus)
       SELECT COALESCE(SUM(amount), 0) INTO v_adv
@@ -396,7 +396,7 @@ BEGIN
       FROM worklog_pt w
       WHERE w.employee_id = v_emp.id
         AND w.work_date BETWEEN NEW.period_start_date AND v_end_date
-        AND w.status IN ('pending', 'approved')
+        AND w.status = 'pending'
         AND w.deleted_at IS NULL
         AND NOT EXISTS (
           SELECT 1
@@ -778,7 +778,7 @@ DECLARE
   v_others_deduction JSONB := '[]'::jsonb;
   v_doctor_fee NUMERIC(14,2) := 0;
   v_sso_prev NUMERIC(14,2) := 0;
-  v_sso_cap NUMERIC(14,2) := 15000.00;
+  v_sso_cap NUMERIC(14,2) := 17500.00;
   v_sso_base NUMERIC(14,2) := 0;
   v_sso_amount NUMERIC(14,2) := 0;
   v_tax_prev NUMERIC(14,2) := 0;
@@ -838,7 +838,7 @@ BEGIN
   END IF;
 
   v_end_date := (v_run.payroll_month_date + interval '1 month' - interval '1 day')::date;
-  v_sso_cap := LEAST(COALESCE(v_config.social_security_wage_cap, 15000.00), 15000.00);
+  v_sso_cap := LEAST(COALESCE(v_config.social_security_wage_cap, 17500.00), 17500.00);
 
   -- 3. คำนวณตามสูตร (Logic เดียวกับ payroll_run_generate_items)
   
@@ -851,24 +851,26 @@ BEGIN
     FROM worklog_ft 
     WHERE employee_id = v_emp.id AND entry_type = 'ot' 
       AND work_date BETWEEN v_run.period_start_date AND v_end_date
-      AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+      AND status = 'pending' AND deleted_at IS NULL;
     v_ot_amount := v_ot_hours * v_config.ot_hourly_rate;
 
-    -- Late (>15 mins * 5)
+    -- Late
     SELECT COALESCE(SUM(quantity), 0) INTO v_late_mins
     FROM worklog_ft 
     WHERE employee_id = v_emp.id AND entry_type = 'late'
       AND work_date BETWEEN v_run.period_start_date AND v_end_date
-      AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+      AND status = 'pending' AND deleted_at IS NULL;
     
-    IF v_late_mins > 15 THEN v_late_deduct := v_late_mins * 5; END IF;
+    IF v_late_mins > COALESCE(v_config.late_grace_minutes, 15) THEN
+      v_late_deduct := v_late_mins * COALESCE(v_config.late_rate_per_minute, 5);
+    END IF;
 
     -- Leave (Days)
     SELECT COALESCE(SUM(quantity), 0) INTO v_leave_days
     FROM worklog_ft 
     WHERE employee_id = v_emp.id AND entry_type = 'leave_day'
       AND work_date BETWEEN v_run.period_start_date AND v_end_date
-      AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+      AND status = 'pending' AND deleted_at IS NULL;
     v_leave_deduct := ROUND((v_emp.base_pay_amount / 30.0) * v_leave_days, 2);
 
     -- Leave (Double)
@@ -876,7 +878,7 @@ BEGIN
     FROM worklog_ft 
     WHERE employee_id = v_emp.id AND entry_type = 'leave_double'
       AND work_date BETWEEN v_run.period_start_date AND v_end_date
-      AND status IN ('pending', 'approved') AND deleted_at IS NULL;
+      AND status = 'pending' AND deleted_at IS NULL;
     v_leave_double_deduct := ROUND(((v_emp.base_pay_amount / 30.0) * 2) * v_leave_double_days, 2);
 
     -- Leave (Hours)
@@ -884,8 +886,8 @@ BEGIN
     FROM worklog_ft 
     WHERE employee_id = v_emp.id AND entry_type = 'leave_hours'
       AND work_date BETWEEN v_run.period_start_date AND v_end_date
-      AND status IN ('pending', 'approved') AND deleted_at IS NULL;
-    v_leave_hours_deduct := ROUND(((v_emp.base_pay_amount / 30.0) / 8.0) * v_leave_hours, 2);
+      AND status = 'pending' AND deleted_at IS NULL;
+    v_leave_hours_deduct := ROUND(((v_emp.base_pay_amount / 30.0) / COALESCE(v_config.work_hours_per_day, 8.0)) * v_leave_hours, 2);
 
   -- === CASE 2: Part-Time ===
   ELSIF v_emp.type_code = 'part_time' THEN
@@ -893,7 +895,7 @@ BEGIN
     FROM worklog_pt w
     WHERE w.employee_id = v_emp.id
       AND w.work_date BETWEEN v_run.period_start_date AND v_end_date
-      AND w.status IN ('pending', 'approved') AND w.deleted_at IS NULL
+      AND w.status = 'pending' AND w.deleted_at IS NULL
       AND NOT EXISTS (
         SELECT 1
         FROM payout_pt_item pi

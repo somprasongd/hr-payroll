@@ -9,7 +9,6 @@ replace hrms/shared/events => ../../shared/events
 require (
 	github.com/gofiber/fiber/v3 v3.0.0-rc.3
 	github.com/google/uuid v1.6.0
-	github.com/lib/pq v1.10.9
 	go.uber.org/zap v1.27.1
 	hrms/shared/common v0.0.0
 	hrms/shared/events v0.0.0
