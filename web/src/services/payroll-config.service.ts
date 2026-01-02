@@ -39,6 +39,10 @@ export interface PayrollConfig {
   taxProgressiveBrackets: TaxProgressiveBracket[]; // Progressive tax brackets (0-35%)
   // Tax configuration for Section 40(2) - Freelance/Contract workers
   withholdingTaxRateService: number; // Withholding tax rate for freelance (e.g., 0.03 for 3%)
+  // Leave/Late deduction calculation settings
+  workHoursPerDay: number; // Hours per day for leave hours calculation (e.g., 8)
+  lateRatePerMinute: number; // Rate per minute for late deduction (e.g., 5 baht/min)
+  lateGraceMinutes: number; // Grace period before late deduction applies (e.g., 15 mins)
   note: string;
   createdAt: string;
   updatedAt: string;
@@ -66,6 +70,10 @@ export interface CreatePayrollConfigRequest {
   taxProgressiveBrackets: TaxProgressiveBracket[];
   // Tax configuration for Section 40(2) - Freelance/Contract workers
   withholdingTaxRateService: number;
+  // Leave/Late deduction calculation settings
+  workHoursPerDay: number;
+  lateRatePerMinute: number;
+  lateGraceMinutes: number;
   note: string;
 }
 

@@ -89,6 +89,10 @@ interface ConfigFormData {
   taxProgressiveBrackets: TaxProgressiveBracket[];
   // Tax config for Section 40(2) - Freelance/Contract workers
   withholdingTaxRateService: number; // Displayed as percentage (e.g., 3 for 3%)
+  // Leave/Late deduction calculation
+  workHoursPerDay: number; // Hours per day (e.g., 8)
+  lateRatePerMinute: number; // Rate per minute in baht (e.g., 5)
+  lateGraceMinutes: number; // Grace period in minutes (e.g., 15)
   note: string;
 }
 
@@ -119,6 +123,10 @@ export default function SettingsPage() {
     taxProgressiveBrackets: DEFAULT_TAX_BRACKETS,
     // Tax defaults for Section 40(2)
     withholdingTaxRateService: 3, // 3%
+    // Leave/Late defaults
+    workHoursPerDay: 8,
+    lateRatePerMinute: 5,
+    lateGraceMinutes: 15,
     note: '',
   });
   const [loading, setLoading] = useState(false);
@@ -177,6 +185,10 @@ export default function SettingsPage() {
           : DEFAULT_TAX_BRACKETS,
         // Tax config for Section 40(2)
         withholdingTaxRateService: (data.withholdingTaxRateService ?? 0.03) * 100, // Convert to %
+        // Leave/Late deduction calculation
+        workHoursPerDay: data.workHoursPerDay ?? 8,
+        lateRatePerMinute: data.lateRatePerMinute ?? 5,
+        lateGraceMinutes: data.lateGraceMinutes ?? 15,
         note: data.note || '',
       });
     } catch (err) {
@@ -271,6 +283,10 @@ export default function SettingsPage() {
           rate: b.rate / 100 // Convert rate from % to decimal
         })),
         withholdingTaxRateService: formData.withholdingTaxRateService / 100,
+        // Leave/Late deduction - keep as is (not percentage)
+        workHoursPerDay: formData.workHoursPerDay,
+        lateRatePerMinute: formData.lateRatePerMinute,
+        lateGraceMinutes: formData.lateGraceMinutes,
       };
 
       const result = await payrollConfigService.create(apiPayload);
@@ -513,6 +529,61 @@ export default function SettingsPage() {
                   onFocus={handleInputFocus}
                 />
                 <p className="text-xs text-gray-500">{t('effectiveDateHint')}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Leave/Late Deduction Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('leaveDeductionSettings')}</CardTitle>
+              <CardDescription>{t('leaveDeductionSettingsDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="workHoursPerDay">{t('workHoursPerDay')}</Label>
+                <Input
+                  id="workHoursPerDay"
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  max="24"
+                  value={formData.workHoursPerDay}
+                  onChange={(e) => handleInputChange('workHoursPerDay', parseFloat(e.target.value) || 8)}
+                  onFocus={handleInputFocus}
+                  placeholder="8"
+                />
+                <p className="text-xs text-gray-500">{t('workHoursPerDayHint')}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lateRatePerMinute">{t('lateRatePerMinute')}</Label>
+                <Input
+                  id="lateRatePerMinute"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={formData.lateRatePerMinute}
+                  onChange={(e) => handleInputChange('lateRatePerMinute', parseFloat(e.target.value) || 0)}
+                  onFocus={handleInputFocus}
+                  placeholder="5"
+                />
+                <p className="text-xs text-gray-500">{t('lateRatePerMinuteHint')}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lateGraceMinutes">{t('lateGraceMinutes')}</Label>
+                <Input
+                  id="lateGraceMinutes"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={formData.lateGraceMinutes}
+                  onChange={(e) => handleInputChange('lateGraceMinutes', parseInt(e.target.value) || 0)}
+                  onFocus={handleInputFocus}
+                  placeholder="15"
+                />
+                <p className="text-xs text-gray-500">{t('lateGraceMinutesHint')}</p>
               </div>
             </CardContent>
           </Card>

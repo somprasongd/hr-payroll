@@ -343,7 +343,7 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
                 <Input
                   id="quantity"
                   type="number"
-                  step="0.01"
+                  step="0.5"
                   min="0"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}

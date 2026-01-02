@@ -32,6 +32,9 @@ type Config struct {
 	TaxPersonalAllowanceAmount float64                `json:"taxPersonalAllowanceAmount"`
 	TaxProgressiveBrackets     repository.TaxBrackets `json:"taxProgressiveBrackets"`
 	WithholdingTaxRateService  float64                `json:"withholdingTaxRateService"`
+	WorkHoursPerDay            float64                `json:"workHoursPerDay"`
+	LateRatePerMinute          float64                `json:"lateRatePerMinute"`
+	LateGraceMinutes           int                    `json:"lateGraceMinutes"`
 	Note                       *string                `json:"note,omitempty"`
 	CreatedAt                  time.Time              `json:"createdAt"`
 	UpdatedAt                  time.Time              `json:"updatedAt"`
@@ -76,6 +79,9 @@ func FromRecord(r repository.Record) Config {
 		TaxPersonalAllowanceAmount: r.TaxPersonalAllowanceAmount,
 		TaxProgressiveBrackets:     r.TaxProgressiveBrackets,
 		WithholdingTaxRateService:  r.WithholdingTaxRateService,
+		WorkHoursPerDay:            r.WorkHoursPerDay,
+		LateRatePerMinute:          r.LateRatePerMinute,
+		LateGraceMinutes:           r.LateGraceMinutes,
 		Note:                       r.Note,
 		CreatedAt:                  r.CreatedAt,
 		UpdatedAt:                  r.UpdatedAt,

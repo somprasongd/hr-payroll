@@ -33,6 +33,9 @@ type RequestBody struct {
 	TaxPersonalAllowanceAmount *float64               `json:"taxPersonalAllowanceAmount"`
 	TaxProgressiveBrackets     repository.TaxBrackets `json:"taxProgressiveBrackets"`
 	WithholdingTaxRateService  *float64               `json:"withholdingTaxRateService"`
+	WorkHoursPerDay            *float64               `json:"workHoursPerDay"`
+	LateRatePerMinute          *float64               `json:"lateRatePerMinute"`
+	LateGraceMinutes           *int                   `json:"lateGraceMinutes"`
 	Note                       *string                `json:"note"`
 
 	ParsedStartDate time.Time `json:"-"`
@@ -59,6 +62,9 @@ func (p RequestBody) ToRecord() repository.Record {
 		TaxPersonalAllowanceAmount: floatValue(p.TaxPersonalAllowanceAmount),
 		TaxProgressiveBrackets:     p.TaxProgressiveBrackets,
 		WithholdingTaxRateService:  floatValue(p.WithholdingTaxRateService),
+		WorkHoursPerDay:            floatValue(p.WorkHoursPerDay),
+		LateRatePerMinute:          floatValue(p.LateRatePerMinute),
+		LateGraceMinutes:           intValue(p.LateGraceMinutes),
 		Note:                       p.Note,
 	}
 }
@@ -115,6 +121,13 @@ func boolValue(v *bool) bool {
 }
 
 func floatValue(v *float64) float64 {
+	if v == nil {
+		return 0
+	}
+	return *v
+}
+
+func intValue(v *int) int {
 	if v == nil {
 		return 0
 	}

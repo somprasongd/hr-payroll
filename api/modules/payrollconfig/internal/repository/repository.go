@@ -41,6 +41,9 @@ type Record struct {
 	TaxPersonalAllowanceAmount float64     `db:"tax_personal_allowance_amount"`
 	TaxProgressiveBrackets     TaxBrackets `db:"tax_progressive_brackets"`
 	WithholdingTaxRateService  float64     `db:"withholding_tax_rate_service"`
+	WorkHoursPerDay            float64     `db:"work_hours_per_day"`
+	LateRatePerMinute          float64     `db:"late_rate_per_minute"`
+	LateGraceMinutes           int         `db:"late_grace_minutes"`
 	Note                       *string     `db:"note"`
 	CreatedAt                  time.Time   `db:"created_at"`
 	UpdatedAt                  time.Time   `db:"updated_at"`
@@ -83,6 +86,9 @@ SELECT
   tax_personal_allowance_amount,
   tax_progressive_brackets,
   withholding_tax_rate_service,
+  work_hours_per_day,
+  late_rate_per_minute,
+  late_grace_minutes,
   note,
   created_at,
   updated_at
@@ -142,6 +148,9 @@ SELECT
   tax_personal_allowance_amount,
   tax_progressive_brackets,
   withholding_tax_rate_service,
+  work_hours_per_day,
+  late_rate_per_minute,
+  late_grace_minutes,
   note,
   created_at,
   updated_at
@@ -178,12 +187,15 @@ INSERT INTO payroll_config (
   tax_personal_allowance_amount,
   tax_progressive_brackets,
   withholding_tax_rate_service,
+  work_hours_per_day,
+  late_rate_per_minute,
+  late_grace_minutes,
   note,
   created_by,
   updated_by
 ) VALUES (
   daterange($1, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25
 )
 RETURNING
   id,
@@ -209,6 +221,9 @@ RETURNING
   tax_personal_allowance_amount,
   tax_progressive_brackets,
   withholding_tax_rate_service,
+  work_hours_per_day,
+  late_rate_per_minute,
+  late_grace_minutes,
   note,
   created_at,
   updated_at`
@@ -234,6 +249,9 @@ RETURNING
 		payload.TaxPersonalAllowanceAmount,
 		payload.TaxProgressiveBrackets,
 		payload.WithholdingTaxRateService,
+		payload.WorkHoursPerDay,
+		payload.LateRatePerMinute,
+		payload.LateGraceMinutes,
 		payload.Note,
 		actor,
 		actor,

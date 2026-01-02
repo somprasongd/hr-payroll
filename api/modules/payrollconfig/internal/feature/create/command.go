@@ -90,6 +90,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 			"tax_personal_allowance_amount": created.TaxPersonalAllowanceAmount,
 			"tax_progressive_brackets":      created.TaxProgressiveBrackets,
 			"withholding_tax_rate_service":  created.WithholdingTaxRateService,
+			"work_hours_per_day":            created.WorkHoursPerDay,
+			"late_rate_per_minute":          created.LateRatePerMinute,
+			"late_grace_minutes":            created.LateGraceMinutes,
 		},
 		Timestamp: time.Now(),
 	})
@@ -168,6 +171,9 @@ const (
 	defaultTaxPersonalAllowanceAmount = 60000.00
 	defaultWithholdingTaxRateService  = 0.03
 	defaultSocialSecurityWageCap      = 15000.00
+	defaultWorkHoursPerDay            = 8.0
+	defaultLateRatePerMinute          = 5.0
+	defaultLateGraceMinutes           = 15
 )
 
 func applyDefaults(p *RequestBody) {
@@ -200,6 +206,18 @@ func applyDefaults(p *RequestBody) {
 	if p.WithholdingTaxRateService == nil {
 		v := defaultWithholdingTaxRateService
 		p.WithholdingTaxRateService = &v
+	}
+	if p.WorkHoursPerDay == nil || *p.WorkHoursPerDay <= 0 {
+		v := defaultWorkHoursPerDay
+		p.WorkHoursPerDay = &v
+	}
+	if p.LateRatePerMinute == nil || *p.LateRatePerMinute < 0 {
+		v := defaultLateRatePerMinute
+		p.LateRatePerMinute = &v
+	}
+	if p.LateGraceMinutes == nil || *p.LateGraceMinutes < 0 {
+		v := defaultLateGraceMinutes
+		p.LateGraceMinutes = &v
 	}
 }
 

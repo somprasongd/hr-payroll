@@ -37,7 +37,7 @@ CREATE TABLE payroll_config (
   -- อัตราเงินสมทบประกันสังคม: เก็บแบบทศนิยม (เช่น 0.05 = 5%)
   social_security_rate_employee NUMERIC(6,5) NOT NULL,  -- พนักงาน
   social_security_rate_employer NUMERIC(6,5) NOT NULL,  -- นายจ้าง (อนาคตอาจใช้คำนวณรายงาน)
-  social_security_wage_cap      NUMERIC(12,2) NOT NULL DEFAULT 15000.00, -- ฐานเงินเดือนสูงสุดสำหรับประกันสังคม
+  social_security_wage_cap      NUMERIC(12,2) NOT NULL DEFAULT 17500.00, -- เพดานค่าจ้างประกันสังคมปี 69
   -- ภาษี: ลูกจ้าง ม.40(1) ใช้ค่าลดหย่อน/หักค่าใช้จ่ายและอัตราก้าวหน้า
   tax_apply_standard_expense    BOOLEAN NOT NULL DEFAULT TRUE,  -- ใช้หักค่าใช้จ่ายเหมา 50%
   tax_standard_expense_rate     NUMERIC(6,5) NOT NULL DEFAULT 0.50, -- อัตราค่าใช้จ่ายเหมา เช่น 0.50 = 50%
@@ -47,6 +47,11 @@ CREATE TABLE payroll_config (
   tax_progressive_brackets      JSONB NOT NULL DEFAULT '[{"min":0,"max":150000,"rate":0},{"min":150000,"max":300000,"rate":0.05},{"min":300000,"max":500000,"rate":0.10},{"min":500000,"max":750000,"rate":0.15},{"min":750000,"max":1000000,"rate":0.20},{"min":1000000,"max":2000000,"rate":0.25},{"min":2000000,"max":5000000,"rate":0.30},{"min":5000000,"max":null,"rate":0.35}]'::jsonb, -- อัตราภาษีก้าวหน้า
   -- ภาษี: เหมาบริการ/ฟรีแลนซ์ ม.40(2) ใช้อัตราหัก ณ ที่จ่าย
   withholding_tax_rate_service  NUMERIC(6,5) NOT NULL DEFAULT 0.03, -- อัตราหัก ณ ที่จ่าย เช่น 0.03 = 3%
+  
+  -- ค่าคำนวณการหักลา/มาสาย
+  work_hours_per_day            NUMERIC(4,2) NOT NULL DEFAULT 8.00,  -- ชั่วโมงทำงานต่อวัน (สำหรับคำนวณหักลารายชั่วโมง)
+  late_rate_per_minute          NUMERIC(8,2) NOT NULL DEFAULT 5.00,  -- อัตราหักต่อนาที (บาท/นาที) เมื่อสายเกินกำหนด
+  late_grace_minutes            INTEGER NOT NULL DEFAULT 15,         -- นาทีที่อนุญาตให้สายโดยไม่หัก
   
 
   status        config_status NOT NULL DEFAULT 'active',
@@ -183,6 +188,7 @@ INSERT INTO payroll_config (
   tax_apply_standard_expense, tax_standard_expense_rate, tax_standard_expense_cap,
   tax_apply_personal_allowance, tax_personal_allowance_amount, tax_progressive_brackets,
   withholding_tax_rate_service,
+  work_hours_per_day, late_rate_per_minute, late_grace_minutes,
   status, note, created_by, updated_by
 )
 SELECT
@@ -195,10 +201,11 @@ SELECT
   500.00, 1000.00,
   1000.00, 10.00, 6.00,
   80.00,
-  0.05, 0.05, 15000.00,
+  0.05, 0.05, 17500.00,
   TRUE, 0.50, 100000.00,
   TRUE, 60000.00, '[{"min":0,"max":150000,"rate":0},{"min":150001,"max":300000,"rate":0.05},{"min":300001,"max":500000,"rate":0.10},{"min":500001,"max":750000,"rate":0.15},{"min":750001,"max":1000000,"rate":0.20},{"min":1000001,"max":2000000,"rate":0.25},{"min":2000001,"max":5000000,"rate":0.30},{"min":5000001,"max":null,"rate":0.35}]'::jsonb,
   0.03,
+  8.00, 5.00, 15,
   'active',
   'ค่าเริ่มต้นของระบบ',
   id, id
