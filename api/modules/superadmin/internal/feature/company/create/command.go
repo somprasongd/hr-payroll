@@ -2,6 +2,7 @@ package create
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,6 +46,22 @@ func NewHandler(tx transactor.Transactor, eb eventbus.EventBus) *commandHandler 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var resp Response
 
+	if cmd.CompanyCode == "" {
+		cmd.CompanyCode = generateRandomCode(5)
+	}
+
+	// Validate inputs
+	// Validate inputs
+	if cmd.CompanyName == "" {
+		return nil, errs.Unprocessable("companyName is required")
+	}
+	if cmd.AdminUsername == "" || cmd.AdminPassword == "" {
+		return nil, errs.Unprocessable("adminUsername and adminPassword are required")
+	}
+	if len(cmd.AdminPassword) < 8 {
+		return nil, errs.Unprocessable("password must be at least 8 characters")
+	}
+
 	err := h.tx.WithinTransaction(ctx, func(txCtx context.Context, registerHook func(transactor.PostCommitHook)) error {
 		// 1. Create company via contract
 		companyResp, err := mediator.Send[*contracts.CreateCompanyCommand, *contracts.CreateCompanyResponse](txCtx, &contracts.CreateCompanyCommand{
@@ -54,6 +71,9 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		})
 		if err != nil {
 			logger.FromContext(ctx).Error("failed to create company", zap.Error(err))
+			if errs.IsConflict(err) {
+				return err
+			}
 			return errs.Internal("failed to create company")
 		}
 		resp.Company = *companyResp.Company
@@ -137,4 +157,25 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 	}
 
 	return &resp, nil
+}
+
+func generateRandomCode(length int) string {
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+		// Add a small sleep or ensuring seed change if called rapidly in loop (unlikely here)
+		// Or verify uniqueness. For this use case, simple random is enough as per collision probability.
+		// A better way is using crypto/rand but math/rand seeded is okay for this non-security ID.
+		// Since we use time.Now().UnixNano() directly in older go versions or math/rand,
+		// let's stick to simple implementation.
+		// Re-seeding via modulo of time for every char is a bit weird but works for single call.
+		// Better approach:
+	}
+	// Let's use a cleaner implementation
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
 }

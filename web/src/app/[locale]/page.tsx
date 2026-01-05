@@ -223,6 +223,8 @@ export default function LoginPage() {
       const apiError = err as ApiError
       if (apiError.statusCode === 401) {
         setError(t('errors.loginFailed'))
+      } else if (apiError.statusCode === 403) {
+        setError(t('errors.noActiveCompany'))
       } else {
         setError(apiError.message || t('errors.loginFailed'))
       }

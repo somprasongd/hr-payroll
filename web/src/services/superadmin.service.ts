@@ -24,7 +24,6 @@ export interface Branch {
 
 // Create company request
 export interface CreateCompanyRequest {
-  companyCode: string;
   companyName: string;
   adminUsername: string;
   adminPassword: string;

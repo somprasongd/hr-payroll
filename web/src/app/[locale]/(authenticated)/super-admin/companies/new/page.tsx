@@ -22,7 +22,6 @@ export default function NewCompanyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateCompanyRequest>({
-    companyCode: '',
     companyName: '',
     adminUsername: '',
     adminPassword: '',
@@ -52,10 +51,6 @@ export default function NewCompanyPage() {
     const newFieldErrors: Partial<Record<keyof CreateCompanyRequest, string>> = {};
     let hasError = false;
 
-    if (!formData.companyCode) {
-      newFieldErrors.companyCode = t('companies.validation.required');
-      hasError = true;
-    }
     if (!formData.companyName) {
       newFieldErrors.companyName = t('companies.validation.required');
       hasError = true;
@@ -88,9 +83,15 @@ export default function NewCompanyPage() {
     } catch (error: any) {
       console.error('Failed to create company:', error);
       
-      let description = error.response?.data?.message || t('companies.createError');
+      let description = error.response?.data?.detail || error.response?.data?.message || t('companies.createError');
       if (error.response?.status === 409) {
-        description = t('companies.errors.duplicateAdminUser');
+        if (error.response?.data?.detail === "duplicate admin user") {
+          description = t('companies.errors.duplicateAdminUser');
+        } else if (error.response?.data?.detail === "company code already exists") {
+          description = t('companies.errors.duplicateCompanyCode');
+        } else {
+          description = error.response?.data?.detail || t('companies.errors.unknown');
+        }
       } else if (error.response?.status === 500) {
         description = t('companies.errors.unknown');
       }
@@ -145,19 +146,6 @@ export default function NewCompanyPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="companyCode">{t('companies.fields.code')} *</Label>
-                <Input
-                  id="companyCode"
-                  value={formData.companyCode}
-                  onChange={handleChange('companyCode')}
-                  placeholder={t('companies.placeholders.code')}
-                  className={fieldErrors.companyCode ? "border-red-500" : ""}
-                />
-                {fieldErrors.companyCode && (
-                  <p className="text-xs text-red-500">{fieldErrors.companyCode}</p>
-                )}
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="companyName">{t('companies.fields.name')} *</Label>
                 <Input

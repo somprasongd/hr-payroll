@@ -7,7 +7,6 @@ import (
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
-	"hrms/shared/contracts"
 )
 
 // UpdateRequest for updating a company
@@ -40,7 +39,7 @@ func NewEndpoint(router fiber.Router) {
 
 		user, _ := contextx.UserFromContext(c.Context())
 
-		resp, err := mediator.Send[*contracts.UpdateCompanyByIDCommand, *contracts.UpdateCompanyByIDResponse](c.Context(), &contracts.UpdateCompanyByIDCommand{
+		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
 			ID:      id,
 			Code:    req.Code,
 			Name:    req.Name,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 
 	"hrms/modules/company/internal/repository"
@@ -35,6 +36,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *contracts.CreateCompanyComman
 		// 1. Create company
 		company, txErr = h.repo.Create(ctxTx, cmd.Code, cmd.Name, cmd.ActorID)
 		if txErr != nil {
+			if pqErr, ok := txErr.(*pq.Error); ok && pqErr.Code == "23505" {
+				return errs.Conflict("company code already exists")
+			}
 			logger.FromContext(ctx).Error("failed to create company", zap.Error(txErr))
 			return txErr
 		}
@@ -71,6 +75,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *contracts.CreateCompanyComman
 	})
 
 	if err != nil {
+		if _, ok := err.(*errs.AppError); ok {
+			return nil, err
+		}
 		return nil, errs.Internal("failed to create company")
 	}
 

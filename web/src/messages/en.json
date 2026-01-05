@@ -16,7 +16,8 @@
       "passwordLength": "Password must be at least 6 characters"
     },
     "errors": {
-      "loginFailed": "Login failed. Please check your username and password"
+      "loginFailed": "Login failed. Please check your username and password",
+      "noActiveCompany": "Your company has been suspended or cancelled. Please contact administrator."
     }
   },
   "Dashboard": {
@@ -1490,6 +1491,7 @@
       },
       "errors": {
         "duplicateAdminUser": "This username is already taken",
+        "duplicateCompanyCode": "This company code is already taken",
         "unknown": "An unknown error occurred. Please try again."
       }
     },

@@ -43,6 +43,7 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 
 	// Register handlers with mediator
 	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.tx, eb))
+	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.tx, eb))
 
 	return nil
 }
