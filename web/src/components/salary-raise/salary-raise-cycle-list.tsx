@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { Eye, Filter, Plus, Trash2, RotateCcw } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
@@ -37,10 +38,11 @@ export function SalaryRaiseCycleList() {
   const t = useTranslations('SalaryRaise');
   const tCommon = useTranslations('Common');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [cycles, setCycles] = useState<SalaryRaiseCycle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

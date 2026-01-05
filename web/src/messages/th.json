@@ -52,7 +52,9 @@
     "attendance": {
       "title": "สถิติการมาทำงาน",
       "yearlyOverview": "ภาพรวมปี {year}",
+      "overview": "ภาพรวม",
       "late": "มาสาย",
+      "leave": "ลา",
       "leaveDay": "ลา (วัน)",
       "leaveDouble": "ลา (2 แรง)",
       "leaveHours": "ลา (ชั่วโมง)",
@@ -746,6 +748,8 @@
     "error": "เกิดข้อผิดพลาด",
     "success": "สำเร็จ",
     "noData": "ไม่มีข้อมูล",
+    "barChart": "แบบแท่ง",
+    "lineChart": "แบบเส้น",
     "search": "ค้นหา",
     "confirm": "ยืนยัน",
     "currentMonth": "เดือนปัจจุบัน",

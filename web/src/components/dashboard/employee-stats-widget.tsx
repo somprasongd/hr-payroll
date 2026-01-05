@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, UserPlus, UserMinus, Briefcase, Clock } from 'lucide-react';
+import { Link } from '@/i18n/routing';
+import { Users, UserPlus, UserMinus, Briefcase, Clock, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { dashboardService, EmployeeSummaryResponse } from '@/services/dashboard.service';
@@ -70,6 +71,7 @@ export function EmployeeStatsWidget() {
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
+      href: '/employees',
     },
     {
       title: t('employeeStats.fullTime'),
@@ -77,6 +79,7 @@ export function EmployeeStatsWidget() {
       icon: Briefcase,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
+      href: '/employees?employeeType=FT',
     },
     {
       title: t('employeeStats.partTime'),
@@ -84,6 +87,7 @@ export function EmployeeStatsWidget() {
       icon: Clock,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
+      href: '/employees?employeeType=PT',
     },
     {
       title: t('employeeStats.newThisMonth'),
@@ -93,34 +97,41 @@ export function EmployeeStatsWidget() {
       bgColor: 'bg-emerald-100',
       subtitle: data.terminatedThisMonth > 0 ? `(-${data.terminatedThisMonth})` : undefined,
       subtitleIcon: UserMinus,
+      href: '/employees?newThisMonth=true',
     },
   ];
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
-        <Card key={index} className="hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
-                  {stat.subtitle && (
-                    <span className="text-sm text-red-500 flex items-center gap-1">
-                      {stat.subtitleIcon && <stat.subtitleIcon className="h-3 w-3" />}
-                      {stat.subtitle}
-                    </span>
-                  )}
+        <Link key={index} href={stat.href}>
+          <Card className="hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
+                      <ExternalLink className="h-3 w-3 text-muted-foreground opacity-50" />
+                    </div>
+                    {stat.subtitle && (
+                      <span className="text-sm text-red-500 flex items-center gap-1">
+                        {stat.subtitleIcon && <stat.subtitleIcon className="h-3 w-3" />}
+                        {stat.subtitle}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className={`rounded-full p-3 ${stat.bgColor}`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
               </div>
-              <div className={`rounded-full p-3 ${stat.bgColor}`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       ))}
     </div>
   );
 }
+

@@ -53,7 +53,7 @@ export function DebtList() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [employeeFilter, setEmployeeFilter] = useState<string>(searchParams.get('employeeId') || 'all');
   const [employees, setEmployees] = useState<Employee[]>([]);

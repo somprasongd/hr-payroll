@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { 
   Select, 
@@ -55,12 +56,13 @@ export function SalaryAdvanceList() {
   const tCommon = useTranslations('Common');
   const { toast } = useToast();
   const user = useAuthStore((state) => state.user);
+  const searchParams = useSearchParams();
   
   const [data, setData] = useState<SalaryAdvance[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
   const [employeeFilter, setEmployeeFilter] = useState<string>('all');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [createOpen, setCreateOpen] = useState(false);

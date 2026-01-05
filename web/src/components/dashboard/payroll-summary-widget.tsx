@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { CreditCard, Wallet, Receipt, Loader2, CheckCircle, Clock } from 'lucide-react';
+import { Link } from '@/i18n/routing';
+import { CreditCard, Wallet, Receipt, Loader2, CheckCircle, Clock, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { dashboardService, PayrollSummaryResponse } from '@/services/dashboard.service';
@@ -109,9 +110,13 @@ export function PayrollSummaryWidget() {
                 {data.latestRun.status}
               </Badge>
             </div>
-            <p className="text-lg font-bold text-green-700 mb-1">
+            <Link 
+              href={`/payroll/${data.latestRun.id}`}
+              className="text-lg font-bold text-green-700 mb-1 hover:text-green-800 hover:underline flex items-center gap-1 transition-colors"
+            >
               {formatMonth(data.latestRun.payrollMonthDate)}
-            </p>
+              <ExternalLink className="h-4 w-4" />
+            </Link>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <span className="text-muted-foreground">{t('payroll.totalNetPay')}:</span>

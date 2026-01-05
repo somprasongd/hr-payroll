@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Banknote, HandCoins, Coins, Gift, TrendingUp, Loader2 } from 'lucide-react';
+import { Link } from '@/i18n/routing';
+import { Banknote, HandCoins, Coins, Gift, TrendingUp, Loader2, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { dashboardService, FinancialSummaryResponse } from '@/services/dashboard.service';
@@ -87,6 +88,8 @@ export function PendingItemsWidget() {
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-100',
+      hoverBgColor: 'hover:bg-amber-100',
+      href: '/salary-advance?status=pending',
     },
     {
       title: t('pending.loans'),
@@ -96,6 +99,8 @@ export function PendingItemsWidget() {
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-100',
+      hoverBgColor: 'hover:bg-red-100',
+      href: '/debt?status=pending',
     },
     {
       title: t('pending.installments'),
@@ -105,6 +110,8 @@ export function PendingItemsWidget() {
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-100',
+      hoverBgColor: 'hover:bg-orange-100',
+      href: '/debt?status=approved',
     },
     {
       title: t('pending.bonusCycles'),
@@ -114,6 +121,8 @@ export function PendingItemsWidget() {
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-100',
+      hoverBgColor: 'hover:bg-purple-100',
+      href: '/bonuses?status=pending',
     },
     {
       title: t('pending.salaryRaise'),
@@ -123,6 +132,8 @@ export function PendingItemsWidget() {
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-100',
+      hoverBgColor: 'hover:bg-green-100',
+      href: '/salary-raise?status=pending',
     },
   ];
 
@@ -149,9 +160,10 @@ export function PendingItemsWidget() {
       <CardContent>
         <div className="space-y-3">
           {items.map((item, index) => (
-            <div
+            <Link
               key={index}
-              className={`flex items-center justify-between p-3 rounded-lg ${item.bgColor} border ${item.borderColor}`}
+              href={item.href}
+              className={`flex items-center justify-between p-3 rounded-lg ${item.bgColor} border ${item.borderColor} ${item.hoverBgColor} transition-colors cursor-pointer group`}
             >
               <div className="flex items-center gap-3">
                 <item.icon className={`h-5 w-5 ${item.color}`} />
@@ -164,16 +176,19 @@ export function PendingItemsWidget() {
                   )}
                 </div>
               </div>
-              <div className="text-right">
-                {item.count > 0 ? (
-                  <span className={`font-semibold ${item.color}`}>
-                    {formatCurrency(item.amount)}
-                  </span>
-                ) : (
-                  <span className="text-sm text-muted-foreground">-</span>
-                )}
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  {item.count > 0 ? (
+                    <span className={`font-semibold ${item.color}`}>
+                      {formatCurrency(item.amount)}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
+                  )}
+                </div>
+                <ChevronRight className={`h-4 w-4 ${item.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </CardContent>

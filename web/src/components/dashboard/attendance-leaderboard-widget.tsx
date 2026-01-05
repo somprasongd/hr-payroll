@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Trophy, Loader2, Clock, Calendar, Clock3, AlertTriangle, User } from 'lucide-react';
+import { Link } from '@/i18n/routing';
+import { Trophy, Loader2, Clock, Calendar, Clock3, AlertTriangle, User, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -15,6 +16,7 @@ import {
 import { dashboardService, TopEmployeeDTO, AttendanceTopEmployeesResponse } from '@/services/dashboard.service';
 import { EmployeeTypeBadge } from '@/components/common/employee-type-badge';
 import { EmployeePhoto } from '@/components/common/employee-photo';
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 export function AttendanceLeaderboardWidget() {
   const t = useTranslations('Dashboard');
@@ -68,7 +70,50 @@ export function AttendanceLeaderboardWidget() {
     fetchData();
   }, [fetchData]);
 
-  const renderEmployeeList = (employees: TopEmployeeDTO[], unit: string) => {
+  // Calculate date range based on period type
+  const getDateRange = useCallback(() => {
+    if (periodType === 'month') {
+      const date = new Date(selectedYear, selectedMonth - 1, 1);
+      return {
+        startDate: format(startOfMonth(date), 'yyyy-MM-dd'),
+        endDate: format(endOfMonth(date), 'yyyy-MM-dd'),
+      };
+    } else {
+      const date = new Date(selectedYear, 0, 1);
+      return {
+        startDate: format(startOfYear(date), 'yyyy-MM-dd'),
+        endDate: format(endOfYear(date), 'yyyy-MM-dd'),
+      };
+    }
+  }, [periodType, selectedYear, selectedMonth]);
+
+  // Map dashboard tab to worklog entry type
+  const getWorklogEntryType = (tabType: string) => {
+    const mapping: Record<string, string> = {
+      'late': 'late',
+      'leaveDay': 'leave_day',
+      'leaveDouble': 'leave_double',
+      'leaveHours': 'leave_hours',
+      'ot': 'ot',
+    };
+    return mapping[tabType] || '';
+  };
+
+  // Build URL for employee worklog link
+  const buildEmployeeLink = (employeeId: string, entryType: string) => {
+    const { startDate, endDate } = getDateRange();
+    const worklogEntryType = getWorklogEntryType(entryType);
+    const params = new URLSearchParams();
+    params.set('employeeId', employeeId);
+    params.set('startDate', startDate);
+    params.set('endDate', endDate);
+    if (worklogEntryType) {
+      params.set('entryType', worklogEntryType);
+    }
+    return `/worklogs/ft?${params.toString()}`;
+  };
+
+  const renderEmployeeList = (employees: TopEmployeeDTO[], unit: string, entryType: string) => {
     if (!employees || employees.length === 0) {
       return (
         <p className="text-sm text-muted-foreground text-center py-4">
@@ -80,9 +125,10 @@ export function AttendanceLeaderboardWidget() {
     return (
       <div className="space-y-2">
         {employees.map((emp, index) => (
-          <div
+          <Link
             key={emp.employeeId}
-            className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+            href={buildEmployeeLink(emp.employeeId, entryType)}
+            className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer group"
           >
             <span className="w-6 text-center font-bold text-muted-foreground text-sm">
               {index + 1}
@@ -95,8 +141,9 @@ export function AttendanceLeaderboardWidget() {
               size="sm"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
+              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors flex items-center">
                 {emp.employeeNumber} - {emp.fullName}
+                <ExternalLink className="h-3 w-3 ml-1.5 opacity-50" />
               </p>
             </div>
             <div className="text-right">
@@ -105,7 +152,7 @@ export function AttendanceLeaderboardWidget() {
               </p>
               <p className="text-xs text-muted-foreground">{unit}</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     );
@@ -212,19 +259,19 @@ export function AttendanceLeaderboardWidget() {
             </TabsList>
             
             <TabsContent value="late">
-              {renderEmployeeList(data?.late || [], t('attendance.minutes'))}
+              {renderEmployeeList(data?.late || [], t('attendance.minutes'), 'late')}
             </TabsContent>
             <TabsContent value="leaveDay">
-              {renderEmployeeList(data?.leaveDay || [], t('attendance.days'))}
+              {renderEmployeeList(data?.leaveDay || [], t('attendance.days'), 'leaveDay')}
             </TabsContent>
             <TabsContent value="leaveDouble">
-              {renderEmployeeList(data?.leaveDouble || [], t('attendance.days'))}
+              {renderEmployeeList(data?.leaveDouble || [], t('attendance.days'), 'leaveDouble')}
             </TabsContent>
             <TabsContent value="leaveHours">
-              {renderEmployeeList(data?.leaveHours || [], t('attendance.hours'))}
+              {renderEmployeeList(data?.leaveHours || [], t('attendance.hours'), 'leaveHours')}
             </TabsContent>
             <TabsContent value="ot">
-              {renderEmployeeList(data?.ot || [], t('attendance.hours'))}
+              {renderEmployeeList(data?.ot || [], t('attendance.hours'), 'ot')}
             </TabsContent>
           </Tabs>
         )}

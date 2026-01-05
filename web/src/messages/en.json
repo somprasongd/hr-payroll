@@ -52,7 +52,9 @@
     "attendance": {
       "title": "Attendance Statistics",
       "yearlyOverview": "Year {year} Overview",
+      "overview": "Overview",
       "late": "Late",
+      "leave": "Leave",
       "leaveDay": "Leave (Days)",
       "leaveDouble": "Leave (Double)",
       "leaveHours": "Leave (Hours)",
@@ -733,6 +735,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "barChart": "Bar Chart",
+    "lineChart": "Line Chart",
     "edit": "Edit",
     "view": "View",
     "create": "Create",
