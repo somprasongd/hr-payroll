@@ -364,7 +364,7 @@ func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, r
 		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
 	}
 
-	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
+	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where = append(where, fmt.Sprintf("(%s ILIKE $%d OR e.employee_number ILIKE $%d)", fullNameExpr, len(args), len(args)))
@@ -451,7 +451,7 @@ func (r Repository) UpdateItem(ctx context.Context, tenant contextx.TenantInfo, 
 
 	setClause := strings.Join(sets, ",")
 	q := fmt.Sprintf(`UPDATE payroll_run_item SET %s WHERE %s RETURNING id, run_id, employee_id,
-       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
+       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT photo_id FROM employees e WHERE e.id = payroll_run_item.employee_id) AS photo_id,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
@@ -486,7 +486,7 @@ func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id 
 		where += " AND pri.branch_id=$3"
 	}
 
-	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
        e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
@@ -558,7 +558,7 @@ func (r Repository) GetItemDetail(ctx context.Context, tenant contextx.TenantInf
 	}
 
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
-       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
        e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,

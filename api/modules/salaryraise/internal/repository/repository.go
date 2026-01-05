@@ -256,7 +256,7 @@ func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id 
 	db := r.dbCtx(ctx)
 	// Join employees to check company access
 	qi := `SELECT sri.id, sri.cycle_id, sri.employee_id,
-       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name,
+       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS employee_name,
        e.employee_number AS employee_number,
        e.photo_id AS photo_id,
        sri.tenure_days, sri.current_salary, sri.current_sso_wage,
@@ -328,7 +328,7 @@ func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, c
 		where += fmt.Sprintf(" AND e.branch_id = $%d", len(args))
 	}
 
-	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
+	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where += fmt.Sprintf(" AND (%s ILIKE $%d)", fullNameExpr, len(args))
@@ -392,7 +392,7 @@ SET %s
 FROM employees e
 WHERE salary_raise_item.id=$%d AND salary_raise_item.employee_id = e.id AND e.company_id=$%d%s
 RETURNING salary_raise_item.id, salary_raise_item.cycle_id, salary_raise_item.employee_id,
-       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = salary_raise_item.employee_id) AS employee_name,
+       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = salary_raise_item.employee_id) AS employee_name,
        (SELECT photo_id FROM employees e WHERE e.id = salary_raise_item.employee_id) AS photo_id,
        salary_raise_item.tenure_days, salary_raise_item.current_salary, salary_raise_item.current_sso_wage,
        salary_raise_item.raise_percent, salary_raise_item.raise_amount, salary_raise_item.new_salary, salary_raise_item.new_sso_wage,

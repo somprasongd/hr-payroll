@@ -1386,18 +1386,23 @@
     },
     "uploadDialog": {
       "title": "Upload Document",
-      "description": "Select a file and fill in document details",
+      "description": "Upload a new document for this employee.",
       "file": "File",
-      "fileHint": "PDF, JPG, PNG up to 10MB",
+      "fileHint": "PDF, JPG, PNG max 10MB",
       "type": "Document Type",
-      "selectType": "Select type",
-      "documentNumber": "Document Number",
-      "documentNumberPlaceholder": "e.g. Passport number",
+      "selectType": "Select document type",
+      "documentNumber": "Document No.",
+      "documentNumberPlaceholder": "e.g. ID Card Number",
       "issueDate": "Issue Date",
       "expiryDate": "Expiry Date",
       "notes": "Notes",
-      "notesPlaceholder": "Additional notes..."
+      "notesPlaceholder": "Additional notes about this document..."
     },
+    "filterByType": "Filter by Type",
+    "searchType": "Search Type",
+    "noTypeFound": "No type found",
+    "clearFilter": "Clear Filter",
+    "noDocumentsMatchFilter": "No documents match the selected filter",
     "deleteDialog": {
       "title": "Confirm Delete",
       "description": "Are you sure you want to delete {name}? This action cannot be undone."

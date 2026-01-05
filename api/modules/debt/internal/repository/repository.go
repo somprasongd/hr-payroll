@@ -241,7 +241,7 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 
 	q := fmt.Sprintf(`
 SELECT t.*,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name,
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name,
   COALESCE((
     SELECT json_agg(child ORDER BY child.payroll_month_date)
     FROM debt_txn child
@@ -281,7 +281,7 @@ func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid
 	db := r.dbCtx(ctx)
 	q := `
 SELECT t.*,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
 JOIN employees e ON e.id = t.employee_id
 WHERE t.id=$1 AND e.company_id=$2 AND t.deleted_at IS NULL LIMIT 1`
@@ -331,7 +331,7 @@ func (r Repository) PendingInstallmentsByEmployee(ctx context.Context, tenant co
 	db := r.dbCtx(ctx)
 	q := `
 SELECT t.*,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
 FROM debt_txn t
 WHERE t.employee_id=$1
   AND t.txn_type='installment'

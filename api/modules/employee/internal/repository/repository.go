@@ -163,7 +163,7 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 SELECT 
   e.id,
   e.employee_number,
-  (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS full_name_th,
+  (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS full_name_th,
   pt.name_th AS title_name,
   et.name_th AS employee_type_name,
   e.phone,

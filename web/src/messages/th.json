@@ -1393,18 +1393,23 @@
     },
     "uploadDialog": {
       "title": "อัปโหลดเอกสาร",
-      "description": "เลือกไฟล์และกรอกข้อมูลเอกสาร",
+      "description": "อัปโหลดเอกสารใหม่สำหรับพนักงานคนนี้",
       "file": "ไฟล์",
-      "fileHint": "รองรับ PDF, JPG, PNG ขนาดไม่เกิน 10MB",
+      "fileHint": "PDF, JPG, PNG สูงสุด 10MB",
       "type": "ประเภทเอกสาร",
-      "selectType": "เลือกประเภท",
+      "selectType": "เลือกประเภทเอกสาร",
       "documentNumber": "เลขที่เอกสาร",
-      "documentNumberPlaceholder": "เช่น เลขที่หนังสือเดินทาง",
-      "issueDate": "วันที่ออก",
+      "documentNumberPlaceholder": "เช่น เลขที่บัตรประชาชน",
+      "issueDate": "วันที่ออกเอกสาร",
       "expiryDate": "วันหมดอายุ",
       "notes": "หมายเหตุ",
-      "notesPlaceholder": "บันทึกเพิ่มเติม..."
+      "notesPlaceholder": "หมายเหตุเพิ่มเติมเกี่ยวกับเอกสารนี้..."
     },
+    "filterByType": "กรองตามประเภท",
+    "searchType": "ค้นหาประเภท",
+    "noTypeFound": "ไม่พบประเภทเอกสาร",
+    "clearFilter": "ล้างตัวกรอง",
+    "noDocumentsMatchFilter": "ไม่พบเอกสารที่ตรงกับตัวกรอง",
     "deleteDialog": {
       "title": "ยืนยันการลบเอกสาร",
       "description": "คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร {name}? การดำเนินการนี้ไม่สามารถย้อนกลับได้"

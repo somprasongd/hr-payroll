@@ -213,7 +213,7 @@ func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, c
 		where += fmt.Sprintf(" AND e.branch_id = $%d", len(args))
 	}
 
-	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
+	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where += fmt.Sprintf(" AND (%s ILIKE $%d)", fullNameExpr, len(args))
@@ -240,7 +240,7 @@ func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id 
 	db := r.dbCtx(ctx)
 	// Join employees to check company access
 	q := `SELECT bi.id, bi.cycle_id, bi.employee_id,
-       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name,
+       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS employee_name,
        e.employee_number AS employee_number,
        e.photo_id AS photo_id,
        bi.tenure_days, bi.current_salary, bi.late_minutes, bi.leave_days, bi.leave_double_days, bi.leave_hours, bi.ot_hours,
@@ -305,7 +305,7 @@ SET %s
 FROM employees e
 WHERE bonus_item.id=$%d AND bonus_item.employee_id = e.id AND e.company_id=$%d%s
 RETURNING bonus_item.id, bonus_item.cycle_id, bonus_item.employee_id,
-       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = bonus_item.employee_id) AS employee_name,
+       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = bonus_item.employee_id) AS employee_name,
        bonus_item.tenure_days, bonus_item.current_salary, bonus_item.late_minutes, bonus_item.leave_days, bonus_item.leave_double_days, bonus_item.leave_hours, bonus_item.ot_hours,
        bonus_item.bonus_months, bonus_item.bonus_amount, bonus_item.updated_at`, setClause, argIdx, argIdx+1, branchClause)
 	var out Item

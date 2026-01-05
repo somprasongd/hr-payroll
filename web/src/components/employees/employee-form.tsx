@@ -52,8 +52,6 @@ import {
   masterDataService,
 } from "@/services/master-data.service";
 import { EmployeeTypeBadge } from "../common/employee-type-badge";
-import { AccumulationView } from "./accumulation-view";
-import { DocumentTab } from "./document-tab";
 
 interface EmployeeFormProps {
   initialData?: Employee;
@@ -71,8 +69,6 @@ export function EmployeeForm({
   defaultTab = "personal",
 }: EmployeeFormProps) {
   const t = useTranslations("Employees");
-  const tAccum = useTranslations("Accumulation");
-  const tDocs = useTranslations("Documents");
   const tCommon = useTranslations("Common");
   const router = useRouter();
   const [masterData, setMasterData] = useState<AllMasterData | null>(null);
@@ -582,19 +578,13 @@ export function EmployeeForm({
         setTimeout(() => {
           financialInputRef.current?.focus();
         }, 100);
-      } else if (activeTab === "financial" && isEditing) {
-        setActiveTab("accumulation");
-      } else if (activeTab === "accumulation" && isEditing) {
-        setActiveTab("documents");
       }
     }
   };
 
   const handleBack = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    if (activeTab === "documents") setActiveTab("accumulation");
-    else if (activeTab === "accumulation") setActiveTab("financial");
-    else if (activeTab === "financial") setActiveTab("employment");
+    if (activeTab === "financial") setActiveTab("employment");
     else if (activeTab === "employment") setActiveTab("personal");
   };
 
@@ -681,9 +671,7 @@ export function EmployeeForm({
             className="w-full"
           >
             <TabsList
-              className={`grid w-full h-auto grid-cols-2 ${
-                isEditing ? "md:grid-cols-5" : "md:grid-cols-3"
-              }`}
+              className="grid w-full h-auto grid-cols-2 md:grid-cols-3"
             >
               <TabsTrigger value="personal" className="relative">
                 {t("personalInfo")}
@@ -703,14 +691,6 @@ export function EmployeeForm({
                   <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
                 ) : null}
               </TabsTrigger>
-              {isEditing && (
-                <TabsTrigger value="accumulation">
-                  {tAccum("title")}
-                </TabsTrigger>
-              )}
-              {isEditing && (
-                <TabsTrigger value="documents">{tDocs("tabTitle")}</TabsTrigger>
-              )}
             </TabsList>
 
             <TabsContent value="personal">
@@ -1541,18 +1521,6 @@ export function EmployeeForm({
                 </CardContent>
               </Card>
             </TabsContent>
-
-            {isEditing && initialData?.id && (
-              <TabsContent value="accumulation">
-                <AccumulationView employeeId={initialData.id} />
-              </TabsContent>
-            )}
-
-            {isEditing && initialData?.id && (
-              <TabsContent value="documents">
-                <DocumentTab employeeId={initialData.id} />
-              </TabsContent>
-            )}
           </Tabs>
 
           <div className="flex justify-end space-x-4">
@@ -1578,19 +1546,6 @@ export function EmployeeForm({
                   {t("next")}
                 </Button>
               </>
-            ) : activeTab === "financial" && isEditing ? (
-              <>
-                <Button type="button" variant="outline" onClick={handleBack}>
-                  {t("back")}
-                </Button>
-                <Button type="button" onClick={handleNext}>
-                  {t("next")}
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {tCommon("save")}
-                </Button>
-              </>
             ) : activeTab === "financial" ? (
               <>
                 <Button type="button" variant="outline" onClick={handleBack}>
@@ -1599,21 +1554,6 @@ export function EmployeeForm({
                 <Button type="submit" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {tCommon("save")}
-                </Button>
-              </>
-            ) : activeTab === "accumulation" ? (
-              <>
-                <Button type="button" variant="outline" onClick={handleBack}>
-                  {t("back")}
-                </Button>
-                <Button type="button" onClick={handleNext}>
-                  {t("next")}
-                </Button>
-              </>
-            ) : activeTab === "documents" ? (
-              <>
-                <Button type="button" variant="outline" onClick={handleBack}>
-                  {t("back")}
                 </Button>
               </>
             ) : (
