@@ -80,6 +80,7 @@ export function EmployeeForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [tabValidationError, setTabValidationError] = useState<string | null>(null);
 
   // Refs for auto-focus
   const personalFirstInputRef = React.useRef<HTMLInputElement>(null);
@@ -362,6 +363,41 @@ export function EmployeeForm({
     }
   };
 
+  // Handle form validation errors - show alert and navigate to first tab with error
+  const handleInvalid = () => {
+    const errors = form.formState.errors;
+    const tabsWithErrors: string[] = [];
+
+    // Check personal tab fields
+    if (errors.titleId || errors.firstName || errors.lastName || errors.idDocumentTypeId || errors.idDocumentNumber || errors.idDocumentOtherDescription || errors.phone || errors.email) {
+      tabsWithErrors.push(t("personalInfo"));
+    }
+
+    // Check employment tab fields
+    if (errors.employeeNumber || errors.employeeTypeId || errors.employmentStartDate || errors.employmentEndDate) {
+      tabsWithErrors.push(t("employmentInfo"));
+    }
+
+    // Check financial tab fields
+    if (errors.basePayAmount) {
+      tabsWithErrors.push(t("financialInfo"));
+    }
+
+    if (tabsWithErrors.length > 0) {
+      // Show tab validation error alert
+      setTabValidationError(t("validation.tabsWithErrors", { tabs: tabsWithErrors.join(", ") }));
+
+      // Navigate to first tab with errors
+      if (errors.titleId || errors.firstName || errors.lastName || errors.idDocumentTypeId || errors.idDocumentNumber || errors.idDocumentOtherDescription || errors.phone || errors.email) {
+        setActiveTab("personal");
+      } else if (errors.employeeNumber || errors.employeeTypeId || errors.employmentStartDate || errors.employmentEndDate) {
+        setActiveTab("employment");
+      } else if (errors.basePayAmount) {
+        setActiveTab("financial");
+      }
+    }
+  };
+
   // Watch for changes to auto-fill SSO Declared Wage
   const ssoContribute = form.watch("ssoContribute");
   const basePayAmount = form.watch("basePayAmount");
@@ -569,7 +605,7 @@ export function EmployeeForm({
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="space-y-8">
           {submitError && (
             <DismissibleAlert
               variant="error"
@@ -589,6 +625,17 @@ export function EmployeeForm({
               autoDismiss={true}
             >
               {tCommon("saveSuccess")}
+            </DismissibleAlert>
+          )}
+
+          {tabValidationError && (
+            <DismissibleAlert
+              variant="warning"
+              title={t("validation.incompleteData")}
+              onDismiss={() => setTabValidationError(null)}
+              autoDismiss={false}
+            >
+              {tabValidationError}
             </DismissibleAlert>
           )}
 
@@ -638,11 +685,24 @@ export function EmployeeForm({
                 isEditing ? "md:grid-cols-5" : "md:grid-cols-3"
               }`}
             >
-              <TabsTrigger value="personal">{t("personalInfo")}</TabsTrigger>
-              <TabsTrigger value="employment">
-                {t("employmentInfo")}
+              <TabsTrigger value="personal" className="relative">
+                {t("personalInfo")}
+                {form.formState.errors.titleId || form.formState.errors.firstName || form.formState.errors.lastName || form.formState.errors.idDocumentTypeId || form.formState.errors.idDocumentNumber || form.formState.errors.idDocumentOtherDescription || form.formState.errors.phone || form.formState.errors.email ? (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                ) : null}
               </TabsTrigger>
-              <TabsTrigger value="financial">{t("financialInfo")}</TabsTrigger>
+              <TabsTrigger value="employment" className="relative">
+                {t("employmentInfo")}
+                {form.formState.errors.employeeNumber || form.formState.errors.employeeTypeId || form.formState.errors.employmentStartDate || form.formState.errors.employmentEndDate ? (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                ) : null}
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="relative">
+                {t("financialInfo")}
+                {form.formState.errors.basePayAmount ? (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                ) : null}
+              </TabsTrigger>
               {isEditing && (
                 <TabsTrigger value="accumulation">
                   {tAccum("title")}

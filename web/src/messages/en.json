@@ -427,7 +427,9 @@
     "validation": {
       "required": "This field is required",
       "email": "Invalid email address",
-      "positive": "Value must be positive"
+      "positive": "Value must be positive",
+      "incompleteData": "Incomplete Data",
+      "tabsWithErrors": "Please check the following tabs: {tabs}"
     },
     "submitError": "Failed to save employee. Please try again.",
     "employeeNumberDuplicate": "This employee number is already in use. Please use a different one."

@@ -6,7 +6,7 @@ import { useRouter } from '@/i18n/routing';
 import { EmployeeForm } from '@/components/employees/employee-form';
 import { employeeService, Employee, UpdateEmployeeRequest, CreateEmployeeRequest } from '@/services/employee.service';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 
 import { useSearchParams } from 'next/navigation';
 
@@ -57,13 +57,19 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('editTitle')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/employees')}
+            className="p-2 hover:bg-muted rounded-md transition-colors"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{t('editTitle')}</h1>
+            <p className="text-muted-foreground">{t('description')}</p>
+          </div>
         </div>
-        <Button variant="outline" onClick={() => router.push('/employees')}>
-          {t('actions.cancel')}
-        </Button>
       </div>
       <EmployeeForm 
         initialData={employee} 
