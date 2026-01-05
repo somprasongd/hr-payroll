@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { DateInput } from '@/components/ui/date-input';
 import { TimeInput } from '@/components/ui/time-input';
@@ -13,6 +12,7 @@ import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 import { Employee } from '@/services/employee.service';
 import { CreatePTWorklogRequest, UpdatePTWorklogRequest, PTWorklog } from '@/services/pt-worklog.service';
 import { format } from 'date-fns';
+import { useWorklogForm } from '@/hooks/use-worklog-form';
 
 interface PTWorklogFormProps {
   open: boolean;
@@ -29,15 +29,20 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
   const t = useTranslations('Worklogs.PT');
   const tCommon = useTranslations('Common');
 
-  const [employeeId, setEmployeeId] = useState('');
-  const [workDate, setWorkDate] = useState('');
+  const {
+    employeeId, setEmployeeId,
+    workDate, setWorkDate,
+    isSubmitting,
+    errors, setErrors,
+    submitError, setSubmitError,
+    handleSubmitWrapper,
+    resetFormState,
+  } = useWorklogForm({ mode, lastSelectedEmployeeId });
+
   const [morningIn, setMorningIn] = useState('');
   const [morningOut, setMorningOut] = useState('');
   const [eveningIn, setEveningIn] = useState('');
   const [eveningOut, setEveningOut] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (mode === 'edit' && worklog) {
@@ -56,8 +61,7 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
       setEveningIn('');
       setEveningOut('');
     }
-    setErrors({});
-    setSubmitError(null);
+    resetFormState();
   }, [mode, worklog, open, lastSelectedEmployeeId]);
 
   const calculateTotalHours = () => {
@@ -68,7 +72,9 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
       const [outH, outM] = morningOut.split(':').map(Number);
       const inMinutes = inH * 60 + inM;
       const outMinutes = outH * 60 + outM;
-      if (outMinutes > inMinutes) {
+      if (outMinutes < inMinutes) {
+        totalMinutes += (outMinutes + 1440) - inMinutes;
+      } else {
         totalMinutes += outMinutes - inMinutes;
       }
     }
@@ -78,7 +84,9 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
       const [outH, outM] = eveningOut.split(':').map(Number);
       const inMinutes = inH * 60 + inM;
       const outMinutes = outH * 60 + outM;
-      if (outMinutes > inMinutes) {
+      if (outMinutes < inMinutes) {
+        totalMinutes += (outMinutes + 1440) - inMinutes;
+      } else {
         totalMinutes += outMinutes - inMinutes;
       }
     }
@@ -117,24 +125,15 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validate()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitError(null);
-    try {
+  const submitLogic = async () => {
       if (mode === 'create') {
         await onSubmit({
           employeeId,
           workDate,
-          morningIn: morningIn || undefined,
-          morningOut: morningOut || undefined,
-          eveningIn: eveningIn || undefined,
-          eveningOut: eveningOut || undefined,
+          morningIn,
+          morningOut,
+          eveningIn,
+          eveningOut,
         } as CreatePTWorklogRequest);
         
         // After success: clear form and set next date (if not future)
@@ -155,40 +154,21 @@ export function PTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
         // Don't close dialog
       } else {
         await onSubmit({
-          morningIn: morningIn || undefined,
-          morningOut: morningOut || undefined,
-          eveningIn: eveningIn || undefined,
-          eveningOut: eveningOut || undefined,
+          morningIn,
+          morningOut,
+          eveningIn,
+          eveningOut,
         } as UpdatePTWorklogRequest);
         onOpenChange(false);
       }
-    } catch (error: any) {
-      console.error('Form submit error:', error);
-      // Handle 409 Conflict (duplicate worklog)
-      const is409 = error?.response?.status === 409 || 
-                    error?.status === 409 || 
-                    error?.message?.includes('409');
-      if (is409) {
-        setSubmitError(t('errors.duplicateWorklog'));
-      } else {
-        setSubmitError(error?.response?.data?.detail || t('errors.submitFailed'));
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    await handleSubmitWrapper(submitLogic, t);
   };
-
-  // Filter part-time employees only
-  const ptEmployees = employees.filter(emp => 
-    emp.employeeTypeName?.includes('พาร์ท') || emp.employeeTypeName?.toLowerCase().includes('part')
-  );
-
-  // Prepare employee options for combobox
-  const employeeOptions = ptEmployees.map(emp => ({
-    value: emp.id,
-    label: `${emp.employeeNumber || ''} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`.trim(),
-    searchText: `${emp.employeeNumber || ''} ${emp.fullNameTh || ''} ${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase(),
-  }));
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen && employeeId && onEmployeeSelect) {

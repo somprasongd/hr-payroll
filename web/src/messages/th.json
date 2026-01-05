@@ -731,6 +731,7 @@
   "Common": {
     "cancel": "ยกเลิก",
     "close": "ปิด",
+    "admin": "ผู้ดูแลระบบ",
     "clearFilters": "ล้างตัวกรอง",
     "clearFilter": "ล้างตัวกรอง",
     "all": "ทั้งหมด",

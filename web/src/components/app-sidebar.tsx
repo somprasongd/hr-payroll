@@ -1,25 +1,11 @@
 "use client"
 
 import * as React from "react"
-import {
-  LayoutDashboard,
-  Users,
-  Clock,
-  DollarSign,
-  TrendingUp,
-  Settings,
-  User,
-  ChevronRight,
-  CreditCard,
-  Settings2,
-  Banknote,
-  Building2,
-  FileText,
-  ClipboardList
-} from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/routing"
 import { useAuthStore } from "@/store/auth-store"
+import { menuConfig, MenuItem, MenuGroup, SubMenuItem } from "@/config/menu-items"
 
 import {
   Collapsible,
@@ -46,6 +32,7 @@ import { Link } from "@/i18n/routing"
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const tMenu = useTranslations('Menu')
   const tNav = useTranslations('Nav')
+  const tCommon = useTranslations('Common')
   const pathname = usePathname()
   const { user } = useAuthStore()
   const [version, setVersion] = React.useState<string>('...')
@@ -62,7 +49,91 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [])
 
   // Helper to check active state
-  const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
+  const isActive = (path?: string) => {
+    if (!path) return false;
+    return pathname === path || pathname.startsWith(path + '/');
+  }
+
+  const getTitle = (key: string, ns?: string) => {
+    // Basic fallback for 'Admin' or other direct keys if they exist in Common/Menu
+    // or if we want to support raw strings (not implemented in config type yet)
+    try {
+      switch(ns) {
+        case 'Nav': return tNav(key);
+        case 'Common': return tCommon(key);
+        default: return tMenu(key);
+      }
+    } catch (e) {
+      return key;
+    }
+  }
+
+  const shouldRenderGroup = (group: MenuGroup) => {
+    if (group.excludedRoles && group.excludedRoles.includes(user?.role || '')) {
+      return false;
+    }
+    if (group.roles && !group.roles.includes(user?.role || '')) {
+      return false;
+    }
+    return true;
+  }
+
+  const renderMenuItem = (item: MenuItem) => {
+    // If it has subitems, render collapsible
+    if (item.items && item.items.length > 0) {
+      const isChildActive = item.items.some(sub => isActive(sub.href));
+      const title = getTitle(item.titleKey, item.namespace);
+
+      return (
+        <Collapsible 
+          key={item.titleKey} 
+          asChild 
+          defaultOpen={isChildActive} 
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip={title}>
+                <item.icon />
+                <span>{title}</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {item.items.map(sub => (
+                  <SidebarMenuSubItem key={sub.href}>
+                    <SidebarMenuSubButton asChild isActive={isActive(sub.href)}>
+                      <Link href={sub.href}>
+                        <span>{getTitle(sub.titleKey, sub.namespace)}</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      )
+    }
+
+    // Standard item
+    if (item.href) {
+      const title = getTitle(item.titleKey, item.namespace);
+      return (
+        <SidebarMenuItem key={item.href}>
+          <SidebarMenuButton asChild isActive={isActive(item.href)} tooltip={title}>
+            <Link href={item.href}>
+              <item.icon />
+              <span>{title}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )
+    }
+
+    return null;
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -84,254 +155,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {user?.role !== 'superadmin' && (
-        <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
-          <SidebarMenu>
-            {/* Dashboard */}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive('/dashboard')} tooltip={tMenu('dashboard')}>
-                <Link href="/dashboard">
-                  <LayoutDashboard />
-                  <span>{tMenu('dashboard')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            {/* Employees */}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive('/employees')} tooltip={tMenu('employeeManagement')}>
-                <Link href="/employees">
-                  <Users />
-                  <span>{tMenu('employeeManagement')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            {/* Payroll */}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive('/payroll')} tooltip={tMenu('payroll')}>
-                <Link href="/payroll">
-                  <Banknote />
-                  <span>{tMenu('payroll')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            {/* Work & Pay - Collapsible */}
-            <Collapsible asChild defaultOpen={isActive('/worklogs') || isActive('/payouts')} className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={tMenu('worklog')}>
-                    <Clock />
-                    <span>{tMenu('worklog')}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/worklogs/ft')}>
-                        <Link href="/worklogs/ft">
-                          <span>{tMenu('worklogFT')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/worklogs/pt')}>
-                        <Link href="/worklogs/pt">
-                          <span>{tMenu('worklogPT')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/payouts/pt')}>
-                        <Link href="/payouts/pt">
-                          <span>{tMenu('payoutPT')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-
-            {/* Compensation - Collapsible */}
-            <Collapsible asChild defaultOpen={isActive('/salary-raise') || isActive('/bonuses')} className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={tMenu('compensation')}>
-                    <DollarSign />
-                    <span>{tMenu('compensation')}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/salary-raise')}>
-                        <Link href="/salary-raise">
-                          <span>{tMenu('salaryRaise')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/bonuses')}>
-                        <Link href="/bonuses">
-                          <span>{tMenu('bonus')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-
-            {/* Deductions - Collapsible (Salary Advance & Debt) */}
-            <Collapsible asChild defaultOpen={isActive('/salary-advance') || isActive('/debt')} className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={tMenu('deductions')}>
-                    <CreditCard />
-                    <span>{tMenu('deductions')}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/salary-advance')}>
-                        <Link href="/salary-advance">
-                          <span>{tMenu('salaryAdvance')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/debt')}>
-                        <Link href="/debt">
-                          <span>{tMenu('debt')}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-
-          </SidebarMenu>
-        </SidebarGroup>
-        )}
-
-        {user?.role === 'admin' && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
-            <SidebarMenu>
-              <Collapsible asChild defaultOpen={isActive('/admin')} className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Admin">
-                      <Settings2 />
-                      <span>Admin</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/org-profile')}>
-                          <Link href="/admin/org-profile">
-                            <span>{tNav('orgProfile')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/branches')}>
-                          <Link href="/admin/branches">
-                            <span>{tNav('branches')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/departments')}>
-                          <Link href="/admin/departments">
-                            <span>{tNav('departments')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/positions')}>
-                          <Link href="/admin/positions">
-                            <span>{tNav('positions')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/document-types')}>
-                          <Link href="/admin/document-types">
-                            <span>{tNav('documentTypes')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/users')}>
-                          <Link href="/admin/users">
-                            <span>{tMenu('users')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/activity-logs')}>
-                          <Link href="/admin/activity-logs">
-                            <span>{tMenu('activityLogs')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton asChild isActive={isActive('/admin/settings')}>
-                          <Link href="/admin/settings">
-                            <span>{tMenu('settings')}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-            </SidebarMenu>
-          </SidebarGroup>
-        )}
-
-        {user?.role === 'superadmin' && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Super Admin</SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/super-admin/companies')} tooltip="Companies">
-                  <Link href="/super-admin/companies">
-                    <Building2 />
-                    <span>{tMenu('companies')}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/super-admin/document-types')} tooltip="Document Types">
-                  <Link href="/super-admin/document-types">
-                    <FileText />
-                    <span>{tNav('documentTypes')}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/super-admin/activity-logs')} tooltip="Activity Logs">
-                  <Link href="/super-admin/activity-logs">
-                    <ClipboardList />
-                    <span>{tMenu('activityLogs')}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        )}
+        {menuConfig.map((group, index) => {
+          if (!shouldRenderGroup(group)) return null;
+          
+          return (
+            <SidebarGroup key={index}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarMenu>
+                {group.items.map(renderMenuItem)}
+              </SidebarMenu>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

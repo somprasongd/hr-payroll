@@ -144,9 +144,12 @@ func validatePayload(p *CreateRequest) (time.Time, error) {
 		return time.Time{}, errs.BadRequest("invalid status")
 	}
 	// time pairing is enforced by DB; just ensure strings look like HH:MM?
-	for _, t := range []*string{p.MorningIn, p.MorningOut, p.EveningIn, p.EveningOut} {
-		if t != nil && *t != "" {
-			if _, err := time.Parse("15:04", *t); err != nil {
+	for _, t := range []**string{&p.MorningIn, &p.MorningOut, &p.EveningIn, &p.EveningOut} {
+		if *t != nil && **t == "" {
+			*t = nil
+		}
+		if *t != nil {
+			if _, err := time.Parse("15:04", **t); err != nil {
 				return time.Time{}, errs.BadRequest("time format must be HH:MM")
 			}
 		}

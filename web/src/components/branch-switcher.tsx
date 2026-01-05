@@ -18,18 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-/**
- * Detail pages that should redirect to their list page when branch is switched
- * Pattern: regex to match the path, listPath: the path to redirect to
- */
-const DETAIL_PAGE_PATTERNS = [
-  { pattern: /^\/employees\/[^/]+$/, listPath: "/employees" },
-  { pattern: /^\/bonuses\/[^/]+$/, listPath: "/bonuses" },
-  { pattern: /^\/salary-raise\/[^/]+$/, listPath: "/salary-raise" },
-  { pattern: /^\/debt\/[^/]+$/, listPath: "/debt" },
-  { pattern: /^\/payroll\/[^/]+$/, listPath: "/payroll" },
-  { pattern: /^\/payouts\/pt\/[^/]+$/, listPath: "/payouts/pt" },
-];
+import { DETAIL_PAGE_PATTERNS } from "@/config/routes";
 
 /**
  * BranchSwitcher component allows users to switch between different branches within a tenant.

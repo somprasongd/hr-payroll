@@ -155,7 +155,7 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.PTRecord) (tim
 		}
 		trimmed := strings.TrimSpace(*val)
 		if trimmed == "" {
-			return nil, nil
+			return nil, nil // Implicitly set to NULL (nil pointer returns nil)
 		}
 		if _, err := time.Parse("15:04", trimmed); err != nil {
 			return nil, errs.BadRequest(field + " must be HH:MM")
