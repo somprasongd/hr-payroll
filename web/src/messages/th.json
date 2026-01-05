@@ -1,1003 +1,130 @@
 {
-  "Index": {
-    "welcomeBack": "ยินดีต้อนรับกลับมา",
-    "signInDescription": "เข้าสู่ระบบ HR & Payroll ของคุณ",
-    "username": "ชื่อผู้ใช้งาน",
-    "usernamePlaceholder": "กรอกชื่อผู้ใช้งาน",
-    "password": "รหัสผ่าน",
-    "passwordPlaceholder": "กรอกรหัสผ่าน",
-    "rememberMe": "จำฉันไว้ในระบบ",
-    "login": "เข้าสู่ระบบ",
-    "loggingIn": "กำลังเข้าสู่ระบบ...",
-    "copyright": "© 2024 บริษัทของคุณ สงวนลิขสิทธิ์",
-    "validation": {
-      "usernameRequired": "กรุณากรอกชื่อผู้ใช้งาน",
-      "usernameLength": "ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 3 ตัวอักษร",
-      "passwordLength": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร"
-    },
-    "errors": {
-      "loginFailed": "เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบชื่อผู้ใช้และรหัสผ่าน",
-      "noActiveCompany": "บริษัทของคุณถูกระงับหรือยกเลิกแล้ว กรุณาติดต่อผู้ดูแลระบบ"
-    }
-  },
-  "Dashboard": {
-    "title": "แดชบอร์ด",
-    "mainContentArea": "พื้นที่เนื้อหาหลัก",
-    "mainContentDescription": "เนื้อหาสำหรับรายการเมนูที่เลือกจะแสดงที่นี่",
-    "mainContentExample": "ตัวอย่างเช่น แดชบอร์ดพร้อมกราฟ ตารางข้อมูลพนักงาน หรือฟอร์มประมวลผลเงินเดือน",
-    "welcome": "ยินดีต้อนรับ, {name}",
-    "loggedInAs": "คุณเข้าสู่ระบบในฐานะ {role}",
-    "logout": "ออกจากระบบ",
-    "profile": "ข้อมูลส่วนตัว",
-    "searchPlaceholder": "ค้นหาพนักงาน...",
-    "expiringDocuments": {
-      "title": "เอกสารใกล้หมดอายุ",
-      "description": "เอกสารพนักงานที่จะหมดอายุภายใน 30 วัน",
-      "noExpiring": "ไม่มีเอกสารใกล้หมดอายุ",
-      "error": "ไม่สามารถโหลดข้อมูลเอกสารได้",
-      "expired": "หมดอายุแล้ว",
-      "days": "อีก {days} วัน",
-      "viewAll": "ดูทั้งหมด ({count} รายการ)"
-    },
-    "employeeStats": {
-      "title": "สรุปพนักงาน",
-      "activeEmployees": "พนักงานทำงานอยู่",
-      "fullTime": "ประจำ",
-      "partTime": "พาร์ทไทม์",
-      "newThisMonth": "เข้าใหม่เดือนนี้",
-      "terminated": "ลาออกเดือนนี้",
-      "error": "ไม่สามารถโหลดข้อมูลพนักงานได้",
-      "noData": "ไม่มีข้อมูลพนักงาน"
-    },
-    "attendance": {
-      "title": "สถิติการมาทำงาน",
-      "yearlyOverview": "ภาพรวมปี {year}",
-      "overview": "ภาพรวม",
-      "late": "มาสาย",
-      "leave": "ลา",
-      "leaveDay": "ลา (วัน)",
-      "leaveDouble": "ลา (2 แรง)",
-      "leaveHours": "ลา (ชั่วโมง)",
-      "ot": "OT",
-      "count": "ครั้ง",
-      "minutes": "นาที",
-      "hours": "ชั่วโมง",
-      "days": "วัน",
-      "error": "ไม่สามารถโหลดข้อมูลได้",
-      "noData": "ไม่มีข้อมูล"
-    },
-    "payroll": {
-      "title": "สรุปเงินเดือน",
-      "yearly": "รวมทั้งปี {year}",
-      "latestRun": "งวดล่าสุด",
-      "totalNetPay": "เงินเดือนสุทธิ",
-      "totalTax": "ภาษีหัก ณ ที่จ่าย",
-      "totalSso": "ประกันสังคม",
-      "totalPf": "กองทุนสำรองฯ",
-      "employees": "พนักงาน",
-      "people": "คน",
-      "error": "ไม่สามารถโหลดข้อมูลได้",
-      "noData": "ไม่มีข้อมูล"
-    },
-    "pending": {
-      "title": "รายการรอดำเนินการ",
-      "description": "รายการทางการเงินที่รอการอนุมัติหรือดำเนินการ",
-      "items": "รายการ",
-      "advances": "เบิกล่วงหน้า",
-      "loans": "เงินกู้รออนุมัติ",
-      "installments": "งวดผ่อนคงค้าง",
-      "bonusCycles": "โบนัสรออนุมัติ",
-      "salaryRaise": "ปรับเงินเดือนรออนุมัติ",
-      "error": "ไม่สามารถโหลดข้อมูลได้",
-      "noData": "ไม่มีข้อมูล"
-    }
-  },
-  "Menu": {
-    "dashboard": "แดชบอร์ดหลัก",
-    "employeeManagement": "จัดการพนักงาน",
-    "attendance": "บันทึกเวลาทำงาน",
-    "worklogFT": "พนักงานประจำ",
-    "worklogPT": "พาร์ทไทม์",
-    "payoutPT": "จ่ายล่วงหน้า (พาร์ทไทม์)",
-    "leaveManagement": "จัดการวันลา",
-    "payrollExpenses": "เงินเดือนและค่าใช้จ่าย",
-    "reports": "รายงาน",
-    "humanResources": "ทรัพยากรบุคคล",
-    "systemManagement": "การจัดการระบบ",
-    "settings": "การตั้งค่า",
-    "users": "การจัดการผู้ใช้งาน",
-    "salaryRaise": "ปรับเงินเดือน",
-    "salaryAdvance": "เบิกเงินล่วงหน้า",
-    "bonus": "การจัดการโบนัส",
-    "debt": "การจัดการหนี้สิน",
-    "deductions": "เบิก/กู้ยืม",
-    "worklog": "บันทึกเวลาทำงาน",
-    "compensation": "ค่าตอบแทน",
-    "collapse": "ย่อเมนู",
-    "payroll": "เงินเดือน",
-    "activityLogs": "ประวัติการใช้งาน",
-    "companies": "จัดการบริษัท"
-  },
-  "Payroll": {
-    "title": "เงินเดือน",
-    "description": "จัดการรอบเงินเดือนและสลิปเงินเดือน",
-    "createTitle": "สร้างรอบเงินเดือน",
-    "createDescription": "สร้างรอบเงินเดือนใหม่สำหรับเดือนที่เลือก",
-    "fields": {
-      "month": "เดือนที่จ่าย",
-      "periodStart": "วันที่เริ่มรอบ",
-      "payDate": "วันที่จ่ายเงิน",
-      "ssoEmployee": "ประกันสังคมลูกจ้าง (%)",
-      "ssoEmployer": "ประกันสังคมนายจ้าง (%)",
-      "period": "รอบระยะเวลา",
-      "status": "สถานะ",
-      "totalEmployees": "จำนวนพนักงาน",
-      "totalNetPay": "ยอดจ่ายสุทธิ",
-      "totalTax": "ยอดหักภาษี",
-      "totalSocialSecurity": "ยอดประกันสังคม",
-      "totalProvidentFund": "ยอดกองทุนสำรองเลี้ยงชีพ"
-    },
-    "status": {
-      "approved": "อนุมัติแล้ว",
-      "paid": "จ่ายแล้ว",
-      "pending": "รอดำเนินการ",
-      "processing": "กำลังประมวลผล"
-    },
-    "filters": {
-      "year": "ปี",
-      "status": "สถานะ",
-      "allStatuses": "ทุกสถานะ"
-    },
-    "actions": {
-      "view": "ดูรายละเอียด",
-      "title": "การกระทำ",
-      "approve": "อนุมัติ"
-    },
-    "approve": {
-      "title": "อนุมัติงวดเงินเดือน",
-      "description": "คุณแน่ใจหรือว่าต้องการอนุมัติงวดเงินเดือนนี้? ไม่สามารถย้อนกลับได้"
-    },
-    "detail": {
-      "title": "รายละเอียดเงินเดือน",
-      "backToList": "กลับไปรายการ",
-      "employeeList": "รายชื่อพนักงาน",
-      "searchPlaceholder": "ค้นหาจากรหัสหรือชื่อ...",
-      "filterByType": "ประเภทพนักงาน"
-    },
-    "payslip": {
-      "editTitle": "แก้ไขสลิปเงินเดือน",
-      "viewTitle": "ดูสลิปเงินเดือน",
-      "tabs": {
-        "income": "รายได้",
-        "attendance": "หักเวลาทำงาน",
-        "deductions": "หักรายเดือน",
-        "loans": "หนี้สิน"
-      },
-      "fields": {
-        "employee": "พนักงาน",
-        "salary": "เงินเดือน",
-        "ot": "ล่วงเวลา",
-        "otHours": "ชม.",
-        "bonus": "โบนัส",
-        "housingAllowance": "ค่าเช่าบ้าน",
-        "attendanceBonus": "เบี้ยขยัน",
-        "attendanceBonusNoLate": "เบี้ยขยัน (ไม่สาย)",
-        "attendanceBonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
-        "leaveCompensation": "ชดเชยวันลา",
-        "doctorFee": "ค่าแพทย์",
-        "othersIncome": "รายได้อื่นๆ",
-        "othersDeduction": "หักอื่นๆ",
-        "tax": "ภาษีหัก ณ ที่จ่าย",
-        "sso": "ประกันสังคม",
-        "providentFund": "กองทุนสำรองเลี้ยงชีพ",
-        "lateMinutes": "สายกี่นาที",
-        "lateDeduction": "หักค่าสาย",
-        "leaveDays": "ลากี่วัน",
-        "leaveDeduction": "หักค่าลา",
-        "leaveDouble": "ลา 2 แรง",
-        "leaveDoubleDeduction": "หักลา 2 แรง",
-        "leaveHours": "ลารายชั่วโมง",
-        "leaveHoursDeduction": "หักลารายชั่วโมง",
-        "utilities": "ค่าสาธารณูปโภค",
-        "waterMeterPrev": "มิเตอร์น้ำ (ก่อน)",
-        "waterMeterCurr": "มิเตอร์น้ำ (หลัง)",
-        "waterAmount": "ค่าน้ำ",
-        "electricMeterPrev": "มิเตอร์ไฟ (ก่อน)",
-        "electricMeterCurr": "มิเตอร์ไฟ (หลัง)",
-        "electricAmount": "ค่าไฟ",
-        "internetAmount": "ค่าเน็ต",
-        "advanceRepay": "หักคืนเงินเบิกล่วงหน้า",
-        "loanRepayments": "หักชำระหนี้",
-        "incomeTotal": "รวมรายได้",
-        "deductionTotal": "รวมหัก",
-        "netPay": "รับสุทธิ"
-      },
-      "addItem": "เพิ่มรายการ",
-      "removeItem": "ลบ",
-      "itemName": "ชื่อรายการ",
-      "itemValue": "จำนวนเงิน"
-    },
-    "print": {
-      "title": "ใบจ่ายเงินเดือน",
-      "original": "ต้นฉบับ",
-      "copy": "สำเนา",
-      "button": "พิมพ์สลิป",
-      "batchButton": "พิมพ์สลิปทั้งหมด",
-      "selectEmployees": "เลือกพนักงานที่ต้องการพิมพ์",
-      "selectAll": "เลือกทั้งหมด",
-      "deselectAll": "ยกเลิกเลือกทั้งหมด",
-      "selectedCount": "เลือก {count} คน"
-    }
-  },
-  "Settings": {
-    "title": "การตั้งค่าระบบ Payroll",
-    "description": "จัดการค่าคงที่สำหรับการคำนวณเงินเดือนและสวัสดิการ",
-    "viewHistory": "ดูประวัติ",
-    "configurationHistory": "ประวัติการตั้งค่า",
-    "historyDescription": "ดูการเปลี่ยนแปลงค่าคอนฟิกทั้งหมดในอดีต",
-    "version": "เวอร์ชัน",
-    "startDate": "วันที่เริ่มใช้",
-    "endDate": "วันที่สิ้นสุด",
-    "status": "สถานะ",
-    "note": "หมายเหตุ",
-    "error": "เกิดข้อผิดพลาด",
-    "success": "สำเร็จ",
-    "saveSuccess": "บันทึกการตั้งค่าสำเร็จ",
-    "currentConfig": "ค่าคอนฟิกปัจจุบัน",
-    "currentConfigDescription": "กำลังใช้งานเวอร์ชัน {version} มีผลตั้งแต่วันที่ {startDate}",
-    "rates": "อัตราค่าจ้าง",
-    "bonuses": "เบี้ยขยันและสวัสดิการ",
-    "utilities": "ค่าสาธารณูปโภค",
-    "socialSecurity": "ประกันสังคม",
-    "wageRates": "อัตราค่าจ้าง",
-    "wageRatesDescription": "กำหนดอัตราค่าจ้างรายชั่วโมงและค่า OT",
-    "hourlyRate": "ค่าแรงรายชั่วโมง",
-    "hourlyRateHint": "ค่าแรงต่อชั่วโมงสำหรับพนักงานชั่วคราว (บาท)",
-    "otHourlyRate": "ค่า OT ต่อชั่วโมง",
-    "otHourlyRateHint": "ค่าล่วงเวลาต่อชั่วโมง (บาท)",
-    "effectiveDate": "วันที่มีผลบังคับใช้",
-    "effectiveDateHint": "วันที่เริ่มต้นใช้งานการตั้งค่านี้",
-    "attendanceBonuses": "เบี้ยขยันและสวัสดิการ",
-    "attendanceBonusesDescription": "กำหนดค่าเบี้ยขยันและค่าเช่าบ้าน",
-    "bonusNoLate": "เบี้ยขยัน (ไม่สาย)",
-    "bonusNoLateHint": "โบนัสสำหรับพนักงานที่ไม่มาสาย (บาท/เดือน)",
-    "bonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
-    "bonusNoLeaveHint": "โบนัสสำหรับพนักงานที่ไม่ลางาน (บาท/เดือน)",
-    "housingAllowance": "ค่าเช่าบ้าน",
-    "housingAllowanceHint": "ค่าสวัสดิการค่าเช่าที่พัก (บาท/เดือน)",
-    "utilityRates": "อัตราค่าสาธารณูปโภค",
-    "utilityRatesDescription": "กำหนดอัตราค่าน้ำ ค่าไฟ และค่าอินเทอร์เน็ต",
-    "waterRate": "ค่าน้ำต่อหน่วย",
-    "waterRateHint": "ค่าน้ำประปาต่อหน่วย (บาท)",
-    "electricityRate": "ค่าไฟต่อหน่วย",
-    "electricityRateHint": "ค่าไฟฟ้าต่อหน่วย (บาท)",
-    "internetFee": "ค่าอินเทอร์เน็ตรายเดือน",
-    "internetFeeHint": "ค่าอินเทอร์เน็ตรายเดือน (บาท)",
-    "socialSecurityRates": "อัตราหักประกันสังคม",
-    "socialSecurityRatesDescription": "กำหนดอัตราการหักเงินประกันสังคมสำหรับลูกจ้างและนายจ้าง",
-    "employeeRate": "อัตราหักลูกจ้าง",
-    "employeeRateHint": "เปอร์เซ็นต์การหักประกันสังคมจากลูกจ้าง (กรอก 5 สำหรับ 5%)",
-    "employerRate": "อัตราสมทบนายจ้าง",
-    "employerRateHint": "เปอร์เซ็นต์การสมทบประกันสังคมจากนายจ้าง (กรอก 5 สำหรับ 5%)",
-    "ssoWageCap": "เพดานค่าจ้างประกันสังคม (ฐานเงินสูงสุด)",
-    "ssoWageCapHint": "ฐานเงินเดือนสูงสุดที่ใช้ในการคำนวณประกันสังคม (บาท)",
-    "notes": "หมายเหตุ",
-    "notesDescription": "บันทึกเหตุผลหรือรายละเอียดการเปลี่ยนแปลง",
-    "notesPlaceholder": "เช่น ปรับขึ้นค่าแรงตามกฎหมายใหม่ หรือ แก้ไขค่าไฟตามจริง",
-    "reset": "รีเซ็ต",
-    "saveChanges": "บันทึกการเปลี่ยนแปลง",
-    "saving": "กำลังบันทึก...",
-    "next": "ถัดไป",
-    "back": "ย้อนกลับ",
-    "tax": "ภาษี",
-    "taxSection40_1Title": "ภาษีเงินได้ ม.40(1) - ลูกจ้างประจำ",
-    "taxSection40_1Description": "การตั้งค่าสำหรับพนักงานประจำที่มีสลิปเงินเดือน/ลงประกันสังคม (เงินเดือน ค่าจ้าง)",
-    "taxApplyStandardExpense": "หักค่าใช้จ่ายเหมา",
-    "taxApplyStandardExpenseHint": "เปิด/ปิดการหักค่าใช้จ่ายเหมา 50% ไม่เกิน 100,000 บาท",
-    "taxStandardExpenseRate": "อัตราค่าใช้จ่ายเหมา",
-    "taxStandardExpenseCap": "เพดานค่าใช้จ่ายเหมา",
-    "taxStandardExpenseCapHint": "ค่าใช้จ่ายเหมาสูงสุดที่หักได้ (บาท)",
-    "taxApplyPersonalAllowance": "หักค่าลดหย่อนส่วนตัว",
-    "taxApplyPersonalAllowanceHint": "เปิด/ปิดการหักค่าลดหย่อนส่วนตัว (60,000 บาท)",
-    "taxPersonalAllowanceAmount": "จำนวนค่าลดหย่อนส่วนตัว",
-    "taxPersonalAllowanceAmountHint": "ค่าลดหย่อนส่วนตัวต่อปี (บาท)",
-    "taxProgressiveBrackets": "อัตราภาษีก้าวหน้า (0-35%)",
-    "taxProgressiveBracketsHint": "กำหนดขั้นบันไดภาษีตามมาตรา 40(1)",
-    "addBracket": "เพิ่มขั้น",
-    "bracketMin": "เงินได้ (ขั้นต่ำ)",
-    "bracketMax": "เงินได้ (ขั้นสูง)",
-    "bracketRate": "อัตราภาษี",
-    "taxSection40_2Title": "ภาษี ม.40(2) - ฟรีแลนซ์/เหมางาน",
-    "taxSection40_2Description": "การตั้งค่าสำหรับการจ้างแบบเหมางาน/ฟรีแลนซ์ ไม่มีประกันสังคม (หักภาษี ณ ที่จ่าย)",
-    "withholdingTaxRateService": "อัตราหักภาษี ณ ที่จ่าย",
-    "withholdingTaxRateServiceHint": "เปอร์เซ็นต์ที่นายจ้างต้องหักภาษี ณ ที่จ่าย เช่น 3%",
-    "leaveDeductionSettings": "การคำนวณหักลา/มาสาย",
-    "leaveDeductionSettingsDescription": "กำหนดค่าสำหรับคำนวณการหักเงินจากการลาและมาสาย",
-    "workHoursPerDay": "ชั่วโมงทำงานต่อวัน",
-    "workHoursPerDayHint": "จำนวนชั่วโมงทำงานต่อวัน สำหรับคำนวณหักลารายชั่วโมง (เช่น 8 ชม.)",
-    "lateRatePerMinute": "อัตราหักต่อนาที (มาสาย)",
-    "lateRatePerMinuteHint": "จำนวนเงินที่หักต่อนาที เมื่อสายเกินเวลาอนุโลม (บาท/นาที)",
-    "lateGraceMinutes": "นาทีอนุโลม (ไม่หักถ้าสายไม่เกิน)",
-    "lateGraceMinutesHint": "จำนวนนาทีที่อนุญาตให้มาสายโดยไม่หักเงิน (เช่น 15 นาที)",
-    "taxBracketValidation": {
-      "prevMaxNull": "กรุณาระบุค่าเงินได้ขั้นสูง ของแถวที่ {row} ก่อน",
-      "minMismatch": "เงินได้ขั้นต่ำ ของแถวที่ {row} ต้องเท่ากับ {expected} (ขั้นสูงแถวก่อนหน้า + 1) แต่ค่าปัจจุบันคือ {actual}",
-      "maxLessThanMin": "เงินได้ขั้นสูง ของแถวที่ {row} ต้องมากกว่าขั้นต่ำ (ขั้นต่ำ: {min}, ขั้นสูง: {max})"
-    }
-  },
-  "Employees": {
-    "title": "จัดการข้อมูลพนักงาน",
-    "description": "จัดการข้อมูลประวัติ สัญญาจ้าง และสวัสดิการ",
-    "listTitle": "รายชื่อพนักงาน",
-    "createTitle": "เพิ่มพนักงานใหม่",
-    "editTitle": "แก้ไขข้อมูลพนักงาน",
-    "searchPlaceholder": "ค้นหาจากชื่อ, รหัส...",
-    "createButton": "เพิ่มพนักงาน",
-    "personalInfo": "ข้อมูลส่วนตัว",
-    "employmentInfo": "ข้อมูลการจ้างงาน",
-    "financialInfo": "การเงินและสวัสดิการ",
-    "fields": {
-      "employeeNumber": "รหัสพนักงาน",
-      "firstName": "ชื่อจริง",
-      "lastName": "นามสกุล",
-      "title": "คำนำหน้า",
-      "idCardType": "ประเภทบัตร",
-      "idCardNumber": "เลขที่บัตร",
-      "idDocumentOtherDescription": "คำอธิบาย สำหรับประเภทบัตรอื่นๆ",
-      "nickname": "ชื่อเล่น",
-      "phone": "เบอร์โทรศัพท์",
-      "email": "อีเมล",
-      "employeeType": "ประเภทพนักงาน",
-      "startDate": "วันที่เริ่มงาน",
-      "endDate": "วันที่สิ้นสุดงาน",
-      "basePay": "ฐานเงินเดือน / ค่าแรงต่อชั่วโมง",
-      "bank": "ธนาคาร",
-      "accountNo": "เลขที่บัญชี",
-      "sso": "ประกันสังคม",
-      "ssoWage": "ฐานเงินเดือนประกันสังคม",
-      "ssoHospitalName": "ชื่อโรงพยาบาลประกันสังคม",
-      "pvd": "กองทุนสำรองเลี้ยงชีพ",
-      "pvdRateEmployee": "อัตราสะสมลูกจ้าง (%)",
-      "pvdRateEmployer": "อัตราสมทบนายจ้าง (%)",
-      "tax": "หักภาษี ณ ที่จ่าย",
-      "allowances": "สวัสดิการเพิ่มเติม",
-      "utilities": "ค่าสาธารณูปโภค (หักจากเงินเดือน)",
-      "utilitiesHint": "ใช้สำหรับบันทึกค่าใช้จ่ายที่ต้องหักจากเงินเดือน เช่น ค่าน้ำ ค่าไฟ ค่าอินเทอร์เน็ต",
-      "housing": "ค่าเช่าบ้าน",
-      "water": "ค่าน้ำ",
-      "electric": "ค่าไฟ",
-      "internet": "ค่าอินเทอร์เน็ต",
-      "doctorFee": "ค่าแพทย์",
-      "allowAttendanceBonusNoLate": "เบี้ยขยัน (ไม่สาย)",
-      "allowAttendanceBonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
-      "status": "สถานะ",
-      "photo": "รูปพนักงาน",
-      "department": "แผนก",
-      "position": "ตำแหน่ง"
-    },
-    "status": {
-      "active": "ทำงานอยู่",
-      "terminated": "พ้นสภาพ",
-      "all": "ทั้งหมด",
-      "allStatuses": "ทุกสถานะ"
-    },
-    "employeeTypes": {
-      "full_time": "พนักงานประจำ",
-      "part_time": "พนักงานชั่วคราว",
-      "ft": "พนักงานประจำ",
-      "pt": "พนักงานชั่วคราว",
-      "allTypes": "ทุกประเภท"
-    },
-    "messages": {
-      "createSuccess": "เพิ่มพนักงานสำเร็จ",
-      "updateSuccess": "บันทึกข้อมูลสำเร็จ",
-      "deleteSuccess": "ลบพนักงานสำเร็จ",
-      "deleteTitle": "ลบพนักงาน",
-      "confirmDelete": "คุณแน่ใจหรือไม่ว่าต้องการลบพนักงานคนนี้?",
-      "noEmployeesFound": "ไม่พบข้อมูลพนักงาน"
-    },
-    "actions": {
-      "title": "การจัดการ",
-      "edit": "แก้ไข",
-      "delete": "ลบ",
-      "openMenu": "เปิดเมนู",
-      "cancel": "ยกเลิก"
-    },
-    "loading": "กำลังโหลด...",
-    "search": "ค้นหา",
-    "clearFilters": "ล้างตัวกรอง",
-    "placeholders": {
-      "selectTitle": "เลือกคำนำหน้า",
-      "selectType": "เลือกประเภท",
-      "selectDepartment": "เลือกแผนก",
-      "selectPosition": "เลือกตำแหน่ง"
-    },
-    "photoUploadSuccess": "อัปโหลดรูปสำเร็จ",
-    "photoUploadError": "อัปโหลดรูปไม่สำเร็จ",
-    "photoDuplicateError": "รูปภาพนี้ถูกอัปโหลดแล้ว กรุณาเลือกรูปภาพใหม่",
-    "photoDeleteConfirmTitle": "ยืนยันการลบรูปภาพ",
-    "photoDeleteConfirmDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพพนักงานนี้?",
-    "photoDeleteSuccess": "ลบรูปภาพสำเร็จ",
-    "photoDeleteError": "ลบรูปภาพไม่สำเร็จ",
-    "photoHint": "อัปโหลดรูปพนักงาน (ไฟล์รูปภาพ ขนาดไม่เกิน 2MB)",
-    "uploadPhoto": "อัปโหลดรูป",
-    "changePhoto": "เปลี่ยนรูป",
-    "removePhoto": "ลบรูป",
-    "photoUploading": "กำลังอัปโหลด...",
-    "cancel": "ยกเลิก",
-    "next": "ถัดไป",
-    "back": "ย้อนกลับ",
-    "validation": {
-      "required": "กรุณากรอกข้อมูล",
-      "email": "รูปแบบอีเมลไม่ถูกต้อง",
-      "positive": "ค่าต้องเป็นจำนวนบวก",
-      "incompleteData": "ข้อมูลไม่ครบถ้วน",
-      "tabsWithErrors": "กรุณาตรวจสอบข้อมูลใน: {tabs}"
-    },
-    "submitError": "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
-    "employeeNumberDuplicate": "รหัสพนักงานนี้ถูกใช้งานแล้ว กรุณาใช้รหัสอื่น"
-  },
   "Accumulation": {
-    "title": "เงินสะสม",
-    "adjustTitle": "ปรับปรุงยอดสะสม",
     "adjustDescription": "อัปเดตยอดเงินสะสมสำหรับ {type}",
-    "types": {
-      "sso": "ประกันสังคม",
-      "tax": "ภาษีหัก ณ ที่จ่าย",
-      "pf": "กองทุนสำรองเลี้ยงชีพ",
-      "loan_outstanding": "หนี้สินสะสม",
-      "income": "รายได้สะสม"
-    },
+    "adjustTitle": "ปรับปรุงยอดสะสม",
     "amount": "จำนวนเงิน",
-    "selectYear": "เลือกปี",
-    "yearly": "รายปี",
+    "cancel": "ยกเลิก",
     "lifetime": "ตลอดชีพ",
     "lifetimeGroup": "สะสมตลอดชีพ",
-    "cancel": "ยกเลิก",
-    "save": "บันทึก"
-  },
-  "Profile": {
-    "title": "ข้อมูลส่วนตัว",
-    "description": "จัดการข้อมูลส่วนตัวและเปลี่ยนรหัสผ่าน",
-    "personalInfo": "ข้อมูลผู้ใช้งาน",
-    "personalInfoDescription": "รายละเอียดบัญชีผู้ใช้งานของคุณ",
-    "username": "ชื่อผู้ใช้งาน",
-    "role": "สิทธิ์การใช้งาน",
-    "lastLogin": "เข้าสู่ระบบล่าสุด",
-    "loading": "กำลังโหลด...",
-    "errorLoadingProfile": "ไม่สามารถโหลดข้อมูลโปรไฟล์ได้",
-    "password": {
-      "title": "เปลี่ยนรหัสผ่าน",
-      "description": "เปลี่ยนรหัสผ่านเพื่อความปลอดภัย",
-      "currentPassword": "รหัสผ่านปัจจุบัน",
-      "newPassword": "รหัสผ่านใหม่",
-      "confirmPassword": "ยืนยันรหัสผ่านใหม่",
-      "submit": "เปลี่ยนรหัสผ่าน",
-      "successTitle": "สำเร็จ",
-      "success": "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว",
-      "errorTitle": "เกิดข้อผิดพลาด",
-      "error": "ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาตรวจสอบรหัสผ่านปัจจุบัน",
-      "passwordsDoNotMatch": "รหัสผ่านไม่ตรงกัน",
-      "minLength": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร",
-      "required": "กรุณากรอกข้อมูล"
-    }
-  },
-  "Users": {
-    "title": "จัดการผู้ใช้งาน",
-    "description": "จัดการบัญชีผู้ใช้งานและสิทธิ์การเข้าถึง",
-    "createUser": "สร้างผู้ใช้งาน",
-    "createUserDescription": "สร้างบัญชีผู้ใช้งานใหม่สำหรับเข้าสู่ระบบ",
-    "loading": "กำลังโหลด...",
-    "fields": {
-      "username": "ชื่อผู้ใช้งาน",
-      "password": "รหัสผ่าน",
-      "role": "สิทธิ์การใช้งาน",
-      "createdAt": "วันที่สร้าง",
-      "lastLoginAt": "เข้าสู่ระบบล่าสุด",
-      "newPassword": "รหัสผ่านใหม่"
-    },
-    "roles": {
-      "admin": "ผู้ดูแลระบบ",
-      "hr": "ฝ่ายบุคคล",
-      "superadmin": "ผู้ดูแลสูงสุด"
-    },
-    "actions": {
-      "title": "การจัดการ",
-      "openMenu": "เปิดเมนู",
-      "manageBranches": "จัดการสาขา",
-      "editRole": "แก้ไขสิทธิ์",
-      "resetPassword": "รีเซ็ตรหัสผ่าน",
-      "delete": "ลบผู้ใช้งาน",
-      "create": "สร้าง",
-      "creating": "กำลังสร้าง...",
-      "save": "บันทึก",
-      "saving": "กำลังบันทึก...",
-      "cancel": "ยกเลิก"
-    },
-    "placeholders": {
-      "selectRole": "เลือกสิทธิ์การใช้งาน"
-    },
-    "validation": {
-      "usernameMin": "ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 3 ตัวอักษร",
-      "passwordMin": "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร",
-      "roleRequired": "กรุณาเลือกสิทธิ์การใช้งาน"
-    },
-    "errors": {
-      "fetchFailed": "ไม่สามารถดึงข้อมูลผู้ใช้งานได้",
-      "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-      "createFailed": "ไม่สามารถสร้างผู้ใช้งานได้",
-      "createFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-      "usernameExists": "ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว",
-      "resetFailed": "ไม่สามารถรีเซ็ตรหัสผ่านได้",
-      "resetFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-      "updateFailed": "ไม่สามารถแก้ไขข้อมูลได้",
-      "updateFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-      "deleteFailed": "ไม่สามารถลบผู้ใช้งานได้",
-      "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง"
-    },
-    "success": {
-      "userCreated": "สร้างผู้ใช้งานสำเร็จ",
-      "passwordReset": "รีเซ็ตรหัสผ่านสำเร็จ",
-      "roleUpdated": "แก้ไขสิทธิ์สำเร็จ",
-      "userDeleted": "ลบผู้ใช้งานสำเร็จ"
-    },
-    "resetPasswordDescription": "ตั้งรหัสผ่านใหม่สำหรับผู้ใช้งาน {username}",
-    "editRoleDescription": "แก้ไขสิทธิ์การใช้งานสำหรับ {username}",
-    "deleteConfirmTitle": "ยืนยันการลบผู้ใช้งาน",
-    "deleteConfirmDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งาน {username}? การกระทำนี้ไม่สามารถย้อนกลับได้",
-    "noData": "ไม่พบข้อมูลผู้ใช้งาน"
-  },
-  "Worklogs": {
-    "FT": {
-      "title": "บันทึกเวลาพนักงานประจำ",
-      "description": "จัดการบันทึกการมาสาย ลา และ OT ของพนักงานประจำ",
-      "createButton": "บันทึกรายการใหม่",
-      "createTitle": "บันทึกรายการใหม่",
-      "editTitle": "แก้ไขรายการ",
-      "formDescription": "กรอกข้อมูลการบันทึกเวลาทำงาน",
-      "noData": "ไม่พบข้อมูลบันทึกเวลา",
-      "fields": {
-        "employee": "พนักงาน",
-        "workDate": "วันที่",
-        "startDate": "วันที่เริ่มต้น",
-        "endDate": "วันที่สิ้นสุด",
-        "entryType": "ประเภท",
-        "quantity": "จำนวน",
-        "leaveDuration": "ช่วงเวลาลา"
-      },
-      "placeholders": {
-        "selectEmployee": "เลือกพนักงาน",
-        "quantity": "กรอกจำนวน"
-      },
-      "entryTypes": {
-        "late": "มาสาย",
-        "leave_day": "ลา (วัน)",
-        "leave_double": "ลา (2 แรง)",
-        "leave_hours": "ลา (ชั่วโมง)",
-        "ot": "OT"
-      },
-      "statuses": {
-        "pending": "รอทำรายการ",
-        "approved": "ทำรายการแล้ว"
-      },
-      "units": {
-        "minutes": "นาที",
-        "hours": "ชั่วโมง",
-        "days": "วัน"
-      },
-      "filters": {
-        "employee": "พนักงาน",
-        "entryType": "ประเภท",
-        "status": "สถานะ",
-        "startDate": "วันที่เริ่มต้น",
-        "endDate": "วันที่สิ้นสุด",
-        "allEmployees": "ทุกคน",
-        "allTypes": "ทุกประเภท",
-        "allStatuses": "ทุกสถานะ",
-        "searchEmployee": "ค้นหาพนักงาน...",
-        "searchPlaceholder": "ค้นหา...",
-        "noEmployeeFound": "ไม่พบพนักงาน"
-      },
-      "table": {
-        "employee": "พนักงาน",
-        "workDate": "วันที่",
-        "entryType": "ประเภท",
-        "quantity": "จำนวน",
-        "status": "สถานะ",
-        "actions": "จัดการ"
-      },
-      "pagination": {
-        "page": "หน้า",
-        "of": "จาก",
-        "previous": "ก่อนหน้า",
-        "next": "ถัดไป"
-      },
-      "validation": {
-        "employeeRequired": "กรุณาเลือกพนักงาน",
-        "workDateRequired": "กรุณาเลือกวันที่",
-        "endDateRequired": "กรุณาเลือกวันที่สิ้นสุด",
-        "quantityRequired": "กรุณากรอกจำนวนที่ถูกต้อง"
-      },
-      "success": {
-        "created": "บันทึกสำเร็จ",
-        "createdDescription": "บันทึกรายการเรียบร้อยแล้ว",
-        "updated": "แก้ไขสำเร็จ",
-        "updatedDescription": "แก้ไขรายการเรียบร้อยแล้ว",
-        "deleted": "ลบสำเร็จ",
-        "deletedDescription": "ลบรายการเรียบร้อยแล้ว"
-      },
-      "errors": {
-        "fetchFailed": "ไม่สามารถโหลดข้อมูล",
-        "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-        "saveFailed": "ไม่สามารถบันทึกข้อมูล",
-        "saveFailedDescription": "กรุณาตรวจสอบข้อมูลและลองใหม่",
-        "deleteFailed": "ไม่สามารถลบรายการ",
-        "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-        "cannotEdit": "ไม่สามารถแก้ไขได้",
-        "cannotEditDescription": "สามารถแก้ไขได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
-        "cannotDelete": "ไม่สามารถลบได้",
-        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
-        "duplicateWorklog": "มีรายการบันทึกซ้ำสำหรับพนักงาน วันที่ และประเภทนี้แล้ว"
-      },
-      "deleteDialog": {
-        "title": "ยืนยันการลบ",
-        "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?"
-      }
-    },
-    "PT": {
-      "title": "บันทึกเวลาพาร์ทไทม์",
-      "description": "จัดการลงเวลาเข้า-ออกของพนักงานพาร์ทไทม์",
-      "createButton": "บันทึกเวลาใหม่",
-      "createTitle": "บันทึกเวลาทำงาน",
-      "editTitle": "แก้ไขเวลาทำงาน",
-      "formDescription": "บันทึกเวลาเข้า-ออกของพนักงาน",
-      "noData": "ไม่พบข้อมูลบันทึกเวลา",
-      "totalHours": "ชั่วโมงรวม",
-      "fields": {
-        "employee": "พนักงาน",
-        "workDate": "วันที่",
-        "morningShift": "กะเช้า",
-        "eveningShift": "กะบ่าย",
-        "timeIn": "เข้า",
-        "timeOut": "ออก"
-      },
-      "placeholders": {
-        "selectEmployee": "เลือกพนักงาน"
-      },
-      "statuses": {
-        "pending": "รอทำรายการ",
-        "approved": "ทำรายการแล้ว",
-        "to_pay": "รอจ่ายเงิน",
-        "paid": "จ่ายแล้ว"
-      },
-      "units": {
-        "hours": "ชั่วโมง"
-      },
-      "filters": {
-        "employee": "พนักงาน",
-        "status": "สถานะ",
-        "startDate": "วันที่เริ่มต้น",
-        "endDate": "วันที่สิ้นสุด",
-        "allEmployees": "ทุกคน",
-        "allStatuses": "ทุกสถานะ"
-      },
-      "table": {
-        "employee": "พนักงาน",
-        "workDate": "วันที่",
-        "morningShift": "กะเช้า",
-        "eveningShift": "กะบ่าย",
-        "totalHours": "ชั่วโมงรวม",
-        "status": "สถานะ",
-        "actions": "จัดการ"
-      },
-      "pagination": {
-        "page": "หน้า",
-        "of": "จาก",
-        "previous": "ก่อนหน้า",
-        "next": "ถัดไป"
-      },
-      "validation": {
-        "employeeRequired": "กรุณาเลือกพนักงาน",
-        "workDateRequired": "กรุณาเลือกวันที่",
-        "atLeastOneShift": "กรุณากรอกเวลาอย่างน้อยหนึ่งกะ",
-        "completeMorningShift": "กรุณากรอกเวลาเข้า-ออกกะเช้าให้ครบ",
-        "completeEveningShift": "กรุณากรอกเวลาเข้า-ออกกะบ่ายให้ครบ"
-      },
-      "success": {
-        "created": "บันทึกสำเร็จ",
-        "createdDescription": "บันทึกเวลาเรียบร้อยแล้ว",
-        "updated": "แก้ไขสำเร็จ",
-        "updatedDescription": "แก้ไขเวลาเรียบร้อยแล้ว",
-        "deleted": "ลบสำเร็จ",
-        "deletedDescription": "ลบรายการเรียบร้อยแล้ว"
-      },
-      "errors": {
-        "fetchFailed": "ไม่สามารถโหลดข้อมูล",
-        "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-        "saveFailed": "ไม่สามารถบันทึกข้อมูล",
-        "saveFailedDescription": "กรุณาตรวจสอบข้อมูลและลองใหม่",
-        "deleteFailed": "ไม่สามารถลบรายการ",
-        "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง",
-        "cannotEdit": "ไม่สามารถแก้ไขได้",
-        "cannotEditDescription": "สามารถแก้ไขได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
-        "cannotDelete": "ไม่สามารถลบได้",
-        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
-        "duplicateWorklog": "มีการบันทึกเวลาสำหรับพนักงานคนนี้ในวันนี้แล้ว",
-        "submitFailed": "ไม่สามารถบันทึกข้อมูลได้"
-      },
-      "deleteDialog": {
-        "title": "ยืนยันการลบ",
-        "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?"
-      }
-    }
-  },
-  "Common": {
-    "cancel": "ยกเลิก",
-    "close": "ปิด",
-    "admin": "ผู้ดูแลระบบ",
-    "clearFilters": "ล้างตัวกรอง",
-    "clearFilter": "ล้างตัวกรอง",
-    "all": "ทั้งหมด",
-    "create": "สร้าง",
-    "edit": "แก้ไข",
-    "view": "ดู",
     "save": "บันทึก",
-    "saving": "กำลังบันทึก...",
-    "delete": "ลบ",
-    "loading": "กำลังโหลด...",
-    "error": "เกิดข้อผิดพลาด",
-    "success": "สำเร็จ",
-    "noData": "ไม่มีข้อมูล",
-    "barChart": "แบบแท่ง",
-    "lineChart": "แบบเส้น",
-    "search": "ค้นหา",
-    "confirm": "ยืนยัน",
-    "currentMonth": "เดือนปัจจุบัน",
-    "errorLoadingData": "เกิดข้อผิดพลาดในการโหลดข้อมูล",
-    "next": "ถัดไป",
-    "previous": "ก่อนหน้า",
-    "filter": "ตัวกรอง",
-    "confirmDeleteTitle": "ยืนยันการลบ",
-    "confirmDeleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
-    "saveSuccess": "บันทึกข้อมูลสำเร็จ",
-    "actions": "การกระทำ",
-    "reset": "คืนค่าเดิม",
-    "branch": "เลือกสาขา",
-    "default": "หลัก",
-    "selectBranch": "เลือกสาขา",
-    "defaultBranch": "สาขาหลัก"
-  },
-  "Payouts": {
-    "PT": {
-      "title": "การจ่ายเงินพาร์ทไทม์",
-      "description": "จัดการการจ่ายเงินสำหรับพนักงานพาร์ทไทม์",
-      "createButton": "สร้างรายการจ่าย",
-      "createTitle": "สร้างรายการจ่ายใหม่",
-      "detailTitle": "รายละเอียดการจ่าย",
-      "listTitle": "ประวัติการจ่าย",
-      "noData": "ไม่พบรายการจ่าย",
-      "fields": {
-        "employee": "พนักงาน",
-        "status": "สถานะ",
-        "totalHours": "ชั่วโมงรวม",
-        "amountTotal": "ยอดเงินรวม",
-        "itemCount": "จำนวนรายการ",
-        "createdAt": "วันที่สร้าง",
-        "paidAt": "วันที่จ่าย",
-        "paidBy": "ผู้จ่าย",
-        "workDate": "วันที่ทำงาน"
-      },
-      "statuses": {
-        "to_pay": "รอจ่าย",
-        "paid": "จ่ายแล้ว"
-      },
-      "actions": {
-        "view": "ดูรายละเอียด",
-        "markAsPaid": "อนุมัติการจ่ายเงิน"
-      },
-      "deleteSuccess": "ลบรายการจ่ายเงินสำเร็จ",
-      "deleteError": "ไม่สามารถลบรายการจ่ายเงินได้",
-      "filters": {
-        "allStatuses": "ทุกสถานะ",
-        "allEmployees": "พนักงานทั้งหมด",
-        "selectEmployee": "เลือกพนักงาน",
-        "startDate": "วันที่เริ่มต้น",
-        "endDate": "วันที่สิ้นสุด"
-      },
-      "create": {
-        "createTitle": "สร้างรายการจ่ายเงิน",
-        "step1": "เลือกพนักงาน",
-        "step2": "เลือกรายการลงเวลา",
-        "step3": "ยืนยัน",
-        "selectEmployeePlaceholder": "เลือกพนักงานเพื่อดำเนินการต่อ",
-        "noPendingWorklogs": "ไม่พบรายการลงเวลาที่ค้างอยู่สำหรับพนักงานคนนี้",
-        "selectedWorklogs": "รายการที่เลือก: {count}",
-        "totalHours": "ชั่วโมงรวม: {hours}",
-        "hourlyRate": "ค่าจ้างต่อชั่วโมง: {rate}",
-        "estimatedAmount": "ยอดเงินโดยประมาณ: {amount}"
-      },
-      "success": {
-        "created": "สร้างรายการจ่ายสำเร็จ",
-        "paid": "บันทึกการจ่ายเงินสำเร็จ"
-      },
-      "errors": {
-        "createFailed": "ไม่สามารถสร้างรายการจ่ายได้",
-        "payFailed": "ไม่สามารถบันทึกการจ่ายเงินได้"
-      },
-      "confirmPay": {
-        "title": "ยืนยันการจ่ายเงิน",
-        "description": "คุณแน่ใจหรือไม่ว่าต้องการบันทึกว่ารายการนี้จ่ายเงินแล้ว? การกระทำนี้ไม่สามารถย้อนกลับได้"
-      }
-    }
-  },
-  "SalaryRaise": {
-    "title": "การจัดการปรับเงินเดือน",
-    "description": "จัดการรอบการปรับเงินเดือนและกำหนดอัตราการปรับเงินเดือนพนักงาน",
-    "noData": "ไม่พบข้อมูลรอบการปรับเงินเดือน",
-    "noItemsFound": "ไม่พบรายการปรับเงินเดือน",
-    "listTitle": "การปรับเงินเดือน",
-    "createTitle": "สร้างรอบใหม่",
-    "detailTitle": "รายละเอียดรอบ",
-    "createButton": "สร้าง",
-    "fields": {
-      "year": "ปี",
-      "period": "รอบการประเมิน",
-      "status": "สถานะ",
-      "totalEmployees": "จำนวนพนักงาน",
-      "totalRaiseAmount": "ยอดปรับรวม",
-      "createdAt": "วันที่สร้าง",
-      "updatedAt": "แก้ไขล่าสุด",
-      "note": "หมายเหตุ",
-      "employee": "พนักงาน",
-      "employeeNumber": "รหัสพนักงาน",
-      "currentSalary": "เงินเดือนปัจจุบัน",
-      "tenure": "อายุงาน (วัน)",
-      "raisePercent": "% ที่ปรับ",
-      "raiseAmount": "ยอดที่ปรับ",
-      "newSalary": "เงินเดือนใหม่",
-      "stats": "สถิติ (สาย/ลา/OT)",
-      "newSsoWage": "ฐาน SSO ใหม่"
+    "selectYear": "เลือกปี",
+    "title": "เงินสะสม",
+    "types": {
+      "income": "รายได้สะสม",
+      "loan_outstanding": "หนี้สินสะสม",
+      "pf": "กองทุนสำรองเลี้ยงชีพ",
+      "sso": "ประกันสังคม",
+      "tax": "ภาษีหัก ณ ที่จ่าย"
     },
-    "status": {
-      "pending": "รออนุมัติ",
-      "approved": "อนุมัติแล้ว",
-      "rejected": "ไม่อนุมัติ",
-      "all": "ทั้งหมด",
-      "allStatuses": "ทุกสถานะ",
-      "allYears": "ทุกปี"
-    },
+    "yearly": "รายปี"
+  },
+  "ActivityLog": {
     "actions": {
-      "view": "ดูรายละเอียด",
-      "edit": "แก้ไข",
-      "delete": "ลบ",
-      "approve": "อนุมัติ",
-      "reject": "ไม่อนุมัติ",
-      "editItem": "แก้ไขยอด"
+      "search": "ค้นหา",
+      "viewDetails": "ดูรายละเอียด"
     },
-    "create": {
-      "title": "สร้างรอบการปรับเงินเดือน",
-      "description": "เลือกช่วงเวลาการประเมินสำหรับรอบนี้ ระบบจะคำนวณสถิติของพนักงานประจำทุกคนให้อัตโนมัติ",
-      "startDate": "วันเริ่มต้น",
-      "endDate": "วันสิ้นสุด",
-      "success": "สร้างรอบสำเร็จ",
-      "error": {
-        "overlapOrPending": "ไม่สามารถสร้างรอบได้ (อาจมีรอบที่รออนุมัติอยู่หรือช่วงเวลาซ้ำกัน)"
-      },
-      "note": "หมายเหตุ: สามารถสร้างรอบที่รออนุมัติได้เพียง 1 รอบเท่านั้น"
+    "description": "ดูประวัติการสร้าง แก้ไข และลบข้อมูลในระบบ",
+    "detailsTitle": "รายละเอียดการเปลี่ยนแปลง",
+    "fields": {
+      "action": "การกระทำ",
+      "entity": "ประเภท",
+      "entityId": "ID รายการ",
+      "timestamp": "เวลา",
+      "user": "ผู้ทำรายการ"
     },
-    "editItem": {
-      "title": "แก้ไขยอดปรับ: {name}",
-      "description": "ปรับแก้จำนวนเงินหรือเปอร์เซ็นต์",
-      "currentSalary": "เงินเดือนปัจจุบัน: {amount}",
-      "newSalary": "เงินเดือนใหม่: {amount}",
-      "saveSuccess": "บันทึกยอดปรับสำเร็จ"
+    "filters": {
+      "action": "การกระทำ",
+      "all": "ทั้งหมด",
+      "dateRange": "ช่วงเวลา",
+      "entity": "ประเภท",
+      "title": "ตัวกรอง",
+      "user": "ผู้ใช้งาน",
+      "userPlaceholder": "ค้นหาชื่อผู้ใช้งาน..."
     },
-    "approve": {
-      "title": "อนุมัติรอบ",
-      "description": "คุณแน่ใจหรือไม่ที่จะอนุมัติรอบนี้? ระบบจะทำการอัปเดตฐานเงินเดือนของพนักงานทุกคนในรอบนี้ทันที",
-      "success": "อนุมัติรอบสำเร็จ"
-    },
-    "reject": {
-      "title": "ไม่อนุมัติรอบ",
-      "description": "คุณแน่ใจหรือไม่ที่จะปฏิเสธรอบนี้?",
-      "success": "ปฏิเสธรอบสำเร็จ"
-    },
-    "delete": {
-      "title": "ลบรอบการปรับเงินเดือน",
-      "description": "คุณแน่ใจหรือไม่ที่จะลบรอบการปรับเงินเดือนนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
-      "success": "ลบรอบการปรับเงินเดือนสำเร็จ",
-      "error": "ลบรอบการปรับเงินเดือนไม่สำเร็จ"
-    },
-    "stats": {
-      "late": "สาย: {minutes} นาที",
-      "leave": "ลา: {days} วัน",
-      "leaveDouble": "ลา 2 แรง: {days} วัน",
-      "leaveHours": "ลา (ชม.): {hours} ชม.",
-      "ot": "OT: {hours} ชม."
-    },
-    "units": {
-      "years": "ปี",
-      "months": "เดือน",
-      "days": "วัน",
-      "minutes": "นาที",
-      "hours": "ชั่วโมง"
-    }
-  },
-  "SalaryAdvance": {
-    "title": "เบิกเงินล่วงหน้า",
-    "description": "จัดการรายการเบิกเงินล่วงหน้าของพนักงาน (Salary Advance)",
-    "searchPlaceholder": "ค้นหา...",
-    "listTitle": "รายการเบิกเงินล่วงหน้า",
-    "filterStatus": "สถานะ",
-
-    "allStatuses": "ทุกสถานะ",
-    "statusPending": "รอหักคืน",
-    "statusProcessed": "หักคืนแล้ว",
-    "create": "สร้างรายการ",
-    "employee": "พนักงาน",
-    "amount": "จำนวนเงิน",
-    "advanceDate": "วันที่เบิก",
-    "payrollMonth": "งวดที่หักคืน",
-    "payrollYear": "ปี",
-    "status": "สถานะ",
-    "validating": "กำลังตรวจสอบ...",
-    "createTitle": "สร้างรายการเบิกเงินล่วงหน้า",
-    "editTitle": "แก้ไขรายการเบิกเงินล่วงหน้า",
-    "selectEmployee": "เลือกพนักงาน",
-    "createSuccess": "สร้างรายการสำเร็จ",
-    "createError": "เกิดข้อผิดพลาดในการสร้างรายการ",
-    "updateSuccess": "แก้ไขรายการสำเร็จ",
-    "updateError": "เกิดข้อผิดพลาดในการแก้ไขรายการ",
-    "deleteTitle": "ยืนยันการลบ",
-    "deleteConfirm": "คุณแน่ใจหรือไม่ที่จะลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
-    "deleteSuccess": "ลบรายการสำเร็จ",
-    "deleteError": "เกิดข้อผิดพลาดในการลบรายการ",
-    "searchEmployee": "ค้นหาพนักงาน...",
-    "noEmployeeFound": "ไม่พบพนักงาน",
-    "selectEmployeeToView": "กรุณาเลือกพนักงานเพื่อดูข้อมูล",
-    "errors": {
-      "invalidPayrollMonth": "งวดเงินเดือนที่เลือกได้รับการอนุมัติแล้ว ไม่สามารถเลือกงวดนี้ได้",
-      "amountMinError": "จำนวนเงินต้องมากกว่า 0"
-    }
+    "noData": "ไม่พบข้อมูลประวัติ",
+    "title": "ประวัติการใช้งาน"
   },
   "Bonus": {
-    "title": "การจัดการโบนัส",
-    "description": "จัดการรอบการจ่ายโบนัสและปรับแต่งจำนวนโบนัสพนักงาน",
-    "listTitle": "การจัดการโบนัส",
-    "createTitle": "สร้างรอบโบนัส",
-    "detailTitle": "รายละเอียดรอบโบนัส",
-    "createButton": "สร้าง",
-    "noData": "ไม่มีข้อมูล",
-    "cycleNotFound": "ไม่พบรอบโบนัส",
-    "fields": {
-      "payrollMonth": "งวดเดือนที่จ่าย",
+    "actions": {
+      "approve": "อนุมัติ",
+      "delete": "ลบ",
+      "editItem": "แก้ไขยอด",
+      "reject": "ไม่อนุมัติ",
+      "view": "ดูรายละเอียด"
+    },
+    "approve": {
+      "description": "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติรอบโบนัสนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "success": "อนุมัติรอบโบนัสสำเร็จ",
+      "title": "ยืนยันการอนุมัติ"
+    },
+    "confirmReject": "ยืนยันไม่อนุมัติ",
+    "create": {
       "bonusYear": "ปีของโบนัส",
-      "period": "ช่วงประเมิน",
-      "periodStart": "วันเริ่มประเมิน",
-      "periodEnd": "วันสิ้นสุดประเมิน",
-      "status": "สถานะ",
-      "totalEmployees": "จำนวนพนักงาน",
-      "totalAmount": "จำนวนเงินรวม",
+      "description": "กำหนดงวดการจ่ายและช่วงเวลาประเมินผลการทำงานของพนักงานและคำนวนสถิติโดยอัตโนมัติ ระบบจะคำนวนสถิติให้อัตโนมัติ",
+      "endDate": "วันสิ้นสุดประเมิน",
+      "error": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+      "errors": {
+        "BONUS_CYCLE_APPROVED_EXISTS": "มีรอบโบนัสที่อนุมัติแล้วสำหรับงวดเงินเดือนนี้",
+        "BONUS_CYCLE_APPROVE_FAILED": "ไม่สามารถอนุมัติรอบโบนัสได้ กรุณาลองใหม่อีกครั้ง",
+        "BONUS_CYCLE_CREATE_FAILED": "ไม่สามารถสร้างรอบโบนัสได้ กรุณาลองใหม่อีกครั้ง",
+        "BONUS_CYCLE_PENDING_EXISTS": "มีรอบโบนัสที่รอดำเนินการอยู่แล้ว กรุณาดำเนินการรอบนั้นให้เสร็จก่อน",
+        "BONUS_CYCLE_PERIOD_EXISTS": "มีรอบโบนัสที่ใช้ช่วงประเมินนี้อยู่แล้ว กรุณาเลือกช่วงอื่น",
+        "conflictApproved": "มีรอบโบนัสที่อนุมัติแล้วในงวดเดือนนี้",
+        "conflictPending": "มีรอบโบนัสที่รอดำเนินการอยู่แล้ว (สร้างได้เพียง 1 รอบ)"
+      },
+      "note": "หมายเหตุ: สร้างได้เพียง 1 รอบที่มีสถานะรอดำเนินการเท่านั้น",
+      "payrollMonth": "งวดเดือนที่จ่าย",
+      "startDate": "วันเริ่มประเมิน",
+      "success": "สร้างรอบโบนัสเรียบร้อย",
+      "title": "สร้างรอบใหม่"
+    },
+    "createButton": "สร้าง",
+    "createTitle": "สร้างรอบโบนัส",
+    "cycleNotFound": "ไม่พบรอบโบนัส",
+    "delete": {
+      "description": "คุณแน่ใจหรือไม่ที่จะลบรอบโบนัสนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "success": "ลบสำเร็จ",
+      "title": "ลบรอบโบนัส"
+    },
+    "description": "จัดการรอบการจ่ายโบนัสและปรับแต่งจำนวนโบนัสพนักงาน",
+    "detailTitle": "รายละเอียดรอบโบนัส",
+    "editItem": {
+      "bonusAmount": "ยอดเงินโบนัส (บาท)",
+      "bonusMonths": "จำนวนเท่า (เดือน)",
+      "description": "ระบุจำนวนเท่า หรือ ยอดเงินโบนัสที่ต้องการจ่าย",
+      "saveError": "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+      "saveSuccess": "บันทึกข้อมูลสำเร็จ",
+      "title": "แก้ไขโบนัส: {name}"
+    },
+    "fields": {
+      "bonusAmount": "จำนวนเงินโบนัส",
+      "bonusMonths": "จำนวนเดือน",
+      "bonusYear": "ปีของโบนัส",
       "createdAt": "วันที่สร้าง",
+      "currentSalary": "เงินเดือนปัจจุบัน",
       "employee": "พนักงาน",
       "employeeNumber": "รหัสพนักงาน",
-      "currentSalary": "เงินเดือนปัจจุบัน",
+      "payrollMonth": "งวดเดือนที่จ่าย",
+      "period": "ช่วงประเมิน",
+      "periodEnd": "วันสิ้นสุดประเมิน",
+      "periodStart": "วันเริ่มประเมิน",
+      "stats": "สถิติ",
+      "status": "สถานะ",
       "tenure": "อายุงาน",
-      "bonusMonths": "จำนวนเดือน",
-      "bonusAmount": "จำนวนเงินโบนัส",
-      "stats": "สถิติ"
+      "totalAmount": "จำนวนเงินรวม",
+      "totalEmployees": "จำนวนพนักงาน"
     },
     "filters": {
       "status": "สถานะ",
       "year": "ปี"
     },
-    "units": {
-      "years": "ปี",
-      "months": "เดือน",
-      "days": "วัน",
-      "minutes": "นาที",
-      "hours": "ชั่วโมง"
+    "listTitle": "การจัดการโบนัส",
+    "noData": "ไม่มีข้อมูล",
+    "reject": {
+      "description": "คุณแน่ใจหรือไม่ว่าต้องการไม่อนุมัติรอบโบนัสนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "title": "ยืนยันการไม่อนุมัติ"
     },
+    "rejectConfirmMessage": "คุณแน่ใจหรือไม่ว่าต้องการไม่อนุมัติรอบโบนัสนี้?",
     "stats": {
       "late": "สาย",
       "leave": "ลา",
@@ -1006,515 +133,1402 @@
       "ot": "OT"
     },
     "status": {
-      "pending": "รออนุมัติ",
-      "approved": "อนุมัติแล้ว",
-      "rejected": "ไม่อนุมัติ",
       "allStatuses": "ทุกสถานะ",
-      "allYears": "ทุกปี"
-    },
-    "actions": {
-      "view": "ดูรายละเอียด",
-      "delete": "ลบ",
-      "approve": "อนุมัติ",
-      "reject": "ไม่อนุมัติ",
-      "editItem": "แก้ไขยอด"
-    },
-    "approve": {
-      "title": "ยืนยันการอนุมัติ",
-      "description": "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติรอบโบนัสนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-    },
-    "reject": {
-      "title": "ยืนยันการไม่อนุมัติ",
-      "description": "คุณแน่ใจหรือไม่ว่าต้องการไม่อนุมัติรอบโบนัสนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-    },
-    "rejectConfirmMessage": "คุณแน่ใจหรือไม่ว่าต้องการไม่อนุมัติรอบโบนัสนี้?",
-    "confirmReject": "ยืนยันไม่อนุมัติ",
-    "create": {
-      "title": "สร้างรอบใหม่",
-      "description": "กำหนดงวดการจ่ายและช่วงเวลาประเมินผลการทำงานของพนักงานและคำนวนสถิติโดยอัตโนมัติ ระบบจะคำนวนสถิติให้อัตโนมัติ",
-      "note": "หมายเหตุ: สร้างได้เพียง 1 รอบที่มีสถานะรอดำเนินการเท่านั้น",
-      "payrollMonth": "งวดเดือนที่จ่าย",
-      "bonusYear": "ปีของโบนัส",
-      "startDate": "วันเริ่มประเมิน",
-      "endDate": "วันสิ้นสุดประเมิน",
-      "success": "สร้างรอบโบนัสเรียบร้อย",
-      "error": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
-      "errors": {
-        "conflictPending": "มีรอบโบนัสที่รอดำเนินการอยู่แล้ว (สร้างได้เพียง 1 รอบ)",
-        "conflictApproved": "มีรอบโบนัสที่อนุมัติแล้วในงวดเดือนนี้",
-        "BONUS_CYCLE_APPROVED_EXISTS": "มีรอบโบนัสที่อนุมัติแล้วสำหรับงวดเงินเดือนนี้",
-        "BONUS_CYCLE_PENDING_EXISTS": "มีรอบโบนัสที่รอดำเนินการอยู่แล้ว กรุณาดำเนินการรอบนั้นให้เสร็จก่อน",
-        "BONUS_CYCLE_PERIOD_EXISTS": "มีรอบโบนัสที่ใช้ช่วงประเมินนี้อยู่แล้ว กรุณาเลือกช่วงอื่น",
-        "BONUS_CYCLE_CREATE_FAILED": "ไม่สามารถสร้างรอบโบนัสได้ กรุณาลองใหม่อีกครั้ง",
-        "BONUS_CYCLE_APPROVE_FAILED": "ไม่สามารถอนุมัติรอบโบนัสได้ กรุณาลองใหม่อีกครั้ง"
-      }
-    },
-    "editItem": {
-      "title": "แก้ไขโบนัส: {name}",
-      "description": "ระบุจำนวนเท่า หรือ ยอดเงินโบนัสที่ต้องการจ่าย",
-      "bonusMonths": "จำนวนเท่า (เดือน)",
-      "bonusAmount": "ยอดเงินโบนัส (บาท)",
-      "saveSuccess": "บันทึกข้อมูลสำเร็จ",
-      "saveError": "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
-    },
-    "delete": {
-      "title": "ลบรอบโบนัส",
-      "description": "คุณแน่ใจหรือไม่ที่จะลบรอบโบนัสนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
-      "success": "ลบสำเร็จ"
-    }
-  },
-  "Debt": {
-    "title": "การจัดการหนี้สิน",
-    "description": "จัดการเงินกู้ หนี้สิน และการชำระคืนของพนักงาน",
-    "listTitle": "รายการหนี้สิน",
-    "selectEmployeeToView": "กรุณาเลือกพนักงานเพื่อดูข้อมูล",
-    "createTitle": "สร้างหนี้สิน/เงินกู้ใหม่",
-    "detailTitle": "รายละเอียดหนี้สิน",
-    "createButton": "สร้างหนี้สิน",
-    "fields": {
-      "employee": "พนักงาน",
-      "txnDate": "วันที่ทำรายการ",
-      "txnType": "ประเภท",
-      "amount": "จำนวนเงิน",
-      "reason": "เหตุผล",
-      "otherDesc": "คำอธิบาย",
-      "status": "สถานะ",
-      "payrollMonth": "งวดเงินเดือน",
-      "installments": "งวดการผ่อนชำระ",
-      "outstandingBalance": "ยอดคงเหลือ",
-      "currentOutstanding": "ยอดหนี้สะสม",
-      "newOutstanding": "หนี้คงเหลือ",
-      "month": "เดือน"
-    },
-    "types": {
-      "loan": "เงินกู้",
-      "other": "อื่นๆ",
-      "repayment": "การชำระคืน",
-      "installment": "การผ่อนชำระ",
-      "all": "ทั้งหมด"
-    },
-    "status": {
-      "pending": "รออนุมัติ",
+      "allYears": "ทุกปี",
       "approved": "อนุมัติแล้ว",
-      "all": "ทั้งหมด",
-      "allStatuses": "ทุกสถานะ",
-      "allTypes": "ทุกประเภท"
+      "pending": "รออนุมัติ",
+      "rejected": "ไม่อนุมัติ"
     },
-    "filters": {
-      "hasOutstanding": "เฉพาะมียอดคงค้าง"
-    },
-    "installmentStatus": {
-      "pending": "รอทำรายการ",
-      "approved": "ชำระแล้ว"
-    },
-    "actions": {
-      "view": "ดูรายละเอียด",
-      "delete": "ลบ",
-      "approve": "อนุมัติ",
-      "repay": "บันทึกการชำระคืน"
-    },
-    "create": {
-      "title": "สร้างรายการหนี้สิน",
-      "hasInstallment": "มีแผนการผ่อนชำระ?",
-      "success": "สร้างรายการสำเร็จ",
-      "error": "เกิดข้อผิดพลาดในการสร้างรายการ",
-      "installmentPlan": "แผนการผ่อนชำระ",
-      "autoGenerate": "สร้างงวดผ่อนชำระอัตโนมัติ",
-      "startMonth": "เดือนที่เริ่มหัก",
-      "months": "จำนวนเดือน",
-      "generate": "คำนวณ",
-      "totalAmountMismatch": "ยอดรวมของงวดผ่อนชำระไม่ตรงกับจำนวนเงินกู้",
-      "totalInstallment": "ยอดรวมผ่อนชำระ",
-      "diff": "ส่วนต่าง",
-      "mustMatchAmount": "ยอดรวมผ่อนชำระต้องเท่ากับจำนวนเงินกู้",
-      "description": "สร้างรายการเงินกู้หรือหนี้สินใหม่ พร้อมแผนการผ่อนชำระ (ถ้ามี)"
-    },
-    "errors": {
-      "sumMismatch": "ยอดรวมของงวดผ่อนชำระต้องเท่ากับจำนวนเงินกู้"
-    },
-    "approve": {
-      "title": "ยืนยันการอนุมัติ",
-      "description": "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติรายการนี้? การกระทำนี้จะทำให้หนี้สินมีผลทันที",
-      "success": "อนุมัติรายการสำเร็จ"
-    },
-    "delete": {
-      "title": "ลบรายการ",
-      "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
-      "success": "ลบรายการสำเร็จ"
-    },
-    "summary": {
-      "outstandingDebt": "ยอดหนี้สะสมทั้งหมด",
-      "pendingInstallments": "ยอดค้างผ่อน"
-    }
-  },
-  "Nav": {
-    "orgProfile": "ข้อมูลองค์กร",
-    "branches": "สาขา",
-    "departments": "แผนก",
-    "positions": "ตำแหน่ง",
-    "documentTypes": "ประเภทเอกสาร"
-  },
-  "DocumentTypes": {
-    "title": "จัดการประเภทเอกสาร",
-    "description": "จัดการประเภทเอกสารสำหรับพนักงาน",
-    "listTitle": "รายการประเภทเอกสาร",
-    "listDescription": "ประเภทเอกสารที่ใช้ในการจัดเก็บเอกสารพนักงาน",
-    "createTitle": "สร้างประเภทเอกสารใหม่",
-    "createDescription": "กรอกข้อมูลประเภทเอกสารที่ต้องการสร้าง",
-    "editTitle": "แก้ไขประเภทเอกสาร",
-    "editDescription": "แก้ไขข้อมูลประเภทเอกสาร",
-    "deleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบ {name}? การลบจะทำให้ไม่สามารถใช้ประเภทนี้ในการอัปโหลดเอกสารใหม่ได้",
-    "fields": {
-      "code": "รหัส",
-      "nameTh": "ชื่อ (ไทย)",
-      "nameEn": "ชื่อ (อังกฤษ)",
-      "type": "ประเภท"
-    },
-    "systemType": "ระบบ",
-    "customType": "เฉพาะบริษัท",
-    "placeholders": {
-      "code": "เช่น PASSPORT, VISA",
-      "nameTh": "เช่น หนังสือเดินทาง",
-      "nameEn": "เช่น Passport"
-    },
-    "noData": "ไม่พบประเภทเอกสาร",
-    "success": {
-      "created": "สร้างประเภทเอกสารสำเร็จ",
-      "updated": "แก้ไขประเภทเอกสารสำเร็จ",
-      "deleted": "ลบประเภทเอกสารสำเร็จ"
-    },
-    "errors": {
-      "fetchFailed": "ไม่สามารถโหลดข้อมูลประเภทเอกสารได้",
-      "saveFailed": "บันทึกไม่สำเร็จ",
-      "deleteFailed": "ลบไม่สำเร็จ"
-    }
-  },
-  "Departments": {
-    "title": "จัดการแผนก",
-    "description": "จัดการข้อมูลแผนกขององค์กร",
-    "createTitle": "สร้างแผนกใหม่",
-    "createDescription": "กรอกข้อมูลแผนกที่ต้องการสร้าง",
-    "editTitle": "แก้ไขแผนก",
-    "editDescription": "แก้ไขข้อมูลแผนก",
-    "fields": {
-      "code": "รหัสแผนก",
-      "name": "ชื่อแผนก"
-    },
-    "placeholders": {
-      "code": "เช่น HR, IT, FIN",
-      "name": "เช่น ฝ่ายบุคคล"
-    },
-    "noData": "ไม่พบข้อมูลแผนก",
-    "success": {
-      "created": "สร้างแผนกสำเร็จ",
-      "updated": "แก้ไขแผนกสำเร็จ",
-      "deleted": "ลบแผนกสำเร็จ"
-    },
-    "errors": {
-      "fetchFailed": "ไม่สามารถโหลดข้อมูลแผนกได้",
-      "saveFailed": "บันทึกไม่สำเร็จ",
-      "deleteFailed": "ลบไม่สำเร็จ"
-    },
-    "validation": {
-      "codeRequired": "กรุณากรอกรหัสแผนก",
-      "nameRequired": "กรุณากรอกชื่อแผนก"
-    }
-  },
-  "Positions": {
-    "title": "จัดการตำแหน่ง",
-    "description": "จัดการข้อมูลตำแหน่งงานขององค์กร",
-    "createTitle": "สร้างตำแหน่งใหม่",
-    "createDescription": "กรอกข้อมูลตำแหน่งที่ต้องการสร้าง",
-    "editTitle": "แก้ไขตำแหน่ง",
-    "editDescription": "แก้ไขข้อมูลตำแหน่ง",
-    "fields": {
-      "code": "รหัสตำแหน่ง",
-      "name": "ชื่อตำแหน่ง"
-    },
-    "placeholders": {
-      "code": "เช่น MGR, STAFF, ENG",
-      "name": "เช่น ผู้จัดการ"
-    },
-    "noData": "ไม่พบข้อมูลตำแหน่ง",
-    "success": {
-      "created": "สร้างตำแหน่งสำเร็จ",
-      "updated": "แก้ไขตำแหน่งสำเร็จ",
-      "deleted": "ลบตำแหน่งสำเร็จ"
-    },
-    "errors": {
-      "fetchFailed": "ไม่สามารถโหลดข้อมูลตำแหน่งได้",
-      "saveFailed": "บันทึกไม่สำเร็จ",
-      "deleteFailed": "ลบไม่สำเร็จ"
-    },
-    "validation": {
-      "codeRequired": "กรุณากรอกรหัสตำแหน่ง",
-      "nameRequired": "กรุณากรอกชื่อตำแหน่ง"
+    "title": "การจัดการโบนัส",
+    "units": {
+      "days": "วัน",
+      "hours": "ชั่วโมง",
+      "minutes": "นาที",
+      "months": "เดือน",
+      "years": "ปี"
     }
   },
   "Branches": {
-    "title": "จัดการสาขา",
-    "description": "จัดการสาขาในบริษัท",
+    "cannotEdit": "ไม่สามารถแก้ไขสาขาที่ถูกระงับหรือเก็บถาวรได้",
     "createButton": "สร้างสาขา",
-    "createTitle": "สร้างสาขาใหม่",
     "createDescription": "กรอกข้อมูลสาขาที่ต้องการสร้าง",
-    "editTitle": "แก้ไขสาขา",
-    "editDescription": "แก้ไขข้อมูลสาขา",
-    "deleteTitle": "ยืนยันการลบ",
-    "deleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบสาขา {name}? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "createError": "ไม่สามารถสร้างสาขา",
+    "createSuccess": "สร้างสาขาสำเร็จ",
+    "createTitle": "สร้างสาขาใหม่",
     "default": "สาขาหลัก",
-    "setDefault": "ตั้งเป็นสาขาหลัก",
+    "deleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบสาขา {name}? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "deleteError": "ไม่สามารถลบสาขา",
+    "deleteSuccess": "ลบสาขาสำเร็จ",
+    "deleteTitle": "ยืนยันการลบ",
+    "description": "จัดการสาขาในบริษัท",
+    "editDescription": "แก้ไขข้อมูลสาขา",
+    "editTitle": "แก้ไขสาขา",
+    "fetchError": "ไม่สามารถโหลดข้อมูลสาขาได้",
     "fields": {
       "code": "รหัสสาขา",
       "name": "ชื่อสาขา",
       "status": "สถานะ"
     },
+    "noData": "ไม่พบข้อมูลสาขา",
     "placeholders": {
       "code": "เช่น HQ, BR01",
       "name": "เช่น สำนักงานใหญ่"
     },
+    "setDefault": "ตั้งเป็นสาขาหลัก",
+    "setDefaultError": "ไม่สามารถตั้งเป็นสาขาหลักได้",
+    "setDefaultSuccess": "ตั้งเป็นสาขาหลักสำเร็จ",
     "status": {
       "active": "ใช้งาน",
-      "suspended": "ระงับชั่วคราว",
-      "archived": "ถูกเก็บถาวร"
+      "archived": "ถูกเก็บถาวร",
+      "suspended": "ระงับชั่วคราว"
     },
-    "noData": "ไม่พบข้อมูลสาขา",
-    "fetchError": "ไม่สามารถโหลดข้อมูลสาขาได้",
-    "createSuccess": "สร้างสาขาสำเร็จ",
-    "createError": "ไม่สามารถสร้างสาขา",
-    "updateSuccess": "แก้ไขสาขาสำเร็จ",
-    "updateError": "ไม่สามารถแก้ไขสาขา",
-    "deleteSuccess": "ลบสาขาสำเร็จ",
-    "deleteError": "ไม่สามารถลบสาขา",
-    "setDefaultSuccess": "ตั้งเป็นสาขาหลักสำเร็จ",
-    "setDefaultError": "ไม่สามารถตั้งเป็นสาขาหลักได้",
     "statusChange": {
-      "title": "เปลี่ยนสถานะสาขา",
-      "suspend": "ระงับชั่วคราว",
-      "archive": "เก็บถาวร",
       "activate": "เปิดใช้งาน",
-      "confirmSuspend": "ยืนยันการระงับสาขา \"{name}\" ชั่วคราว?",
+      "archive": "เก็บถาวร",
+      "cannotChangeDefault": "ไม่สามารถเปลี่ยนสถานะสาขาหลักได้",
+      "confirmActivate": "ยืนยันการเปิดใช้งานสาขา \"{name}\" อีกครั้ง?",
       "confirmArchive": "ยืนยันการเก็บถาวรสาขา \"{name}\"?",
       "confirmArchiveWithEmployees": "สาขา \"{name}\" มีพนักงานอยู่ {count} คน ยืนยันต้องการเก็บถาวร?",
-      "confirmActivate": "ยืนยันการเปิดใช้งานสาขา \"{name}\" อีกครั้ง?",
-      "cannotChangeDefault": "ไม่สามารถเปลี่ยนสถานะสาขาหลักได้",
+      "confirmSuspend": "ยืนยันการระงับสาขา \"{name}\" ชั่วคราว?",
+      "error": "ไม่สามารถเปลี่ยนสถานะสาขาได้",
       "success": "เปลี่ยนสถานะสาขาสำเร็จ",
-      "error": "ไม่สามารถเปลี่ยนสถานะสาขาได้"
+      "suspend": "ระงับชั่วคราว",
+      "title": "เปลี่ยนสถานะสาขา"
     },
-    "cannotEdit": "ไม่สามารถแก้ไขสาขาที่ถูกระงับหรือเก็บถาวรได้"
+    "title": "จัดการสาขา",
+    "updateError": "ไม่สามารถแก้ไขสาขา",
+    "updateSuccess": "แก้ไขสาขาสำเร็จ",
+    "validation": {
+      "codeRequired": "กรุณากรอกรหัสสาขา",
+      "nameRequired": "กรุณากรอกชื่อสาขา"
+    }
   },
-  "UserBranches": {
-    "title": "จัดการสาขาของ {username}",
-    "description": "เลือกสาขาที่ผู้ใช้สามารถเข้าถึงได้",
-    "branchList": "รายการสาขา",
-    "selectBranches": "เลือกสาขา {count} รายการ",
-    "selectAll": "เลือกทั้งหมด",
-    "deselectAll": "ยกเลิกทั้งหมด",
-    "noBranches": "ไม่พบสาขา",
+  "Common": {
+    "actions": "การกระทำ",
+    "admin": "ผู้ดูแลระบบ",
+    "all": "ทั้งหมด",
+    "back": "Back",
+    "barChart": "แบบแท่ง",
+    "branch": "เลือกสาขา",
+    "cancel": "ยกเลิก",
+    "clearFilter": "ล้างตัวกรอง",
+    "clearFilters": "ล้างตัวกรอง",
+    "close": "ปิด",
+    "confirm": "ยืนยัน",
+    "confirmDeleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "confirmDeleteTitle": "ยืนยันการลบ",
+    "create": "สร้าง",
+    "currentMonth": "เดือนปัจจุบัน",
     "default": "หลัก",
-    "fetchError": "ไม่สามารถโหลดข้อมูลได้",
-    "saveSuccess": "บันทึกสาขาสำเร็จ",
-    "saveError": "ไม่สามารถบันทึกได้",
-    "mustSelectOne": "ต้องเลือกอย่างน้อย 1 สาขา"
+    "defaultBranch": "สาขาหลัก",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "error": "เกิดข้อผิดพลาด",
+    "errorLoadingData": "เกิดข้อผิดพลาดในการโหลดข้อมูล",
+    "export": "Export",
+    "filter": "ตัวกรอง",
+    "import": "Import",
+    "lineChart": "แบบเส้น",
+    "loading": "กำลังโหลด...",
+    "next": "ถัดไป",
+    "no": "No",
+    "noData": "ไม่มีข้อมูล",
+    "previous": "ก่อนหน้า",
+    "reset": "คืนค่าเดิม",
+    "save": "บันทึก",
+    "saveSuccess": "บันทึกข้อมูลสำเร็จ",
+    "saving": "กำลังบันทึก...",
+    "search": "ค้นหา",
+    "selectBranch": "เลือกสาขา",
+    "submit": "Submit",
+    "success": "สำเร็จ",
+    "view": "ดู",
+    "yes": "Yes"
+  },
+  "Dashboard": {
+    "attendance": {
+      "count": "ครั้ง",
+      "days": "วัน",
+      "error": "ไม่สามารถโหลดข้อมูลได้",
+      "hours": "ชั่วโมง",
+      "late": "มาสาย",
+      "leave": "ลา",
+      "leaveDay": "ลา (วัน)",
+      "leaveDouble": "ลา (2 แรง)",
+      "leaveHours": "ลา (ชั่วโมง)",
+      "minutes": "นาที",
+      "noData": "ไม่มีข้อมูล",
+      "ot": "OT",
+      "overview": "ภาพรวม",
+      "title": "สถิติการมาทำงาน",
+      "yearlyOverview": "ภาพรวมปี {year}"
+    },
+    "employeeStats": {
+      "activeEmployees": "พนักงานทำงานอยู่",
+      "error": "ไม่สามารถโหลดข้อมูลพนักงานได้",
+      "fullTime": "ประจำ",
+      "newThisMonth": "เข้าใหม่เดือนนี้",
+      "noData": "ไม่มีข้อมูลพนักงาน",
+      "partTime": "พาร์ทไทม์",
+      "terminated": "ลาออกเดือนนี้",
+      "title": "สรุปพนักงาน"
+    },
+    "expiringDocuments": {
+      "days": "อีก {days} วัน",
+      "description": "เอกสารพนักงานที่จะหมดอายุภายใน 30 วัน",
+      "error": "ไม่สามารถโหลดข้อมูลเอกสารได้",
+      "expired": "หมดอายุแล้ว",
+      "noExpiring": "ไม่มีเอกสารใกล้หมดอายุ",
+      "title": "เอกสารใกล้หมดอายุ",
+      "viewAll": "ดูทั้งหมด ({count} รายการ)"
+    },
+    "loggedInAs": "คุณเข้าสู่ระบบในฐานะ {role}",
+    "logout": "ออกจากระบบ",
+    "mainContentArea": "พื้นที่เนื้อหาหลัก",
+    "mainContentDescription": "เนื้อหาสำหรับรายการเมนูที่เลือกจะแสดงที่นี่",
+    "mainContentExample": "ตัวอย่างเช่น แดชบอร์ดพร้อมกราฟ ตารางข้อมูลพนักงาน หรือฟอร์มประมวลผลเงินเดือน",
+    "payroll": {
+      "employees": "พนักงาน",
+      "error": "ไม่สามารถโหลดข้อมูลได้",
+      "latestRun": "งวดล่าสุด",
+      "noData": "ไม่มีข้อมูล",
+      "people": "คน",
+      "title": "สรุปเงินเดือน",
+      "totalNetPay": "เงินเดือนสุทธิ",
+      "totalPf": "กองทุนสำรองฯ",
+      "totalSso": "ประกันสังคม",
+      "totalTax": "ภาษีหัก ณ ที่จ่าย",
+      "yearly": "รวมทั้งปี {year}"
+    },
+    "pending": {
+      "advances": "เบิกล่วงหน้า",
+      "bonusCycles": "โบนัสรออนุมัติ",
+      "description": "รายการทางการเงินที่รอการอนุมัติหรือดำเนินการ",
+      "error": "ไม่สามารถโหลดข้อมูลได้",
+      "installments": "งวดผ่อนคงค้าง",
+      "items": "รายการ",
+      "loans": "เงินกู้รออนุมัติ",
+      "noData": "ไม่มีข้อมูล",
+      "salaryRaise": "ปรับเงินเดือนรออนุมัติ",
+      "title": "รายการรอดำเนินการ"
+    },
+    "profile": "ข้อมูลส่วนตัว",
+    "searchPlaceholder": "เลือกพนักงาน",
+    "title": "แดชบอร์ด",
+    "welcome": "ยินดีต้อนรับ, {name}"
+  },
+  "Debt": {
+    "actions": {
+      "approve": "อนุมัติ",
+      "delete": "ลบ",
+      "repay": "บันทึกการชำระคืน",
+      "view": "ดูรายละเอียด"
+    },
+    "approve": {
+      "description": "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติรายการนี้? การกระทำนี้จะทำให้หนี้สินมีผลทันที",
+      "success": "อนุมัติรายการสำเร็จ",
+      "title": "ยืนยันการอนุมัติ"
+    },
+    "create": {
+      "autoGenerate": "สร้างงวดผ่อนชำระอัตโนมัติ",
+      "description": "สร้างรายการเงินกู้หรือหนี้สินใหม่ พร้อมแผนการผ่อนชำระ (ถ้ามี)",
+      "diff": "ส่วนต่าง",
+      "error": "เกิดข้อผิดพลาดในการสร้างรายการ",
+      "generate": "คำนวณ",
+      "hasInstallment": "มีแผนการผ่อนชำระ?",
+      "installmentPlan": "แผนการผ่อนชำระ",
+      "months": "จำนวนเดือน",
+      "mustMatchAmount": "ยอดรวมผ่อนชำระต้องเท่ากับจำนวนเงินกู้",
+      "startMonth": "เดือนที่เริ่มหัก",
+      "success": "สร้างรายการสำเร็จ",
+      "title": "สร้างรายการหนี้สิน",
+      "totalAmountMismatch": "ยอดรวมของงวดผ่อนชำระไม่ตรงกับจำนวนเงินกู้",
+      "totalInstallment": "ยอดรวมผ่อนชำระ"
+    },
+    "createButton": "สร้างหนี้สิน",
+    "createTitle": "สร้างหนี้สิน/เงินกู้ใหม่",
+    "delete": {
+      "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "success": "ลบรายการสำเร็จ",
+      "title": "ลบรายการ"
+    },
+    "description": "จัดการเงินกู้ หนี้สิน และการชำระคืนของพนักงาน",
+    "detailTitle": "รายละเอียดหนี้สิน",
+    "errors": {
+      "sumMismatch": "ยอดรวมของงวดผ่อนชำระต้องเท่ากับจำนวนเงินกู้"
+    },
+    "fields": {
+      "amount": "จำนวนเงิน",
+      "currentOutstanding": "ยอดหนี้สะสม",
+      "employee": "พนักงาน",
+      "installments": "งวดการผ่อนชำระ",
+      "month": "เดือน",
+      "newOutstanding": "หนี้คงเหลือ",
+      "otherDesc": "คำอธิบาย",
+      "outstandingBalance": "ยอดคงเหลือ",
+      "payrollMonth": "งวดเงินเดือน",
+      "reason": "เหตุผล",
+      "status": "สถานะ",
+      "txnDate": "วันที่ทำรายการ",
+      "txnType": "ประเภท"
+    },
+    "filters": {
+      "hasOutstanding": "เฉพาะมียอดคงค้าง",
+      "selectEmployee": "เลือกพนักงาน"
+    },
+    "installmentStatus": {
+      "approved": "ชำระแล้ว",
+      "pending": "รอทำรายการ"
+    },
+    "listTitle": "รายการหนี้สิน",
+    "selectEmployeeToView": "กรุณาเลือกพนักงานเพื่อดูข้อมูล",
+    "status": {
+      "all": "ทั้งหมด",
+      "allStatuses": "ทุกสถานะ",
+      "allTypes": "ทุกประเภท",
+      "approved": "อนุมัติแล้ว",
+      "pending": "รออนุมัติ"
+    },
+    "summary": {
+      "outstandingDebt": "ยอดหนี้สะสมทั้งหมด",
+      "pendingInstallments": "ยอดค้างผ่อน"
+    },
+    "title": "การจัดการหนี้สิน",
+    "types": {
+      "all": "ทั้งหมด",
+      "installment": "การผ่อนชำระ",
+      "loan": "เงินกู้",
+      "other": "อื่นๆ",
+      "repayment": "การชำระคืน"
+    }
+  },
+  "Departments": {
+    "createDescription": "กรอกข้อมูลแผนกที่ต้องการสร้าง",
+    "createTitle": "สร้างแผนกใหม่",
+    "description": "จัดการข้อมูลแผนกขององค์กร",
+    "editDescription": "แก้ไขข้อมูลแผนก",
+    "editTitle": "แก้ไขแผนก",
+    "errors": {
+      "deleteFailed": "ลบไม่สำเร็จ",
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลแผนกได้",
+      "saveFailed": "บันทึกไม่สำเร็จ"
+    },
+    "fields": {
+      "code": "รหัสแผนก",
+      "name": "ชื่อแผนก"
+    },
+    "noData": "ไม่พบข้อมูลแผนก",
+    "placeholders": {
+      "code": "เช่น HR, IT, FIN",
+      "name": "เช่น ฝ่ายบุคคล"
+    },
+    "success": {
+      "created": "สร้างแผนกสำเร็จ",
+      "deleted": "ลบแผนกสำเร็จ",
+      "updated": "แก้ไขแผนกสำเร็จ"
+    },
+    "title": "จัดการแผนก",
+    "validation": {
+      "codeRequired": "กรุณากรอกรหัสแผนก",
+      "nameRequired": "กรุณากรอกชื่อแผนก"
+    }
+  },
+  "DocumentTypes": {
+    "createDescription": "กรอกข้อมูลประเภทเอกสารที่ต้องการสร้าง",
+    "createTitle": "สร้างประเภทเอกสารใหม่",
+    "customType": "เฉพาะบริษัท",
+    "deleteDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบ {name}? การลบจะทำให้ไม่สามารถใช้ประเภทนี้ในการอัปโหลดเอกสารใหม่ได้",
+    "description": "จัดการประเภทเอกสารสำหรับพนักงาน",
+    "editDescription": "แก้ไขข้อมูลประเภทเอกสาร",
+    "editTitle": "แก้ไขประเภทเอกสาร",
+    "errors": {
+      "deleteFailed": "ลบไม่สำเร็จ",
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลประเภทเอกสารได้",
+      "saveFailed": "บันทึกไม่สำเร็จ"
+    },
+    "fields": {
+      "code": "รหัส",
+      "nameEn": "ชื่อ (อังกฤษ)",
+      "nameTh": "ชื่อ (ไทย)",
+      "type": "ประเภท"
+    },
+    "listDescription": "ประเภทเอกสารที่ใช้ในการจัดเก็บเอกสารพนักงาน",
+    "listTitle": "รายการประเภทเอกสาร",
+    "noData": "ไม่พบประเภทเอกสาร",
+    "placeholders": {
+      "code": "เช่น PASSPORT, VISA",
+      "nameEn": "เช่น Passport",
+      "nameTh": "เช่น หนังสือเดินทาง"
+    },
+    "success": {
+      "created": "สร้างประเภทเอกสารสำเร็จ",
+      "deleted": "ลบประเภทเอกสารสำเร็จ",
+      "updated": "แก้ไขประเภทเอกสารสำเร็จ"
+    },
+    "systemType": "ระบบ",
+    "title": "จัดการประเภทเอกสาร"
+  },
+  "Documents": {
+    "cancel": "ยกเลิก",
+    "clearFilter": "ล้างตัวกรอง",
+    "delete": "ลบ",
+    "deleteDialog": {
+      "description": "คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร {name}? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "title": "ยืนยันการลบเอกสาร"
+    },
+    "description": "จัดการเอกสารที่เกี่ยวข้องกับพนักงาน เช่น บัตรประชาชน หนังสือเดินทาง ใบอนุญาตทำงาน",
+    "download": "ดาวน์โหลด",
+    "duplicateDocumentError": "เอกสารนี้ถูกอัปโหลดแล้ว กรุณาเลือกไฟล์ใหม่",
+    "expired": "หมดอายุแล้ว",
+    "expiringDays": "หมดอายุใน {days} วัน",
+    "expiryLabel": "หมดอายุ",
+    "fetchError": "ไม่สามารถโหลดข้อมูลเอกสารได้",
+    "filterByType": "กรองตามประเภท",
+    "noDocuments": "ยังไม่มีเอกสาร",
+    "noDocumentsMatchFilter": "ไม่พบเอกสารที่ตรงกับตัวกรอง",
+    "noTypeFound": "ไม่พบประเภทเอกสาร",
+    "preview": "ดูตัวอย่าง",
+    "previewError": "ไม่สามารถแสดงตัวอย่างได้",
+    "searchType": "ค้นหาประเภท",
+    "tabTitle": "เอกสาร",
+    "title": "เอกสารพนักงาน",
+    "upload": "อัปโหลด",
+    "uploadDialog": {
+      "description": "อัปโหลดเอกสารใหม่สำหรับพนักงานคนนี้",
+      "documentNumber": "เลขที่เอกสาร",
+      "documentNumberPlaceholder": "เช่น เลขที่บัตรประชาชน",
+      "expiryDate": "วันหมดอายุ",
+      "file": "ไฟล์",
+      "fileHint": "PDF, JPG, PNG สูงสุด 10MB",
+      "issueDate": "วันที่ออกเอกสาร",
+      "notes": "หมายเหตุ",
+      "notesPlaceholder": "หมายเหตุเพิ่มเติมเกี่ยวกับเอกสารนี้...",
+      "selectType": "เลือกประเภทเอกสาร",
+      "title": "อัปโหลดเอกสาร",
+      "type": "ประเภทเอกสาร"
+    },
+    "uploadError": "อัปโหลดเอกสารไม่สำเร็จ",
+    "uploading": "กำลังอัปโหลด...",
+    "validation": {
+      "fileAndTypeRequired": "กรุณาเลือกไฟล์และประเภทเอกสาร",
+      "fileTooLarge": "ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 10MB)"
+    }
+  },
+  "Employees": {
+    "actions": {
+      "cancel": "ยกเลิก",
+      "delete": "ลบ",
+      "edit": "แก้ไข",
+      "openMenu": "เปิดเมนู",
+      "title": "การจัดการ"
+    },
+    "back": "ย้อนกลับ",
+    "cancel": "ยกเลิก",
+    "changePhoto": "เปลี่ยนรูป",
+    "clearFilters": "ล้างตัวกรอง",
+    "createButton": "เพิ่มพนักงาน",
+    "createTitle": "เพิ่มพนักงานใหม่",
+    "description": "จัดการข้อมูลประวัติ สัญญาจ้าง และสวัสดิการ",
+    "editTitle": "แก้ไขข้อมูลพนักงาน",
+    "employeeNumberDuplicate": "รหัสพนักงานนี้ถูกใช้งานแล้ว กรุณาใช้รหัสอื่น",
+    "employeeTypes": {
+      "allTypes": "ทุกประเภท",
+      "ft": "พนักงานประจำ",
+      "full_time": "พนักงานประจำ",
+      "part_time": "พนักงานชั่วคราว",
+      "pt": "พนักงานชั่วคราว"
+    },
+    "employmentInfo": "ข้อมูลการจ้างงาน",
+    "fields": {
+      "accountNo": "เลขที่บัญชี",
+      "allowAttendanceBonusNoLate": "เบี้ยขยัน (ไม่สาย)",
+      "allowAttendanceBonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
+      "allowances": "สวัสดิการเพิ่มเติม",
+      "bank": "ธนาคาร",
+      "basePay": "ฐานเงินเดือน / ค่าแรงต่อชั่วโมง",
+      "department": "แผนก",
+      "doctorFee": "ค่าแพทย์",
+      "electric": "ค่าไฟ",
+      "email": "อีเมล",
+      "employeeNumber": "รหัสพนักงาน",
+      "employeeType": "ประเภทพนักงาน",
+      "endDate": "วันที่สิ้นสุดงาน",
+      "firstName": "ชื่อจริง",
+      "housing": "ค่าเช่าบ้าน",
+      "idCardNumber": "เลขที่บัตร",
+      "idCardType": "ประเภทบัตร",
+      "idDocumentOtherDescription": "คำอธิบาย สำหรับประเภทบัตรอื่นๆ",
+      "internet": "ค่าอินเทอร์เน็ต",
+      "lastName": "นามสกุล",
+      "nickname": "ชื่อเล่น",
+      "phone": "เบอร์โทรศัพท์",
+      "photo": "รูปพนักงาน",
+      "position": "ตำแหน่ง",
+      "pvd": "กองทุนสำรองเลี้ยงชีพ",
+      "pvdRateEmployee": "อัตราสะสมลูกจ้าง (%)",
+      "pvdRateEmployer": "อัตราสมทบนายจ้าง (%)",
+      "sso": "ประกันสังคม",
+      "ssoHospitalName": "ชื่อโรงพยาบาลประกันสังคม",
+      "ssoWage": "ฐานเงินเดือนประกันสังคม",
+      "startDate": "วันที่เริ่มงาน",
+      "status": "สถานะ",
+      "tax": "หักภาษี ณ ที่จ่าย",
+      "title": "คำนำหน้า",
+      "utilities": "ค่าสาธารณูปโภค (หักจากเงินเดือน)",
+      "utilitiesHint": "ใช้สำหรับบันทึกค่าใช้จ่ายที่ต้องหักจากเงินเดือน เช่น ค่าน้ำ ค่าไฟ ค่าอินเทอร์เน็ต",
+      "water": "ค่าน้ำ"
+    },
+    "financialInfo": "การเงินและสวัสดิการ",
+    "listTitle": "รายชื่อพนักงาน",
+    "loading": "กำลังโหลด...",
+    "messages": {
+      "confirmDelete": "คุณแน่ใจหรือไม่ว่าต้องการลบพนักงานคนนี้?",
+      "createSuccess": "เพิ่มพนักงานสำเร็จ",
+      "deleteSuccess": "ลบพนักงานสำเร็จ",
+      "deleteTitle": "ลบพนักงาน",
+      "noEmployeesFound": "ไม่พบข้อมูลพนักงาน",
+      "updateSuccess": "บันทึกข้อมูลสำเร็จ"
+    },
+    "next": "ถัดไป",
+    "personalInfo": "ข้อมูลส่วนตัว",
+    "photoDeleteConfirmDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพพนักงานนี้?",
+    "photoDeleteConfirmTitle": "ยืนยันการลบรูปภาพ",
+    "photoDeleteError": "ลบรูปภาพไม่สำเร็จ",
+    "photoDeleteSuccess": "ลบรูปภาพสำเร็จ",
+    "photoDuplicateError": "รูปภาพนี้ถูกอัปโหลดแล้ว กรุณาเลือกรูปภาพใหม่",
+    "photoHint": "อัปโหลดรูปพนักงาน (ไฟล์รูปภาพ ขนาดไม่เกิน 2MB)",
+    "photoUploadError": "อัปโหลดรูปไม่สำเร็จ",
+    "photoUploadSuccess": "อัปโหลดรูปสำเร็จ",
+    "photoUploading": "กำลังอัปโหลด...",
+    "placeholders": {
+      "selectDepartment": "เลือกแผนก",
+      "selectPosition": "เลือกตำแหน่ง",
+      "selectTitle": "เลือกคำนำหน้า",
+      "selectType": "เลือกประเภท"
+    },
+    "removePhoto": "ลบรูป",
+    "search": "ค้นหา",
+    "searchPlaceholder": "ค้นหาจากชื่อ, รหัส...",
+    "status": {
+      "active": "ทำงานอยู่",
+      "all": "ทั้งหมด",
+      "allStatuses": "ทุกสถานะ",
+      "allYears": "ทุกปี",
+      "terminated": "พ้นสภาพ"
+    },
+    "submitError": "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "title": "จัดการข้อมูลพนักงาน",
+    "uploadPhoto": "อัปโหลดรูป",
+    "validation": {
+      "email": "รูปแบบอีเมลไม่ถูกต้อง",
+      "incompleteData": "ข้อมูลไม่ครบถ้วน",
+      "positive": "ค่าต้องเป็นจำนวนบวก",
+      "required": "กรุณากรอกข้อมูล",
+      "tabsWithErrors": "กรุณาตรวจสอบข้อมูลใน: {tabs}"
+    }
+  },
+  "Index": {
+    "copyright": "© 2024 บริษัทของคุณ สงวนลิขสิทธิ์",
+    "errors": {
+      "loginFailed": "เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบชื่อผู้ใช้และรหัสผ่าน",
+      "noActiveCompany": "บริษัทของคุณถูกระงับหรือยกเลิกแล้ว กรุณาติดต่อผู้ดูแลระบบ"
+    },
+    "loggingIn": "กำลังเข้าสู่ระบบ...",
+    "login": "เข้าสู่ระบบ",
+    "password": "รหัสผ่าน",
+    "passwordPlaceholder": "กรอกรหัสผ่าน",
+    "rememberMe": "จำฉันไว้ในระบบ",
+    "signInDescription": "เข้าสู่ระบบ HR & Payroll ของคุณ",
+    "username": "ชื่อผู้ใช้งาน",
+    "usernamePlaceholder": "กรอกชื่อผู้ใช้งาน",
+    "validation": {
+      "passwordLength": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร",
+      "usernameLength": "ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 3 ตัวอักษร",
+      "usernameRequired": "กรุณากรอกชื่อผู้ใช้งาน"
+    },
+    "welcomeBack": "ยินดีต้อนรับกลับมา"
+  },
+  "Menu": {
+    "activityLogs": "ประวัติการใช้งาน",
+    "attendance": "บันทึกเวลาทำงาน",
+    "bonus": "การจัดการโบนัส",
+    "collapse": "ย่อเมนู",
+    "companies": "จัดการบริษัท",
+    "compensation": "ค่าตอบแทน",
+    "dashboard": "แดชบอร์ดหลัก",
+    "debt": "การจัดการหนี้สิน",
+    "deductions": "เบิก/กู้ยืม",
+    "employeeManagement": "จัดการพนักงาน",
+    "humanResources": "ทรัพยากรบุคคล",
+    "leaveManagement": "จัดการวันลา",
+    "payoutPT": "จ่ายล่วงหน้า (พาร์ทไทม์)",
+    "payroll": "เงินเดือน",
+    "payrollExpenses": "เงินเดือนและค่าใช้จ่าย",
+    "reports": "รายงาน",
+    "salaryAdvance": "เบิกเงินล่วงหน้า",
+    "salaryRaise": "ปรับเงินเดือน",
+    "settings": "การตั้งค่า",
+    "systemManagement": "การจัดการระบบ",
+    "users": "การจัดการผู้ใช้งาน",
+    "worklog": "บันทึกเวลาทำงาน",
+    "worklogFT": "พนักงานประจำ",
+    "worklogPT": "พาร์ทไทม์"
+  },
+  "Nav": {
+    "branches": "สาขา",
+    "departments": "แผนก",
+    "documentTypes": "ประเภทเอกสาร",
+    "orgProfile": "ข้อมูลองค์กร",
+    "positions": "ตำแหน่ง"
   },
   "OrgProfile": {
-    "title": "ข้อมูลองค์กร (หัวสลิป)",
-    "description": "จัดการข้อมูลองค์กรที่จะแสดงบนหัวสลิปเงินเดือน",
-    "viewHistory": "ดูประวัติ",
-    "configurationHistory": "ประวัติการเปลี่ยนแปลง",
-    "historyDescription": "รายการการเปลี่ยนแปลงข้อมูลองค์กรตามช่วงเวลา",
-    "version": "เวอร์ชัน",
-    "startDate": "วันที่มีผล",
-    "endDate": "วันที่สิ้นสุด",
-    "status": "สถานะ",
-    "currentConfig": "ข้อมูลปัจจุบัน",
-    "currentConfigDescription": "ใช้เวอร์ชัน {version} ตั้งแต่วันที่ {startDate}",
-    "companyInfo": "ข้อมูลบริษัท",
-    "companyInfoDescription": "ข้อมูลพื้นฐานของบริษัท",
-    "companyName": "ชื่อบริษัท",
-    "companyNameHint": "ชื่อบริษัทที่จะแสดงบนสลิปเงินเดือน",
-    "taxId": "เลขประจำตัวผู้เสียภาษี",
-    "taxIdHint": "เลข 13 หลัก",
-    "effectiveDate": "วันที่มีผลบังคับใช้",
-    "effectiveDateHint": "วันที่ข้อมูลนี้จะเริ่มมีผลใช้งาน",
     "addressInfo": "ที่อยู่",
     "addressInfoDescription": "ที่อยู่ของบริษัท",
     "addressLine1": "ที่อยู่บรรทัดที่ 1",
     "addressLine1Hint": "เลขที่ ซอย ถนน",
     "addressLine2": "ที่อยู่บรรทัดที่ 2",
     "addressLine2Hint": "รายละเอียดเพิ่มเติม (ถ้ามี)",
-    "subdistrict": "ตำบล/แขวง",
-    "district": "อำเภอ/เขต",
-    "province": "จังหวัด",
-    "postalCode": "รหัสไปรษณีย์",
+    "back": "ก่อนหน้า",
+    "changeLogo": "เปลี่ยนโลโก้",
+    "companyInfo": "ข้อมูลบริษัท",
+    "companyInfoDescription": "ข้อมูลพื้นฐานของบริษัท",
+    "companyName": "ชื่อบริษัท",
+    "companyNameHint": "ชื่อบริษัทที่จะแสดงบนสลิปเงินเดือน",
+    "configurationHistory": "ประวัติการเปลี่ยนแปลง",
     "contactInfo": "ข้อมูลติดต่อ",
     "contactInfoDescription": "ช่องทางการติดต่อบริษัท",
-    "phoneMain": "โทรศัพท์หลัก",
-    "phoneMainHint": "หมายเลขโทรศัพท์หลัก",
-    "phoneAlt": "โทรศัพท์สำรอง",
-    "phoneAltHint": "หมายเลขโทรศัพท์สำรอง (ถ้ามี)",
+    "currentConfig": "ข้อมูลปัจจุบัน",
+    "currentConfigDescription": "ใช้เวอร์ชัน {version} ตั้งแต่วันที่ {startDate}",
+    "description": "จัดการข้อมูลองค์กรที่จะแสดงบนหัวสลิปเงินเดือน",
+    "district": "อำเภอ/เขต",
+    "effectiveDate": "วันที่มีผลบังคับใช้",
+    "effectiveDateHint": "วันที่ข้อมูลนี้จะเริ่มมีผลใช้งาน",
     "email": "อีเมล",
     "emailHint": "อีเมลติดต่อบริษัท",
-    "slipSettings": "ตั้งค่าสลิป",
-    "slipSettingsDescription": "ตั้งค่าเพิ่มเติมสำหรับสลิปเงินเดือน",
-    "slipFooterNote": "ข้อความท้ายสลิป",
-    "slipFooterNoteHint": "ข้อความที่จะแสดงท้ายสลิปเงินเดือน",
+    "endDate": "วันที่สิ้นสุด",
+    "error": "เกิดข้อผิดพลาด",
+    "historyDescription": "รายการการเปลี่ยนแปลงข้อมูลองค์กรตามช่วงเวลา",
     "logo": "โลโก้บริษัท",
     "logoHint": "อัปโหลดโลโก้บริษัท (ไฟล์รูปภาพ ขนาดไม่เกิน 2MB)",
-    "uploadLogo": "อัปโหลดโลโก้",
-    "changeLogo": "เปลี่ยนโลโก้",
-    "removeLogo": "ลบโลโก้",
-    "logoUploading": "กำลังอัปโหลด...",
-    "logoUploadSuccess": "อัปโหลดโลโก้สำเร็จ",
     "logoUploadError": "อัปโหลดโลโก้ไม่สำเร็จ",
-    "saveChanges": "บันทึกการเปลี่ยนแปลง",
-    "saving": "กำลังบันทึก...",
-    "saveSuccess": "บันทึกข้อมูลสำเร็จ",
-    "reset": "รีเซ็ต",
-    "back": "ก่อนหน้า",
+    "logoUploadSuccess": "อัปโหลดโลโก้สำเร็จ",
+    "logoUploading": "กำลังอัปโหลด...",
     "next": "ถัดไป",
-    "error": "เกิดข้อผิดพลาด",
-    "success": "สำเร็จ"
+    "phoneAlt": "โทรศัพท์สำรอง",
+    "phoneAltHint": "หมายเลขโทรศัพท์สำรอง (ถ้ามี)",
+    "phoneMain": "โทรศัพท์หลัก",
+    "phoneMainHint": "หมายเลขโทรศัพท์หลัก",
+    "postalCode": "รหัสไปรษณีย์",
+    "province": "จังหวัด",
+    "removeLogo": "ลบโลโก้",
+    "reset": "รีเซ็ต",
+    "saveChanges": "บันทึกการเปลี่ยนแปลง",
+    "saveSuccess": "บันทึกข้อมูลสำเร็จ",
+    "saving": "กำลังบันทึก...",
+    "slipFooterNote": "ข้อความท้ายสลิป",
+    "slipFooterNoteHint": "ข้อความที่จะแสดงท้ายสลิปเงินเดือน",
+    "slipSettings": "ตั้งค่าสลิป",
+    "slipSettingsDescription": "ตั้งค่าเพิ่มเติมสำหรับสลิปเงินเดือน",
+    "startDate": "วันที่มีผล",
+    "status": "สถานะ",
+    "subdistrict": "ตำบล/แขวง",
+    "success": "สำเร็จ",
+    "taxId": "เลขประจำตัวผู้เสียภาษี",
+    "taxIdHint": "เลข 13 หลัก",
+    "title": "ข้อมูลองค์กร (หัวสลิป)",
+    "uploadLogo": "อัปโหลดโลโก้",
+    "version": "เวอร์ชัน",
+    "viewHistory": "ดูประวัติ"
   },
-  "Documents": {
-    "tabTitle": "เอกสาร",
-    "title": "เอกสารพนักงาน",
-    "description": "จัดการเอกสารที่เกี่ยวข้องกับพนักงาน เช่น บัตรประชาชน หนังสือเดินทาง ใบอนุญาตทำงาน",
-    "upload": "อัปโหลด",
-    "download": "ดาวน์โหลด",
-    "preview": "ดูตัวอย่าง",
-    "delete": "ลบ",
-    "cancel": "ยกเลิก",
-    "uploading": "กำลังอัปโหลด...",
-    "noDocuments": "ยังไม่มีเอกสาร",
-    "fetchError": "ไม่สามารถโหลดข้อมูลเอกสารได้",
-    "uploadError": "อัปโหลดเอกสารไม่สำเร็จ",
-    "duplicateDocumentError": "เอกสารนี้ถูกอัปโหลดแล้ว กรุณาเลือกไฟล์ใหม่",
-    "previewError": "ไม่สามารถแสดงตัวอย่างได้",
-    "expiryLabel": "หมดอายุ",
-    "expired": "หมดอายุแล้ว",
-    "expiringDays": "หมดอายุใน {days} วัน",
-    "validation": {
-      "fileAndTypeRequired": "กรุณาเลือกไฟล์และประเภทเอกสาร",
-      "fileTooLarge": "ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 10MB)"
-    },
-    "uploadDialog": {
-      "title": "อัปโหลดเอกสาร",
-      "description": "อัปโหลดเอกสารใหม่สำหรับพนักงานคนนี้",
-      "file": "ไฟล์",
-      "fileHint": "PDF, JPG, PNG สูงสุด 10MB",
-      "type": "ประเภทเอกสาร",
-      "selectType": "เลือกประเภทเอกสาร",
-      "documentNumber": "เลขที่เอกสาร",
-      "documentNumberPlaceholder": "เช่น เลขที่บัตรประชาชน",
-      "issueDate": "วันที่ออกเอกสาร",
-      "expiryDate": "วันหมดอายุ",
-      "notes": "หมายเหตุ",
-      "notesPlaceholder": "หมายเหตุเพิ่มเติมเกี่ยวกับเอกสารนี้..."
-    },
-    "filterByType": "กรองตามประเภท",
-    "searchType": "ค้นหาประเภท",
-    "noTypeFound": "ไม่พบประเภทเอกสาร",
-    "clearFilter": "ล้างตัวกรอง",
-    "noDocumentsMatchFilter": "ไม่พบเอกสารที่ตรงกับตัวกรอง",
-    "deleteDialog": {
-      "title": "ยืนยันการลบเอกสาร",
-      "description": "คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร {name}? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+  "Payouts": {
+    "PT": {
+      "actions": {
+        "markAsPaid": "อนุมัติการจ่ายเงิน",
+        "view": "ดูรายละเอียด"
+      },
+      "confirmPay": {
+        "description": "คุณแน่ใจหรือไม่ว่าต้องการบันทึกว่ารายการนี้จ่ายเงินแล้ว? การกระทำนี้ไม่สามารถย้อนกลับได้",
+        "title": "ยืนยันการจ่ายเงิน"
+      },
+      "create": {
+        "createTitle": "สร้างรายการจ่ายเงิน",
+        "estimatedAmount": "ยอดเงินโดยประมาณ: {amount}",
+        "hourlyRate": "ค่าจ้างต่อชั่วโมง: {rate}",
+        "noPendingWorklogs": "ไม่พบรายการลงเวลาที่ค้างอยู่สำหรับพนักงานคนนี้",
+        "selectEmployeePlaceholder": "เลือกพนักงานเพื่อดำเนินการต่อ",
+        "selectedWorklogs": "รายการที่เลือก: {count}",
+        "step1": "เลือกพนักงาน",
+        "step2": "เลือกรายการลงเวลา",
+        "step3": "ยืนยัน",
+        "totalHours": "ชั่วโมงรวม: {hours}"
+      },
+      "createButton": "สร้างรายการจ่าย",
+      "createTitle": "สร้างรายการจ่ายใหม่",
+      "deleteError": "ไม่สามารถลบรายการจ่ายเงินได้",
+      "deleteSuccess": "ลบรายการจ่ายเงินสำเร็จ",
+      "description": "จัดการการจ่ายเงินสำหรับพนักงานพาร์ทไทม์",
+      "detailTitle": "รายละเอียดการจ่าย",
+      "errors": {
+        "createFailed": "ไม่สามารถสร้างรายการจ่ายได้",
+        "payFailed": "ไม่สามารถบันทึกการจ่ายเงินได้"
+      },
+      "fields": {
+        "amountTotal": "ยอดเงินรวม",
+        "createdAt": "วันที่สร้าง",
+        "employee": "พนักงาน",
+        "itemCount": "จำนวนรายการ",
+        "paidAt": "วันที่จ่าย",
+        "paidBy": "ผู้จ่าย",
+        "status": "สถานะ",
+        "totalHours": "ชั่วโมงรวม",
+        "workDate": "วันที่ทำงาน"
+      },
+      "filters": {
+        "allEmployees": "พนักงานทั้งหมด",
+        "allStatuses": "ทุกสถานะ",
+        "endDate": "วันที่สิ้นสุด",
+        "selectEmployee": "เลือกพนักงาน",
+        "startDate": "วันที่เริ่มต้น"
+      },
+      "listTitle": "ประวัติการจ่าย",
+      "noData": "ไม่พบรายการจ่าย",
+      "statuses": {
+        "paid": "จ่ายแล้ว",
+        "to_pay": "รอจ่าย"
+      },
+      "success": {
+        "created": "สร้างรายการจ่ายสำเร็จ",
+        "paid": "บันทึกการจ่ายเงินสำเร็จ"
+      },
+      "title": "การจ่ายเงินพาร์ทไทม์"
     }
   },
-  "ActivityLog": {
-    "title": "ประวัติการใช้งาน",
-    "description": "ดูประวัติการสร้าง แก้ไข และลบข้อมูลในระบบ",
+  "Payroll": {
+    "actions": {
+      "approve": "อนุมัติ",
+      "title": "การกระทำ",
+      "view": "ดูรายละเอียด"
+    },
+    "approve": {
+      "description": "คุณแน่ใจหรือว่าต้องการอนุมัติงวดเงินเดือนนี้? ไม่สามารถย้อนกลับได้",
+      "title": "อนุมัติงวดเงินเดือน"
+    },
+    "createDescription": "สร้างรอบเงินเดือนใหม่สำหรับเดือนที่เลือก",
+    "createTitle": "สร้างรอบเงินเดือน",
+    "description": "จัดการรอบเงินเดือนและสลิปเงินเดือน",
+    "detail": {
+      "backToList": "กลับไปรายการ",
+      "employeeList": "รายชื่อพนักงาน",
+      "filterByType": "ประเภทพนักงาน",
+      "searchPlaceholder": "ค้นหาจากรหัสหรือชื่อ...",
+      "title": "รายละเอียดเงินเดือน"
+    },
     "fields": {
-      "timestamp": "เวลา",
-      "user": "ผู้ทำรายการ",
-      "action": "การกระทำ",
-      "entity": "ประเภท",
-      "entityId": "ID รายการ"
+      "month": "เดือนที่จ่าย",
+      "payDate": "วันที่จ่ายเงิน",
+      "period": "รอบระยะเวลา",
+      "periodStart": "วันที่เริ่มรอบ",
+      "ssoEmployee": "ประกันสังคมลูกจ้าง (%)",
+      "ssoEmployer": "ประกันสังคมนายจ้าง (%)",
+      "status": "สถานะ",
+      "totalEmployees": "จำนวนพนักงาน",
+      "totalNetPay": "ยอดจ่ายสุทธิ",
+      "totalProvidentFund": "ยอดกองทุนสำรองเลี้ยงชีพ",
+      "totalSocialSecurity": "ยอดประกันสังคม",
+      "totalTax": "ยอดหักภาษี"
     },
     "filters": {
-      "title": "ตัวกรอง",
-      "dateRange": "ช่วงเวลา",
-      "user": "ผู้ใช้งาน",
-      "userPlaceholder": "ค้นหาชื่อผู้ใช้งาน...",
-      "action": "การกระทำ",
-      "entity": "ประเภท",
-      "all": "ทั้งหมด"
+      "allStatuses": "ทุกสถานะ",
+      "status": "สถานะ",
+      "year": "ปี"
     },
-    "actions": {
-      "viewDetails": "ดูรายละเอียด",
-      "search": "ค้นหา"
+    "payslip": {
+      "addItem": "เพิ่มรายการ",
+      "editTitle": "แก้ไขสลิปเงินเดือน",
+      "fields": {
+        "advanceRepay": "หักคืนเงินเบิกล่วงหน้า",
+        "attendanceBonus": "เบี้ยขยัน",
+        "attendanceBonusNoLate": "เบี้ยขยัน (ไม่สาย)",
+        "attendanceBonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
+        "bonus": "โบนัส",
+        "deductionTotal": "รวมหัก",
+        "doctorFee": "ค่าแพทย์",
+        "electricAmount": "ค่าไฟ",
+        "electricMeterCurr": "มิเตอร์ไฟ (หลัง)",
+        "electricMeterPrev": "มิเตอร์ไฟ (ก่อน)",
+        "employee": "พนักงาน",
+        "housingAllowance": "ค่าเช่าบ้าน",
+        "incomeTotal": "รวมรายได้",
+        "internetAmount": "ค่าเน็ต",
+        "lateDeduction": "หักค่าสาย",
+        "lateMinutes": "สายกี่นาที",
+        "leaveCompensation": "ชดเชยวันลา",
+        "leaveDays": "ลากี่วัน",
+        "leaveDeduction": "หักค่าลา",
+        "leaveDouble": "ลา 2 แรง",
+        "leaveDoubleDeduction": "หักลา 2 แรง",
+        "leaveHours": "ลารายชั่วโมง",
+        "leaveHoursDeduction": "หักลารายชั่วโมง",
+        "loanRepayments": "หักชำระหนี้",
+        "netPay": "รับสุทธิ",
+        "ot": "ล่วงเวลา",
+        "otHours": "ชม.",
+        "othersDeduction": "หักอื่นๆ",
+        "othersIncome": "รายได้อื่นๆ",
+        "providentFund": "กองทุนสำรองเลี้ยงชีพ",
+        "salary": "เงินเดือน",
+        "sso": "ประกันสังคม",
+        "tax": "ภาษีหัก ณ ที่จ่าย",
+        "utilities": "ค่าสาธารณูปโภค",
+        "waterAmount": "ค่าน้ำ",
+        "waterMeterCurr": "มิเตอร์น้ำ (หลัง)",
+        "waterMeterPrev": "มิเตอร์น้ำ (ก่อน)"
+      },
+      "itemName": "ชื่อรายการ",
+      "itemValue": "จำนวนเงิน",
+      "removeItem": "ลบ",
+      "tabs": {
+        "attendance": "หักเวลาทำงาน",
+        "deductions": "หักรายเดือน",
+        "income": "รายได้",
+        "loans": "หนี้สิน"
+      },
+      "viewTitle": "ดูสลิปเงินเดือน"
     },
-    "detailsTitle": "รายละเอียดการเปลี่ยนแปลง",
-    "noData": "ไม่พบข้อมูลประวัติ"
+    "print": {
+      "batchButton": "พิมพ์สลิปทั้งหมด",
+      "button": "พิมพ์สลิป",
+      "copy": "สำเนา",
+      "deselectAll": "ยกเลิกเลือกทั้งหมด",
+      "original": "ต้นฉบับ",
+      "selectAll": "เลือกทั้งหมด",
+      "selectEmployees": "เลือกพนักงานที่ต้องการพิมพ์",
+      "selectedCount": "เลือก {count} คน",
+      "title": "ใบจ่ายเงินเดือน"
+    },
+    "status": {
+      "approved": "อนุมัติแล้ว",
+      "paid": "จ่ายแล้ว",
+      "pending": "รอดำเนินการ",
+      "processing": "กำลังประมวลผล"
+    },
+    "title": "เงินเดือน"
   },
-  "Tenant": {
-    "selectBranch": "เลือกสาขา",
-    "selectBranches": "เลือกสาขา",
-    "branches": "สาขา",
-    "default": "หลัก",
-    "branchSwitched": "เปลี่ยนสาขาเรียบร้อยแล้ว",
-    "switchFailed": "ไม่สามารถเปลี่ยนสาขาได้",
-    "mustSelectOneBranch": "ต้องเลือกอย่างน้อย 1 สาขา",
-    "error": "เกิดข้อผิดพลาด",
-    "success": "สำเร็จ",
-    "selectCompany": "เลือกบริษัท",
-    "selectCompanyDescription": "เลือกบริษัทที่คุณต้องการเข้าถึง",
-    "selectBranchDescription": "เลือกสาขาที่คุณต้องการทำงาน",
+  "Positions": {
+    "createDescription": "กรอกข้อมูลตำแหน่งที่ต้องการสร้าง",
+    "createTitle": "สร้างตำแหน่งใหม่",
+    "description": "จัดการข้อมูลตำแหน่งงานขององค์กร",
+    "editDescription": "แก้ไขข้อมูลตำแหน่ง",
+    "editTitle": "แก้ไขตำแหน่ง",
+    "errors": {
+      "deleteFailed": "ลบไม่สำเร็จ",
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลตำแหน่งได้",
+      "saveFailed": "บันทึกไม่สำเร็จ"
+    },
+    "fields": {
+      "code": "รหัสตำแหน่ง",
+      "name": "ชื่อตำแหน่ง"
+    },
+    "noData": "ไม่พบข้อมูลตำแหน่ง",
+    "placeholders": {
+      "code": "เช่น MGR, STAFF, ENG",
+      "name": "เช่น ผู้จัดการ"
+    },
+    "success": {
+      "created": "สร้างตำแหน่งสำเร็จ",
+      "deleted": "ลบตำแหน่งสำเร็จ",
+      "updated": "แก้ไขตำแหน่งสำเร็จ"
+    },
+    "title": "จัดการตำแหน่ง",
+    "validation": {
+      "codeRequired": "กรุณากรอกรหัสตำแหน่ง",
+      "nameRequired": "กรุณากรอกชื่อตำแหน่ง"
+    }
+  },
+  "Profile": {
+    "description": "จัดการข้อมูลส่วนตัวและเปลี่ยนรหัสผ่าน",
+    "errorLoadingProfile": "ไม่สามารถโหลดข้อมูลโปรไฟล์ได้",
+    "lastLogin": "เข้าสู่ระบบล่าสุด",
+    "loading": "กำลังโหลด...",
+    "password": {
+      "confirmPassword": "ยืนยันรหัสผ่านใหม่",
+      "currentPassword": "รหัสผ่านปัจจุบัน",
+      "description": "เปลี่ยนรหัสผ่านเพื่อความปลอดภัย",
+      "error": "ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาตรวจสอบรหัสผ่านปัจจุบัน",
+      "errorTitle": "เกิดข้อผิดพลาด",
+      "minLength": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร",
+      "newPassword": "รหัสผ่านใหม่",
+      "passwordsDoNotMatch": "รหัสผ่านไม่ตรงกัน",
+      "required": "กรุณากรอกข้อมูล",
+      "submit": "เปลี่ยนรหัสผ่าน",
+      "success": "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว",
+      "successTitle": "สำเร็จ",
+      "title": "เปลี่ยนรหัสผ่าน"
+    },
+    "personalInfo": "ข้อมูลผู้ใช้งาน",
+    "personalInfoDescription": "รายละเอียดบัญชีผู้ใช้งานของคุณ",
+    "role": "สิทธิ์การใช้งาน",
+    "title": "ข้อมูลส่วนตัว",
+    "username": "ชื่อผู้ใช้งาน"
+  },
+  "SalaryAdvance": {
+    "advanceDate": "วันที่เบิก",
+    "allStatuses": "ทุกสถานะ",
+    "amount": "จำนวนเงิน",
+    "create": "สร้างรายการ",
+    "createError": "เกิดข้อผิดพลาดในการสร้างรายการ",
+    "createSuccess": "สร้างรายการสำเร็จ",
+    "createTitle": "สร้างรายการเบิกเงินล่วงหน้า",
+    "deleteConfirm": "คุณแน่ใจหรือไม่ที่จะลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+    "deleteError": "เกิดข้อผิดพลาดในการลบรายการ",
+    "deleteSuccess": "ลบรายการสำเร็จ",
+    "deleteTitle": "ยืนยันการลบ",
+    "description": "จัดการรายการเบิกเงินล่วงหน้าของพนักงาน (Salary Advance)",
+    "editTitle": "แก้ไขรายการเบิกเงินล่วงหน้า",
+    "employee": "พนักงาน",
+    "errors": {
+      "amountMinError": "จำนวนเงินต้องมากกว่า 0",
+      "invalidPayrollMonth": "งวดเงินเดือนที่เลือกได้รับการอนุมัติแล้ว ไม่สามารถเลือกงวดนี้ได้"
+    },
+    "filterStatus": "สถานะ",
+    "listTitle": "รายการเบิกเงินล่วงหน้า",
+    "noEmployeeFound": "ไม่พบพนักงาน",
+    "payrollMonth": "งวดที่หักคืน",
+    "payrollYear": "ปี",
+    "searchEmployee": "เลือกพนักงาน",
+    "searchPlaceholder": "ค้นหา...",
+    "selectEmployee": "เลือกพนักงาน",
+    "selectEmployeeToView": "กรุณาเลือกพนักงานเพื่อดูข้อมูล",
+    "status": "สถานะ",
+    "statusPending": "รอหักคืน",
+    "statusProcessed": "หักคืนแล้ว",
+    "title": "เบิกเงินล่วงหน้า",
+    "updateError": "เกิดข้อผิดพลาดในการแก้ไขรายการ",
+    "updateSuccess": "แก้ไขรายการสำเร็จ",
+    "validating": "กำลังตรวจสอบ..."
+  },
+  "SalaryRaise": {
+    "actions": {
+      "approve": "อนุมัติ",
+      "delete": "ลบ",
+      "edit": "แก้ไข",
+      "editItem": "แก้ไขยอด",
+      "reject": "ไม่อนุมัติ",
+      "view": "ดูรายละเอียด"
+    },
+    "approve": {
+      "description": "คุณแน่ใจหรือไม่ที่จะอนุมัติรอบนี้? ระบบจะทำการอัปเดตฐานเงินเดือนของพนักงานทุกคนในรอบนี้ทันที",
+      "success": "อนุมัติรอบสำเร็จ",
+      "title": "อนุมัติรอบ"
+    },
+    "confirmReject": "คุณแน่ใจหรือไม่ที่จะปฏิเสธรอบนี้?",
+    "create": {
+      "description": "เลือกช่วงเวลาการประเมินสำหรับรอบนี้ ระบบจะคำนวณสถิติของพนักงานประจำทุกคนให้อัตโนมัติ",
+      "endDate": "วันสิ้นสุด",
+      "error": {
+        "overlapOrPending": "ไม่สามารถสร้างรอบได้ (อาจมีรอบที่รออนุมัติอยู่หรือช่วงเวลาซ้ำกัน)"
+      },
+      "note": "หมายเหตุ: สามารถสร้างรอบที่รออนุมัติได้เพียง 1 รอบเท่านั้น",
+      "startDate": "วันเริ่มต้น",
+      "success": "สร้างรอบสำเร็จ",
+      "title": "สร้างรอบการปรับเงินเดือน"
+    },
+    "createButton": "สร้าง",
+    "createTitle": "สร้างรอบใหม่",
+    "delete": {
+      "description": "คุณแน่ใจหรือไม่ที่จะลบรอบการปรับเงินเดือนนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "error": "ลบรอบการปรับเงินเดือนไม่สำเร็จ",
+      "success": "ลบรอบการปรับเงินเดือนสำเร็จ",
+      "title": "ลบรอบการปรับเงินเดือน"
+    },
+    "description": "จัดการรอบการปรับเงินเดือนและกำหนดอัตราการปรับเงินเดือนพนักงาน",
+    "detailTitle": "รายละเอียดรอบ",
+    "editItem": {
+      "currentSalary": "เงินเดือนปัจจุบัน: {amount}",
+      "description": "ปรับแก้จำนวนเงินหรือเปอร์เซ็นต์",
+      "newSalary": "เงินเดือนใหม่: {amount}",
+      "saveSuccess": "บันทึกยอดปรับสำเร็จ",
+      "title": "แก้ไขยอดปรับ: {name}"
+    },
+    "fields": {
+      "createdAt": "วันที่สร้าง",
+      "currentSalary": "เงินเดือนปัจจุบัน",
+      "employee": "พนักงาน",
+      "employeeNumber": "รหัสพนักงาน",
+      "newSalary": "เงินเดือนใหม่",
+      "newSsoWage": "ฐาน SSO ใหม่",
+      "note": "หมายเหตุ",
+      "period": "รอบการประเมิน",
+      "raiseAmount": "ยอดที่ปรับ",
+      "raisePercent": "% ที่ปรับ",
+      "stats": "สถิติ (สาย/ลา/OT)",
+      "status": "สถานะ",
+      "tenure": "อายุงาน (วัน)",
+      "totalEmployees": "จำนวนพนักงาน",
+      "totalRaiseAmount": "ยอดปรับรวม",
+      "updatedAt": "แก้ไขล่าสุด",
+      "year": "ปี"
+    },
+    "listTitle": "การปรับเงินเดือน",
+    "noData": "ไม่พบข้อมูลรอบการปรับเงินเดือน",
+    "noItemsFound": "ไม่พบรายการปรับเงินเดือน",
+    "reject": {
+      "description": "คุณแน่ใจหรือไม่ที่จะปฏิเสธรอบนี้?",
+      "success": "ปฏิเสธรอบสำเร็จ",
+      "title": "ไม่อนุมัติรอบ"
+    },
+    "rejectConfirmMessage": "คุณแน่ใจหรือไม่ที่จะปฏิเสธรอบการปรับเงินเดือนนี้?",
+    "stats": {
+      "late": "สาย: {minutes} นาที",
+      "leave": "ลา: {days} วัน",
+      "leaveDouble": "ลา 2 แรง: {days} วัน",
+      "leaveHours": "ลา (ชม.): {hours} ชม.",
+      "ot": "OT: {hours} ชม."
+    },
+    "status": {
+      "all": "ทั้งหมด",
+      "allStatuses": "ทุกสถานะ",
+      "allYears": "ทุกปี",
+      "approved": "อนุมัติแล้ว",
+      "pending": "รออนุมัติ",
+      "rejected": "ไม่อนุมัติ"
+    },
+    "title": "การจัดการปรับเงินเดือน",
+    "units": {
+      "days": "วัน",
+      "hours": "ชั่วโมง",
+      "minutes": "นาที",
+      "months": "เดือน",
+      "years": "ปี"
+    }
+  },
+  "Settings": {
+    "addBracket": "เพิ่มขั้น",
+    "attendanceBonuses": "เบี้ยขยันและสวัสดิการ",
+    "attendanceBonusesDescription": "กำหนดค่าเบี้ยขยันและค่าเช่าบ้าน",
     "back": "ย้อนกลับ",
-    "confirm": "ยืนยัน"
+    "bonusNoLate": "เบี้ยขยัน (ไม่สาย)",
+    "bonusNoLateHint": "โบนัสสำหรับพนักงานที่ไม่มาสาย (บาท/เดือน)",
+    "bonusNoLeave": "เบี้ยขยัน (ไม่ลา)",
+    "bonusNoLeaveHint": "โบนัสสำหรับพนักงานที่ไม่ลางาน (บาท/เดือน)",
+    "bonuses": "เบี้ยขยันและสวัสดิการ",
+    "bracketMax": "เงินได้ (ขั้นสูง)",
+    "bracketMin": "เงินได้ (ขั้นต่ำ)",
+    "bracketRate": "อัตราภาษี",
+    "configurationHistory": "ประวัติการตั้งค่า",
+    "currentConfig": "ค่าคอนฟิกปัจจุบัน",
+    "currentConfigDescription": "กำลังใช้งานเวอร์ชัน {version} มีผลตั้งแต่วันที่ {startDate}",
+    "description": "จัดการค่าคงที่สำหรับการคำนวณเงินเดือนและสวัสดิการ",
+    "effectiveDate": "วันที่มีผลบังคับใช้",
+    "effectiveDateHint": "วันที่เริ่มต้นใช้งานการตั้งค่านี้",
+    "electricityRate": "ค่าไฟต่อหน่วย",
+    "electricityRateHint": "ค่าไฟฟ้าต่อหน่วย (บาท)",
+    "employeeRate": "อัตราหักลูกจ้าง",
+    "employeeRateHint": "เปอร์เซ็นต์การหักประกันสังคมจากลูกจ้าง (กรอก 5 สำหรับ 5%)",
+    "employerRate": "อัตราสมทบนายจ้าง",
+    "employerRateHint": "เปอร์เซ็นต์การสมทบประกันสังคมจากนายจ้าง (กรอก 5 สำหรับ 5%)",
+    "endDate": "วันที่สิ้นสุด",
+    "error": "เกิดข้อผิดพลาด",
+    "historyDescription": "ดูการเปลี่ยนแปลงค่าคอนฟิกทั้งหมดในอดีต",
+    "hourlyRate": "ค่าแรงรายชั่วโมง",
+    "hourlyRateHint": "ค่าแรงต่อชั่วโมงสำหรับพนักงานชั่วคราว (บาท)",
+    "housingAllowance": "ค่าเช่าบ้าน",
+    "housingAllowanceHint": "ค่าสวัสดิการค่าเช่าที่พัก (บาท/เดือน)",
+    "internetFee": "ค่าอินเทอร์เน็ตรายเดือน",
+    "internetFeeHint": "ค่าอินเทอร์เน็ตรายเดือน (บาท)",
+    "lateGraceMinutes": "นาทีอนุโลม (ไม่หักถ้าสายไม่เกิน)",
+    "lateGraceMinutesHint": "จำนวนนาทีที่อนุญาตให้มาสายโดยไม่หักเงิน (เช่น 15 นาที)",
+    "lateRatePerMinute": "อัตราหักต่อนาที (มาสาย)",
+    "lateRatePerMinuteHint": "จำนวนเงินที่หักต่อนาที เมื่อสายเกินเวลาอนุโลม (บาท/นาที)",
+    "leaveDeductionSettings": "การคำนวณหักลา/มาสาย",
+    "leaveDeductionSettingsDescription": "กำหนดค่าสำหรับคำนวณการหักเงินจากการลาและมาสาย",
+    "next": "ถัดไป",
+    "note": "หมายเหตุ",
+    "notes": "หมายเหตุ",
+    "notesDescription": "บันทึกเหตุผลหรือรายละเอียดการเปลี่ยนแปลง",
+    "notesPlaceholder": "เช่น ปรับขึ้นค่าแรงตามกฎหมายใหม่ หรือ แก้ไขค่าไฟตามจริง",
+    "otHourlyRate": "ค่า OT ต่อชั่วโมง",
+    "otHourlyRateHint": "ค่าล่วงเวลาต่อชั่วโมง (บาท)",
+    "rates": "อัตราค่าจ้าง",
+    "reset": "รีเซ็ต",
+    "saveChanges": "บันทึกการเปลี่ยนแปลง",
+    "saveSuccess": "บันทึกการตั้งค่าสำเร็จ",
+    "saving": "กำลังบันทึก...",
+    "socialSecurity": "ประกันสังคม",
+    "socialSecurityRates": "อัตราหักประกันสังคม",
+    "socialSecurityRatesDescription": "กำหนดอัตราการหักเงินประกันสังคมสำหรับลูกจ้างและนายจ้าง",
+    "ssoWageCap": "เพดานค่าจ้างประกันสังคม (ฐานเงินสูงสุด)",
+    "ssoWageCapHint": "ฐานเงินเดือนสูงสุดที่ใช้ในการคำนวณประกันสังคม (บาท)",
+    "startDate": "วันที่เริ่มใช้",
+    "status": "สถานะ",
+    "success": "สำเร็จ",
+    "tax": "ภาษี",
+    "taxApplyPersonalAllowance": "หักค่าลดหย่อนส่วนตัว",
+    "taxApplyPersonalAllowanceHint": "เปิด/ปิดการหักค่าลดหย่อนส่วนตัว (60,000 บาท)",
+    "taxApplyStandardExpense": "หักค่าใช้จ่ายเหมา",
+    "taxApplyStandardExpenseHint": "เปิด/ปิดการหักค่าใช้จ่ายเหมา 50% ไม่เกิน 100,000 บาท",
+    "taxBracketValidation": {
+      "maxLessThanMin": "เงินได้ขั้นสูง ของแถวที่ {row} ต้องมากกว่าขั้นต่ำ (ขั้นต่ำ: {min}, ขั้นสูง: {max})",
+      "minMismatch": "เงินได้ขั้นต่ำ ของแถวที่ {row} ต้องเท่ากับ {expected} (ขั้นสูงแถวก่อนหน้า + 1) แต่ค่าปัจจุบันคือ {actual}",
+      "prevMaxNull": "กรุณาระบุค่าเงินได้ขั้นสูง ของแถวที่ {row} ก่อน"
+    },
+    "taxPersonalAllowanceAmount": "จำนวนค่าลดหย่อนส่วนตัว",
+    "taxPersonalAllowanceAmountHint": "ค่าลดหย่อนส่วนตัวต่อปี (บาท)",
+    "taxProgressiveBrackets": "อัตราภาษีก้าวหน้า (0-35%)",
+    "taxProgressiveBracketsHint": "กำหนดขั้นบันไดภาษีตามมาตรา 40(1)",
+    "taxSection40_1Description": "การตั้งค่าสำหรับพนักงานประจำที่มีสลิปเงินเดือน/ลงประกันสังคม (เงินเดือน ค่าจ้าง)",
+    "taxSection40_1Title": "ภาษีเงินได้ ม.40(1) - ลูกจ้างประจำ",
+    "taxSection40_2Description": "การตั้งค่าสำหรับการจ้างแบบเหมางาน/ฟรีแลนซ์ ไม่มีประกันสังคม (หักภาษี ณ ที่จ่าย)",
+    "taxSection40_2Title": "ภาษี ม.40(2) - ฟรีแลนซ์/เหมางาน",
+    "taxStandardExpenseCap": "เพดานค่าใช้จ่ายเหมา",
+    "taxStandardExpenseCapHint": "ค่าใช้จ่ายเหมาสูงสุดที่หักได้ (บาท)",
+    "taxStandardExpenseRate": "อัตราค่าใช้จ่ายเหมา",
+    "title": "การตั้งค่าระบบ Payroll",
+    "utilities": "ค่าสาธารณูปโภค",
+    "utilityRates": "อัตราค่าสาธารณูปโภค",
+    "utilityRatesDescription": "กำหนดอัตราค่าน้ำ ค่าไฟ และค่าอินเทอร์เน็ต",
+    "version": "เวอร์ชัน",
+    "viewHistory": "ดูประวัติ",
+    "wageRates": "อัตราค่าจ้าง",
+    "wageRatesDescription": "กำหนดอัตราค่าจ้างรายชั่วโมงและค่า OT",
+    "waterRate": "ค่าน้ำต่อหน่วย",
+    "waterRateHint": "ค่าน้ำประปาต่อหน่วย (บาท)",
+    "withholdingTaxRateService": "อัตราหักภาษี ณ ที่จ่าย",
+    "withholdingTaxRateServiceHint": "เปอร์เซ็นต์ที่นายจ้างต้องหักภาษี ณ ที่จ่าย เช่น 3%",
+    "workHoursPerDay": "ชั่วโมงทำงานต่อวัน",
+    "workHoursPerDayHint": "จำนวนชั่วโมงทำงานต่อวัน สำหรับคำนวณหักลารายชั่วโมง (เช่น 8 ชม.)"
   },
   "SuperAdmin": {
-    "title": "ผู้ดูแลระบบสูงสุด",
     "companies": {
-      "title": "จัดการบริษัท",
-      "description": "ดูและจัดการบริษัทลูกค้าทั้งหมดในระบบ",
-      "create": "สร้างบริษัทใหม่",
-      "createDescription": "สร้างบริษัทใหม่พร้อมสาขาเริ่มต้นและผู้ดูแลระบบ",
-      "noData": "ไม่พบข้อมูลบริษัท",
-      "createSuccess": "สร้างบริษัทสำเร็จ",
-      "createError": "ไม่สามารถสร้างบริษัทได้",
-      "edit": "แก้ไขบริษัท",
-      "updateSuccess": "อัปเดตบริษัทสำเร็จ",
-      "updateError": "ไม่สามารถอัปเดตบริษัทได้",
-      "notFound": "ไม่พบบริษัท",
-      "companyInfo": "ข้อมูลบริษัท",
-      "companyInfoDesc": "กรอกรหัสและชื่อบริษัท",
       "adminInfo": "ผู้ดูแลระบบ",
       "adminInfoDesc": "สร้างบัญชีผู้ดูแลระบบสำหรับบริษัทนี้",
-      "passwordHint": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
-      "fields": {
-        "code": "รหัสบริษัท",
-        "name": "ชื่อบริษัท",
-        "status": "สถานะ",
-        "createdAt": "วันที่สร้าง",
-        "adminUsername": "ชื่อผู้ใช้ผู้ดูแล",
-        "adminPassword": "รหัสผ่านผู้ดูแล"
-      },
-      "placeholders": {
-        "code": "เช่น COMPANY01",
-        "name": "เช่น บริษัท ABC จำกัด",
-        "adminUsername": "เช่น admin",
-        "adminPassword": "รหัสผ่าน"
-      },
-      "validation": {
-        "required": "กรุณากรอกข้อมูลให้ครบถ้วน",
-        "passwordLength": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"
-      },
+      "companyInfo": "ข้อมูลบริษัท",
+      "companyInfoDesc": "กรอกรหัสและชื่อบริษัท",
+      "create": "สร้างบริษัทใหม่",
+      "createDescription": "สร้างบริษัทใหม่พร้อมสาขาเริ่มต้นและผู้ดูแลระบบ",
+      "createError": "ไม่สามารถสร้างบริษัทได้",
+      "createSuccess": "สร้างบริษัทสำเร็จ",
+      "description": "ดูและจัดการบริษัทลูกค้าทั้งหมดในระบบ",
+      "edit": "แก้ไขบริษัท",
       "errors": {
         "duplicateAdminUser": "ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว",
         "duplicateCompanyCode": "รหัสบริษัทนี้มีอยู่ในระบบแล้ว",
         "unknown": "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ กรุณาลองใหม่อีกครั้ง"
+      },
+      "fields": {
+        "adminPassword": "รหัสผ่านผู้ดูแล",
+        "adminUsername": "ชื่อผู้ใช้ผู้ดูแล",
+        "code": "รหัสบริษัท",
+        "createdAt": "วันที่สร้าง",
+        "name": "ชื่อบริษัท",
+        "status": "สถานะ"
+      },
+      "noData": "ไม่พบข้อมูลบริษัท",
+      "notFound": "ไม่พบบริษัท",
+      "passwordHint": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+      "placeholders": {
+        "adminPassword": "รหัสผ่าน",
+        "adminUsername": "เช่น admin",
+        "code": "เช่น COMPANY01",
+        "name": "เช่น บริษัท ABC จำกัด"
+      },
+      "title": "จัดการบริษัท",
+      "updateError": "ไม่สามารถอัปเดตบริษัทได้",
+      "updateSuccess": "อัปเดตบริษัทสำเร็จ",
+      "validation": {
+        "passwordLength": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+        "required": "กรุณากรอกข้อมูลให้ครบถ้วน"
       }
     },
     "documentTypes": {
-      "title": "จัดการประเภทเอกสาร (ระบบ)",
-      "description": "จัดการประเภทเอกสารระดับระบบที่ใช้ได้กับทุกบริษัท"
+      "description": "จัดการประเภทเอกสารระดับระบบที่ใช้ได้กับทุกบริษัท",
+      "title": "จัดการประเภทเอกสาร (ระบบ)"
     },
+    "fetchError": "ไม่สามารถโหลดข้อมูลได้",
     "status": {
       "active": "ใช้งาน",
-      "suspended": "ระงับ",
-      "archived": "ยกเลิก"
+      "archived": "ยกเลิก",
+      "suspended": "ระงับ"
     },
-    "fetchError": "ไม่สามารถโหลดข้อมูลได้"
+    "title": "ผู้ดูแลระบบสูงสุด"
+  },
+  "Tenant": {
+    "back": "ย้อนกลับ",
+    "branchSwitched": "เปลี่ยนสาขาเรียบร้อยแล้ว",
+    "branches": "สาขา",
+    "confirm": "ยืนยัน",
+    "default": "หลัก",
+    "error": "เกิดข้อผิดพลาด",
+    "mustSelectOneBranch": "ต้องเลือกอย่างน้อย 1 สาขา",
+    "selectBranch": "เลือกสาขา",
+    "selectBranchDescription": "เลือกสาขาที่คุณต้องการทำงาน",
+    "selectBranches": "เลือกสาขา",
+    "selectCompany": "เลือกบริษัท",
+    "selectCompanyDescription": "เลือกบริษัทที่คุณต้องการเข้าถึง",
+    "success": "สำเร็จ",
+    "switchFailed": "ไม่สามารถเปลี่ยนสาขาได้"
+  },
+  "UserBranches": {
+    "branchList": "รายการสาขา",
+    "default": "หลัก",
+    "description": "เลือกสาขาที่ผู้ใช้สามารถเข้าถึงได้",
+    "deselectAll": "ยกเลิกทั้งหมด",
+    "fetchError": "ไม่สามารถโหลดข้อมูลได้",
+    "mustSelectOne": "ต้องเลือกอย่างน้อย 1 สาขา",
+    "noBranches": "ไม่พบสาขา",
+    "saveError": "ไม่สามารถบันทึกได้",
+    "saveSuccess": "บันทึกสาขาสำเร็จ",
+    "selectAll": "เลือกทั้งหมด",
+    "selectBranches": "เลือกสาขา {count} รายการ",
+    "title": "จัดการสาขาของ {username}"
+  },
+  "Users": {
+    "actions": {
+      "cancel": "ยกเลิก",
+      "create": "สร้าง",
+      "creating": "กำลังสร้าง...",
+      "delete": "ลบผู้ใช้งาน",
+      "editRole": "แก้ไขสิทธิ์",
+      "manageBranches": "จัดการสาขา",
+      "openMenu": "เปิดเมนู",
+      "resetPassword": "รีเซ็ตรหัสผ่าน",
+      "save": "บันทึก",
+      "saving": "กำลังบันทึก...",
+      "title": "การจัดการ"
+    },
+    "createUser": "สร้างผู้ใช้งาน",
+    "createUserDescription": "สร้างบัญชีผู้ใช้งานใหม่สำหรับเข้าสู่ระบบ",
+    "deleteConfirmDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งาน {username}? การกระทำนี้ไม่สามารถย้อนกลับได้",
+    "deleteConfirmTitle": "ยืนยันการลบผู้ใช้งาน",
+    "description": "จัดการบัญชีผู้ใช้งานและสิทธิ์การเข้าถึง",
+    "editRoleDescription": "แก้ไขสิทธิ์การใช้งานสำหรับ {username}",
+    "errors": {
+      "createFailed": "ไม่สามารถสร้างผู้ใช้งานได้",
+      "createFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "deleteFailed": "ไม่สามารถลบผู้ใช้งานได้",
+      "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "fetchFailed": "ไม่สามารถดึงข้อมูลผู้ใช้งานได้",
+      "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "resetFailed": "ไม่สามารถรีเซ็ตรหัสผ่านได้",
+      "resetFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "updateFailed": "ไม่สามารถแก้ไขข้อมูลได้",
+      "updateFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+      "usernameExists": "ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว"
+    },
+    "fields": {
+      "createdAt": "วันที่สร้าง",
+      "lastLoginAt": "เข้าสู่ระบบล่าสุด",
+      "newPassword": "รหัสผ่านใหม่",
+      "password": "รหัสผ่าน",
+      "role": "สิทธิ์การใช้งาน",
+      "username": "ชื่อผู้ใช้งาน"
+    },
+    "loading": "กำลังโหลด...",
+    "noData": "ไม่พบข้อมูลผู้ใช้งาน",
+    "placeholders": {
+      "selectRole": "เลือกสิทธิ์การใช้งาน"
+    },
+    "resetPasswordDescription": "ตั้งรหัสผ่านใหม่สำหรับผู้ใช้งาน {username}",
+    "roles": {
+      "admin": "ผู้ดูแลระบบ",
+      "hr": "ฝ่ายบุคคล",
+      "superadmin": "ผู้ดูแลสูงสุด"
+    },
+    "success": {
+      "passwordReset": "รีเซ็ตรหัสผ่านสำเร็จ",
+      "roleUpdated": "แก้ไขสิทธิ์สำเร็จ",
+      "userCreated": "สร้างผู้ใช้งานสำเร็จ",
+      "userDeleted": "ลบผู้ใช้งานสำเร็จ"
+    },
+    "title": "จัดการผู้ใช้งาน",
+    "validation": {
+      "passwordMin": "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร",
+      "roleRequired": "กรุณาเลือกสิทธิ์การใช้งาน",
+      "usernameMin": "ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 3 ตัวอักษร"
+    }
+  },
+  "Worklogs": {
+    "FT": {
+      "createButton": "บันทึกรายการใหม่",
+      "createTitle": "บันทึกรายการใหม่",
+      "deleteDialog": {
+        "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?",
+        "title": "ยืนยันการลบ"
+      },
+      "description": "จัดการบันทึกการมาสาย ลา และ OT ของพนักงานประจำ",
+      "editTitle": "แก้ไขรายการ",
+      "entryTypes": {
+        "late": "มาสาย",
+        "leave_day": "ลา (วัน)",
+        "leave_double": "ลา (2 แรง)",
+        "leave_hours": "ลา (ชั่วโมง)",
+        "ot": "OT"
+      },
+      "errors": {
+        "cannotDelete": "ไม่สามารถลบได้",
+        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
+        "cannotEdit": "ไม่สามารถแก้ไขได้",
+        "cannotEditDescription": "สามารถแก้ไขได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
+        "deleteFailed": "ไม่สามารถลบรายการ",
+        "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "duplicateWorklog": "มีรายการบันทึกซ้ำสำหรับพนักงาน วันที่ และประเภทนี้แล้ว",
+        "fetchFailed": "ไม่สามารถโหลดข้อมูล",
+        "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "saveFailed": "ไม่สามารถบันทึกข้อมูล",
+        "saveFailedDescription": "กรุณาตรวจสอบข้อมูลและลองใหม่"
+      },
+      "fields": {
+        "employee": "พนักงาน",
+        "endDate": "วันที่สิ้นสุด",
+        "entryType": "ประเภท",
+        "leaveDuration": "ช่วงเวลาลา",
+        "quantity": "จำนวน",
+        "startDate": "วันที่เริ่มต้น",
+        "workDate": "วันที่"
+      },
+      "filters": {
+        "allEmployees": "ทุกคน",
+        "allStatuses": "ทุกสถานะ",
+        "allTypes": "ทุกประเภท",
+        "employee": "พนักงาน",
+        "endDate": "วันที่สิ้นสุด",
+        "entryType": "ประเภท",
+        "noEmployeeFound": "ไม่พบพนักงาน",
+        "searchEmployee": "เลือกพนักงาน",
+        "searchPlaceholder": "ค้นหา...",
+        "startDate": "วันที่เริ่มต้น",
+        "status": "สถานะ"
+      },
+      "formDescription": "กรอกข้อมูลการบันทึกเวลาทำงาน",
+      "noData": "ไม่พบข้อมูลบันทึกเวลา",
+      "pagination": {
+        "next": "ถัดไป",
+        "of": "จาก",
+        "page": "หน้า",
+        "previous": "ก่อนหน้า"
+      },
+      "placeholders": {
+        "quantity": "กรอกจำนวน",
+        "selectEmployee": "เลือกพนักงาน"
+      },
+      "statuses": {
+        "approved": "ทำรายการแล้ว",
+        "pending": "รอทำรายการ"
+      },
+      "success": {
+        "created": "บันทึกสำเร็จ",
+        "createdDescription": "บันทึกรายการเรียบร้อยแล้ว",
+        "deleted": "ลบสำเร็จ",
+        "deletedDescription": "ลบรายการเรียบร้อยแล้ว",
+        "updated": "แก้ไขสำเร็จ",
+        "updatedDescription": "แก้ไขรายการเรียบร้อยแล้ว"
+      },
+      "table": {
+        "actions": "จัดการ",
+        "employee": "พนักงาน",
+        "entryType": "ประเภท",
+        "quantity": "จำนวน",
+        "status": "สถานะ",
+        "workDate": "วันที่"
+      },
+      "title": "บันทึกเวลาพนักงานประจำ",
+      "units": {
+        "days": "วัน",
+        "hours": "ชั่วโมง",
+        "minutes": "นาที"
+      },
+      "validation": {
+        "employeeRequired": "กรุณาเลือกพนักงาน",
+        "endDateRequired": "กรุณาเลือกวันที่สิ้นสุด",
+        "quantityRequired": "กรุณากรอกจำนวนที่ถูกต้อง",
+        "workDateRequired": "กรุณาเลือกวันที่"
+      }
+    },
+    "PT": {
+      "createButton": "บันทึกเวลาใหม่",
+      "createTitle": "บันทึกเวลาทำงาน",
+      "deleteDialog": {
+        "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?",
+        "title": "ยืนยันการลบ"
+      },
+      "description": "จัดการลงเวลาเข้า-ออกของพนักงานพาร์ทไทม์",
+      "editTitle": "แก้ไขเวลาทำงาน",
+      "errors": {
+        "cannotDelete": "ไม่สามารถลบได้",
+        "cannotDeleteDescription": "สามารถลบได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
+        "cannotEdit": "ไม่สามารถแก้ไขได้",
+        "cannotEditDescription": "สามารถแก้ไขได้เฉพาะรายการที่รอดำเนินการเท่านั้น",
+        "deleteFailed": "ไม่สามารถลบรายการ",
+        "deleteFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "duplicateWorklog": "มีการบันทึกเวลาสำหรับพนักงานคนนี้ในวันนี้แล้ว",
+        "fetchFailed": "ไม่สามารถโหลดข้อมูล",
+        "fetchFailedDescription": "กรุณาลองใหม่อีกครั้ง",
+        "saveFailed": "ไม่สามารถบันทึกข้อมูล",
+        "saveFailedDescription": "กรุณาตรวจสอบข้อมูลและลองใหม่",
+        "submitFailed": "ไม่สามารถบันทึกข้อมูลได้"
+      },
+      "fields": {
+        "employee": "พนักงาน",
+        "eveningShift": "กะบ่าย",
+        "morningShift": "กะเช้า",
+        "timeIn": "เข้า",
+        "timeOut": "ออก",
+        "workDate": "วันที่"
+      },
+      "filters": {
+        "allEmployees": "ทุกคน",
+        "allStatuses": "ทุกสถานะ",
+        "employee": "พนักงาน",
+        "endDate": "วันที่สิ้นสุด",
+        "startDate": "วันที่เริ่มต้น",
+        "status": "สถานะ"
+      },
+      "formDescription": "บันทึกเวลาเข้า-ออกของพนักงาน",
+      "noData": "ไม่พบข้อมูลบันทึกเวลา",
+      "pagination": {
+        "next": "ถัดไป",
+        "of": "จาก",
+        "page": "หน้า",
+        "previous": "ก่อนหน้า"
+      },
+      "placeholders": {
+        "selectEmployee": "เลือกพนักงาน"
+      },
+      "statuses": {
+        "approved": "ทำรายการแล้ว",
+        "paid": "จ่ายแล้ว",
+        "pending": "รอทำรายการ",
+        "to_pay": "รอจ่ายเงิน"
+      },
+      "success": {
+        "created": "บันทึกสำเร็จ",
+        "createdDescription": "บันทึกเวลาเรียบร้อยแล้ว",
+        "deleted": "ลบสำเร็จ",
+        "deletedDescription": "ลบรายการเรียบร้อยแล้ว",
+        "updated": "แก้ไขสำเร็จ",
+        "updatedDescription": "แก้ไขเวลาเรียบร้อยแล้ว"
+      },
+      "table": {
+        "actions": "จัดการ",
+        "employee": "พนักงาน",
+        "eveningShift": "กะบ่าย",
+        "morningShift": "กะเช้า",
+        "status": "สถานะ",
+        "totalHours": "ชั่วโมงรวม",
+        "workDate": "วันที่"
+      },
+      "title": "บันทึกเวลาพาร์ทไทม์",
+      "totalHours": "ชั่วโมงรวม",
+      "units": {
+        "hours": "ชั่วโมง"
+      },
+      "validation": {
+        "atLeastOneShift": "กรุณากรอกเวลาอย่างน้อยหนึ่งกะ",
+        "completeEveningShift": "กรุณากรอกเวลาเข้า-ออกกะบ่ายให้ครบ",
+        "completeMorningShift": "กรุณากรอกเวลาเข้า-ออกกะเช้าให้ครบ",
+        "employeeRequired": "กรุณาเลือกพนักงาน",
+        "workDateRequired": "กรุณาเลือกวันที่"
+      }
+    }
   }
 }

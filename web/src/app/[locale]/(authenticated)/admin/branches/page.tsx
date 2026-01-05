@@ -65,6 +65,7 @@ export default function BranchesPage() {
   const [employeeCount, setEmployeeCount] = useState(0);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [formData, setFormData] = useState({ code: '', name: '' });
+  const [errors, setErrors] = useState({ code: '', name: '' });
   const [saving, setSaving] = useState(false);
 
   const { refreshAvailableBranches } = useTenantStore();
@@ -95,14 +96,31 @@ export default function BranchesPage() {
     fetchBranches();
   }, [fetchBranches]);
 
-  const handleCreate = async () => {
-    if (!formData.code || !formData.name) return;
+  const validate = () => {
+    const newErrors = { code: '', name: '' };
+    let isValid = true;
+    if (!formData.code.trim()) {
+      newErrors.code = t('validation.codeRequired');
+      isValid = false;
+    }
+    if (!formData.name.trim()) {
+      newErrors.name = t('validation.nameRequired');
+      isValid = false;
+    }
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleCreate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!validate()) return;
     setSaving(true);
     try {
       await createBranch(formData);
       toast({ title: tCommon('success'), description: t('createSuccess') });
       setIsCreateOpen(false);
       setFormData({ code: '', name: '' });
+      setErrors({ code: '', name: '' });
       fetchBranches();
     } catch {
       toast({ title: tCommon('error'), description: t('createError'), variant: 'destructive' });
@@ -111,14 +129,16 @@ export default function BranchesPage() {
     }
   };
 
-  const handleEdit = async () => {
-    if (!selectedBranch || !formData.code || !formData.name) return;
+  const handleEdit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!selectedBranch || !validate()) return;
     setSaving(true);
     try {
       await updateBranch(selectedBranch.id, { ...formData, status: selectedBranch.status });
       toast({ title: tCommon('success'), description: t('updateSuccess') });
       setIsEditOpen(false);
       setSelectedBranch(null);
+      setErrors({ code: '', name: '' });
       fetchBranches();
     } catch {
       toast({ title: tCommon('error'), description: t('updateError'), variant: 'destructive' });
@@ -164,6 +184,7 @@ export default function BranchesPage() {
     }
     setSelectedBranch(branch);
     setFormData({ code: branch.code, name: branch.name });
+    setErrors({ code: '', name: '' });
     setIsEditOpen(true);
   };
 
@@ -353,44 +374,63 @@ export default function BranchesPage() {
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setFormData({ code: '', name: '' })}>
+            <Button onClick={() => {
+              setFormData({ code: '', name: '' });
+              setErrors({ code: '', name: '' });
+            }}>
               <Plus className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{t('createButton')}</span>
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('createTitle')}</DialogTitle>
-              <DialogDescription>{t('createDescription')}</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">{t('fields.code')}</Label>
-                <Input
-                  id="code"
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder={t('placeholders.code')}
-                />
+            <form onSubmit={handleCreate}>
+              <DialogHeader>
+                <DialogTitle>{t('createTitle')}</DialogTitle>
+                <DialogDescription>{t('createDescription')}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="code" className={errors.code ? 'text-destructive' : ''}>
+                    {t('fields.code')}
+                  </Label>
+                  <Input
+                    id="code"
+                    value={formData.code}
+                    onChange={(e) => {
+                      setFormData({ ...formData, code: e.target.value });
+                      if (errors.code) setErrors({ ...errors, code: '' });
+                    }}
+                    placeholder={t('placeholders.code')}
+                    className={errors.code ? 'border-destructive' : ''}
+                  />
+                  {errors.code && <p className="text-xs text-destructive">{errors.code}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name" className={errors.name ? 'text-destructive' : ''}>
+                    {t('fields.name')}
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      if (errors.name) setErrors({ ...errors, name: '' });
+                    }}
+                    placeholder={t('placeholders.name')}
+                    className={errors.name ? 'border-destructive' : ''}
+                  />
+                  {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">{t('fields.name')}</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t('placeholders.name')}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                {tCommon('cancel')}
-              </Button>
-              <Button onClick={handleCreate} disabled={saving}>
-                {saving ? tCommon('saving') : tCommon('create')}
-              </Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                  {tCommon('cancel')}
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? tCommon('saving') : tCommon('create')}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -405,36 +445,52 @@ export default function BranchesPage() {
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('editTitle')}</DialogTitle>
-            <DialogDescription>{t('editDescription')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-code">{t('fields.code')}</Label>
-              <Input
-                id="edit-code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              />
+          <form onSubmit={handleEdit}>
+            <DialogHeader>
+              <DialogTitle>{t('editTitle')}</DialogTitle>
+              <DialogDescription>{t('editDescription')}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-code" className={errors.code ? 'text-destructive' : ''}>
+                  {t('fields.code')}
+                </Label>
+                <Input
+                  id="edit-code"
+                  value={formData.code}
+                  onChange={(e) => {
+                    setFormData({ ...formData, code: e.target.value });
+                    if (errors.code) setErrors({ ...errors, code: '' });
+                  }}
+                  className={errors.code ? 'border-destructive' : ''}
+                />
+                {errors.code && <p className="text-xs text-destructive">{errors.code}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-name" className={errors.name ? 'text-destructive' : ''}>
+                  {t('fields.name')}
+                </Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (errors.name) setErrors({ ...errors, name: '' });
+                  }}
+                  className={errors.name ? 'border-destructive' : ''}
+                />
+                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">{t('fields.name')}</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              {tCommon('cancel')}
-            </Button>
-            <Button onClick={handleEdit} disabled={saving}>
-              {saving ? tCommon('saving') : tCommon('save')}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
+                {tCommon('cancel')}
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? tCommon('saving') : tCommon('save')}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

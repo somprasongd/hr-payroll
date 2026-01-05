@@ -74,7 +74,7 @@ export default function CompanyDetailPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.code || !formData.name) {
+    if (!formData.name) {
       toast({
         title: tCommon('error'),
         description: t('companies.validation.required'),
@@ -132,7 +132,7 @@ export default function CompanyDetailPage() {
             {t('companies.edit')}
           </h1>
           <p className="text-muted-foreground hidden sm:block">
-            {company.code} - {company.name}
+            {company.name}
           </p>
         </div>
       </div>
@@ -150,15 +150,6 @@ export default function CompanyDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">{t('companies.fields.code')} *</Label>
-                <Input
-                  id="code"
-                  value={formData.code}
-                  onChange={handleChange('code')}
-                  placeholder={t('companies.placeholders.code')}
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="name">{t('companies.fields.name')} *</Label>
                 <Input

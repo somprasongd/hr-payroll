@@ -70,6 +70,8 @@
 
 - Add URL parameter support for list filtering and enhance dashboard attendance chart with new views and translations." (d1179fc)
 
+- Add bonus management, accumulation adjustments, branch management, and update app icons and translations. (f11e811)
+
 
 ### Changed
 
@@ -84,6 +86,8 @@
 - change activity_logs primary key default to uuidv7 (a3d0b15)
 
 - rename update handler to command and remove fiber registration (9835f05)
+
+- streamline entries by consolidating and updating multi-tenancy features and enhancements (5d9ac30)
 
 
 ### Docs
@@ -102,6 +106,72 @@
 - manual test (75c8b23)
 
 - Correctly handle empty nicknames in employee queries and refactor employee form by removing document/accumulation tabs and enhancing document management with filtering and grouping. (084a7f1)
+
+## v1.4.0 - 2026-01-02
+
+### Added
+
+- Add payroll configuration for work hours, late deduction rate, and grace minutes. (65537b5)
+
+## v1.3.0 - 2026-01-02
+
+### Added
+
+- Implement year selection for the attendance chart and refine loading/error display within the widget. (fc26d06)
+
+- Add employee filter to attendance summary dashboard. (370dbe9)
+
+- Implement attendance leaderboard widget and API to display top employees by attendance. (b2d5165)
+
+## v1.2.0 - 2026-01-01
+
+### Added
+
+- Update payslip print template content and styling. (ca51a37)
+
+- add EmployeeCellDisplay component and integrate it into worklogs, debt, and salary advance lists, enhancing employee display and filtering. (853a660)
+
+- Add date range filtering to the payout list UI, service, and API. (b85d9f3)
+
+- add filter for employees with outstanding debt (8718ca0)
+
+- Add employee fields for nickname, ID document description, and SSO hospital name with associated validation, UI, and migration updates. (e9a63f2)
+
+
+### Changed
+
+- adjust route paths and permissions for payroll and user modules (0a42bb1)
+
+
+### Fixed
+
+- allow updating existing loan repayments when loan outstanding is zero during payroll item update. (c76bcd8)
+
+- allow updating existing payroll item repayments when amount is zero and add `EmployeeCellDisplay` component to debt and salary advance lists. (1f3a6fb)
+
+## v1.1.0 - 2026-01-01
+
+### Added
+
+- add loan outstanding tracking to payroll calculations (78eefe5)
+
+- allow listing all employees update payroll for deleted (76a3494)
+
+- Make batch and individual payslip printing available for pending payrolls, defaulting to original print when pending. (33ee283)
+
+- Add payslip preview functionality to batch print and individual payslip edit dialogs. (6e71ba8)
+
+- Add radio group for selecting full/half day leave duration in worklog form, automatically setting quantity. (f378f23)
+
+
+### Changed
+
+- handle SSO declared wage null and update import syntax (bf6e573)
+
+
+### Fixed
+
+- update late deduction condition to use late minutes instead of late deduct (8f9800b)
 
 ## v1.0.0 - 2025-12-20
 
@@ -251,15 +321,18 @@
 
 - add CI workflow and migration support to Docker builds (c69f0a8)
 
+
 ### Build
 
 - Add `activitylog`, `dashboard`, and `shared/events` Go module dependencies to Dockerfile. (773e61d)
+
 
 ### CI
 
 - Add steps to start web server and wait for API and web readiness before E2E tests. (1943f34)
 
 - add NEXT_PUBLIC_API_BASE_URL environment variable to E2E standalone build step. (b20640f)
+
 
 ### Changed
 
@@ -271,17 +344,24 @@
 
 - add attendance bonus flags to employee detail DTO (2d3b132)
 
+
 ### Chore
 
 - Add favicon.ico route to return 204 No Content. (53a6844)
 
 - update ignore patterns and Dockerfile for new module (ea575c6)
 
+- add --unreleased flag to changelog-release target (59710fc)
+
+- add v1.0.0 release notes (c48230a)
+
+
 ### Docs
 
 - Add HR Payroll system color palette documentation and its associated image asset. (4d18530)
 
 - add initial CHANGELOG.md with release notes (5ccba9f)
+
 
 ### Fixed
 
@@ -293,12 +373,15 @@
 
 - default position and department data to empty array on null API responses (0bdf061)
 
+
 ### Other
 
 - init api (19a38c7)
 
 - update next.js dependency to version 16.0.10. (38c5564)
 
+
 ### Tests
 
 - update E2E tests for filters functionality (883c2b6)
+

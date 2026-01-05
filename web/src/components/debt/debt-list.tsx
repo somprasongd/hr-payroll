@@ -314,7 +314,7 @@ export function DebtList() {
                 employees={employees}
                 selectedEmployeeId={employeeFilter}
                 onSelect={setEmployeeFilter}
-                placeholder={t('fields.employee')}
+                placeholder={t('filters.selectEmployee')}
                 searchPlaceholder={tCommon('search')}
                 emptyText={tCommon('noData')}
               />

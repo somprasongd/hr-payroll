@@ -54,11 +54,7 @@ export default function CompaniesPage() {
 
   // Define columns for GenericDataTable
   const columns: ColumnDef<Company>[] = useMemo(() => [
-    {
-      accessorKey: 'code',
-      header: t('companies.fields.code'),
-      cell: ({ row }) => <span className="font-medium">{row.original.code}</span>,
-    },
+
     {
       accessorKey: 'name',
       header: t('companies.fields.name'),
