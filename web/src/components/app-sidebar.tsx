@@ -48,6 +48,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const tNav = useTranslations('Nav')
   const pathname = usePathname()
   const { user } = useAuthStore()
+  const [version, setVersion] = React.useState<string>('...')
+
+  React.useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/version`)
+      .then(res => res.json())
+      .then(data => {
+         if (data.version) {
+             setVersion(data.version.replace(/^v/i, ''))
+         }
+      })
+      .catch(() => setVersion('unknown'))
+  }, [])
 
   // Helper to check active state
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
@@ -324,7 +336,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            {/* Footer content if needed */}
+             <div className="px-4 py-2 text-xs text-muted-foreground">
+               Version: {version}
+             </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

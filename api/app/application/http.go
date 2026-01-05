@@ -64,7 +64,7 @@ func newFiber(cfg config.Config, healthCheck HealthCheck) *fiber.App {
 
 func registerHealthRoutes(app *fiber.App, cfg config.Config, healthCheck HealthCheck) {
 	handler := healthHandler(cfg, healthCheck)
-	for _, route := range []string{"/", "/health", "/api/health", "/api/v1/health"} {
+	for _, route := range []string{"/", "/health", "/api/health", "/api/v1/health", "/api/version"} {
 		app.Get(route, handler)
 	}
 }

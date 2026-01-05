@@ -48,8 +48,20 @@ export default function LoginPage() {
   const [pendingCompanies, setPendingCompanies] = useState<CompanyInfo[]>([]);
   const [pendingBranches, setPendingBranches] = useState<BranchInfo[]>([]);
   const [pendingRedirect, setPendingRedirect] = useState<string>('/dashboard');
+  const [version, setVersion] = useState<string>('');
 
 
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/version`)
+      .then(res => res.json())
+      .then(data => {
+         if (data.version) {
+             setVersion(data.version.replace(/^v/i, ''))
+         }
+      })
+      .catch(() => setVersion(''))
+  }, [])
 
   useEffect(() => {
     // Wait for hydration to complete
@@ -398,6 +410,7 @@ export default function LoginPage() {
           </Form>
           <div className="mt-6 text-center text-xs text-gray-500">
             © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_COMPANY_NAME || 'HRMS'}. All Rights Reserved
+            {version && <span className="ml-2 text-gray-400">v{version}</span>}
           </div>
         </CardContent>
       </Card>
