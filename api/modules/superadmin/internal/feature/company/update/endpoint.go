@@ -1,17 +1,13 @@
 package update
 
 import (
-	"time"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/contracts"
-	"hrms/shared/events"
 )
 
 // UpdateRequest for updating a company
@@ -30,7 +26,7 @@ type UpdateRequest struct {
 // @Param request body UpdateRequest true "company payload"
 // @Success 200 {object} contracts.CompanyDTO
 // @Router /super-admin/companies/{id} [patch]
-func NewEndpoint(router fiber.Router, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Patch("/companies/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -54,22 +50,6 @@ func NewEndpoint(router fiber.Router, eb eventbus.EventBus) {
 		if err != nil {
 			return err
 		}
-
-		// Publish log event
-		eb.Publish(events.LogEvent{
-			ActorID:    user.ID,
-			CompanyID:  nil,
-			BranchID:   nil,
-			Action:     "UPDATE",
-			EntityName: "COMPANY",
-			EntityID:   resp.Company.ID.String(),
-			Details: map[string]interface{}{
-				"code":   resp.Company.Code,
-				"name":   resp.Company.Name,
-				"status": resp.Company.Status,
-			},
-			Timestamp: time.Now(),
-		})
 
 		return c.JSON(resp.Company)
 	})

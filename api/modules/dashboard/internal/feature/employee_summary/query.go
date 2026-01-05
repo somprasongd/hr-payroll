@@ -1,9 +1,8 @@
-package feature
+package employee_summary
 
 import (
 	"context"
 
-	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
@@ -11,8 +10,6 @@ import (
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
-	"hrms/shared/common/mediator"
-	"hrms/shared/common/response"
 )
 
 // EmployeeSummaryQuery is the query for employee summary
@@ -80,26 +77,4 @@ func (h *employeeSummaryHandler) Handle(ctx context.Context, q *EmployeeSummaryQ
 		TerminatedThisMonth: summary.TerminatedThisMonth,
 		ByDepartment:        byDepartment,
 	}, nil
-}
-
-// RegisterEmployeeSummary registers the employee summary endpoint
-// @Summary Get employee summary
-// @Description Get aggregated employee statistics
-// @Tags Dashboard
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} EmployeeSummaryResponse
-// @Failure 401
-// @Failure 500
-// @Router /dashboard/employee-summary [get]
-func RegisterEmployeeSummary(router fiber.Router, repo *repository.Repository) {
-	router.Get("/employee-summary", func(c fiber.Ctx) error {
-		resp, err := mediator.Send[*EmployeeSummaryQuery, *EmployeeSummaryResponse](c.Context(), &EmployeeSummaryQuery{
-			Repo: repo,
-		})
-		if err != nil {
-			return err
-		}
-		return response.JSON(c, fiber.StatusOK, resp)
-	})
 }

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
@@ -16,8 +15,6 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
-	"hrms/shared/common/mediator"
-	"hrms/shared/common/response"
 	"hrms/shared/events"
 )
 
@@ -86,38 +83,4 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	})
 
 	return &UpdateResponse{Item: dto.FromItem(*updated)}, nil
-}
-
-// @Summary Update bonus item
-// @Tags Bonus
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "item id"
-// @Param request body UpdateCommand true "payload"
-// @Success 200 {object} UpdateResponse
-// @Router /bonus-items/{id} [patch]
-func RegisterUpdate(router fiber.Router) {
-	router.Patch("/:id", func(c fiber.Ctx) error {
-		id, err := uuid.Parse(c.Params("id"))
-		if err != nil {
-			return errs.BadRequest("invalid item id")
-		}
-		var req UpdateCommand
-		if err := c.Bind().Body(&req); err != nil {
-			return errs.BadRequest("invalid request body")
-		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-		req.ID = id
-		req.Actor = user.ID
-
-		resp, err := mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &req)
-		if err != nil {
-			return err
-		}
-		return response.JSON(c, fiber.StatusOK, resp.Item)
-	})
 }

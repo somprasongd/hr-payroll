@@ -35,7 +35,7 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	// Register internal handlers for company module endpoints
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
 	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo))
@@ -46,7 +46,9 @@ func (m *Module) Init(_ eventbus.EventBus) error {
 	mediator.Register[*contracts.CreateCompanyCommand, *contracts.CreateCompanyResponse](
 		createcompany.NewHandler(m.repo, m.ctx.Transactor),
 	)
-	mediator.Register[*contracts.UpdateCompanyByIDCommand, *contracts.UpdateCompanyByIDResponse](updatebyid.NewHandler(m.repo))
+	mediator.Register[*contracts.UpdateCompanyByIDCommand, *contracts.UpdateCompanyByIDResponse](
+		updatebyid.NewHandler(m.repo, m.ctx.Transactor, eb),
+	)
 	mediator.Register[*contracts.CreateDefaultBranchCommand, *contracts.CreateDefaultBranchResponse](createdefaultbranch.NewHandler(m.repo))
 
 	return nil

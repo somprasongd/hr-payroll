@@ -5,9 +5,7 @@ import (
 
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 // CreateCompanyRequest for creating a new company with admin user
@@ -26,7 +24,7 @@ type CreateCompanyRequest struct {
 // @Param request body CreateCompanyRequest true "company and admin payload"
 // @Success 201 {object} Response
 // @Router /super-admin/companies [post]
-func NewEndpoint(router fiber.Router, tx transactor.Transactor, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Post("/companies", func(c fiber.Ctx) error {
 		var req CreateCompanyRequest
 		if err := c.Bind().JSON(&req); err != nil {
@@ -47,8 +45,6 @@ func NewEndpoint(router fiber.Router, tx transactor.Transactor, eb eventbus.Even
 		user, _ := contextx.UserFromContext(c.Context())
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Tx:            tx,
-			Eb:            eb,
 			CompanyCode:   req.CompanyCode,
 			CompanyName:   req.CompanyName,
 			AdminUsername: req.AdminUsername,

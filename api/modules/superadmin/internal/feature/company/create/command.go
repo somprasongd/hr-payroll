@@ -17,8 +17,6 @@ import (
 )
 
 type Command struct {
-	Tx            transactor.Transactor
-	Eb            eventbus.EventBus
 	CompanyCode   string
 	CompanyName   string
 	AdminUsername string
@@ -32,16 +30,22 @@ type Response struct {
 	AdminID uuid.UUID            `json:"adminUserId"`
 }
 
-type commandHandler struct{}
+type commandHandler struct {
+	tx transactor.Transactor
+	eb eventbus.EventBus
+}
 
-func NewHandler() *commandHandler {
-	return &commandHandler{}
+func NewHandler(tx transactor.Transactor, eb eventbus.EventBus) *commandHandler {
+	return &commandHandler{
+		tx: tx,
+		eb: eb,
+	}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var resp Response
 
-	err := cmd.Tx.WithinTransaction(ctx, func(txCtx context.Context, registerHook func(transactor.PostCommitHook)) error {
+	err := h.tx.WithinTransaction(ctx, func(txCtx context.Context, registerHook func(transactor.PostCommitHook)) error {
 		// 1. Create company via contract
 		companyResp, err := mediator.Send[*contracts.CreateCompanyCommand, *contracts.CreateCompanyResponse](txCtx, &contracts.CreateCompanyCommand{
 			Code:    cmd.CompanyCode,
@@ -102,7 +106,7 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		}
 
 		registerHook(func(ctx context.Context) error {
-			cmd.Eb.Publish(events.LogEvent{
+			h.eb.Publish(events.LogEvent{
 				ActorID:    cmd.ActorID,
 				CompanyID:  nil,
 				BranchID:   nil,

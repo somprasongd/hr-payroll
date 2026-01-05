@@ -42,7 +42,7 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
 
 	// Register handlers with mediator
-	mediator.Register[*create.Command, *create.Response](create.NewHandler())
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.tx, eb))
 
 	return nil
 }
@@ -54,8 +54,8 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	// Company management - CQRS endpoints (use contracts via mediator)
 	list.NewEndpoint(superAdmin)
 	get.NewEndpoint(superAdmin)
-	create.NewEndpoint(superAdmin, m.tx, m.eb)
-	update.NewEndpoint(superAdmin, m.eb)
+	create.NewEndpoint(superAdmin)
+	update.NewEndpoint(superAdmin)
 
 	// Document type management - CQRS endpoints (use contracts via mediator)
 	doctypelist.NewEndpoint(superAdmin)

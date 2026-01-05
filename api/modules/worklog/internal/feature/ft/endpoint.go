@@ -1,0 +1,220 @@
+package ft
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+
+	"hrms/modules/worklog/internal/repository"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/eventbus"
+	"hrms/shared/common/mediator"
+	"hrms/shared/common/response"
+	"hrms/shared/common/storage/sqldb/transactor"
+)
+
+// Register list endpoint
+// @Summary List worklogs FT
+// @Description รายการ worklog (Full-time)
+// @Tags Worklogs FT
+// @Produce json
+// @Param page query int false "page"
+// @Param limit query int false "limit"
+// @Param employeeId query string false "employee id"
+// @Param status query string false "pending|approved|all"
+// @Param entryType query string false "late|leave_day|leave_double|leave_hours|ot"
+// @Param startDate query string false "YYYY-MM-DD"
+// @Param endDate query string false "YYYY-MM-DD"
+// @Security BearerAuth
+// @Success 200 {object} ListResponse
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Router /worklogs/ft [get]
+// @Router /worklogs/ft [get]
+func Register(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
+	handler := func(c fiber.Ctx) error {
+		page, _ := strconv.Atoi(c.Query("page", "1"))
+		limit, _ := strconv.Atoi(c.Query("limit", "20"))
+		status := c.Query("status", "all")
+		entryType := c.Query("entryType")
+		var empID *uuid.UUID
+		if v := c.Query("employeeId"); v != "" {
+			if id, err := uuid.Parse(v); err == nil {
+				empID = &id
+			} else {
+				return errs.BadRequest("invalid employeeId")
+			}
+		}
+		var startDate, endDate *time.Time
+		if v := c.Query("startDate"); v != "" {
+			d, err := time.Parse("2006-01-02", v)
+			if err != nil {
+				return errs.BadRequest("invalid startDate")
+			}
+			startDate = &d
+		}
+		if v := c.Query("endDate"); v != "" {
+			d, err := time.Parse("2006-01-02", v)
+			if err != nil {
+				return errs.BadRequest("invalid endDate")
+			}
+			endDate = &d
+		}
+
+		resp, err := mediator.Send[*ListQuery, *ListResponse](c.Context(), &ListQuery{
+			Page:       page,
+			Limit:      limit,
+			EmployeeID: empID,
+			Status:     status,
+			EntryType:  entryType,
+			StartDate:  startDate,
+			EndDate:    endDate,
+			Repo:       repo,
+		})
+		if err != nil {
+			return err
+		}
+		return response.JSON(c, fiber.StatusOK, resp)
+	}
+
+	// Support both /worklogs/ft and /worklogs/ft/
+	router.Get("/", handler)
+	router.Get("", handler)
+
+	// register detail/create/update/delete
+	registerGet(router, repo)
+	registerCreate(router, repo, tx, eb)
+	registerUpdate(router, repo, tx, eb)
+	registerDelete(router, repo, eb)
+}
+
+// @Summary Get worklog FT detail
+// @Description ดึง worklog (Full-time) ตาม id
+// @Tags Worklogs FT
+// @Produce json
+// @Param id path string true "worklog id"
+// @Security BearerAuth
+// @Success 200 {object} GetResponse
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Failure 404
+// @Router /worklogs/ft/{id} [get]
+func registerGet(router fiber.Router, repo repository.FTRepository) {
+	router.Get("/:id", func(c fiber.Ctx) error {
+		id, err := uuid.Parse(c.Params("id"))
+		if err != nil {
+			return errs.BadRequest("invalid id")
+		}
+		resp, err := mediator.Send[*GetQuery, *GetResponse](c.Context(), &GetQuery{
+			ID:   id,
+			Repo: repo,
+		})
+		if err != nil {
+			return err
+		}
+		return response.JSON(c, fiber.StatusOK, resp.FTItem)
+	})
+}
+
+// @Summary Create worklog FT
+// @Description บันทึก worklog (Full-time) สถานะเริ่มต้น pending
+// @Tags Worklogs FT
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CreateRequest true "worklog payload"
+// @Success 201 {object} CreateResponse
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Failure 409
+// @Router /worklogs/ft [post]
+func registerCreate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
+	router.Post("/", func(c fiber.Ctx) error {
+		var req CreateRequest
+		if err := c.Bind().Body(&req); err != nil {
+			return errs.BadRequest("invalid request body")
+		}
+		resp, err := mediator.Send[*CreateCommand, *CreateResponse](c.Context(), &CreateCommand{
+			Payload: req,
+			Repo:    repo,
+			Tx:      tx,
+			Eb:      eb,
+		})
+		if err != nil {
+			return err
+		}
+		return response.JSON(c, fiber.StatusCreated, resp.FTItem)
+	})
+}
+
+// @Summary Update worklog FT
+// @Description แก้ไข worklog (Full-time). เปลี่ยนสถานะเป็น approved ได้, revert approved ไม่ได้
+// @Tags Worklogs FT
+// @Accept json
+// @Produce json
+// @Param id path string true "worklog id"
+// @Param request body UpdateRequest true "worklog payload"
+// @Security BearerAuth
+// @Success 200 {object} UpdateResponse
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Failure 404
+// @Failure 409
+// @Router /worklogs/ft/{id} [patch]
+func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
+	router.Patch("/:id", func(c fiber.Ctx) error {
+		id, err := uuid.Parse(c.Params("id"))
+		if err != nil {
+			return errs.BadRequest("invalid id")
+		}
+		var req UpdateRequest
+		if err := c.Bind().Body(&req); err != nil {
+			return errs.BadRequest("invalid request body")
+		}
+		resp, err := mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &UpdateCommand{
+			ID:      id,
+			Payload: req,
+			Repo:    repo,
+			Tx:      tx,
+			Eb:      eb,
+		})
+		if err != nil {
+			return err
+		}
+		return response.JSON(c, fiber.StatusOK, resp.FTItem)
+	})
+}
+
+// @Summary Delete worklog FT
+// @Description ลบ worklog (Full-time) ได้เฉพาะสถานะ pending
+// @Tags Worklogs FT
+// @Security BearerAuth
+// @Param id path string true "worklog id"
+// @Success 204 "No Content"
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Failure 404
+// @Router /worklogs/ft/{id} [delete]
+func registerDelete(router fiber.Router, repo repository.FTRepository, eb eventbus.EventBus) {
+	router.Delete("/:id", func(c fiber.Ctx) error {
+		id, err := uuid.Parse(c.Params("id"))
+		if err != nil {
+			return errs.BadRequest("invalid id")
+		}
+		if _, err := mediator.Send[*DeleteCommand, mediator.NoResponse](c.Context(), &DeleteCommand{
+			ID:   id,
+			Repo: repo,
+			Eb:   eb,
+		}); err != nil {
+			return err
+		}
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+}

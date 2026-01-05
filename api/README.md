@@ -49,7 +49,9 @@ api/
 
 1.  **CQRS Pattern**: แยกความรับผิดชอบของการอ่าน (Query) และการเขียน (Command)
 2.  **Mediator Pattern**: ลดการพึ่งพากันโดยตรงระหว่างโมดูล (Loose Coupling)
-3.  **Integration Events**: สื่อสารระหว่างโมดูลแบบ Asynchronous ผ่าน Internal Event Bus
+3.  **Integration Events**: ใช้สำหรับงานต่อเนื่อง (side effects) ที่ทำหลัง DB transaction สำเร็จแล้ว ผ่าน Internal Event Bus
+
+หมายเหตุ: ถ้าเป็นงานที่ต้องการ atomic อยู่ใน transaction เดียวกัน ให้เรียกผ่าน mediator แบบ synchronous ได้ แต่ถ้าเป็นงานที่ไม่จำเป็นต้อง atomic ให้ publish เป็น integration events หลัง commit (post-commit) เพื่อแยกความรับผิดชอบและรองรับ eventual consistency โดยใช้ `transactor.WithinTransaction` แล้ว `registerPostCommitHook(...)` ใน handler เพื่อให้ event ถูกยิงหลัง commit จริง
 
 ### Module Structure
 

@@ -3,7 +3,6 @@ package items
 import (
 	"context"
 
-	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
@@ -12,8 +11,6 @@ import (
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
-	"hrms/shared/common/mediator"
-	"hrms/shared/common/response"
 )
 
 type ListQuery struct {
@@ -47,30 +44,4 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 		out = append(out, dto.FromItem(it))
 	}
 	return &ListResponse{Data: out}, nil
-}
-
-// @Summary List bonus items
-// @Tags Bonus
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "cycle id"
-// @Param search query string false "search employee name"
-// @Success 200 {object} ListResponse
-// @Router /bonus-cycles/{id}/items [get]
-func RegisterList(router fiber.Router) {
-	router.Get("/:id/items", func(c fiber.Ctx) error {
-		cycleID, err := uuid.Parse(c.Params("id"))
-		if err != nil {
-			return errs.BadRequest("invalid cycle id")
-		}
-		search := c.Query("search")
-		resp, err := mediator.Send[*ListQuery, *ListResponse](c.Context(), &ListQuery{
-			CycleID: cycleID,
-			Search:  search,
-		})
-		if err != nil {
-			return err
-		}
-		return response.JSON(c, fiber.StatusOK, resp)
-	})
 }
