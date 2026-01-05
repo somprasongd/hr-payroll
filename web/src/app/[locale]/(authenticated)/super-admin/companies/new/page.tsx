@@ -11,14 +11,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Link } from '@/i18n/routing';
 import { createCompany, CreateCompanyRequest } from '@/services/superadmin.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DismissibleAlert } from '@/components/ui/dismissible-alert';
 
 export default function NewCompanyPage() {
   const t = useTranslations('SuperAdmin');
   const tCommon = useTranslations('Common');
   const router = useRouter();
-  const { toast } = useToast();
+  const { toast } = useToast(); // Keep toast for success messages if needed, or replace entirely. User said "alert component like OTHER pages". OrgProfile uses DismissibleAlert for success too. But here we redirect. Let's keep toast for success before redirect for now, or just redirect. The plan said "Remove toast calls" for errors.
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateCompanyRequest>({
     companyCode: '',
     companyName: '',
@@ -26,34 +28,58 @@ export default function NewCompanyPage() {
     adminPassword: '',
   });
 
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof CreateCompanyRequest, string>>>({});
+
   const handleChange = (field: keyof CreateCompanyRequest) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    // Clear error for this field
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    // Clear global error
+    if (error) setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setFieldErrors({});
 
-    if (!formData.companyCode || !formData.companyName || !formData.adminUsername || !formData.adminPassword) {
-      toast({
-        title: tCommon('error'),
-        description: t('companies.validation.required'),
-        variant: 'destructive',
-      });
-      return;
+    const newFieldErrors: Partial<Record<keyof CreateCompanyRequest, string>> = {};
+    let hasError = false;
+
+    if (!formData.companyCode) {
+      newFieldErrors.companyCode = t('companies.validation.required');
+      hasError = true;
+    }
+    if (!formData.companyName) {
+      newFieldErrors.companyName = t('companies.validation.required');
+      hasError = true;
+    }
+    if (!formData.adminUsername) {
+      newFieldErrors.adminUsername = t('companies.validation.required');
+      hasError = true;
+    }
+    if (!formData.adminPassword) {
+      newFieldErrors.adminPassword = t('companies.validation.required');
+      hasError = true;
+    } else if (formData.adminPassword.length < 8) {
+      newFieldErrors.adminPassword = t('companies.validation.passwordLength');
+      hasError = true;
     }
 
-    if (formData.adminPassword.length < 8) {
-      toast({
-        title: tCommon('error'),
-        description: t('companies.validation.passwordLength'),
-        variant: 'destructive',
-      });
+    if (hasError) {
+      setFieldErrors(newFieldErrors);
       return;
     }
 
     try {
       setLoading(true);
-      const response = await createCompany(formData);
+      await createCompany(formData);
       toast({
         title: tCommon('success'),
         description: t('companies.createSuccess'),
@@ -61,11 +87,17 @@ export default function NewCompanyPage() {
       router.push('/super-admin/companies');
     } catch (error: any) {
       console.error('Failed to create company:', error);
-      toast({
-        title: tCommon('error'),
-        description: error.response?.data?.message || t('companies.createError'),
-        variant: 'destructive',
-      });
+      
+      let description = error.response?.data?.message || t('companies.createError');
+      if (error.response?.status === 409) {
+        description = t('companies.errors.duplicateAdminUser');
+      } else if (error.response?.status === 500) {
+        description = t('companies.errors.unknown');
+      }
+
+      setError(description);
+      // Scroll to top to see error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -89,6 +121,17 @@ export default function NewCompanyPage() {
         </div>
       </div>
 
+      {error && (
+        <DismissibleAlert
+          variant="error"
+          title={tCommon('error')}
+          onDismiss={() => setError(null)}
+          autoDismiss={false}
+        >
+          {error}
+        </DismissibleAlert>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
@@ -109,7 +152,11 @@ export default function NewCompanyPage() {
                   value={formData.companyCode}
                   onChange={handleChange('companyCode')}
                   placeholder={t('companies.placeholders.code')}
+                  className={fieldErrors.companyCode ? "border-red-500" : ""}
                 />
+                {fieldErrors.companyCode && (
+                  <p className="text-xs text-red-500">{fieldErrors.companyCode}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="companyName">{t('companies.fields.name')} *</Label>
@@ -118,12 +165,16 @@ export default function NewCompanyPage() {
                   value={formData.companyName}
                   onChange={handleChange('companyName')}
                   placeholder={t('companies.placeholders.name')}
+                  className={fieldErrors.companyName ? "border-red-500" : ""}
                 />
+                {fieldErrors.companyName && (
+                  <p className="text-xs text-red-500">{fieldErrors.companyName}</p>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -142,12 +193,15 @@ export default function NewCompanyPage() {
                   <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="adminUsername"
-                    className="pl-10"
+                    className={`pl-10 ${fieldErrors.adminUsername ? "border-red-500" : ""}`}
                     value={formData.adminUsername}
                     onChange={handleChange('adminUsername')}
                     placeholder={t('companies.placeholders.adminUsername')}
                   />
                 </div>
+                {fieldErrors.adminUsername && (
+                  <p className="text-xs text-red-500">{fieldErrors.adminUsername}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="adminPassword">{t('companies.fields.adminPassword')} *</Label>
@@ -156,20 +210,24 @@ export default function NewCompanyPage() {
                   <Input
                     id="adminPassword"
                     type="password"
-                    className="pl-10"
+                    className={`pl-10 ${fieldErrors.adminPassword ? "border-red-500" : ""}`}
                     value={formData.adminPassword}
                     onChange={handleChange('adminPassword')}
                     placeholder={t('companies.placeholders.adminPassword')}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">{t('companies.passwordHint')}</p>
+                {fieldErrors.adminPassword ? (
+                  <p className="text-xs text-red-500">{fieldErrors.adminPassword}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{t('companies.passwordHint')}</p>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" type="button" asChild>
             <Link href="/super-admin/companies">{tCommon('cancel')}</Link>
           </Button>
           <Button type="submit" disabled={loading}>

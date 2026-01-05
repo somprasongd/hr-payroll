@@ -1487,6 +1487,10 @@
       "validation": {
         "required": "Please fill in all required fields",
         "passwordLength": "Password must be at least 8 characters"
+      },
+      "errors": {
+        "duplicateAdminUser": "This username is already taken",
+        "unknown": "An unknown error occurred. Please try again."
       }
     },
     "documentTypes": {

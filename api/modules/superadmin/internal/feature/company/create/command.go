@@ -78,6 +78,9 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		})
 		if err != nil {
 			logger.FromContext(ctx).Error("failed to create admin user", zap.Error(err))
+			if errs.IsConflict(err) {
+				return errs.Conflict("duplicate admin user")
+			}
 			return errs.Internal("failed to create admin user")
 		}
 		resp.AdminID = userResp.UserID
