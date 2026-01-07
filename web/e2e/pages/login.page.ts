@@ -43,10 +43,19 @@ export class LoginPage {
    */
   async selectCompany(companyName: string = 'COMPANY2') {
     try {
-      await this.page.getByText('เลือกบริษัท').waitFor({ state: 'visible', timeout: 5000 });
-      await this.page.locator('div, span, button').filter({ hasText: companyName }).first().click({ force: true });
-    } catch (e) {
-      // Optional, ignore if not found
+      // Wait for company selection dialog
+      const dialog = this.page.locator('[role="dialog"], .company-selector, [data-testid="company-selector"]');
+      await dialog.waitFor({ state: 'visible', timeout: 3000 });
+      
+      // Find and click the company option
+      const companyOption = this.page.locator('button, [role="option"]').filter({ hasText: companyName }).first();
+      await companyOption.waitFor({ state: 'visible', timeout: 3000 });
+      await companyOption.click();
+      
+      // Wait a bit for the selection to register
+      await this.page.waitForTimeout(500);
+    } catch (e: any) {
+      console.log('Company selection skipped or failed:', e.message);
     }
   }
 
@@ -55,22 +64,30 @@ export class LoginPage {
    */
   async selectBranch(branchName: string = 'สำนักงานใหญ่') {
     try {
-      // 1. Wait for any branch button to appear
-      await this.page.locator('button').filter({ hasText: branchName }).first().waitFor({ state: 'visible', timeout: 5000 });
+      // 1. Wait for branch selection dialog to be visible
+      const branchDialog = this.page.getByRole('heading', { name: /เลือกสาขา|Select Branch/i });
+      await branchDialog.waitFor({ state: 'visible', timeout: 3000 });
       
-      // 2. Click the branch
-      const option = this.page.locator('button').filter({ hasText: branchName }).last();
-      await option.click({ force: true });
+      // 2. Find and click the branch button/option
+      const branchOption = this.page.locator('button').filter({ hasText: branchName }).first();
+      await branchOption.waitFor({ state: 'visible', timeout: 3000 });
+      await branchOption.click();
+      
+      // 3. Wait a bit for selection to register
+      await this.page.waitForTimeout(500);
 
-      // 3. Click "Confirm" button (Check both Thai and English)
-      const confirmButton = this.page.getByRole('button').filter({ hasText: /ยืนยัน|Confirm/i });
-      await confirmButton.waitFor({ state: 'visible', timeout: 2000 });
-      await confirmButton.click({ force: true });
+      // 4. Click "Confirm" button if it exists
+      const confirmButton = this.page.getByRole('button', { name: /ยืนยัน|Confirm/i });
+      if (await confirmButton.isVisible({ timeout: 2000 })) {
+        await confirmButton.click();
+        // 5. Wait for dialog to close
+        await confirmButton.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+      }
       
-      // 4. Wait for modal to disappear
-      await confirmButton.waitFor({ state: 'hidden', timeout: 5000 });
+      // 6. Additional wait to ensure dialog is fully closed
+      await this.page.waitForTimeout(500);
     } catch (e: any) {
-      console.log('Note: Branch selector flow skipped or failed:', e.message);
+      console.log('Branch selection skipped or failed:', e.message);
     }
   }
 
@@ -80,33 +97,76 @@ export class LoginPage {
   async fullLogin(username: string, password: string, company: string = 'DEFAULT', branch: string = 'สำนักงานใหญ่') {
     await this.login(username, password);
     
+    // Wait for login to complete - either by URL change or selector appearing
+    await this.page.waitForTimeout(2000); // Give time for page transition
+    
+    // Check if we already landed on a valid page (no selector needed)
+    const currentUrl = this.page.url();
+    if (currentUrl.includes('dashboard') || currentUrl.includes('super-admin') || currentUrl.includes('employees')) {
+      await this.page.waitForLoadState('networkidle');
+      return;
+    }
+    
     // Wait for either dashboard OR company/branch selector to appear
-    await this.page.waitForFunction(() => {
-      const url = window.location.href;
-      return url.includes('dashboard') || 
-             url.includes('super-admin') || 
-             document.body.innerText.includes('เลือกบริษัท') || 
-             document.body.innerText.includes('เลือกสาขา') ||
-             document.body.innerText.includes('Select Company') ||
-             document.body.innerText.includes('Select Branch');
-    }, { timeout: 30000 }).catch(() => console.log('Wait for UI transition timed out'));
+    try {
+      await this.page.waitForFunction(() => {
+        const url = window.location.href;
+        return url.includes('dashboard') || 
+               url.includes('super-admin') || 
+               document.body.innerText.includes('เลือกบริษัท') || 
+               document.body.innerText.includes('เลือกสาขา') ||
+               document.body.innerText.includes('Select Company') ||
+               document.body.innerText.includes('Select Branch');
+      }, { timeout: 15000 });
+    } catch (e) {
+      console.log('Wait for UI transition timed out, checking current state...');
+    }
+
+    // Check URL again after waiting
+    const urlAfterWait = this.page.url();
+    if (urlAfterWait.includes('dashboard') || urlAfterWait.includes('super-admin') || urlAfterWait.includes('employees')) {
+      await this.page.waitForLoadState('networkidle');
+      return;
+    }
 
     // Handle Company Selector if it appears (Super Admin or Multi-Company)
-    const companyHeader = this.page.getByRole('heading', { name: /เลือกบริษัท|Select Company/i });
-    if (await companyHeader.isVisible({ timeout: 5000 })) {
+    try {
+      const companyHeader = this.page.getByRole('heading', { name: /เลือกบริษัท|Select Company/i });
+      if (await companyHeader.isVisible({ timeout: 3000 })) {
         console.log('Handling company selection...');
         await this.selectCompany(company);
+        await this.page.waitForTimeout(1000);
+      }
+    } catch (e) {
+      // No company selector - that's fine
     }
 
     // Handle Branch Selector if it appears
-    const branchHeader = this.page.getByRole('heading', { name: /เลือกสาขา|Select Branch/i });
-    if (await branchHeader.isVisible({ timeout: 5000 })) {
+    try {
+      const branchHeader = this.page.getByRole('heading', { name: /เลือกสาขา|Select Branch/i });
+      if (await branchHeader.isVisible({ timeout: 3000 })) {
         console.log('Handling branch selection...');
         await this.selectBranch(branch);
+        await this.page.waitForTimeout(1000);
+      }
+    } catch (e) {
+      // No branch selector - that's fine
     }
 
-    // Final wait for the target page
-    await this.page.waitForURL(/\/dashboard|\/super-admin|\/employees/, { timeout: 30000 });
+    // Final wait for the target page - with longer timeout and retry mechanism
+    try {
+      await this.page.waitForURL(/\/dashboard|\/super-admin|\/employees/, { timeout: 15000 });
+    } catch (e) {
+      // If still not on target page, log current URL for debugging
+      console.log('Still not on target page. Current URL:', this.page.url());
+      // Take a screenshot for debugging
+      const screenshot = await this.page.screenshot();
+      console.log('Page content includes selectors:', {
+        hasCompanySelector: await this.page.getByText('เลือกบริษัท').isVisible().catch(() => false),
+        hasBranchSelector: await this.page.getByText('เลือกสาขา').isVisible().catch(() => false),
+      });
+      throw e;
+    }
     await this.page.waitForLoadState('networkidle');
   }
 

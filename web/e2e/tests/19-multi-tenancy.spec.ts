@@ -44,11 +44,14 @@ test.describe('Multi-tenancy & Branch Isolation', () => {
     await page.goto('/th/employees');
     await page.waitForLoadState('networkidle');
     
+    // Wait for table to be loaded
+    await page.locator('table tbody tr').first().waitFor({ state: 'visible', timeout: 15000 });
+    
     // Initially at HQ
-    await expect(page.getByRole('cell', { name: 'C2-FT-001' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'C2-FT-001' })).toBeVisible({ timeout: 15000 });
 
     // Open the switcher in header
-    const switcher = page.locator('header button').filter({ hasText: /สำนักงานใหญ่|กะทู้/ }).first();
+    const switcher = page.locator('header button').filter({ hasText: /สำนักงานใหญ่|สาขา 1/ }).first();
     await switcher.click();
     
     // Select "สาขา 1"

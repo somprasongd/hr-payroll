@@ -1,7 +1,7 @@
 -- Seed test data for PT Payout tests
 -- Creates:
 -- 1. PT worklogs with approved status for PT-001, PT-002
--- 2. PT payouts with 'to_pay' and 'paid' status
+-- 2. PT payouts with 'to_pay' status (paid payout created separately)
 -- 
 -- Used by tests:
 -- - 09-pt-payout.spec.ts
@@ -15,7 +15,6 @@ DECLARE
   v_work_date DATE;
   v_day_counter INT;
   v_payout_pending_id UUID;
-  v_payout_paid_id UUID;
   v_wl_id UUID;
   v_counter INT;
 BEGIN
@@ -63,7 +62,7 @@ BEGIN
       v_payout_pending_id, v_emp.id, v_emp.company_id, v_emp.branch_id, 'to_pay', v_emp.base_pay_amount, v_admin_id, v_admin_id
     ) ON CONFLICT DO NOTHING;
     
-    -- Attach first 5 approved worklogs to this pending payout
+    -- Attach worklogs to pending payout
     v_counter := 0;
     FOR v_wl_id IN 
       SELECT id FROM worklog_pt 
@@ -76,30 +75,40 @@ BEGIN
       v_counter := v_counter + 1;
     END LOOP;
     
-    -- 3. Create a payout with 'paid' status for PT-001 only
+    -- 3. For PT-001: Create a second payout and mark it paid
+    -- This must be done as a single INSERT with items, then update to paid
     IF v_emp.employee_number = 'PT-001' THEN
-      v_payout_paid_id := gen_random_uuid();
-      
-      INSERT INTO payout_pt (
-        id, employee_id, company_id, branch_id, status, hourly_rate_used, 
-        paid_at, paid_by, created_by, updated_by
-      ) VALUES (
-        v_payout_paid_id, v_emp.id, v_emp.company_id, v_emp.branch_id, 'paid', 
-        v_emp.base_pay_amount, now() - interval '1 day', v_admin_id, v_admin_id, v_admin_id
-      ) ON CONFLICT DO NOTHING;
-      
-      -- Attach next 5 approved worklogs (skip the first 5 already used)
-      v_counter := 0;
-      FOR v_wl_id IN 
-        SELECT id FROM worklog_pt 
-        WHERE employee_id = v_emp.id AND status = 'approved' AND deleted_at IS NULL
-        OFFSET 5 LIMIT 5
-      LOOP
-        INSERT INTO payout_pt_item (payout_id, worklog_id, company_id, branch_id)
-        VALUES (v_payout_paid_id, v_wl_id, v_emp.company_id, v_emp.branch_id)
-        ON CONFLICT DO NOTHING;
-        v_counter := v_counter + 1;
-      END LOOP;
+      DECLARE
+        v_payout_to_mark_paid UUID := gen_random_uuid();
+      BEGIN
+        -- Insert payout as 'to_pay' first
+        INSERT INTO payout_pt (
+          id, employee_id, company_id, branch_id, status, hourly_rate_used, created_by, updated_by
+        ) VALUES (
+          v_payout_to_mark_paid, v_emp.id, v_emp.company_id, v_emp.branch_id, 'to_pay', 
+          v_emp.base_pay_amount, v_admin_id, v_admin_id
+        ) ON CONFLICT DO NOTHING;
+        
+        -- Attach next 5 worklogs (skip the first 5 already used)
+        v_counter := 0;
+        FOR v_wl_id IN 
+          SELECT id FROM worklog_pt 
+          WHERE employee_id = v_emp.id AND status = 'approved' AND deleted_at IS NULL
+          OFFSET 5 LIMIT 5
+        LOOP
+          INSERT INTO payout_pt_item (payout_id, worklog_id, company_id, branch_id)
+          VALUES (v_payout_to_mark_paid, v_wl_id, v_emp.company_id, v_emp.branch_id)
+          ON CONFLICT DO NOTHING;
+          v_counter := v_counter + 1;
+        END LOOP;
+        
+        -- Mark as paid AFTER all items are added
+        IF v_counter > 0 THEN
+          UPDATE payout_pt 
+          SET status = 'paid', paid_at = now() - interval '1 day', paid_by = v_admin_id
+          WHERE id = v_payout_to_mark_paid AND status = 'to_pay';
+        END IF;
+      END;
     END IF;
     
   END LOOP;

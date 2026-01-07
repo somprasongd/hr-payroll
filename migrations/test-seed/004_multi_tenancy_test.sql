@@ -166,60 +166,110 @@ BEGIN
   SELECT id INTO v_pos_helper FROM employee_position 
     WHERE code = 'helper' AND company_id = v_company2_id AND deleted_at IS NULL LIMIT 1;
   
-  -- ====== 7. Create Employees for COMPANY2 ======
-  -- HQ Branch
-  INSERT INTO employees (
-    employee_number, title_id, first_name, last_name,
-    id_document_type_id, id_document_number, phone, email,
-    employee_type_id, department_id, position_id, company_id, branch_id,
-    base_pay_amount, employment_start_date,
-    bank_name, bank_account_no,
-    sso_contribute, sso_declared_wage,
-    provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
-    withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
-    allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
-    created_by, updated_by
-  ) VALUES
+  -- ====== 7. Create Employees for COMPANY2 (using IF NOT EXISTS) ======
   -- C2-FT-001: HQ Full-time
-  ('C2-FT-001', v_mr_id, 'Itsara', 'Jongjit', v_th_cid_id, '1200000000011', '0830000001', 'itsara@company2.com',
-   v_ft_id, v_dept_production, v_pos_supervisor, v_company2_id, v_branch2_hq_id,
-   38000.00, DATE '2024-01-05', 'KBank', '789-1-00001-7',
-   TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
-   v_admin2_id, v_admin2_id),
-  -- C2-PT-001: HQ Part-time
-  ('C2-PT-001', v_mr_id, 'Lertchai', 'Manee', v_th_cid_id, '1200000000111', '0840000001', 'lertchai@company2.com',
-   v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_branch2_hq_id,
-   100.00, DATE '2024-04-01', 'KBank', '789-4-10000-1',
-   TRUE, 6000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-   v_admin2_id, v_admin2_id)
-  ON CONFLICT (employee_number, company_id) WHERE deleted_at IS NULL DO NOTHING;
+  IF NOT EXISTS (
+    SELECT 1 FROM employees 
+    WHERE company_id = v_company2_id AND lower(employee_number) = 'c2-ft-001' 
+      AND employment_end_date IS NULL AND deleted_at IS NULL
+  ) THEN
+    INSERT INTO employees (
+      employee_number, title_id, first_name, last_name,
+      id_document_type_id, id_document_number, phone, email,
+      employee_type_id, department_id, position_id, company_id, branch_id,
+      base_pay_amount, employment_start_date,
+      bank_name, bank_account_no,
+      sso_contribute, sso_declared_wage,
+      provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
+      withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+      allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
+      created_by, updated_by
+    ) VALUES (
+      'C2-FT-001', v_mr_id, 'Itsara', 'Jongjit', v_th_cid_id, '1200000000011', '0830000001', 'itsara@company2.com',
+      v_ft_id, v_dept_production, v_pos_supervisor, v_company2_id, v_branch2_hq_id,
+      38000.00, DATE '2024-01-05', 'KBank', '789-1-00001-7',
+      TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+      v_admin2_id, v_admin2_id
+    );
+  END IF;
   
-  -- Branch 1
-  INSERT INTO employees (
-    employee_number, title_id, first_name, last_name,
-    id_document_type_id, id_document_number, phone, email,
-    employee_type_id, department_id, position_id, company_id, branch_id,
-    base_pay_amount, employment_start_date,
-    bank_name, bank_account_no,
-    sso_contribute, sso_declared_wage,
-    provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
-    withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
-    allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
-    created_by, updated_by
-  ) VALUES
+  -- C2-PT-001: HQ Part-time
+  IF NOT EXISTS (
+    SELECT 1 FROM employees 
+    WHERE company_id = v_company2_id AND lower(employee_number) = 'c2-pt-001' 
+      AND employment_end_date IS NULL AND deleted_at IS NULL
+  ) THEN
+    INSERT INTO employees (
+      employee_number, title_id, first_name, last_name,
+      id_document_type_id, id_document_number, phone, email,
+      employee_type_id, department_id, position_id, company_id, branch_id,
+      base_pay_amount, employment_start_date,
+      bank_name, bank_account_no,
+      sso_contribute, sso_declared_wage,
+      provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
+      withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+      allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
+      created_by, updated_by
+    ) VALUES (
+      'C2-PT-001', v_mr_id, 'Lertchai', 'Manee', v_th_cid_id, '1200000000111', '0840000001', 'lertchai@company2.com',
+      v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_branch2_hq_id,
+      100.00, DATE '2024-04-01', 'KBank', '789-4-10000-1',
+      TRUE, 6000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+      v_admin2_id, v_admin2_id
+    );
+  END IF;
+  
   -- C2-FT-101: Branch 1 Full-time
-  ('C2-FT-101', v_mr_id, 'Noppadon', 'Orachai', v_th_cid_id, '1200000000045', '0830000101', 'noppadon@company2.com',
-   v_ft_id, v_dept_production, v_pos_supervisor, v_company2_id, v_branch2_second_id,
-   33000.00, DATE '2024-01-15', 'Krungsri', '890-1-00101-1',
-   TRUE, 15000.00, TRUE, 0.04, 0.04, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE,
-   v_admin2_id, v_admin2_id),
+  IF NOT EXISTS (
+    SELECT 1 FROM employees 
+    WHERE company_id = v_company2_id AND lower(employee_number) = 'c2-ft-101' 
+      AND employment_end_date IS NULL AND deleted_at IS NULL
+  ) THEN
+    INSERT INTO employees (
+      employee_number, title_id, first_name, last_name,
+      id_document_type_id, id_document_number, phone, email,
+      employee_type_id, department_id, position_id, company_id, branch_id,
+      base_pay_amount, employment_start_date,
+      bank_name, bank_account_no,
+      sso_contribute, sso_declared_wage,
+      provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
+      withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+      allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
+      created_by, updated_by
+    ) VALUES (
+      'C2-FT-101', v_mr_id, 'Noppadon', 'Orachai', v_th_cid_id, '1200000000045', '0830000101', 'noppadon@company2.com',
+      v_ft_id, v_dept_production, v_pos_supervisor, v_company2_id, v_branch2_second_id,
+      33000.00, DATE '2024-01-15', 'Krungsri', '890-1-00101-1',
+      TRUE, 15000.00, TRUE, 0.04, 0.04, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE,
+      v_admin2_id, v_admin2_id
+    );
+  END IF;
+  
   -- C2-PT-101: Branch 1 Part-time
-  ('C2-PT-101', v_mr_id, 'Rattana', 'Somboon', v_th_cid_id, '1200000000137', '0840000101', 'rattana@company2.com',
-   v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_branch2_second_id,
-   95.00, DATE '2024-05-01', 'KBank', '890-4-10101-4',
-   TRUE, 5000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-   v_admin2_id, v_admin2_id)
-  ON CONFLICT (employee_number, company_id) WHERE deleted_at IS NULL DO NOTHING;
+  IF NOT EXISTS (
+    SELECT 1 FROM employees 
+    WHERE company_id = v_company2_id AND lower(employee_number) = 'c2-pt-101' 
+      AND employment_end_date IS NULL AND deleted_at IS NULL
+  ) THEN
+    INSERT INTO employees (
+      employee_number, title_id, first_name, last_name,
+      id_document_type_id, id_document_number, phone, email,
+      employee_type_id, department_id, position_id, company_id, branch_id,
+      base_pay_amount, employment_start_date,
+      bank_name, bank_account_no,
+      sso_contribute, sso_declared_wage,
+      provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
+      withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
+      allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
+      created_by, updated_by
+    ) VALUES (
+      'C2-PT-101', v_mr_id, 'Rattana', 'Somboon', v_th_cid_id, '1200000000137', '0840000101', 'rattana@company2.com',
+      v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_branch2_second_id,
+      95.00, DATE '2024-05-01', 'KBank', '890-4-10101-4',
+      TRUE, 5000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+      v_admin2_id, v_admin2_id
+    );
+  END IF;
 
   RAISE NOTICE 'Created COMPANY2 with admin2 user, 2 branches, and 4 employees';
 END $$;
