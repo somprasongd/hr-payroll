@@ -4,23 +4,23 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
+	"hrms/modules/user/internal/dto"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
 
-// Get user detail
-// @Summary Get user detail
-// @Description ดูข้อมูลผู้ใช้งาน (Admin)
+// User represents the user response for documentation
+type User = dto.User
+
+// @Summary Get user by ID
 // @Tags Admin Users
 // @Produce json
 // @Param id path string true "user id"
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Security BearerAuth
-// @Success 200 {object} dto.User
-// @Failure 400
-// @Failure 401
-// @Failure 403
-// @Failure 404
+// @Success 200 {object} User
 // @Router /admin/users/{id} [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/:id", func(c fiber.Ctx) error {
@@ -35,7 +35,6 @@ func NewEndpoint(router fiber.Router) {
 		if err != nil {
 			return err
 		}
-
 		return response.JSON(c, fiber.StatusOK, resp.User)
 	})
 }

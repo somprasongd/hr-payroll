@@ -20,6 +20,8 @@ import (
 // @Security BearerAuth
 // @Success 200 {object} Response
 // @Failure 404
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /admin/payroll-org-profiles/effective [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/effective", func(c fiber.Ctx) error {

@@ -16,15 +16,16 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	EmployeeID uuid.UUID `json:"employeeId"`
-	TxnDateRaw string    `json:"txnDate"` // expect YYYY-MM-DD
-	Amount     float64   `json:"amount"`
+	EmployeeID uuid.UUID `json:"employeeId" validate:"required"`
+	TxnDateRaw string    `json:"txnDate" validate:"required"`
+	Amount     float64   `json:"amount" validate:"required,gt=0"`
 	Reason     *string   `json:"reason,omitempty"`
-	ActorID    uuid.UUID
+	ActorID    uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -48,22 +49,19 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	cmd.TxnDateRaw = strings.TrimSpace(cmd.TxnDateRaw)
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
-	if cmd.EmployeeID == uuid.Nil {
-		return nil, errs.BadRequest("employeeId is required")
-	}
-	if strings.TrimSpace(cmd.TxnDateRaw) == "" {
-		return nil, errs.BadRequest("txnDate is required")
-	}
+
 	txnDate, err := time.Parse("2006-01-02", cmd.TxnDateRaw)
 	if err != nil {
 		return nil, errs.BadRequest("txnDate must be YYYY-MM-DD")
-	}
-	if cmd.Amount <= 0 {
-		return nil, errs.BadRequest("amount must be > 0")
 	}
 	rec := repository.Record{
 		EmployeeID: cmd.EmployeeID,

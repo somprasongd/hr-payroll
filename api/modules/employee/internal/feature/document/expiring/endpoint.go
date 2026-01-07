@@ -18,6 +18,8 @@ import (
 // @Param days query int false "Days ahead (default 30)"
 // @Success 200 {object} Response
 // @Failure 401
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /documents/expiring [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/expiring", func(c fiber.Ctx) error {

@@ -24,6 +24,8 @@ import (
 // @Param monthDate query string false "YYYY-MM-DD (will use month & year from this date to filter payroll_month_date)"
 // @Security BearerAuth
 // @Success 200 {object} Response
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /payroll-runs [get]
 func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Get("/", func(c fiber.Ctx) error {

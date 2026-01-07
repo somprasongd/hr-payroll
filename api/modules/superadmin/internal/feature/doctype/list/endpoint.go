@@ -12,6 +12,8 @@ import (
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /super-admin/employee-document-types [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/employee-document-types", func(c fiber.Ctx) error {

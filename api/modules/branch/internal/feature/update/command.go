@@ -10,15 +10,16 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID      uuid.UUID
-	Code    string
-	Name    string
-	Status  string
-	ActorID uuid.UUID
+	ID      uuid.UUID `validate:"required"`
+	Code    string    `validate:"required"`
+	Name    string    `validate:"required"`
+	Status  string    `validate:"required"`
+	ActorID uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -35,6 +36,10 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandle
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	// Rule 2: Cannot edit suspended or archived branches
 	existing, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {

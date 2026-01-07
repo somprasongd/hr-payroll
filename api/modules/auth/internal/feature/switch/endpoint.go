@@ -9,6 +9,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/response"
+	"time"
 )
 
 type switchRequest struct {
@@ -27,13 +28,15 @@ type switchRequest struct {
 // @Failure 400
 // @Failure 401
 // @Failure 403
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /auth/switch [post]
 func NewEndpoint(router fiber.Router, auth fiber.Handler) {
 	// Create a sub-group with auth middleware
 	switchGroup := router.Group("/switch")
 	switchGroup.Use(auth)
 
-	switchGroup.Post("/", func(c fiber.Ctx) error {
+	switchGroup.Post("", func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
 			return errs.Unauthorized("missing user")
@@ -68,6 +71,17 @@ func NewEndpoint(router fiber.Router, auth fiber.Handler) {
 		if err != nil {
 			return err
 		}
+
+		// Set HttpOnly cookie for refresh token (for web clients)
+		c.Cookie(&fiber.Cookie{
+			Name:     "refresh_token",
+			Value:    resp.RefreshToken,
+			Path:     "/",
+			HTTPOnly: true,
+			Secure:   false, // Set to true in production (HTTPS)
+			SameSite: fiber.CookieSameSiteStrictMode,
+			MaxAge:   int(30 * 24 * time.Hour / time.Second), // 30 days
+		})
 
 		return response.JSON(c, fiber.StatusOK, resp)
 	})

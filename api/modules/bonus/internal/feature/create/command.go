@@ -14,14 +14,15 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	PayrollMonth string `json:"payrollMonthDate"`
+	PayrollMonth string `json:"payrollMonthDate" validate:"required"`
 	BonusYear    *int   `json:"bonusYear,omitempty"`
-	PeriodStart  string `json:"periodStartDate"`
-	PeriodEnd    string `json:"periodEndDate"`
+	PeriodStart  string `json:"periodStartDate" validate:"required"`
+	PeriodEnd    string `json:"periodEndDate" validate:"required"`
 
 	ParsedPayrollMonth time.Time `json:"-"`
 	ParsedPeriodStart  time.Time `json:"-"`
@@ -75,6 +76,10 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")

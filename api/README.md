@@ -116,6 +116,52 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 }
 ```
 
+### Validation Strategy
+
+**Command-Level Validation** - Validation ทำที่ Command/Query Handler ไม่ใช่ที่ Endpoint:
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│ HTTP Endpoint │ ──► │   Command    │ ──► │   Handler    │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │
+                      ┌─────▼─────┐
+                      │ Validate  │
+                      └───────────┘
+
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│ gRPC Endpoint │ ──► │   Command    │ ──► │   Handler    │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │
+                      ┌─────▼─────┐
+                      │ Validate  │  (Same validation logic)
+                      └───────────┘
+```
+
+**เหตุผล:**
+
+1. **Single Source of Truth** - Validation rules อยู่ที่เดียว ไม่ว่า request จะมาจาก HTTP, gRPC, CLI, หรือ Message Queue
+2. **Transport Agnostic** - Command struct คือ contract ของ use case, Transport Layer แค่แปลง format
+3. **Hexagonal Architecture** - แยก business logic ออกจาก infrastructure
+
+**ใช้ `go-playground/validator` ที่ Command struct:**
+
+```go
+// endpoint.go - Request struct with validation tags
+type RequestBody struct {
+    Name  string `json:"name" validate:"required,max=255"`
+    Email string `json:"email" validate:"required,email"`
+}
+
+// command.go - Validate in handler
+func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+    if err := validator.Validate(&cmd.Payload); err != nil {
+        return nil, err // Returns 400 Bad Request with field-specific errors
+    }
+    // Business logic...
+}
+```
+
 ### Mediator Pattern
 
 **Centralized Request Handling** - ทุก request ผ่าน mediator:
@@ -186,11 +232,15 @@ make image-api
 
 ## ⚙️ Configuration
 
-| Variable             | Description                  |
-| -------------------- | ---------------------------- |
-| `DB_DSN`             | PostgreSQL connection string |
-| `JWT_ACCESS_SECRET`  | JWT access token secret      |
-| `JWT_REFRESH_SECRET` | JWT refresh token secret     |
+| Variable             | Description                                  | Default |
+| -------------------- | -------------------------------------------- | ------- |
+| `DB_DSN`             | PostgreSQL connection string                 | -       |
+| `JWT_ACCESS_SECRET`  | JWT access token secret                      | -       |
+| `JWT_REFRESH_SECRET` | JWT refresh token secret                     | -       |
+| `JWT_ACCESS_TTL`     | Access token TTL (e.g., `15m`)               | `15m`   |
+| `JWT_REFRESH_TTL`    | Refresh token TTL (e.g., `720h` for 30 days) | `720h`  |
+| `ALLOWED_ORIGINS`    | CORS allowed origins (comma-separated)       | `*`     |
+| `HTTP_PORT`          | HTTP server port                             | `8080`  |
 
 ## 📖 API Documentation
 

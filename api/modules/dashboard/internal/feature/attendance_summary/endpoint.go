@@ -26,6 +26,8 @@ import (
 // @Failure 400
 // @Failure 401
 // @Failure 500
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /dashboard/attendance-summary [get]
 func RegisterAttendanceSummary(router fiber.Router, repo *repository.Repository) {
 	router.Get("/attendance-summary", func(c fiber.Ctx) error {

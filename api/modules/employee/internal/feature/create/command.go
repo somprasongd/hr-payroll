@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"go.uber.org/zap"
 
@@ -18,6 +17,7 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
@@ -148,16 +148,13 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 }
 
 func validatePayload(p RequestBody) error {
-	if strings.TrimSpace(p.EmployeeNumber) == "" ||
-		p.TitleID == uuid.Nil ||
-		strings.TrimSpace(p.FirstName) == "" ||
-		strings.TrimSpace(p.LastName) == "" ||
-		p.IDDocumentTypeID == uuid.Nil ||
-		strings.TrimSpace(p.IDDocumentNumber) == "" ||
-		p.EmployeeTypeID == uuid.Nil ||
-		p.BasePayAmount <= 0 ||
-		p.ParsedEmploymentStartDate.IsZero() {
-		return errs.BadRequest("missing required fields")
+	// Use shared validator for struct tag-based validation
+	if err := validator.Validate(&p); err != nil {
+		return err
+	}
+	// Additional business rule: parsed date must not be zero
+	if p.ParsedEmploymentStartDate.IsZero() {
+		return errs.BadRequest("EmploymentStartDate is required")
 	}
 	return nil
 }

@@ -11,16 +11,17 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/contracts"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID      uuid.UUID
-	Code    string
-	Name    string
-	Status  string
-	ActorID uuid.UUID
+	ID      uuid.UUID `validate:"required"`
+	Code    string    `validate:"required"`
+	Name    string    `validate:"required"`
+	Status  string    `validate:"required"`
+	ActorID uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -40,6 +41,10 @@ func NewHandler(tx transactor.Transactor, eb eventbus.EventBus) *commandHandler 
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	var resp Response
 
 	err := h.tx.WithinTransaction(ctx, func(txCtx context.Context, registerHook func(transactor.PostCommitHook)) error {

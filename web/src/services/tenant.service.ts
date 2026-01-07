@@ -12,7 +12,6 @@ export interface SwitchTenantRequest {
 
 export interface SwitchTenantResponse {
   accessToken: string;
-  refreshToken: string;
   tokenType: string;
   expiresIn: number;
   company: Company;

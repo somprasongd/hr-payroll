@@ -15,6 +15,8 @@ import (
 // @Security BearerAuth
 // @Param id path string true "employee id"
 // @Success 200 {object} Response
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /employees/{id}/accumulations [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/:id/accumulations", func(c fiber.Ctx) error {

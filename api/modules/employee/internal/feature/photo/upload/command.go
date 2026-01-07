@@ -16,15 +16,16 @@ import (
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 const maxPhotoSizeBytes = 2 * 1024 * 1024
 
 type Command struct {
-	FileName    string
-	ContentType string
-	Data        []byte
+	FileName    string `validate:"required"`
+	ContentType string `validate:"required"`
+	Data        []byte `validate:"required,min=1"`
 	Size        int64
 }
 
@@ -48,6 +49,10 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -58,13 +63,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	if len(cmd.Data) == 0 {
-		return nil, errs.BadRequest("file is empty")
-	}
 	if cmd.Size > maxPhotoSizeBytes || int64(len(cmd.Data)) > maxPhotoSizeBytes {
 		return nil, errs.BadRequest("file too large (max 2MB)")
 	}
-	if cmd.ContentType == "" || !strings.HasPrefix(cmd.ContentType, "image/") {
+	if !strings.HasPrefix(cmd.ContentType, "image/") {
 		return nil, errs.BadRequest("contentType must be image/*")
 	}
 

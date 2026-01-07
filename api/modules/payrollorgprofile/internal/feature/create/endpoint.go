@@ -16,8 +16,8 @@ import (
 )
 
 type RequestBody struct {
-	StartDate      string     `json:"startDate"`
-	CompanyName    string     `json:"companyName"`
+	StartDate      string     `json:"startDate" validate:"required"`
+	CompanyName    string     `json:"companyName" validate:"required"`
 	AddressLine1   *string    `json:"addressLine1,omitempty"`
 	AddressLine2   *string    `json:"addressLine2,omitempty"`
 	Subdistrict    *string    `json:"subdistrict,omitempty"`
@@ -26,11 +26,11 @@ type RequestBody struct {
 	PostalCode     *string    `json:"postalCode,omitempty"`
 	PhoneMain      *string    `json:"phoneMain,omitempty"`
 	PhoneAlt       *string    `json:"phoneAlt,omitempty"`
-	Email          *string    `json:"email,omitempty"`
+	Email          *string    `json:"email,omitempty" validate:"omitempty,email"`
 	TaxID          *string    `json:"taxId,omitempty"`
 	SlipFooterNote *string    `json:"slipFooterNote,omitempty"`
 	LogoID         *uuid.UUID `json:"logoId,omitempty"`
-	Status         *string    `json:"status,omitempty"`
+	Status         *string    `json:"status,omitempty" validate:"omitempty,oneof=active retired"`
 
 	parsedStartDate time.Time `json:"-"`
 }
@@ -67,6 +67,8 @@ func (p RequestBody) ToPayload() repository.UpsertPayload {
 // @Failure 400
 // @Failure 401
 // @Failure 403
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /admin/payroll-org-profiles [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

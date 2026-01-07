@@ -18,17 +18,18 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type CreateRequest struct {
-	EmployeeID uuid.UUID `json:"employeeId"`
-	WorkDate   string    `json:"workDate"`
+	EmployeeID uuid.UUID `json:"employeeId" validate:"required"`
+	WorkDate   string    `json:"workDate" validate:"required"`
 	MorningIn  *string   `json:"morningIn"`
 	MorningOut *string   `json:"morningOut"`
 	EveningIn  *string   `json:"eveningIn"`
 	EveningOut *string   `json:"eveningOut"`
-	Status     string    `json:"status"` // pending|approved
+	Status     string    `json:"status" validate:"omitempty,oneof=pending approved"`
 }
 
 type CreateCommand struct {
@@ -47,6 +48,14 @@ type createHandler struct{}
 func NewCreateHandler() *createHandler { return &createHandler{} }
 
 func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*CreateResponse, error) {
+	cmd.Payload.Status = strings.TrimSpace(cmd.Payload.Status)
+	if cmd.Payload.Status == "" {
+		cmd.Payload.Status = "pending"
+	}
+	if err := validator.Validate(&cmd.Payload); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -123,26 +132,13 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	return &CreateResponse{PTItem: dto.FromPT(*created)}, nil
 }
 
+// validatePayload handles time format validation and parsing
 func validatePayload(p *CreateRequest) (time.Time, error) {
-	if p.EmployeeID == uuid.Nil {
-		return time.Time{}, errs.BadRequest("employeeId is required")
-	}
-	dateStr := strings.TrimSpace(p.WorkDate)
-	if dateStr == "" {
-		return time.Time{}, errs.BadRequest("workDate is required")
-	}
-	parsedDate, err := time.Parse("2006-01-02", dateStr)
+	parsedDate, err := time.Parse("2006-01-02", strings.TrimSpace(p.WorkDate))
 	if err != nil {
 		return time.Time{}, errs.BadRequest("workDate must be YYYY-MM-DD")
 	}
-	p.Status = strings.TrimSpace(p.Status)
-	if p.Status == "" {
-		p.Status = "pending"
-	}
-	if p.Status != "pending" && p.Status != "approved" {
-		return time.Time{}, errs.BadRequest("invalid status")
-	}
-	// time pairing is enforced by DB; just ensure strings look like HH:MM?
+	// time pairing is enforced by DB; just ensure strings look like HH:MM
 	for _, t := range []**string{&p.MorningIn, &p.MorningOut, &p.EveningIn, &p.EveningOut} {
 		if *t != nil && **t == "" {
 			*t = nil
@@ -162,11 +158,11 @@ type UpdateRequest struct {
 	MorningOut *string `json:"morningOut"`
 	EveningIn  *string `json:"eveningIn"`
 	EveningOut *string `json:"eveningOut"`
-	Status     string  `json:"status"` // pending|approved
+	Status     string  `json:"status" validate:"omitempty,oneof=pending approved"`
 }
 
 type UpdateCommand struct {
-	ID      uuid.UUID
+	ID      uuid.UUID `validate:"required"`
 	Payload UpdateRequest
 	Repo    repository.PTRepository
 	Tx      transactor.Transactor
@@ -182,6 +178,11 @@ type updateHandler struct{}
 func NewUpdateHandler() *updateHandler { return &updateHandler{} }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
+	cmd.Payload.Status = strings.TrimSpace(cmd.Payload.Status)
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -291,7 +292,7 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.PTRecord) (tim
 			return nil, nil // Implicitly set to NULL (nil pointer returns nil)
 		}
 		if _, err := time.Parse("15:04", trimmed); err != nil {
-			return nil, errs.BadRequest(field+" must be HH:MM")
+			return nil, errs.BadRequest(field + " must be HH:MM")
 		}
 		return &trimmed, nil
 	}
@@ -325,7 +326,7 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.PTRecord) (tim
 }
 
 type DeleteCommand struct {
-	ID   uuid.UUID
+	ID   uuid.UUID `validate:"required"`
 	Repo repository.PTRepository
 	Eb   eventbus.EventBus
 }
@@ -335,6 +336,10 @@ type deleteHandler struct{}
 func NewDeleteHandler() *deleteHandler { return &deleteHandler{} }
 
 func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return mediator.NoResponse{}, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")

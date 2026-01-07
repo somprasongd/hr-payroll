@@ -16,6 +16,8 @@ import (
 // @Produce image/jpeg
 // @Success 200 {file} binary
 // @Failure 404
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /public/branding/logo [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/logo", func(c fiber.Ctx) error {

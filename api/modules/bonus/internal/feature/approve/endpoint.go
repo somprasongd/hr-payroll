@@ -26,6 +26,8 @@ type Request struct {
 // @Failure 401
 // @Failure 403
 // @Failure 404
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /bonus-cycles/{id} [patch]
 func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {

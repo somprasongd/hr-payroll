@@ -17,13 +17,14 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID          uuid.UUID
-	NewPassword string
-	Actor       uuid.UUID
+	ID          uuid.UUID `validate:"required"`
+	NewPassword string    `validate:"required"`
+	Actor       uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -45,8 +46,9 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if strings.TrimSpace(cmd.NewPassword) == "" {
-		return nil, errs.BadRequest("newPassword is required")
+	cmd.NewPassword = strings.TrimSpace(cmd.NewPassword)
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	hash, err := password.Hash(cmd.NewPassword)

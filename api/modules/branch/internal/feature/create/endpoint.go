@@ -3,10 +3,14 @@ package create
 import (
 	"github.com/gofiber/fiber/v3"
 
+	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
+
+// Branch represents the branch response for documentation
+type Branch = repository.Branch
 
 // CreateRequest represents the request body for creating a branch
 type CreateRequest struct {
@@ -20,7 +24,9 @@ type CreateRequest struct {
 // @Produce json
 // @Security BearerAuth
 // @Param request body CreateRequest true "branch payload"
-// @Success 201 {object} repository.Branch
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+// @Success 201 {object} Branch
 // @Router /admin/branches [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

@@ -10,12 +10,13 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	Code string
-	Name string
+	Code string `validate:"required"`
+	Name string `validate:"required"`
 }
 
 type Response struct {
@@ -32,6 +33,10 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandle
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	user, ok := contextx.UserFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing user context")

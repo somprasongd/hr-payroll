@@ -19,14 +19,15 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	Username string
-	Password string
-	Role     string
-	ActorID  uuid.UUID
+	Username string    `validate:"required"`
+	Password string    `validate:"required"`
+	Role     string    `validate:"required,oneof=admin hr"`
+	ActorID  uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -52,11 +53,8 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	cmd.Username = strings.TrimSpace(cmd.Username)
 	cmd.Role = strings.TrimSpace(cmd.Role)
-	if cmd.Username == "" || cmd.Password == "" || cmd.Role == "" {
-		return nil, errs.BadRequest("username, password and role are required")
-	}
-	if cmd.Role != "admin" && cmd.Role != "hr" {
-		return nil, errs.BadRequest("invalid role")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	hash, err := password.Hash(cmd.Password)

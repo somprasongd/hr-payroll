@@ -16,6 +16,8 @@ import (
 // @Param id path string true "branch ID"
 // @Success 204
 // @Failure 400 {object} response.Problem "Branch must be archived before deletion"
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /admin/branches/{id} [delete]
 func NewEndpoint(router fiber.Router) {
 	router.Delete("/:id", func(c fiber.Ctx) error {

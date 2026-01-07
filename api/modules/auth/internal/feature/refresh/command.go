@@ -14,12 +14,13 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 
 	"go.uber.org/zap"
 )
 
 type Command struct {
-	RefreshToken string
+	RefreshToken string `validate:"required"`
 }
 
 type Response struct {
@@ -46,8 +47,8 @@ func NewHandler(tokenSvc *jwt.TokenService, repo repository.Repository, tx trans
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	cmd.RefreshToken = strings.TrimSpace(cmd.RefreshToken)
-	if cmd.RefreshToken == "" {
-		return nil, errs.BadRequest("refreshToken is required")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	claims, err := h.tokenSvc.ParseRefreshToken(cmd.RefreshToken)

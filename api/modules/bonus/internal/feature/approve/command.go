@@ -18,12 +18,13 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID     uuid.UUID
-	Status string
+	ID     uuid.UUID `validate:"required"`
+	Status string    `validate:"required,oneof=approved rejected"`
 }
 
 type Response struct {
@@ -44,6 +45,11 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	cmd.Status = strings.TrimSpace(cmd.Status)
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -54,10 +60,6 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	cmd.Status = strings.TrimSpace(cmd.Status)
-	if cmd.Status != "approved" && cmd.Status != "rejected" {
-		return nil, errs.BadRequest("status must be approved or rejected")
-	}
 	if user.Role == "hr" {
 		return nil, errs.Forbidden("HR is not allowed to change status")
 	}

@@ -34,22 +34,22 @@ func (p *RequestBody) ParseDates() error {
 }
 
 type RequestBody struct {
-	EmployeeNumber              string       `json:"employeeNumber"`
-	TitleID                     uuid.UUID    `json:"titleId"`
-	FirstName                   string       `json:"firstName"`
-	LastName                    string       `json:"lastName"`
+	EmployeeNumber              string       `json:"employeeNumber" validate:"required"`
+	TitleID                     uuid.UUID    `json:"titleId" validate:"required"`
+	FirstName                   string       `json:"firstName" validate:"required"`
+	LastName                    string       `json:"lastName" validate:"required"`
 	Nickname                    *string      `json:"nickname"`
-	IDDocumentTypeID            uuid.UUID    `json:"idDocumentTypeId"`
-	IDDocumentNumber            string       `json:"idDocumentNumber"`
+	IDDocumentTypeID            uuid.UUID    `json:"idDocumentTypeId" validate:"required"`
+	IDDocumentNumber            string       `json:"idDocumentNumber" validate:"required"`
 	IDDocumentOtherDescription  *string      `json:"idDocumentOtherDescription"`
 	Phone                       *string      `json:"phone"`
-	Email                       *string      `json:"email"`
+	Email                       *string      `json:"email" validate:"omitempty,email"`
 	PhotoID                     OptionalUUID `json:"photoId"`
-	EmployeeTypeID              uuid.UUID    `json:"employeeTypeId"`
+	EmployeeTypeID              uuid.UUID    `json:"employeeTypeId" validate:"required"`
 	DepartmentID                OptionalUUID `json:"departmentId"`
 	PositionID                  OptionalUUID `json:"positionId"`
-	BasePayAmount               float64      `json:"basePayAmount"`
-	EmploymentStartDate         string       `json:"employmentStartDate"`
+	BasePayAmount               float64      `json:"basePayAmount" validate:"gt=0"`
+	EmploymentStartDate         string       `json:"employmentStartDate" validate:"required"`
 	EmploymentEndDate           *string      `json:"employmentEndDate"`
 	BankName                    *string      `json:"bankName"`
 	BankAccountNo               *string      `json:"bankAccountNo"`
@@ -131,6 +131,8 @@ func (p RequestBody) ToDetailRecord() repository.DetailRecord {
 // @Failure 401
 // @Failure 403
 // @Failure 409
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /employees [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

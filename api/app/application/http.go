@@ -44,11 +44,12 @@ func newFiber(cfg config.Config, healthCheck HealthCheck) *fiber.App {
 
 	app.Use(mw.RequestLogger())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     cfg.AllowedOrigins,
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Company-ID", "X-Branch-ID"},
 		AllowMethods:     []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
-		AllowCredentials: false,
+		AllowCredentials: true, // Required for HttpOnly Cookie auth
 	}))
+
 	app.Use(recover.New())
 	app.Use(mw.ErrorHandler())
 	app.Use(mw.SuperAdminRouteRestriction())

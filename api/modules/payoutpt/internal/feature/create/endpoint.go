@@ -18,6 +18,8 @@ import (
 // @Security BearerAuth
 // @Param request body Command true "payload"
 // @Success 201 {object} Response
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /payouts/pt [post]
 func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Post("/", func(c fiber.Ctx) error {

@@ -13,16 +13,17 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/contracts"
 	"hrms/shared/events"
 )
 
 type Command struct {
 	CompanyCode   string
-	CompanyName   string
-	AdminUsername string
-	AdminPassword string
-	ActorID       uuid.UUID
+	CompanyName   string    `validate:"required"`
+	AdminUsername string    `validate:"required"`
+	AdminPassword string    `validate:"required,min=8"`
+	ActorID       uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -50,16 +51,8 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		cmd.CompanyCode = generateRandomCode(5)
 	}
 
-	// Validate inputs
-	// Validate inputs
-	if cmd.CompanyName == "" {
-		return nil, errs.Unprocessable("companyName is required")
-	}
-	if cmd.AdminUsername == "" || cmd.AdminPassword == "" {
-		return nil, errs.Unprocessable("adminUsername and adminPassword are required")
-	}
-	if len(cmd.AdminPassword) < 8 {
-		return nil, errs.Unprocessable("password must be at least 8 characters")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	err := h.tx.WithinTransaction(ctx, func(txCtx context.Context, registerHook func(transactor.PostCommitHook)) error {

@@ -26,6 +26,8 @@ type RequestBody = create.RequestBody
 // @Failure 401
 // @Failure 403
 // @Failure 404
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /employees/{id} [put]
 func NewEndpoint(router fiber.Router) {
 	router.Put("/:id", func(c fiber.Ctx) error {

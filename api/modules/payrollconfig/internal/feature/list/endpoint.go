@@ -20,6 +20,8 @@ import (
 // @Success 200 {object} Response
 // @Failure 401
 // @Failure 403
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Router /admin/payroll-configs [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/", func(c fiber.Ctx) error {
