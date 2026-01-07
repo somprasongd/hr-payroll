@@ -16,8 +16,8 @@ import (
 )
 
 type RequestBody struct {
-	StartDate      string     `json:"startDate"`
-	CompanyName    string     `json:"companyName"`
+	StartDate      string     `json:"startDate" validate:"required"`
+	CompanyName    string     `json:"companyName" validate:"required"`
 	AddressLine1   *string    `json:"addressLine1,omitempty"`
 	AddressLine2   *string    `json:"addressLine2,omitempty"`
 	Subdistrict    *string    `json:"subdistrict,omitempty"`
@@ -26,11 +26,11 @@ type RequestBody struct {
 	PostalCode     *string    `json:"postalCode,omitempty"`
 	PhoneMain      *string    `json:"phoneMain,omitempty"`
 	PhoneAlt       *string    `json:"phoneAlt,omitempty"`
-	Email          *string    `json:"email,omitempty"`
+	Email          *string    `json:"email,omitempty" validate:"omitempty,email"`
 	TaxID          *string    `json:"taxId,omitempty"`
 	SlipFooterNote *string    `json:"slipFooterNote,omitempty"`
 	LogoID         *uuid.UUID `json:"logoId,omitempty"`
-	Status         *string    `json:"status,omitempty"`
+	Status         *string    `json:"status,omitempty" validate:"omitempty,oneof=active retired"`
 
 	parsedStartDate time.Time `json:"-"`
 }

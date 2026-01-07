@@ -12,14 +12,15 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
 	Repo      repository.Repository
-	UserID    uuid.UUID
-	BranchIDs []uuid.UUID
-	ActorID   uuid.UUID
+	UserID    uuid.UUID   `validate:"required"`
+	BranchIDs []uuid.UUID `validate:"required,min=1"`
+	ActorID   uuid.UUID   `validate:"required"`
 }
 
 type Response struct {
@@ -35,9 +36,8 @@ func NewHandler(eb eventbus.EventBus) *commandHandler {
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	// Validate at least 1 branch is required
-	if len(cmd.BranchIDs) == 0 {
-		return nil, errs.BadRequest("at least one branch is required")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	existing, err := cmd.Repo.GetUserBranchAccess(ctx, cmd.UserID)

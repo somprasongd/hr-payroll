@@ -17,23 +17,24 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Installment struct {
-	Amount           float64 `json:"amount"`
-	PayrollMonthDate string  `json:"payrollMonthDate"` // expect YYYY-MM-DD (1st of month)
+	Amount           float64 `json:"amount" validate:"required,gt=0"`
+	PayrollMonthDate string  `json:"payrollMonthDate" validate:"required"`
 }
 
 type Command struct {
-	EmployeeID   uuid.UUID     `json:"employeeId"`
-	TxnType      string        `json:"txnType"` // loan|other
+	EmployeeID   uuid.UUID     `json:"employeeId" validate:"required"`
+	TxnType      string        `json:"txnType" validate:"required,oneof=loan other"`
 	OtherDesc    *string       `json:"otherDesc,omitempty"`
-	TxnDate      string        `json:"txnDate"` // expect YYYY-MM-DD
-	Amount       float64       `json:"amount"`
+	TxnDate      string        `json:"txnDate" validate:"required"`
+	Amount       float64       `json:"amount" validate:"required,gt=0"`
 	Reason       *string       `json:"reason,omitempty"`
-	Installments []Installment `json:"installments"`
-	ActorID      uuid.UUID
+	Installments []Installment `json:"installments" validate:"dive"`
+	ActorID      uuid.UUID     `validate:"required"`
 }
 
 type Response struct {
@@ -58,12 +59,16 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	txnDate, parsedInstallments, err := validate(cmd)
+	txnDate, parsedInstallments, err := validateDates(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -142,40 +147,23 @@ type parsedInstallment struct {
 	PayrollMonthDate time.Time
 }
 
-func validate(cmd *Command) (time.Time, []parsedInstallment, error) {
-	if cmd.EmployeeID == uuid.Nil {
-		return time.Time{}, nil, errs.BadRequest("employeeId is required")
-	}
-	switch cmd.TxnType {
-	case "loan":
-	case "other":
+// validateDates handles date parsing and business logic validation
+func validateDates(cmd *Command) (time.Time, []parsedInstallment, error) {
+	// Validate otherDesc for txnType other
+	if cmd.TxnType == "other" {
 		if cmd.OtherDesc == nil || strings.TrimSpace(*cmd.OtherDesc) == "" {
 			return time.Time{}, nil, errs.BadRequest("otherDesc is required for txnType other")
 		}
-	default:
-		return time.Time{}, nil, errs.BadRequest("invalid txnType")
 	}
-	txnDateStr := strings.TrimSpace(cmd.TxnDate)
-	if txnDateStr == "" {
-		return time.Time{}, nil, errs.BadRequest("txnDate is required")
-	}
-	txnDate, err := time.Parse("2006-01-02", txnDateStr)
+
+	txnDate, err := time.Parse("2006-01-02", strings.TrimSpace(cmd.TxnDate))
 	if err != nil {
 		return time.Time{}, nil, errs.BadRequest("txnDate must be YYYY-MM-DD")
 	}
-	if cmd.Amount <= 0 {
-		return time.Time{}, nil, errs.BadRequest("amount must be > 0")
-	}
+
 	parsedInst := make([]parsedInstallment, 0, len(cmd.Installments))
 	for _, ins := range cmd.Installments {
-		if ins.Amount <= 0 {
-			return time.Time{}, nil, errs.BadRequest("installment amount must be > 0")
-		}
-		payrollDateStr := strings.TrimSpace(ins.PayrollMonthDate)
-		if payrollDateStr == "" {
-			return time.Time{}, nil, errs.BadRequest("payrollMonthDate is required for installments")
-		}
-		payrollDate, err := time.Parse("2006-01-02", payrollDateStr)
+		payrollDate, err := time.Parse("2006-01-02", strings.TrimSpace(ins.PayrollMonthDate))
 		if err != nil {
 			return time.Time{}, nil, errs.BadRequest("payrollMonthDate must be YYYY-MM-DD")
 		}

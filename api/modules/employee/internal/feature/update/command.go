@@ -19,11 +19,12 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID      uuid.UUID
+	ID      uuid.UUID `validate:"required"`
 	Payload RequestBody
 }
 
@@ -58,7 +59,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	if err := validatePayload(cmd.Payload); err != nil {
+	if err := validator.Validate(&cmd.Payload); err != nil {
 		return nil, err
 	}
 

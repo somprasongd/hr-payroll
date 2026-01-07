@@ -15,14 +15,15 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type UpdateCommand struct {
-	ID          uuid.UUID
-	BonusMonths *float64 `json:"bonusMonths"`
-	BonusAmount *float64 `json:"bonusAmount"`
-	Actor       uuid.UUID
+	ID          uuid.UUID `validate:"required"`
+	BonusMonths *float64  `json:"bonusMonths"`
+	BonusAmount *float64  `json:"bonusAmount"`
+	Actor       uuid.UUID `validate:"required"`
 }
 
 type UpdateResponse struct {
@@ -39,6 +40,10 @@ func NewUpdateHandler(repo repository.Repository, eb eventbus.EventBus) *updateH
 }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")

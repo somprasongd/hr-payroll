@@ -16,6 +16,7 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
@@ -44,13 +45,17 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 type Request struct {
-	EmployeeID      uuid.UUID `json:"employeeId"`
-	Amount          float64   `json:"amount"`
-	AdvanceDate     string    `json:"advanceDate"`      // expect YYYY-MM-DD
-	PayrollMonthRaw string    `json:"payrollMonthDate"` // expect YYYY-MM-DD (1st of month)
+	EmployeeID      uuid.UUID `json:"employeeId" validate:"required"`
+	Amount          float64   `json:"amount" validate:"required,gt=0"`
+	AdvanceDate     string    `json:"advanceDate" validate:"required"`
+	PayrollMonthRaw string    `json:"payrollMonthDate" validate:"required"`
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(&cmd.Payload); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")

@@ -12,12 +12,13 @@ import (
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID      uuid.UUID
-	ActorID uuid.UUID
+	ID      uuid.UUID `validate:"required"`
+	ActorID uuid.UUID `validate:"required"`
 }
 
 type commandHandler struct {
@@ -30,6 +31,10 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandle
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return mediator.NoResponse{}, err
+	}
+
 	branch, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {
 		return mediator.NoResponse{}, errs.NotFound("branch not found")

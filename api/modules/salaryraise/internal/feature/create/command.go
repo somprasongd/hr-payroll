@@ -14,12 +14,13 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	PeriodStart string                `json:"periodStartDate"`
-	PeriodEnd   string                `json:"periodEndDate"`
+	PeriodStart string                `json:"periodStartDate" validate:"required"`
+	PeriodEnd   string                `json:"periodEndDate" validate:"required"`
 	Repo        repository.Repository `json:"-"`
 	Tx          transactor.Transactor `json:"-"`
 	Eb          eventbus.EventBus     `json:"-"`
@@ -55,6 +56,10 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")

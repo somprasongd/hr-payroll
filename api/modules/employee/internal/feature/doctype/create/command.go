@@ -12,13 +12,14 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	Code   string `json:"code"`
-	NameTh string `json:"nameTh"`
-	NameEn string `json:"nameEn"`
+	Code   string `json:"code" validate:"required"`
+	NameTh string `json:"nameTh" validate:"required"`
+	NameEn string `json:"nameEn" validate:"required"`
 }
 
 type Response struct {
@@ -37,28 +38,23 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	cmd.Code = strings.TrimSpace(cmd.Code)
+	cmd.NameTh = strings.TrimSpace(cmd.NameTh)
+	cmd.NameEn = strings.TrimSpace(cmd.NameEn)
+
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	user, ok := contextx.UserFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	code := strings.TrimSpace(cmd.Code)
-	if code == "" {
-		return nil, errs.BadRequest("code is required")
-	}
-	nameTh := strings.TrimSpace(cmd.NameTh)
-	if nameTh == "" {
-		return nil, errs.BadRequest("nameTh is required")
-	}
-	nameEn := strings.TrimSpace(cmd.NameEn)
-	if nameEn == "" {
-		return nil, errs.BadRequest("nameEn is required")
-	}
-
 	rec, err := h.repo.CreateDocumentType(ctx, repository.DocumentTypeRecord{
-		Code:   code,
-		NameTh: nameTh,
-		NameEn: nameEn,
+		Code:   cmd.Code,
+		NameTh: cmd.NameTh,
+		NameEn: cmd.NameEn,
 	}, user.ID)
 	if err != nil {
 		if repository.IsUniqueViolation(err) {

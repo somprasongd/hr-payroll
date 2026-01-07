@@ -17,16 +17,17 @@ import (
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 const dateLayout = "2006-01-02"
 
 type Command struct {
-	ID        uuid.UUID
+	ID        uuid.UUID `validate:"required"`
 	StartDate *time.Time
 	EndDate   *time.Time
-	Status    *string
+	Status    *string `validate:"omitempty,oneof=approved rejected"`
 }
 
 type Response struct {
@@ -45,6 +46,10 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -60,13 +65,10 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	if cmd.Status != nil {
-		status := strings.TrimSpace(strings.ToLower(*cmd.Status))
-		if user.Role == "hr" { // Assuming user.Role is available from contextx.UserFromContext
+		if user.Role == "hr" {
 			return nil, errs.Forbidden("HR is not allowed to change status")
 		}
-		if status != "approved" && status != "rejected" {
-			return nil, errs.BadRequest("status must be approved or rejected")
-		}
+		status := strings.TrimSpace(strings.ToLower(*cmd.Status))
 		cmd.Status = &status
 	}
 

@@ -17,6 +17,7 @@ type Config struct {
 	AccessTokenTTL   time.Duration `env:"JWT_ACCESS_TTL" envDefault:"15m"`
 	RefreshTokenTTL  time.Duration `env:"JWT_REFRESH_TTL" envDefault:"720h"` // default 30d
 	GracefulTimeout  time.Duration `env:"GRACEFUL_TIMEOUT" envDefault:"10s"`
+	AllowedOrigins   []string      `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000,http://127.0.0.1:3000,http://127.0.0.1:8080" envSeparator:","`
 }
 
 func Load() (*Config, error) {

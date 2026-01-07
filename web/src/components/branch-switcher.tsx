@@ -38,7 +38,7 @@ export function BranchSwitcher() {
     switchTenant: switchTenantStore 
   } = useTenantStore();
   
-  const { updateTokens } = useAuthStore();
+  const { updateToken } = useAuthStore();
   const [loading, setLoading] = useState(false);
 
   const branches = availableBranches || [];
@@ -53,7 +53,7 @@ export function BranchSwitcher() {
         branchIds: [branch.id]
       });
       
-      updateTokens(response.accessToken, response.refreshToken);
+      updateToken(response.accessToken);
       switchTenantStore(response.company, response.branches[0]);
       
       toast({

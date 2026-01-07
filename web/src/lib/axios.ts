@@ -18,6 +18,7 @@ export const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Required for HttpOnly cookies
 });
 
 // Track refresh token promise to prevent multiple refresh calls
@@ -147,50 +148,22 @@ axiosInstance.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    let refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
-
-    if (!refreshToken) {
-      refreshToken = useAuthStore.getState().refreshToken;
-    }
-
-    if (!refreshToken) {
-      console.log('[Axios] No refresh token available in storage or store, performing logout.');
-      isRefreshing = false;
-      if (typeof window !== 'undefined') {
-        const { logout, setReturnUrl, user } = useAuthStore.getState();
-        const currentPath = window.location.pathname;
-        const currentUserId = user?.id;
-        
-        logout();
-        
-        // Save return URL and user ID AFTER logout (because logout clears them)
-        if (currentPath !== '/' && !currentPath.includes('/login')) {
-          const pathWithoutLocale = removeLocalePrefix(currentPath);
-          setReturnUrl(pathWithoutLocale, currentUserId);
-        }
-        
-        window.location.href = '/';
-      }
-      return Promise.reject(error);
-    }
-
     try {
-      // Call refresh token endpoint
-      const response = await axios.post(`${API_CONFIG.baseURL}/auth/refresh`, {
-        refreshToken,
-      });
+      // Call refresh token endpoint - no body needed, API reads HttpOnly cookie
+      const response = await axios.post(
+        `${API_CONFIG.baseURL}/auth/refresh`,
+        {}, // Empty body - refresh token is in HttpOnly cookie
+        { withCredentials: true } // Send cookies
+      );
 
-      const { accessToken: newToken, refreshToken: newRefreshToken } = response.data;
+      const { accessToken: newToken } = response.data;
 
-      // Update token in store and localStorage
+      // Update access token in store and localStorage
+      // Note: refresh token is managed via HttpOnly cookie, not stored client-side
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', newToken);
-        if (newRefreshToken) {
-          localStorage.setItem('refreshToken', newRefreshToken);
-        }
-        const { updateTokens } = useAuthStore.getState();
-        // Use new refresh token if available, otherwise keep using the old one (though it might be invalid if rotation is enforced)
-        updateTokens(newToken, newRefreshToken || refreshToken);
+        const { updateToken } = useAuthStore.getState();
+        updateToken(newToken);
       }
 
       // Process queued requests

@@ -10,13 +10,14 @@ import (
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID        uuid.UUID
-	NewStatus string
-	ActorID   uuid.UUID
+	ID        uuid.UUID `validate:"required"`
+	NewStatus string    `validate:"required"`
+	ActorID   uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -34,6 +35,10 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *commandHandle
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	// Get current branch
 	branch, err := h.repo.GetByID(ctx, cmd.ID)
 	if err != nil {

@@ -16,6 +16,7 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
@@ -45,13 +46,13 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(&cmd.Payload); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
-	}
-
-	if err := validatePayload(cmd.Payload); err != nil {
-		return nil, err
 	}
 
 	payload := cmd.Payload.ToPayload()

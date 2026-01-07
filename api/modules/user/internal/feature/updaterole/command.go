@@ -16,13 +16,14 @@ import (
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID    uuid.UUID
-	Role  string
-	Actor uuid.UUID
+	ID    uuid.UUID `validate:"required"`
+	Role  string    `validate:"required,oneof=admin hr"`
+	Actor uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -41,8 +42,8 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if cmd.Role != "admin" && cmd.Role != "hr" {
-		return nil, errs.BadRequest("invalid role")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	if err := h.repo.UpdateRole(ctx, cmd.ID, cmd.Role, cmd.Actor); err != nil {

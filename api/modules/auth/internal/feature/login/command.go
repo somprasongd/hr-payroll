@@ -16,13 +16,14 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 
 	"go.uber.org/zap"
 )
 
 type Command struct {
-	Username  string
-	Password  string
+	Username  string `validate:"required"`
+	Password  string `validate:"required"`
 	IP        string
 	UserAgent string
 }
@@ -61,8 +62,8 @@ func NewHandler(tokenSvc *jwt.TokenService, repo repository.Repository, tx trans
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	cmd.Username = strings.TrimSpace(cmd.Username)
-	if cmd.Username == "" || cmd.Password == "" {
-		return nil, errs.BadRequest("username and password are required")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	user, err := h.repo.FindUserByUsername(ctx, cmd.Username)

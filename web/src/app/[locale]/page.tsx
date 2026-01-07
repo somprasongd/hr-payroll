@@ -32,7 +32,7 @@ import { CompanySelector } from "@/components/company-selector";
 export default function LoginPage() {
   const t = useTranslations('Index');
   const locale = useLocale();
-  const { login, returnUrl, returnUrlUserId, clearReturnUrl, isAuthenticated, _hasHydrated, refreshToken, updateToken, updateTokens, logout } = useAuthStore()
+  const { login, returnUrl, returnUrlUserId, clearReturnUrl, isAuthenticated, _hasHydrated, updateToken, logout } = useAuthStore()
   const { setCompanies, setBranches, switchTenant: switchTenantStore, clearTenant } = useTenantStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -70,20 +70,20 @@ export default function LoginPage() {
     // Prevent multiple verifications or loops
     if (hasVerified.current) return;
 
-    console.log('[LoginPage] Checking session', { isAuthenticated, hasRefreshToken: !!refreshToken });
+    console.log('[LoginPage] Checking session', { isAuthenticated });
 
     const verifySession = async () => {
       hasVerified.current = true;
 
-      if (isAuthenticated && refreshToken) {
+      if (isAuthenticated) {
         try {
-          console.log('[LoginPage] Verifying session with refresh token');
-          // Verify session by refreshing token
-          const response = await authService.refreshToken(refreshToken);
-          console.log('[LoginPage] Session verified, updating tokens');
+          console.log('[LoginPage] Verifying session with HttpOnly cookie');
+          // Verify session by refreshing token (uses HttpOnly cookie)
+          const response = await authService.refreshToken();
+          console.log('[LoginPage] Session verified, updating token');
           
-          // Update access token and refresh token (if rotated)
-          updateTokens(response.accessToken, response.refreshToken || refreshToken);
+          // Update access token only - refresh token is in HttpOnly cookie
+          updateToken(response.accessToken);
           
           const preferredLocale = localStorage.getItem('preferredLocale');
           const targetLocale = (preferredLocale && ['en', 'th', 'my'].includes(preferredLocale)) 
@@ -117,7 +117,7 @@ export default function LoginPage() {
     };
 
     verifySession();
-  }, [_hasHydrated, isAuthenticated, refreshToken, router, returnUrl, returnUrlUserId, locale, updateToken, updateTokens, logout]);
+  }, [_hasHydrated, isAuthenticated, router, returnUrl, returnUrlUserId, locale, updateToken, logout]);
 
   const formSchema = z.object({
     username: z.string().min(3, {
@@ -159,13 +159,11 @@ export default function LoginPage() {
       // Debug: Log raw response
       console.log('[Raw API Response]', response);
       
-      // Debug: Log response to verify token and refreshToken
+      // Debug: Log response to verify token
       console.log('[Login Response]', {
         hasAccessToken: !!response.accessToken,
-        hasRefreshToken: !!response.refreshToken,
         hasUser: !!response.user,
         tokenPreview: response.accessToken?.substring(0, 20) + '...',
-        refreshTokenPreview: response.refreshToken?.substring(0, 20) + '...',
       });
       
       // Capture return URL and user ID BEFORE login (in case login clears them)
@@ -178,8 +176,8 @@ export default function LoginPage() {
         newUserId: response.user.id 
       });
       
-      // Store authentication data (using accessToken as token)
-      login(response.user, response.accessToken, response.refreshToken)
+      // Store authentication data (refreshToken is in HttpOnly cookie)
+      login(response.user, response.accessToken)
 
       // Handle Remember Me
       if (values.rememberMe) {
@@ -191,7 +189,6 @@ export default function LoginPage() {
       // Debug: Verify localStorage
       console.log('[After Login]', {
         localStorageToken: localStorage.getItem('token')?.substring(0, 20) + '...',
-        localStorageRefreshToken: localStorage.getItem('refreshToken')?.substring(0, 20) + '...',
       });
       
       // Determine redirect destination based on role
@@ -252,8 +249,8 @@ export default function LoginPage() {
         branchIds: branches.map(b => b.id),
       });
       
-      // Update tokens
-      updateTokens(response.accessToken, response.refreshToken);
+      // Update token (refreshToken is in HttpOnly cookie)
+      updateToken(response.accessToken);
       
       // Update tenant store
       setCompanies(pendingCompanies.map(c => ({

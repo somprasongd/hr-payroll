@@ -17,15 +17,16 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	PayrollMonthRaw string                `json:"payrollMonthDate"`
-	PeriodStartRaw  string                `json:"periodStartDate"`
-	PayDateRaw      string                `json:"payDate"`
-	SSORateEmp      float64               `json:"socialSecurityRateEmployee"`
-	SSORateEmployer float64               `json:"socialSecurityRateEmployer"`
+	PayrollMonthRaw string                `json:"payrollMonthDate" validate:"required"`
+	PeriodStartRaw  string                `json:"periodStartDate" validate:"required"`
+	PayDateRaw      string                `json:"payDate" validate:"required"`
+	SSORateEmp      float64               `json:"socialSecurityRateEmployee" validate:"gte=0"`
+	SSORateEmployer float64               `json:"socialSecurityRateEmployer" validate:"gte=0"`
 	Repo            repository.Repository `json:"-"`
 	Tx              transactor.Transactor `json:"-"`
 	Eb              eventbus.EventBus     `json:"-"`
@@ -43,6 +44,10 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")

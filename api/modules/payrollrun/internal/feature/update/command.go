@@ -18,12 +18,13 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID      uuid.UUID             `json:"-"`
-	Status  string                `json:"status"`
+	ID      uuid.UUID             `json:"-" validate:"required"`
+	Status  string                `json:"status" validate:"omitempty,oneof=pending approved"`
 	PayDate *string               `json:"payDate"`
 	Repo    repository.Repository `json:"-"`
 	Tx      transactor.Transactor `json:"-"`
@@ -42,6 +43,11 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	cmd.Status = strings.TrimSpace(cmd.Status)
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -52,12 +58,6 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	if cmd.Status != "" {
-		cmd.Status = strings.TrimSpace(cmd.Status)
-		if cmd.Status != "pending" && cmd.Status != "approved" {
-			return nil, errs.BadRequest("invalid status")
-		}
-	}
 	if cmd.Status == "" && cmd.PayDate == nil {
 		return nil, errs.BadRequest("nothing to update")
 	}

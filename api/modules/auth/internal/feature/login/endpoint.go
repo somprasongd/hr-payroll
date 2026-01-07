@@ -1,6 +1,8 @@
 package login
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v3"
 
 	"hrms/shared/common/errs"
@@ -41,6 +43,18 @@ func NewEndpoint(router fiber.Router) {
 			return err
 		}
 
+		// Set HttpOnly cookie for refresh token (for web clients)
+		c.Cookie(&fiber.Cookie{
+			Name:     "refresh_token",
+			Value:    resp.RefreshToken,
+			Path:     "/api/auth",
+			HTTPOnly: true,
+			Secure:   true, // Set to true in production (HTTPS)
+			SameSite: fiber.CookieSameSiteStrictMode,
+			MaxAge:   int(30 * 24 * time.Hour / time.Second), // 30 days
+		})
+
+		// Keep refreshToken in body for mobile app compatibility
 		return response.JSON(c, fiber.StatusOK, resp)
 	})
 }

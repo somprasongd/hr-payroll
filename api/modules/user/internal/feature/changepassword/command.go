@@ -13,12 +13,13 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/password"
+	"hrms/shared/common/validator"
 )
 
 type Command struct {
-	UserID          uuid.UUID
-	CurrentPassword string
-	NewPassword     string
+	UserID          uuid.UUID `validate:"required"`
+	CurrentPassword string    `validate:"required"`
+	NewPassword     string    `validate:"required"`
 }
 
 type Response struct {
@@ -36,8 +37,8 @@ func NewHandler(repo repository.Repository) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if cmd.CurrentPassword == "" || cmd.NewPassword == "" {
-		return nil, errs.BadRequest("currentPassword and newPassword are required")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	rec, err := h.repo.GetUser(ctx, cmd.UserID)

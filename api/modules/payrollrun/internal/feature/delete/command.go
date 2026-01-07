@@ -15,11 +15,12 @@ import (
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	ID   uuid.UUID
+	ID   uuid.UUID `validate:"required"`
 	Repo repository.Repository
 	Eb   eventbus.EventBus
 }
@@ -31,6 +32,10 @@ var _ mediator.RequestHandler[*Command, mediator.NoResponse] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return mediator.NoResponse{}, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")

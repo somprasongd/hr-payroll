@@ -35,7 +35,6 @@ export interface BranchInfo {
 
 export interface LoginResponse {
   accessToken: string;
-  refreshToken: string;
   tokenType: string;
   expiresIn: number;
   user: {
@@ -50,7 +49,6 @@ export interface LoginResponse {
 
 export interface RefreshTokenResponse {
   accessToken: string;
-  refreshToken: string;
   tokenType: string;
   expiresIn: number;
 }
@@ -64,10 +62,11 @@ export const authService = {
   },
 
   /**
-   * Refresh access token using refresh token
+   * Refresh access token using HttpOnly cookie (no body needed)
    */
-  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    return apiClient.post<RefreshTokenResponse>('/auth/refresh', { refreshToken });
+  async refreshToken(): Promise<RefreshTokenResponse> {
+    // Refresh token is sent via HttpOnly cookie, no body needed
+    return apiClient.post<RefreshTokenResponse>('/auth/refresh', {});
   },
 
   /**

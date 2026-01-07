@@ -18,14 +18,15 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type CreateRequest struct {
-	EmployeeID uuid.UUID `json:"employeeId"`
-	EntryType  string    `json:"entryType"`
-	WorkDate   string    `json:"workDate"`
-	Quantity   float64   `json:"quantity"`
+	EmployeeID uuid.UUID `json:"employeeId" validate:"required"`
+	EntryType  string    `json:"entryType" validate:"required,oneof=late leave_day leave_double leave_hours ot"`
+	WorkDate   string    `json:"workDate" validate:"required"`
+	Quantity   float64   `json:"quantity" validate:"required,gt=0"`
 }
 
 type CreateCommand struct {
@@ -44,6 +45,11 @@ type createHandler struct{}
 func NewCreateHandler() *createHandler { return &createHandler{} }
 
 func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*CreateResponse, error) {
+	cmd.Payload.EntryType = strings.TrimSpace(cmd.Payload.EntryType)
+	if err := validator.Validate(&cmd.Payload); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -54,11 +60,11 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	parsedDate, err := validateFTPayload(&cmd.Payload)
+	parsedDate, err := parseDate(cmd.Payload.WorkDate)
 	if err != nil {
 		return nil, err
 	}
-	entryType := strings.TrimSpace(cmd.Payload.EntryType)
+	entryType := cmd.Payload.EntryType
 
 	rec := repository.FTRecord{
 		EmployeeID: cmd.Payload.EmployeeID,
@@ -118,39 +124,23 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	return &CreateResponse{FTItem: dto.FromFT(*created)}, nil
 }
 
-func validateFTPayload(p *CreateRequest) (time.Time, error) {
-	if p.EmployeeID == uuid.Nil {
-		return time.Time{}, errs.BadRequest("employeeId is required")
-	}
-	entry := strings.TrimSpace(p.EntryType)
-	switch entry {
-	case "late", "leave_day", "leave_double", "leave_hours", "ot":
-	default:
-		return time.Time{}, errs.BadRequest("invalid entryType")
-	}
-	dateStr := strings.TrimSpace(p.WorkDate)
-	if dateStr == "" {
-		return time.Time{}, errs.BadRequest("workDate is required")
-	}
-	parsedDate, err := time.Parse("2006-01-02", dateStr)
+func parseDate(dateStr string) (time.Time, error) {
+	parsedDate, err := time.Parse("2006-01-02", strings.TrimSpace(dateStr))
 	if err != nil {
 		return time.Time{}, errs.BadRequest("workDate must be YYYY-MM-DD")
-	}
-	if p.Quantity <= 0 {
-		return time.Time{}, errs.BadRequest("quantity must be > 0")
 	}
 	return parsedDate, nil
 }
 
 type UpdateRequest struct {
-	EntryType string   `json:"entryType"`
+	EntryType string   `json:"entryType" validate:"omitempty,oneof=late leave_day leave_double leave_hours ot"`
 	WorkDate  string   `json:"workDate"`
-	Quantity  *float64 `json:"quantity"`
-	Status    string   `json:"status"` // pending|approved
+	Quantity  *float64 `json:"quantity" validate:"omitempty,gt=0"`
+	Status    string   `json:"status" validate:"omitempty,oneof=pending approved"`
 }
 
 type UpdateCommand struct {
-	ID      uuid.UUID
+	ID      uuid.UUID `validate:"required"`
 	Payload UpdateRequest
 	Repo    repository.FTRepository
 	Tx      transactor.Transactor
@@ -166,6 +156,12 @@ type updateHandler struct{}
 func NewUpdateHandler() *updateHandler { return &updateHandler{} }
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
+	cmd.Payload.EntryType = strings.TrimSpace(cmd.Payload.EntryType)
+	cmd.Payload.Status = strings.TrimSpace(cmd.Payload.Status)
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
@@ -311,7 +307,7 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.FTRecord) (str
 }
 
 type DeleteCommand struct {
-	ID   uuid.UUID
+	ID   uuid.UUID `validate:"required"`
 	Repo repository.FTRepository
 	Eb   eventbus.EventBus
 }
@@ -321,6 +317,10 @@ type deleteHandler struct{}
 func NewDeleteHandler() *deleteHandler { return &deleteHandler{} }
 
 func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
+	if err := validator.Validate(cmd); err != nil {
+		return mediator.NoResponse{}, err
+	}
+
 	tenant, ok := contextx.TenantFromContext(ctx)
 	if !ok {
 		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")

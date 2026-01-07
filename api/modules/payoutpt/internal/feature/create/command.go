@@ -15,12 +15,13 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
+	"hrms/shared/common/validator"
 	"hrms/shared/events"
 )
 
 type Command struct {
-	EmployeeID uuid.UUID   `json:"employeeId"`
-	WorklogIDs []uuid.UUID `json:"worklogIds"`
+	EmployeeID uuid.UUID   `json:"employeeId" validate:"required"`
+	WorklogIDs []uuid.UUID `json:"worklogIds" validate:"required,min=1"`
 	Repo       repository.Repository
 	Tx         transactor.Transactor
 	Eb         eventbus.EventBus
@@ -37,11 +38,8 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	if cmd.EmployeeID == uuid.Nil {
-		return nil, errs.BadRequest("employeeId is required")
-	}
-	if len(cmd.WorklogIDs) == 0 {
-		return nil, errs.BadRequest("worklogIds required")
+	if err := validator.Validate(cmd); err != nil {
+		return nil, err
 	}
 
 	tenant, ok := contextx.TenantFromContext(ctx)
