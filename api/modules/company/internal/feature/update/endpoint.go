@@ -21,6 +21,9 @@ type UpdateRequest struct {
 // @Security BearerAuth
 // @Param request body UpdateRequest true "company payload"
 // @Success 200 {object} repository.Company
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/company/current [put]
 func NewEndpoint(router fiber.Router) {
 	router.Put("/current", func(c fiber.Ctx) error {

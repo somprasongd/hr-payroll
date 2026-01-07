@@ -17,6 +17,9 @@ import (
 // @Security BearerAuth
 // @Param id path string true "payout id"
 // @Success 200 {object} repository.Payout
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /payouts/pt/{id}/pay [post]
 func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Post("/:id/pay", func(c fiber.Ctx) error {

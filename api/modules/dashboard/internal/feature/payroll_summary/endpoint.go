@@ -21,6 +21,9 @@ import (
 // @Success 200 {object} PayrollSummaryResponse
 // @Failure 401
 // @Failure 500
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /dashboard/payroll-summary [get]
 func RegisterPayrollSummary(router fiber.Router, repo *repository.Repository) {
 	router.Get("/payroll-summary", func(c fiber.Ctx) error {

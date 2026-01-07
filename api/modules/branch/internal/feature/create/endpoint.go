@@ -21,6 +21,9 @@ type CreateRequest struct {
 // @Security BearerAuth
 // @Param request body CreateRequest true "branch payload"
 // @Success 201 {object} repository.Branch
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/branches [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

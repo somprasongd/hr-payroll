@@ -25,6 +25,7 @@ type RequestBody struct {
 // @Success 200 {object} Response
 // @Failure 400
 // @Failure 401
+
 // @Router /auth/login [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/login", func(c fiber.Ctx) error {

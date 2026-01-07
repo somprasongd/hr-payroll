@@ -14,6 +14,9 @@ import (
 // @Security BearerAuth
 // @Param id path string true "branch ID"
 // @Success 204
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/branches/{id}/default [put]
 func NewEndpoint(router fiber.Router) {
 	router.Put("/:id/default", func(c fiber.Ctx) error {

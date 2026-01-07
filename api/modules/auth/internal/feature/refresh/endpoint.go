@@ -24,6 +24,7 @@ type RequestBody struct {
 // @Success 200 {object} Response
 // @Failure 400
 // @Failure 401
+
 // @Router /auth/refresh [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/refresh", func(c fiber.Ctx) error {

@@ -23,6 +23,9 @@ type CreateCompanyRequest struct {
 // @Security BearerAuth
 // @Param request body CreateCompanyRequest true "company and admin payload"
 // @Success 201 {object} Response
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /super-admin/companies [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/companies", func(c fiber.Ctx) error {

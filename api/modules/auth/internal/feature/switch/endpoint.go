@@ -27,6 +27,9 @@ type switchRequest struct {
 // @Failure 400
 // @Failure 401
 // @Failure 403
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /auth/switch [post]
 func NewEndpoint(router fiber.Router, auth fiber.Handler) {
 	// Create a sub-group with auth middleware

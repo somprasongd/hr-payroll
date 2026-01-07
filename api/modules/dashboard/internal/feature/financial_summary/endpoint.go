@@ -17,6 +17,9 @@ import (
 // @Success 200 {object} FinancialSummaryResponse
 // @Failure 401
 // @Failure 500
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /dashboard/financial-summary [get]
 func RegisterFinancialSummary(router fiber.Router, repo *repository.Repository) {
 	router.Get("/financial-summary", func(c fiber.Ctx) error {

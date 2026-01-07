@@ -25,6 +25,9 @@ type UpdateRequest struct {
 // @Param id path string true "branch ID"
 // @Param request body UpdateRequest true "branch payload"
 // @Success 200 {object} repository.Branch
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/branches/{id} [patch]
 func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {

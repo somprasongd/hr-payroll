@@ -24,6 +24,9 @@ type SetBranchesRequest struct {
 // @Param userId path string true "user ID"
 // @Param request body SetBranchesRequest true "branch IDs"
 // @Success 200 {array} repository.BranchAccess
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/users/{userId}/branches [put]
 func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Put("/:userId/branches", func(c fiber.Ctx) error {

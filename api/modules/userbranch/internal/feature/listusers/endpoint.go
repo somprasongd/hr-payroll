@@ -13,6 +13,9 @@ import (
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {array} repository.CompanyUser
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/users [get]
 func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Get("/", func(c fiber.Ctx) error {

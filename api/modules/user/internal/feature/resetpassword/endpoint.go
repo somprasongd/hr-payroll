@@ -28,6 +28,9 @@ type RequestBody struct {
 // @Failure 401
 // @Failure 403
 // @Failure 404
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/users/{id}/password-reset [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/:id/password-reset", func(c fiber.Ctx) error {

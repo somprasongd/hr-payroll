@@ -20,6 +20,9 @@ type EmployeeCountResponse struct {
 // @Security BearerAuth
 // @Param id path string true "branch ID"
 // @Success 200 {object} EmployeeCountResponse
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /admin/branches/{id}/employee-count [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/:id/employee-count", func(c fiber.Ctx) error {

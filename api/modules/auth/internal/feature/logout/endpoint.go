@@ -24,6 +24,9 @@ type RequestBody struct {
 // @Failure 400
 // @Failure 401
 // @Failure 403
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /auth/logout [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/logout", func(c fiber.Ctx) error {

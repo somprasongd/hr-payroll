@@ -17,6 +17,9 @@ import (
 // @Param id path string true "cycle id"
 // @Param search query string false "search employee name"
 // @Success 200 {object} ListResponse
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /bonus-cycles/{id}/items [get]
 func RegisterList(router fiber.Router) {
 	router.Get("/:id/items", func(c fiber.Ctx) error {
@@ -44,6 +47,9 @@ func RegisterList(router fiber.Router) {
 // @Param id path string true "item id"
 // @Param request body UpdateCommand true "payload"
 // @Success 200 {object} UpdateResponse
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /bonus-items/{id} [patch]
 func RegisterUpdate(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {

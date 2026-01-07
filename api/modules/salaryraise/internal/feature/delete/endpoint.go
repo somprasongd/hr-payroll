@@ -18,6 +18,9 @@ import (
 // @Failure 400
 // @Failure 401
 // @Failure 404
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
+
 // @Router /salary-raise-cycles/{id} [delete]
 func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
 	router.Delete("/:id", func(c fiber.Ctx) error {
