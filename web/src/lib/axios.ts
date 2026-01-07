@@ -97,8 +97,7 @@ axiosInstance.interceptors.response.use(
     // Skip 401 handling for login, refresh, and switch requests
     // (switch needs special handling since it's called right after login)
     if (originalRequest?.url?.includes('/auth/login') || 
-        originalRequest?.url?.includes('/auth/refresh') ||
-        originalRequest?.url?.includes('/auth/switch')) {
+        originalRequest?.url?.includes('/auth/refresh')) {
       return Promise.reject(error);
     }
 
@@ -114,6 +113,9 @@ axiosInstance.interceptors.response.use(
         const { logout, setReturnUrl, user } = useAuthStore.getState();
         const currentPath = window.location.pathname;
         const currentUserId = user?.id;
+        
+        // Attempt to clear cookie on backend
+        axios.post(`${API_CONFIG.baseURL}/auth/logout`, {}, { withCredentials: true }).catch(() => {});
         
         logout();
         
@@ -196,6 +198,9 @@ axiosInstance.interceptors.response.use(
         const { logout, setReturnUrl, user } = useAuthStore.getState();
         const currentPath = window.location.pathname;
         const currentUserId = user?.id;
+        
+        // Attempt to clear cookie on backend
+        axios.post(`${API_CONFIG.baseURL}/auth/logout`, {}, { withCredentials: true }).catch(() => {});
         
         logout();
         

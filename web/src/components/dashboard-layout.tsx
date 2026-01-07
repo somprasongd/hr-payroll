@@ -9,6 +9,7 @@ import {
   LogOut,
   Users,
 } from "lucide-react";
+import { authService } from "@/services/auth.service";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -36,10 +37,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // Save current path and userId before logout for same-user return
     const currentUserId = user?.id;
     const currentPath = pathname;
+    
+    try {
+      // Call API to revoke token and clear HttpOnly cookie
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout API failed:', error);
+    }
     
     logout();
     

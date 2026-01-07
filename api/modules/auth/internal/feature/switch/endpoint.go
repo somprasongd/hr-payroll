@@ -36,7 +36,7 @@ func NewEndpoint(router fiber.Router, auth fiber.Handler) {
 	switchGroup := router.Group("/switch")
 	switchGroup.Use(auth)
 
-	switchGroup.Post("/", func(c fiber.Ctx) error {
+	switchGroup.Post("", func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
 			return errs.Unauthorized("missing user")
