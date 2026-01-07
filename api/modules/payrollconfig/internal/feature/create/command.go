@@ -168,13 +168,13 @@ func validatePayload(p RequestBody) error {
 
 var defaultTaxProgressiveBrackets = repository.TaxBrackets{
 	{Min: floatPtr(0), Max: floatPtr(150000), Rate: 0},
-	{Min: floatPtr(150001), Max: floatPtr(300000), Rate: 0.05},
-	{Min: floatPtr(300001), Max: floatPtr(500000), Rate: 0.10},
-	{Min: floatPtr(500001), Max: floatPtr(750000), Rate: 0.15},
-	{Min: floatPtr(750001), Max: floatPtr(1000000), Rate: 0.20},
-	{Min: floatPtr(1000001), Max: floatPtr(2000000), Rate: 0.25},
-	{Min: floatPtr(2000001), Max: floatPtr(5000000), Rate: 0.30},
-	{Min: floatPtr(5000001), Max: nil, Rate: 0.35},
+	{Min: floatPtr(150000), Max: floatPtr(300000), Rate: 0.05},
+	{Min: floatPtr(300000), Max: floatPtr(500000), Rate: 0.10},
+	{Min: floatPtr(500000), Max: floatPtr(750000), Rate: 0.15},
+	{Min: floatPtr(750000), Max: floatPtr(1000000), Rate: 0.20},
+	{Min: floatPtr(1000000), Max: floatPtr(2000000), Rate: 0.25},
+	{Min: floatPtr(2000000), Max: floatPtr(5000000), Rate: 0.30},
+	{Min: floatPtr(5000000), Max: nil, Rate: 0.35},
 }
 
 const (

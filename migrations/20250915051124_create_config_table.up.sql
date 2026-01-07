@@ -44,7 +44,7 @@ CREATE TABLE payroll_config (
   tax_standard_expense_cap      NUMERIC(12,2) NOT NULL DEFAULT 10000.00, -- เพดานค่าใช้จ่ายเหมา
   tax_apply_personal_allowance  BOOLEAN NOT NULL DEFAULT TRUE,  -- ใช้ค่าลดหย่อนส่วนตัว
   tax_personal_allowance_amount NUMERIC(12,2) NOT NULL DEFAULT 60000.00, -- จำนวนค่าลดหย่อนส่วนตัว
-  tax_progressive_brackets      JSONB NOT NULL DEFAULT '[{"min":0,"max":150000,"rate":0},{"min":150001,"max":300000,"rate":0.05},{"min":300001,"max":500000,"rate":0.10},{"min":500001,"max":750000,"rate":0.15},{"min":750001,"max":1000000,"rate":0.20},{"min":1000001,"max":2000000,"rate":0.25},{"min":2000001,"max":5000000,"rate":0.30},{"min":5000001,"max":null,"rate":0.35}]'::jsonb, -- อัตราภาษีก้าวหน้า
+  tax_progressive_brackets      JSONB NOT NULL DEFAULT '[{"min":0,"max":150000,"rate":0},{"min":150000,"max":300000,"rate":0.05},{"min":300000,"max":500000,"rate":0.10},{"min":500000,"max":750000,"rate":0.15},{"min":750000,"max":1000000,"rate":0.20},{"min":1000000,"max":2000000,"rate":0.25},{"min":2000000,"max":5000000,"rate":0.30},{"min":5000000,"max":null,"rate":0.35}]'::jsonb, -- อัตราภาษีก้าวหน้า
   -- ภาษี: เหมาบริการ/ฟรีแลนซ์ ม.40(2) ใช้อัตราหัก ณ ที่จ่าย
   withholding_tax_rate_service  NUMERIC(6,5) NOT NULL DEFAULT 0.03, -- อัตราหัก ณ ที่จ่าย เช่น 0.03 = 3%
   
@@ -203,7 +203,7 @@ SELECT
   80.00,
   0.05, 0.05, 17500.00,
   TRUE, 0.50, 100000.00,
-  TRUE, 60000.00, '[{"min":0,"max":150000,"rate":0},{"min":150001,"max":300000,"rate":0.05},{"min":300001,"max":500000,"rate":0.10},{"min":500001,"max":750000,"rate":0.15},{"min":750001,"max":1000000,"rate":0.20},{"min":1000001,"max":2000000,"rate":0.25},{"min":2000001,"max":5000000,"rate":0.30},{"min":5000001,"max":null,"rate":0.35}]'::jsonb,
+  TRUE, 60000.00, '[{"min":0,"max":150000,"rate":0},{"min":150000,"max":300000,"rate":0.05},{"min":300000,"max":500000,"rate":0.10},{"min":500000,"max":750000,"rate":0.15},{"min":750000,"max":1000000,"rate":0.20},{"min":1000000,"max":2000000,"rate":0.25},{"min":2000000,"max":5000000,"rate":0.30},{"min":5000000,"max":null,"rate":0.35}]'::jsonb,
   0.03,
   8.00, 5.00, 15,
   'active',

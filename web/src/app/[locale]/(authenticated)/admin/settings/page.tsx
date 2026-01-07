@@ -58,13 +58,13 @@ import { Badge } from "@/components/ui/badge";
 // min = previous max + 1 (except first row which starts at 0)
 const DEFAULT_TAX_BRACKETS: TaxProgressiveBracket[] = [
   { min: 0, max: 150000, rate: 0 },
-  { min: 150001, max: 300000, rate: 5 },
-  { min: 300001, max: 500000, rate: 10 },
-  { min: 500001, max: 750000, rate: 15 },
-  { min: 750001, max: 1000000, rate: 20 },
-  { min: 1000001, max: 2000000, rate: 25 },
-  { min: 2000001, max: 5000000, rate: 30 },
-  { min: 5000001, max: null, rate: 35 },
+  { min: 150000, max: 300000, rate: 5 },
+  { min: 300000, max: 500000, rate: 10 },
+  { min: 500000, max: 750000, rate: 15 },
+  { min: 750000, max: 1000000, rate: 20 },
+  { min: 1000000, max: 2000000, rate: 25 },
+  { min: 2000000, max: 5000000, rate: 30 },
+  { min: 5000000, max: null, rate: 35 },
 ];
 
 // Helper: Get first day of current month as YYYY-MM-DD
@@ -249,10 +249,10 @@ export default function SettingsPage() {
           return t('taxBracketValidation.prevMaxNull', { row: i });
         }
         
-        if (bracket.min !== prevMax + 1) {
+        if (bracket.min !== prevMax) {
           return t('taxBracketValidation.minMismatch', { 
             row: i + 1, 
-            expected: prevMax + 1, 
+            expected: prevMax, 
             actual: bracket.min
           });
         }
@@ -332,7 +332,7 @@ export default function SettingsPage() {
       
       // When max is changed, auto-update the next row's min to max + 1
       if (field === 'max' && value !== null && index < newBrackets.length - 1) {
-        newBrackets[index + 1] = { ...newBrackets[index + 1], min: value + 1 };
+        newBrackets[index + 1] = { ...newBrackets[index + 1], min: value };
       }
       
       return { ...prev, taxProgressiveBrackets: newBrackets };
@@ -344,7 +344,7 @@ export default function SettingsPage() {
     setFormData(prev => {
       const lastBracket = prev.taxProgressiveBrackets[prev.taxProgressiveBrackets.length - 1];
       // newMin = lastMax + 1, or 0 if no last bracket
-      const newMin = lastBracket?.max !== null ? (lastBracket.max + 1) : 0;
+      const newMin = lastBracket?.max !== null ? lastBracket.max : 0;
       return {
         ...prev,
         taxProgressiveBrackets: [

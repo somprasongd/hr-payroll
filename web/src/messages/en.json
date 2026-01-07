@@ -1169,7 +1169,7 @@
     "taxApplyStandardExpenseHint": "Enable/disable 50% standard expense deduction (max 100,000 THB)",
     "taxBracketValidation": {
       "maxLessThanMin": "Maximum income for row {row} must be greater than minimum (min: {min}, max: {max})",
-      "minMismatch": "Minimum income for row {row} must be {expected} (previous max + 1), but current value is {actual}",
+      "minMismatch": "Minimum income for row {row} must be {expected} (previous max), but current value is {actual}",
       "prevMaxNull": "Please specify the maximum income for row {row} first"
     },
     "taxPersonalAllowanceAmount": "Personal Allowance Amount",
