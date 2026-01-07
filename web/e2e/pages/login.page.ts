@@ -13,10 +13,10 @@ export class LoginPage {
   constructor(page: Page) {
     this.page = page;
     // Use placeholder text which is more specific
-    this.usernameInput = page.getByPlaceholder('กรอกชื่อผู้ใช้งาน');
-    this.passwordInput = page.getByPlaceholder('กรอกรหัสผ่าน');
+    this.usernameInput = page.getByPlaceholder('ชื่อผู้ใช้งาน');
+    this.passwordInput = page.getByPlaceholder('รหัสผ่าน');
     this.loginButton = page.getByRole('button', { name: 'เข้าสู่ระบบ' });
-    this.errorMessage = page.locator('[role="alert"]');
+    this.errorMessage = page.locator('[role="alert"]').filter({ hasNot: page.locator('#__next-route-announcer__') }).first();
   }
 
   /**
@@ -55,21 +55,22 @@ export class LoginPage {
    */
   async selectBranch(branchName: string = 'สำนักงานใหญ่') {
     try {
-      // 1. Wait for confirm button to be visible (Short timeout as it might be skipped)
-      const confirmButton = this.page.locator('button').filter({ hasText: 'ยืนยัน' });
-      await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
+      // 1. Wait for any branch button to appear
+      await this.page.locator('button').filter({ hasText: branchName }).first().waitFor({ state: 'visible', timeout: 5000 });
       
-      // 2. Select the branch
-      const option = this.page.locator('div, span, label, button').filter({ hasText: branchName }).last();
-      await option.click({ force: true }).catch(() => {});
+      // 2. Click the branch
+      const option = this.page.locator('button').filter({ hasText: branchName }).last();
+      await option.click({ force: true });
 
-      // 3. Click "Confirm" button
+      // 3. Click "Confirm" button (Check both Thai and English)
+      const confirmButton = this.page.getByRole('button').filter({ hasText: /ยืนยัน|Confirm/i });
+      await confirmButton.waitFor({ state: 'visible', timeout: 2000 });
       await confirmButton.click({ force: true });
       
       // 4. Wait for modal to disappear
       await confirmButton.waitFor({ state: 'hidden', timeout: 5000 });
-    } catch (e) {
-      console.log('Branch selector modal not appeared, might be redirected elsewhere.');
+    } catch (e: any) {
+      console.log('Note: Branch selector flow skipped or failed:', e.message);
     }
   }
 
@@ -78,9 +79,34 @@ export class LoginPage {
    */
   async fullLogin(username: string, password: string, company: string = 'DEFAULT', branch: string = 'สำนักงานใหญ่') {
     await this.login(username, password);
-    await this.selectCompany(company);
-    await this.selectBranch(branch);
-    // Wait for the URL to change from /login but don't force /dashboard
+    
+    // Wait for either dashboard OR company/branch selector to appear
+    await this.page.waitForFunction(() => {
+      const url = window.location.href;
+      return url.includes('dashboard') || 
+             url.includes('super-admin') || 
+             document.body.innerText.includes('เลือกบริษัท') || 
+             document.body.innerText.includes('เลือกสาขา') ||
+             document.body.innerText.includes('Select Company') ||
+             document.body.innerText.includes('Select Branch');
+    }, { timeout: 30000 }).catch(() => console.log('Wait for UI transition timed out'));
+
+    // Handle Company Selector if it appears (Super Admin or Multi-Company)
+    const companyHeader = this.page.getByRole('heading', { name: /เลือกบริษัท|Select Company/i });
+    if (await companyHeader.isVisible({ timeout: 5000 })) {
+        console.log('Handling company selection...');
+        await this.selectCompany(company);
+    }
+
+    // Handle Branch Selector if it appears
+    const branchHeader = this.page.getByRole('heading', { name: /เลือกสาขา|Select Branch/i });
+    if (await branchHeader.isVisible({ timeout: 5000 })) {
+        console.log('Handling branch selection...');
+        await this.selectBranch(branch);
+    }
+
+    // Final wait for the target page
+    await this.page.waitForURL(/\/dashboard|\/super-admin|\/employees/, { timeout: 30000 });
     await this.page.waitForLoadState('networkidle');
   }
 

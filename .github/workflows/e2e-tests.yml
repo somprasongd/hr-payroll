@@ -74,6 +74,11 @@ jobs:
             echo "Running seed: $file"
             PGPASSWORD=test psql -h localhost -U test -d hr_payroll_test -f "$file"
           done
+          # Run test-seed SQL files (for E2E specific test data)
+          for file in migrations/test-seed/*.sql; do
+            echo "Running test seed: $file"
+            PGPASSWORD=test psql -h localhost -U test -d hr_payroll_test -f "$file"
+          done
 
       - name: Start API server
         run: |

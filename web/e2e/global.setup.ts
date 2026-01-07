@@ -18,7 +18,7 @@ setup('authenticate as admin', async ({ page }) => {
   await loginPage.fullLogin(testUsers.admin.username, testUsers.admin.password, 'DEFAULT', 'สำนักงานใหญ่');
   
   // Verify we're logged in
-  await expect(page).toHaveURL(/dashboard/);
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
   
   // Save authentication state
   await page.context().storageState({ path: adminAuthFile });

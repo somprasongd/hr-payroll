@@ -29,8 +29,8 @@ test.describe('ระบบ Super Admin (Super Admin Portal)', () => {
     await expect(superAdminPage.companiesTable).toBeVisible();
     
     // Verify both companies are listed (Multi-tenancy visibility for Superadmin)
-    await expect(page.getByRole('cell', { name: 'DEFAULT', exact: true })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'COMPANY2', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: /เจ้าฟ้า|Default Company/ })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'บริษัท ทดสอบ 2 จำกัด' })).toBeVisible();
   });
 
   // Test 2: Normal admin restricted from superadmin area

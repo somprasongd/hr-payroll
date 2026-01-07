@@ -33,6 +33,13 @@ export default defineConfig({
       testMatch: /global\.setup\.ts/,
     },
     {
+      name: 'no-setup',
+      use: { 
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
+      },
+    },
+    {
       name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],

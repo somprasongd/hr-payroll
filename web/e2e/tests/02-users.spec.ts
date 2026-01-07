@@ -34,27 +34,26 @@ test.describe('Users Management', () => {
     test('ควรสร้าง HR user ใหม่สำเร็จ', async ({ page }) => {
       await usersPage.createUser(testUsername, 'Test@123456', 'hr');
       
-      // Verify: either dialog closes or user appears in table
-      // Wait for table to update
-      await page.waitForTimeout(1000);
-      
-      // Check if dialog is closed (success case)
-      const dialog = page.locator('[role="dialog"]');
-      const dialogVisible = await dialog.isVisible();
-      
-      if (!dialogVisible) {
-        // Dialog closed = user created successfully
-        const userRow = usersPage.getUserRow(testUsername);
-        await expect(userRow).toBeVisible({ timeout: 5000 });
-      } else {
-        // Dialog still visible = check for error or unexpected state
-        const errorMessage = dialog.locator('[class*="destructive"]');
-        if (await errorMessage.isVisible()) {
-          // There's an error - test should fail with info
-          const errorText = await errorMessage.textContent();
-          throw new Error(`User creation failed: ${errorText}`);
+      // Either dialog closes or we redirect. 
+      // The app redirects to /admin/users/[id]/branches after creation
+      try {
+        await expect(page).toHaveURL(/\/admin\/users\/.*\/branches/, { timeout: 10000 });
+      } catch (e) {
+        // Fallback or check for error if redirect didn't happen
+        const dialog = page.locator('[role="dialog"]');
+        if (await dialog.isVisible()) {
+          const errorMessage = dialog.locator('[class*="destructive"]');
+          if (await errorMessage.isVisible()) {
+            const errorText = await errorMessage.textContent();
+            throw new Error(`User creation failed: ${errorText}`);
+          }
         }
       }
+      
+      // Go back to users list to verify in table
+      await usersPage.goto();
+      const userRow = usersPage.getUserRow(testUsername);
+      await expect(userRow).toBeVisible({ timeout: 5000 });
     });
 
     test('ควรแสดง Error เมื่อสร้าง user ด้วย username ซ้ำ', async ({ page }) => {

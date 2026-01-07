@@ -90,21 +90,49 @@ npm run test:e2e:ui       # Interactive UI mode
 npm run test:e2e:report   # View HTML report
 ```
 
+### Test Seed Data
+
+บาง test ต้องการ seed data พิเศษ ซึ่งถูกจัดเก็บในโฟลเดอร์ `migrations/test-seed/`:
+
+| File                               | Description                                              | Used By                             |
+| ---------------------------------- | -------------------------------------------------------- | ----------------------------------- |
+| `001_login_restriction_test.sql`   | Seed users สำหรับทดสอบ login กับบริษัทที่ถูกระงับ/ยกเลิก | 25-login-restriction.spec.ts        |
+| `002_branch_and_employee_test.sql` | Seed "สาขา 1" และพนักงานสำหรับ DEFAULT company           | 24-branch-switch-navigation.spec.ts |
+| `003_pt_payout_test.sql`           | Seed PT worklogs และ payouts (paid/to_pay status)        | 09-pt-payout.spec.ts                |
+| `004_multi_tenancy_test.sql`       | Seed COMPANY2 พร้อม admin2, branches, และพนักงาน         | 19-multi-tenancy.spec.ts            |
+| `005_document_types_test.sql`      | Seed document types (system + company-specific)          | 14-admin-document-types.spec.ts     |
+
+**CI (GitHub Actions):** Seed data จะถูกรันอัตโนมัติใน workflow
+
+**Local Development:** รัน seed data ทั้งหมดก่อนรัน test:
+
+```bash
+DB_URL="postgres://postgres:postgres@localhost:54322/test?sslmode=disable"
+
+# รัน test-seed ทั้งหมด
+for file in migrations/test-seed/*.sql; do
+  echo "Running: $file"
+  psql "$DB_URL" -f "$file"
+done
+```
+
 ### Test Coverage
 
-| Spec | Description       |
-| ---- | ----------------- |
-| 01   | Login/Logout      |
-| 02   | Users Management  |
-| 03   | Employees (FT/PT) |
-| 04   | Worklogs (FT/PT)  |
-| 05   | Salary Advance    |
-| 06   | Debt/Loan         |
-| 07   | Bonus Cycles      |
-| 08   | Salary Raise      |
-| 09   | PT Payout         |
-| 10   | Payroll Run       |
-| 11   | Filters           |
+| Spec | Description                    |
+| ---- | ------------------------------ |
+| 01   | Login/Logout                   |
+| 02   | Users Management               |
+| 03   | Employees (FT/PT)              |
+| 04   | Worklogs (FT/PT)               |
+| 05   | Salary Advance                 |
+| 06   | Debt/Loan                      |
+| 07   | Bonus Cycles                   |
+| 08   | Salary Raise                   |
+| 09   | PT Payout                      |
+| 10   | Payroll Run                    |
+| 11   | Filters                        |
+| 20   | Super Admin (Company/Settings) |
+| 25   | Login Restriction              |
 
 ## 🛠️ Tech Stack
 
