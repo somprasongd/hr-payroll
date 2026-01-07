@@ -20,7 +20,6 @@ import (
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /employees/{id}/documents/{docId} [delete]
 func NewEndpoint(router fiber.Router) {
 	router.Delete("/:docId", func(c fiber.Ctx) error {

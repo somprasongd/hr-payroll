@@ -12,14 +12,16 @@ import (
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
+// Payout represents the payout response for documentation
+type Payout = repository.Payout
+
 // @Summary Mark payout paid
 // @Tags Part-Time Payout
 // @Security BearerAuth
 // @Param id path string true "payout id"
-// @Success 200 {object} repository.Payout
+// @Success 200 {object} Payout
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /payouts/pt/{id}/pay [post]
 func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Post("/:id/pay", func(c fiber.Ctx) error {

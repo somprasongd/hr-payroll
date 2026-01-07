@@ -11,52 +11,45 @@ import (
 	"hrms/shared/common/response"
 )
 
-// SetBranchesRequest represents the request body
-type SetBranchesRequest struct {
-	BranchIDs []string `json:"branchIds"`
+// BranchAccess represents the branch access response for documentation
+type BranchAccess = repository.BranchAccess
+
+type RequestBody struct {
+	BranchIDs []uuid.UUID `json:"branchIds"`
 }
 
-// @Summary Set user's branch access
-// @Tags UserBranch
+// @Summary Set user branches
+// @Tags User-Branch Access
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param userId path string true "user ID"
-// @Param request body SetBranchesRequest true "branch IDs"
-// @Success 200 {array} repository.BranchAccess
+// @Param request body RequestBody true "branches"
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
+// @Success 200 {array} BranchAccess
 // @Router /admin/users/{userId}/branches [put]
 func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Put("/:userId/branches", func(c fiber.Ctx) error {
-		actor, ok := contextx.UserFromContext(c.Context())
+		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {
-			return errs.Unauthorized("missing user")
+			return errs.Unauthorized("missing user context")
 		}
 
 		userID, err := uuid.Parse(c.Params("userId"))
 		if err != nil {
-			return errs.BadRequest("invalid userId")
+			return errs.BadRequest("invalid user id")
 		}
 
-		var req SetBranchesRequest
+		var req RequestBody
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
 
-		var branchIDs []uuid.UUID
-		for _, idStr := range req.BranchIDs {
-			if id, err := uuid.Parse(idStr); err == nil {
-				branchIDs = append(branchIDs, id)
-			}
-		}
-
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			Repo:      repo,
 			UserID:    userID,
-			BranchIDs: branchIDs,
-			ActorID:   actor.ID,
+			BranchIDs: req.BranchIDs,
+			ActorID:   user.ID,
 		})
 		if err != nil {
 			return err

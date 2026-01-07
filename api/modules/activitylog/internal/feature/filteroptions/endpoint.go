@@ -15,7 +15,6 @@ import (
 // @Success 200 {object} Response
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /admin/activity-logs/filter-options [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/filter-options", func(c fiber.Ctx) error {

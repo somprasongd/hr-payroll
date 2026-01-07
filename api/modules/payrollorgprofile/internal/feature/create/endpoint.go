@@ -69,7 +69,6 @@ func (p RequestBody) ToPayload() repository.UpsertPayload {
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /admin/payroll-org-profiles [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

@@ -32,7 +32,6 @@ import (
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/pt [get]
 func Register(router fiber.Router, repo repository.PTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	handler := func(c fiber.Ctx) error {
@@ -101,7 +100,6 @@ func Register(router fiber.Router, repo repository.PTRepository, tx transactor.T
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/pt/{id} [get]
 func registerGet(router fiber.Router, repo repository.PTRepository) {
 	router.Get("/:id", func(c fiber.Ctx) error {
@@ -133,7 +131,6 @@ func registerGet(router fiber.Router, repo repository.PTRepository) {
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/pt [post]
 func registerCreate(router fiber.Router, repo repository.PTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Post("/", func(c fiber.Ctx) error {
@@ -169,7 +166,6 @@ func registerCreate(router fiber.Router, repo repository.PTRepository, tx transa
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/pt/{id} [patch]
 func registerUpdate(router fiber.Router, repo repository.PTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
@@ -207,7 +203,6 @@ func registerUpdate(router fiber.Router, repo repository.PTRepository, tx transa
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/pt/{id} [delete]
 func registerDelete(router fiber.Router, repo repository.PTRepository, eb eventbus.EventBus) {
 	router.Delete("/:id", func(c fiber.Ctx) error {

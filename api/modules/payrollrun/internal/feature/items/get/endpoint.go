@@ -23,7 +23,6 @@ import (
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /payroll-items/{id} [get]
 func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Get("/:itemId", func(c fiber.Ctx) error {

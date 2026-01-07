@@ -18,7 +18,6 @@ import (
 // @Success 200 {object} Response
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /payouts/pt/{id} [get]
 func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Get("/:id", func(c fiber.Ctx) error {

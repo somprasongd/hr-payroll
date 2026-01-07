@@ -40,7 +40,7 @@ import (
 // @title HR Payroll API
 // @version 1.0
 // @description HR Payroll REST API
-// @BasePath /api/v1
+// @Server /api/v1 "Production Server"
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization

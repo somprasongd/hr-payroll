@@ -26,7 +26,6 @@ import (
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /payroll-items/{id} [patch]
 func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Patch("/:itemId", func(c fiber.Ctx) error {

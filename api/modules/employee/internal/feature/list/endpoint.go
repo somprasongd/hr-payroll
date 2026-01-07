@@ -22,12 +22,11 @@ import (
 // @Param employeeTypeCode query string false "รหัสประเภทพนักงานแบบย่อ (ft/pt/full_time/part_time)"
 // @Param hasOutstandingDebt query bool false "แสดงเฉพาะพนักงานที่มียอดหนี้คงค้าง"
 // @Security BearerAuth
+// @Param X-Company-ID header string false "Company ID"
+// @Param X-Branch-ID header string false "Branch ID"
 // @Success 200 {object} Response
 // @Failure 401
 // @Failure 403
-// @Param X-Company-ID header string false "Company ID"
-// @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /employees [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/", func(c fiber.Ctx) error {

@@ -21,7 +21,6 @@ import (
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /master/employee-positions [post]
 func NewCreateEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {
@@ -52,7 +51,6 @@ func NewCreateEndpoint(router fiber.Router) {
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /master/employee-positions/{id} [patch]
 func NewUpdateEndpoint(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
@@ -87,7 +85,6 @@ func NewUpdateEndpoint(router fiber.Router) {
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /master/employee-positions/{id} [delete]
 func NewDeleteEndpoint(router fiber.Router) {
 	router.Delete("/:id", func(c fiber.Ctx) error {

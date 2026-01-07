@@ -25,7 +25,6 @@ type RequestBody struct {
 // @Success 200 {object} Response
 // @Failure 400
 // @Failure 401
-
 // @Router /auth/login [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/login", func(c fiber.Ctx) error {
@@ -48,9 +47,9 @@ func NewEndpoint(router fiber.Router) {
 		c.Cookie(&fiber.Cookie{
 			Name:     "refresh_token",
 			Value:    resp.RefreshToken,
-			Path:     "/api/auth",
+			Path:     "/",
 			HTTPOnly: true,
-			Secure:   true, // Set to true in production (HTTPS)
+			Secure:   false, // Set to true in production (HTTPS)
 			SameSite: fiber.CookieSameSiteStrictMode,
 			MaxAge:   int(30 * 24 * time.Hour / time.Second), // 30 days
 		})

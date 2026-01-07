@@ -32,7 +32,6 @@ type StatusChangeResponse struct {
 // @Success 200 {object} StatusChangeResponse
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /admin/branches/{id}/status [patch]
 func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id/status", func(c fiber.Ctx) error {

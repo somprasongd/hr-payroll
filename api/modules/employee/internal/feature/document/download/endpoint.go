@@ -23,7 +23,6 @@ import (
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /employees/{id}/documents/{docId}/file [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/:docId/file", func(c fiber.Ctx) error {

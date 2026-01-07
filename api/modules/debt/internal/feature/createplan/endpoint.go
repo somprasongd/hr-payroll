@@ -22,7 +22,6 @@ import (
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /debt-txns/create-plan [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/create-plan", func(c fiber.Ctx) error {

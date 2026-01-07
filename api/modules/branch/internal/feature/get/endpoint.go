@@ -4,20 +4,23 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
+	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
+
+// Branch represents the branch response for documentation
+type Branch = repository.Branch
 
 // @Summary Get a branch by ID
 // @Tags Branches
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "branch ID"
-// @Success 200 {object} repository.Branch
+// @Success 200 {object} Branch
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /admin/branches/{id} [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/:id", func(c fiber.Ctx) error {

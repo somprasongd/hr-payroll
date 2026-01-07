@@ -138,7 +138,7 @@ doc:
 	swag init \
 		-g main.go \
 		-o ../../docs \
-		-d .,../../application,../../../modules/auth,../../../modules/user,../../../modules/employee,../../../modules/payrollconfig,../../../modules/activitylog,../../../modules/bonus,../../../modules/branch,../../../modules/company,../../../modules/dashboard,../../../modules/debt,../../../modules/masterdata,../../../modules/payoutpt,../../../modules/payrollorgprofile,../../../modules/payrollrun,../../../modules/salaryadvance,../../../modules/salaryraise,../../../modules/superadmin,../../../modules/tenant,../../../modules/userbranch,../../../modules/worklog \
+		-d .,../../application,../../../modules \
 		--parseDependency --parseInternal --parseDependencyLevel 3
 
 .PHONY: dbml

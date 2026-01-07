@@ -34,11 +34,9 @@ import (
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/ft [get]
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/ft [get]
 func Register(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	handler := func(c fiber.Ctx) error {
@@ -110,7 +108,6 @@ func Register(router fiber.Router, repo repository.FTRepository, tx transactor.T
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/ft/{id} [get]
 func registerGet(router fiber.Router, repo repository.FTRepository) {
 	router.Get("/:id", func(c fiber.Ctx) error {
@@ -143,7 +140,6 @@ func registerGet(router fiber.Router, repo repository.FTRepository) {
 // @Failure 409
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/ft [post]
 func registerCreate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Post("/", func(c fiber.Ctx) error {
@@ -180,7 +176,6 @@ func registerCreate(router fiber.Router, repo repository.FTRepository, tx transa
 // @Failure 409
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/ft/{id} [patch]
 func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
@@ -218,7 +213,6 @@ func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transa
 // @Failure 404
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /worklogs/ft/{id} [delete]
 func registerDelete(router fiber.Router, repo repository.FTRepository, eb eventbus.EventBus) {
 	router.Delete("/:id", func(c fiber.Ctx) error {

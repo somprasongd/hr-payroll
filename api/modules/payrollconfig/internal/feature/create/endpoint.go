@@ -83,7 +83,6 @@ func (p RequestBody) ToRecord() repository.Record {
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /admin/payroll-configs [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

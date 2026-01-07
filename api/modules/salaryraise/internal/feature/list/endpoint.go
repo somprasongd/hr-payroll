@@ -24,7 +24,6 @@ import (
 // @Success 200 {object} Response
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /salary-raise-cycles [get]
 func NewEndpoint(router fiber.Router, repo repository.Repository) {
 	router.Get("/", func(c fiber.Ctx) error {

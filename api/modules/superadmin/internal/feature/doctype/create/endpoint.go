@@ -25,7 +25,6 @@ type DocumentTypeRequest struct {
 // @Success 201 {object} contracts.CreateSystemDocTypeResponse
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /super-admin/employee-document-types [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/employee-document-types", func(c fiber.Ctx) error {

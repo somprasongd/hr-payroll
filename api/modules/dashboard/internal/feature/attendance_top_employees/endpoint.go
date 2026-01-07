@@ -28,7 +28,6 @@ import (
 // @Failure 500
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /dashboard/attendance-top-employees [get]
 func RegisterAttendanceTopEmployees(router fiber.Router, repo *repository.Repository) {
 	router.Get("/attendance-top-employees", func(c fiber.Ctx) error {

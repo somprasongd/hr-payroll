@@ -4,11 +4,15 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
+	"hrms/modules/branch/internal/repository"
 	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
+
+// Branch represents the branch response for documentation
+type Branch = repository.Branch
 
 // UpdateRequest represents the request body for updating a branch
 type UpdateRequest struct {
@@ -24,10 +28,9 @@ type UpdateRequest struct {
 // @Security BearerAuth
 // @Param id path string true "branch ID"
 // @Param request body UpdateRequest true "branch payload"
-// @Success 200 {object} repository.Branch
+// @Success 200 {object} Branch
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /admin/branches/{id} [patch]
 func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {

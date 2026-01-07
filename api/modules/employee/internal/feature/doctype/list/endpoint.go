@@ -17,7 +17,6 @@ import (
 // @Failure 401
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /employee-document-types [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/", func(c fiber.Ctx) error {

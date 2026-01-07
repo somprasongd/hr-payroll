@@ -17,7 +17,6 @@ import (
 // @Success 200 {object} contracts.CompanyDTO
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /super-admin/companies/{id} [get]
 func NewEndpoint(router fiber.Router) {
 	router.Get("/companies/:id", func(c fiber.Ctx) error {

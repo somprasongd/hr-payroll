@@ -22,7 +22,6 @@ import (
 // @Failure 409 {object} response.Problem "เมื่อมี pending หรือ approved เดือนเดียวกันอยู่แล้ว"
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /bonus-cycles [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

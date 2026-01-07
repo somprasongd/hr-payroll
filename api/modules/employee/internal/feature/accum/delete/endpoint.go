@@ -16,7 +16,6 @@ import (
 // @Success 204 "No Content"
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /employees/accumulations/{accumId} [delete]
 func NewEndpoint(router fiber.Router) {
 	router.Delete("/accumulations/:accumId", func(c fiber.Ctx) error {

@@ -17,7 +17,6 @@ import (
 // @Success 204
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /super-admin/employee-document-types/{id} [delete]
 func NewEndpoint(router fiber.Router) {
 	router.Delete("/employee-document-types/:id", func(c fiber.Ctx) error {

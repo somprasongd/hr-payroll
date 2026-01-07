@@ -28,7 +28,6 @@ type requestBody struct {
 // @Failure 409
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /employee-document-types [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {

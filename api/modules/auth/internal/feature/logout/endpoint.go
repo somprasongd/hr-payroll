@@ -26,7 +26,6 @@ type RequestBody struct {
 // @Failure 403
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
-
 // @Router /auth/logout [post]
 func NewEndpoint(router fiber.Router) {
 	router.Post("/logout", func(c fiber.Ctx) error {
@@ -56,9 +55,9 @@ func NewEndpoint(router fiber.Router) {
 		c.Cookie(&fiber.Cookie{
 			Name:     "refresh_token",
 			Value:    "",
-			Path:     "/api/auth",
+			Path:     "/",
 			HTTPOnly: true,
-			Secure:   true,
+			Secure:   false,
 			SameSite: fiber.CookieSameSiteStrictMode,
 			MaxAge:   -1, // Delete cookie
 			Expires:  time.Now().Add(-1 * time.Hour),
