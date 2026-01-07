@@ -67,6 +67,12 @@ const DEFAULT_TAX_BRACKETS: TaxProgressiveBracket[] = [
   { min: 5000001, max: null, rate: 35 },
 ];
 
+// Helper: Get first day of current month as YYYY-MM-DD
+const getFirstDayOfCurrentMonth = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+};
+
 interface ConfigFormData {
   startDate: string;
   hourlyRate: number;
@@ -98,11 +104,16 @@ interface ConfigFormData {
 
 export default function SettingsPage() {
   const t = useTranslations('Settings');
-  const firstFieldRef = useRef<HTMLInputElement>(null);
+  // Refs for first input of each tab
+  const ratesFirstInputRef = useRef<HTMLInputElement>(null);
+  const bonusesFirstInputRef = useRef<HTMLInputElement>(null);
+  const utilitiesFirstInputRef = useRef<HTMLInputElement>(null);
+  const socialFirstInputRef = useRef<HTMLInputElement>(null);
+  const taxFirstInputRef = useRef<HTMLInputElement>(null);
   const [activeConfig, setActiveConfig] = useState<PayrollConfig | null>(null);
   const [configHistory, setConfigHistory] = useState<PayrollConfig[]>([]);
   const [formData, setFormData] = useState<ConfigFormData>({
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: getFirstDayOfCurrentMonth(),
     hourlyRate: 0,
     otHourlyRate: 0,
     attendanceBonusNoLate: 0,
@@ -113,7 +124,7 @@ export default function SettingsPage() {
     internetFeeMonthly: 0,
     socialSecurityRateEmployee: 5, // Default 5%
     socialSecurityRateEmployer: 5, // Default 5%
-    socialSecurityWageCap: 15000,
+    socialSecurityWageCap: 17500,
     // Tax defaults for Section 40(1)
     taxApplyStandardExpense: true,
     taxStandardExpenseRate: 50, // 50%
@@ -162,7 +173,7 @@ export default function SettingsPage() {
       
       // Load data into form (convert decimal to percentage for social security and tax rates)
       setFormData({
-        startDate: data.startDate || new Date().toISOString().split('T')[0],
+        startDate: data.startDate || getFirstDayOfCurrentMonth(),
         hourlyRate: data.hourlyRate || 0,
         otHourlyRate: data.otHourlyRate || 0,
         attendanceBonusNoLate: data.attendanceBonusNoLate || 0,
@@ -173,7 +184,7 @@ export default function SettingsPage() {
         internetFeeMonthly: data.internetFeeMonthly || 0,
         socialSecurityRateEmployee: (data.socialSecurityRateEmployee || 0.05) * 100, // Convert to %
         socialSecurityRateEmployer: (data.socialSecurityRateEmployer || 0.05) * 100, // Convert to %
-        socialSecurityWageCap: data.socialSecurityWageCap || 15000,
+        socialSecurityWageCap: data.socialSecurityWageCap || 17500,
         // Tax config for Section 40(1)
         taxApplyStandardExpense: data.taxApplyStandardExpense ?? true,
         taxStandardExpenseRate: (data.taxStandardExpenseRate ?? 0.5) * 100, // Convert to %
@@ -363,12 +374,30 @@ export default function SettingsPage() {
     fetchConfigHistory();
   }, []);
 
-  // Auto-focus first field when page loads
+  // Auto-focus first input when tab changes
   useEffect(() => {
-    if (firstFieldRef.current) {
-      firstFieldRef.current.focus();
-    }
-  }, []);
+    // Use setTimeout to ensure the tab content is rendered
+    const timeoutId = setTimeout(() => {
+      switch (activeTab) {
+        case 'rates':
+          ratesFirstInputRef.current?.focus();
+          break;
+        case 'bonuses':
+          bonusesFirstInputRef.current?.focus();
+          break;
+        case 'utilities':
+          utilitiesFirstInputRef.current?.focus();
+          break;
+        case 'social':
+          socialFirstInputRef.current?.focus();
+          break;
+        case 'tax':
+          taxFirstInputRef.current?.focus();
+          break;
+      }
+    }, 50);
+    return () => clearTimeout(timeoutId);
+  }, [activeTab]);
 
   if (loading && !activeConfig) {
     return (
@@ -404,7 +433,7 @@ export default function SettingsPage() {
                 {t('historyDescription')}
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-4">
+            <div className="mt-4 border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -493,7 +522,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="hourlyRate">{t('hourlyRate')}</Label>
                 <Input
-                  ref={firstFieldRef}
+                  ref={ratesFirstInputRef}
                   id="hourlyRate"
                   type="number"
                   step="0.01"
@@ -600,6 +629,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="attendanceBonusNoLate">{t('bonusNoLate')}</Label>
                 <Input
+                  ref={bonusesFirstInputRef}
                   id="attendanceBonusNoLate"
                   type="number"
                   step="0.01"
@@ -653,6 +683,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="waterRatePerUnit">{t('waterRate')}</Label>
                 <Input
+                  ref={utilitiesFirstInputRef}
                   id="waterRatePerUnit"
                   type="number"
                   step="0.01"
@@ -707,6 +738,7 @@ export default function SettingsPage() {
                 <Label htmlFor="socialSecurityRateEmployee">{t('employeeRate')}</Label>
                 <div className="relative">
                   <Input
+                    ref={socialFirstInputRef}
                     id="socialSecurityRateEmployee"
                     type="number"
                     step="0.01"
@@ -753,7 +785,7 @@ export default function SettingsPage() {
                   value={formData.socialSecurityWageCap}
                   onChange={(e) => handleInputChange('socialSecurityWageCap', parseFloat(e.target.value) || 0)}
                   onFocus={handleInputFocus}
-                  placeholder="15000.00"
+                  placeholder="17500.00"
                 />
                 <p className="text-xs text-gray-500">{t('ssoWageCapHint')}</p>
               </div>
@@ -788,6 +820,7 @@ export default function SettingsPage() {
                     <Label htmlFor="taxStandardExpenseRate">{t('taxStandardExpenseRate')}</Label>
                     <div className="relative">
                       <Input
+                        ref={taxFirstInputRef}
                         id="taxStandardExpenseRate"
                         type="number"
                         step="1"
@@ -863,7 +896,7 @@ export default function SettingsPage() {
                   </Button>
                 </div>
                 
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-md">
                   <Table>
                     <TableHeader>
                       <TableRow>

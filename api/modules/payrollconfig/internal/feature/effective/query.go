@@ -6,12 +6,14 @@ import (
 	"errors"
 	"time"
 
-	"go.uber.org/zap"
 	"hrms/modules/payrollconfig/internal/dto"
 	"hrms/modules/payrollconfig/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
+
+	"go.uber.org/zap"
 )
 
 type Query struct {
@@ -36,7 +38,13 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	if q.Date.IsZero() {
 		q.Date = time.Now()
 	}
-	rec, err := h.repo.GetEffective(ctx, q.Date)
+
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	rec, err := h.repo.GetEffective(ctx, tenant, q.Date)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			logger.FromContext(ctx).Warn("payroll config not found for date", zap.Time("date", q.Date), zap.Error(err))

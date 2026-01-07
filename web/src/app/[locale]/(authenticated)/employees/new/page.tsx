@@ -6,6 +6,8 @@ import { EmployeeForm } from '@/components/employees/employee-form';
 import { employeeService, CreateEmployeeRequest, UpdateEmployeeRequest } from '@/services/employee.service';
 import { Button } from '@/components/ui/button';
 
+import { ArrowLeft } from 'lucide-react';
+
 export default function NewEmployeePage() {
   const t = useTranslations('Employees');
   const router = useRouter();
@@ -24,13 +26,19 @@ export default function NewEmployeePage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('createTitle')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/employees')}
+            className="p-2 hover:bg-muted rounded-md transition-colors"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{t('createTitle')}</h1>
+            <p className="text-muted-foreground">{t('description')}</p>
+          </div>
         </div>
-        <Button variant="outline" onClick={() => router.push('/employees')}>
-          {t('actions.cancel')}
-        </Button>
       </div>
       <EmployeeForm onSubmit={handleSubmit} />
     </div>

@@ -2,6 +2,7 @@ package payrollconfig
 
 import (
 	"hrms/modules/payrollconfig/internal/feature/create"
+	"hrms/modules/payrollconfig/internal/feature/createdirect"
 	"hrms/modules/payrollconfig/internal/feature/effective"
 	"hrms/modules/payrollconfig/internal/feature/list"
 	"hrms/modules/payrollconfig/internal/repository"
@@ -10,7 +11,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -32,20 +33,24 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*effective.Query, *effective.Response](effective.NewHandler(m.repo))
 	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eb))
+
+	// Register contract handler for company creation (bypasses tenant context)
+	mediator.Register[*contracts.CreatePayrollConfigDirectCommand, *contracts.CreatePayrollConfigDirectResponse](createdirect.NewHandler(m.repo, eb))
+
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/admin/payroll-configs", middleware.Auth(m.tokenSvc))
-	adminOrHR := group.Group("", middleware.RequireRoles("admin", "hr"))
+	adminOrHR := group.Group("", middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr"))
 	effective.NewEndpoint(adminOrHR)
 
-	admin := group.Group("", middleware.RequireRoles("admin"))
+	admin := group.Group("", middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
 	list.NewEndpoint(admin)
 	create.NewEndpoint(admin)
 }

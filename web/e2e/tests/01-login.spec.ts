@@ -23,7 +23,8 @@ test.describe('Login', () => {
       const adminUsername = process.env.TEST_ADMIN_USERNAME || 'admin';
       const adminPassword = process.env.TEST_ADMIN_PASSWORD || 'changeme';
       
-      await loginPage.login(adminUsername, adminPassword);
+      // Use fullLogin to handle company/branch selection which may be required
+      await loginPage.fullLogin(adminUsername, adminPassword, 'DEFAULT', 'สำนักงานใหญ่');
       
       // Should redirect to dashboard
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });

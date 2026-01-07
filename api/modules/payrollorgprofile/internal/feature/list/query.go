@@ -6,6 +6,7 @@ import (
 
 	"hrms/modules/payrollorgprofile/internal/dto"
 	"hrms/modules/payrollorgprofile/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -39,6 +40,10 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	}
 	if q.Limit <= 0 || q.Limit > 1000 {
 		q.Limit = 1000
+	}
+
+	if _, ok := contextx.TenantFromContext(ctx); !ok {
+		return nil, errs.Unauthorized("missing tenant context")
 	}
 
 	res, err := h.repo.List(ctx, q.Page, q.Limit)

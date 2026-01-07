@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -20,6 +21,8 @@ type FTRepository struct {
 
 type FTRecord struct {
 	ID         uuid.UUID  `db:"id"`
+	CompanyID  uuid.UUID  `db:"company_id"`
+	BranchID   uuid.UUID  `db:"branch_id"`
 	EmployeeID uuid.UUID  `db:"employee_id"`
 	EntryType  string     `db:"entry_type"`
 	WorkDate   time.Time  `db:"work_date"`
@@ -42,12 +45,21 @@ func NewFTRepository(dbCtx transactor.DBTXContext) FTRepository {
 	return FTRepository{dbCtx: dbCtx}
 }
 
-func (r FTRepository) List(ctx context.Context, page, limit int, employeeID *uuid.UUID, status, entryType string, startDate, endDate *time.Time) (FTListResult, error) {
+func (r FTRepository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, employeeID *uuid.UUID, status, entryType string, startDate, endDate *time.Time) (FTListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
 	where = append(where, "wl.deleted_at IS NULL")
+
+	// Tenant Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
+	}
 
 	if employeeID != nil {
 		args = append(args, *employeeID)
@@ -75,6 +87,7 @@ func (r FTRepository) List(ctx context.Context, page, limit int, employeeID *uui
 
 	query := fmt.Sprintf(`
 SELECT wl.* FROM worklog_ft wl
+JOIN employees e ON e.id = wl.employee_id
 WHERE %s
 ORDER BY wl.work_date DESC, wl.created_at DESC
 LIMIT $%d OFFSET $%d
@@ -96,7 +109,7 @@ LIMIT $%d OFFSET $%d
 	}
 
 	countArgs := args[:len(args)-2]
-	countQuery := fmt.Sprintf(`SELECT COUNT(1) FROM worklog_ft wl WHERE %s`, whereClause)
+	countQuery := fmt.Sprintf(`SELECT COUNT(1) FROM worklog_ft wl JOIN employees e ON e.id = wl.employee_id WHERE %s`, whereClause)
 	var total int
 	if err := db.GetContext(ctx, &total, countQuery, countArgs...); err != nil {
 		return FTListResult{}, err
@@ -104,11 +117,22 @@ LIMIT $%d OFFSET $%d
 	return FTListResult{Rows: list, Total: total}, nil
 }
 
-func (r FTRepository) Get(ctx context.Context, id uuid.UUID) (*FTRecord, error) {
+func (r FTRepository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*FTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT * FROM worklog_ft WHERE id=$1 AND deleted_at IS NULL LIMIT 1`
+	q := `
+SELECT wl.* FROM worklog_ft wl
+JOIN employees e ON e.id = wl.employee_id
+WHERE wl.id=$1 AND e.company_id=$2 AND wl.deleted_at IS NULL LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT wl.* FROM worklog_ft wl
+JOIN employees e ON e.id = wl.employee_id
+WHERE wl.id=$1 AND e.company_id=$2 AND e.branch_id=$3 AND wl.deleted_at IS NULL LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var rec FTRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -134,39 +158,75 @@ SELECT EXISTS (
 	return exists, nil
 }
 
-func (r FTRepository) Insert(ctx context.Context, rec FTRecord) (*FTRecord, error) {
+func (r FTRepository) Insert(ctx context.Context, tenant contextx.TenantInfo, rec FTRecord) (*FTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
-INSERT INTO worklog_ft (employee_id, entry_type, work_date, quantity, status, created_by, updated_by)
-VALUES ($1,$2,$3,$4,$5,$6,$7)
+	// Validate employee belongs to company and get branch
+	var branchID uuid.UUID
+	q := "SELECT branch_id FROM employees WHERE id=$1 AND company_id=$2"
+	args := []interface{}{rec.EmployeeID, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q += " AND branch_id=$3"
+		args = append(args, tenant.BranchID)
+	}
+	if err := db.GetContext(ctx, &branchID, q, args...); err != nil {
+		return nil, fmt.Errorf("employee not found in this company")
+	}
+
+	const insertQ = `
+INSERT INTO worklog_ft (employee_id, company_id, branch_id, entry_type, work_date, quantity, status, created_by, updated_by)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
 RETURNING *`
 	var out FTRecord
-	if err := db.GetContext(ctx, &out, q,
-		rec.EmployeeID, rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.CreatedBy, rec.UpdatedBy); err != nil {
+	if err := db.GetContext(ctx, &out, insertQ,
+		rec.EmployeeID, tenant.CompanyID, branchID, rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.CreatedBy, rec.UpdatedBy); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (r FTRepository) Update(ctx context.Context, id uuid.UUID, rec FTRecord) (*FTRecord, error) {
+func (r FTRepository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, rec FTRecord) (*FTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	// Ensure worklog belongs to an employee of this company
+	q := `
 UPDATE worklog_ft
 SET entry_type=$1, work_date=$2, quantity=$3, status=$4, updated_by=$5
-WHERE id=$6 AND deleted_at IS NULL
-RETURNING *`
+FROM employees e
+WHERE worklog_ft.id=$6 AND worklog_ft.employee_id = e.id AND e.company_id=$7 AND worklog_ft.deleted_at IS NULL
+RETURNING worklog_ft.*`
+	args := []interface{}{rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.UpdatedBy, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_ft
+SET entry_type=$1, work_date=$2, quantity=$3, status=$4, updated_by=$5
+FROM employees e
+WHERE worklog_ft.id=$6 AND worklog_ft.employee_id = e.id AND e.company_id=$7 AND e.branch_id=$8 AND worklog_ft.deleted_at IS NULL
+RETURNING worklog_ft.*`
+		args = append(args, tenant.BranchID)
+	}
 	var out FTRecord
-	if err := db.GetContext(ctx, &out, q,
-		rec.EntryType, rec.WorkDate, rec.Quantity, rec.Status, rec.UpdatedBy, id); err != nil {
+	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (r FTRepository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r FTRepository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE worklog_ft SET deleted_at = now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id)
+	q := `
+UPDATE worklog_ft
+SET deleted_at = now(), deleted_by=$1
+FROM employees e
+WHERE worklog_ft.id=$2 AND worklog_ft.employee_id = e.id AND e.company_id=$3 AND worklog_ft.deleted_at IS NULL`
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_ft
+SET deleted_at = now(), deleted_by=$1
+FROM employees e
+WHERE worklog_ft.id=$2 AND worklog_ft.employee_id = e.id AND e.company_id=$3 AND e.branch_id=$4 AND worklog_ft.deleted_at IS NULL`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

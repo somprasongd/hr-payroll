@@ -14,14 +14,11 @@ setup('authenticate as admin', async ({ page }) => {
   // Go to login page
   await loginPage.goto();
   
-  // Login with admin credentials
-  await loginPage.login(testUsers.admin.username, testUsers.admin.password);
-  
-  // Wait for dashboard to load (successful login)
-  await page.waitForURL('**/dashboard', { timeout: 30000 });
+  // Login with admin credentials and select company/branch
+  await loginPage.fullLogin(testUsers.admin.username, testUsers.admin.password, 'DEFAULT', 'สำนักงานใหญ่');
   
   // Verify we're logged in
-  await expect(page).toHaveURL(/dashboard/);
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
   
   // Save authentication state
   await page.context().storageState({ path: adminAuthFile });

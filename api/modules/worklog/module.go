@@ -9,7 +9,6 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -31,7 +30,7 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
 	// FT
 	mediator.Register[*ft.ListQuery, *ft.ListResponse](ft.NewListHandler())
@@ -51,7 +50,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/worklogs", middleware.Auth(m.tokenSvc))
+	group := r.Group("/worklogs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	// FT
 	ftGroup := group.Group("/ft")
 	ft.Register(ftGroup, m.repo.FTRepo, m.ctx.Transactor, m.eb)

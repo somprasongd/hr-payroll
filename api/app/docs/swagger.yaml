@@ -17,6 +17,130 @@ definitions:
       message:
         type: string
     type: object
+  changestatus.StatusChangeRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - suspended
+        - archived
+        type: string
+    required:
+    - status
+    type: object
+  changestatus.StatusChangeResponse:
+    properties:
+      branch:
+        $ref: '#/definitions/repository.Branch'
+      employeeCount:
+        type: integer
+    type: object
+  contracts.BranchDTO:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  contracts.CompanyDTO:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  contracts.CreateSystemDocTypeResponse:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  contracts.UpdateSystemDocTypeResponse:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  create.CreateCompanyRequest:
+    properties:
+      adminPassword:
+        minLength: 8
+        type: string
+      adminUsername:
+        maxLength: 50
+        minLength: 3
+        type: string
+      companyCode:
+        maxLength: 50
+        type: string
+      companyName:
+        maxLength: 200
+        type: string
+    required:
+    - adminPassword
+    - adminUsername
+    - companyCode
+    - companyName
+    type: object
+  create.CreateRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  create.DocumentTypeRequest:
+    properties:
+      code:
+        type: string
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  create.OptionalUUID:
+    type: object
   create.Request:
     properties:
       advanceDate:
@@ -28,6 +152,15 @@ definitions:
         type: string
       payrollMonthDate:
         description: expect YYYY-MM-DD (1st of month)
+        type: string
+    type: object
+  create.requestBody:
+    properties:
+      code:
+        type: string
+      nameEn:
+        type: string
+      nameTh:
         type: string
     type: object
   createplan.Command:
@@ -102,6 +235,8 @@ definitions:
         type: string
       code:
         type: string
+      companyID:
+        type: string
       name:
         type: string
     type: object
@@ -115,6 +250,8 @@ definitions:
       actorID:
         type: string
       code:
+        type: string
+      companyID:
         type: string
       id:
         type: string
@@ -213,7 +350,11 @@ definitions:
         type: string
       phone:
         type: string
+      photoId:
+        type: string
       status:
+        type: string
+      titleName:
         type: string
     type: object
   dto.PTItem:
@@ -358,11 +499,18 @@ definitions:
       username:
         type: string
     type: object
+  employeecount.EmployeeCountResponse:
+    properties:
+      count:
+        type: integer
+    type: object
   employeeposition.CreateCommand:
     properties:
       actorID:
         type: string
       code:
+        type: string
+      companyID:
         type: string
       name:
         type: string
@@ -378,10 +526,204 @@ definitions:
         type: string
       code:
         type: string
+      companyID:
+        type: string
       id:
         type: string
       name:
         type: string
+    type: object
+  entity.ActivityLog:
+    properties:
+      action:
+        type: string
+      branchId:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      details:
+        items:
+          type: integer
+        type: array
+      entity:
+        type: string
+      entityId:
+        type: string
+      id:
+        type: string
+      userId:
+        type: string
+      userName:
+        description: Joined fields
+        type: string
+    type: object
+  expiring.Response:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repository.ExpiringDocumentRecord'
+        type: array
+      total:
+        type: integer
+    type: object
+  feature.AttendanceBreakdown:
+    properties:
+      lateCount:
+        type: integer
+      lateMinutes:
+        type: number
+      leaveDayCount:
+        type: integer
+      leaveDays:
+        type: number
+      leaveDoubleCount:
+        type: integer
+      leaveDoubleDays:
+        type: number
+      leaveHours:
+        type: number
+      leaveHoursCount:
+        type: integer
+      otCount:
+        type: integer
+      otHours:
+        type: number
+      period:
+        type: string
+    type: object
+  feature.AttendanceSummaryResponse:
+    properties:
+      breakdown:
+        items:
+          $ref: '#/definitions/feature.AttendanceBreakdown'
+        type: array
+      period:
+        properties:
+          endDate:
+            type: string
+          startDate:
+            type: string
+        type: object
+      totals:
+        $ref: '#/definitions/feature.AttendanceTotals'
+    type: object
+  feature.AttendanceTotals:
+    properties:
+      lateCount:
+        type: integer
+      lateMinutes:
+        type: number
+      leaveDayCount:
+        type: integer
+      leaveDays:
+        type: number
+      leaveDoubleCount:
+        type: integer
+      leaveDoubleDays:
+        type: number
+      leaveHours:
+        type: number
+      leaveHoursCount:
+        type: integer
+      otCount:
+        type: integer
+      otHours:
+        type: number
+    type: object
+  feature.DepartmentCountDTO:
+    properties:
+      count:
+        type: integer
+      departmentId:
+        type: string
+      departmentName:
+        type: string
+    type: object
+  feature.EmployeeSummaryResponse:
+    properties:
+      activeEmployees:
+        type: integer
+      byDepartment:
+        items:
+          $ref: '#/definitions/feature.DepartmentCountDTO'
+        type: array
+      fullTimeCount:
+        type: integer
+      newThisMonth:
+        type: integer
+      partTimeCount:
+        type: integer
+      terminatedThisMonth:
+        type: integer
+      totalEmployees:
+        type: integer
+    type: object
+  feature.FinancialSummaryResponse:
+    properties:
+      outstandingInstallments:
+        $ref: '#/definitions/feature.PendingItemDTO'
+      pendingAdvances:
+        $ref: '#/definitions/feature.PendingItemDTO'
+      pendingBonusCycles:
+        $ref: '#/definitions/feature.PendingItemDTO'
+      pendingLoans:
+        $ref: '#/definitions/feature.PendingItemDTO'
+      pendingSalaryRaiseCycles:
+        $ref: '#/definitions/feature.PendingItemDTO'
+    type: object
+  feature.LatestRunDTO:
+    properties:
+      employeeCount:
+        type: integer
+      id:
+        type: string
+      payrollMonthDate:
+        type: string
+      status:
+        type: string
+      totalNetPay:
+        type: number
+      totalPf:
+        type: number
+      totalSso:
+        type: number
+      totalTax:
+        type: number
+    type: object
+  feature.MonthlyBreakdownDTO:
+    properties:
+      month:
+        type: string
+      netPay:
+        type: number
+      pf:
+        type: number
+      sso:
+        type: number
+      tax:
+        type: number
+    type: object
+  feature.PayrollSummaryResponse:
+    properties:
+      latestRun:
+        $ref: '#/definitions/feature.LatestRunDTO'
+      monthlyBreakdown:
+        items:
+          $ref: '#/definitions/feature.MonthlyBreakdownDTO'
+        type: array
+      year:
+        type: integer
+      yearlyTotals:
+        $ref: '#/definitions/feature.YearlyTotalsDTO'
+    type: object
+  feature.PendingItemDTO:
+    properties:
+      count:
+        type: integer
+      totalAmount:
+        type: number
     type: object
   feature.Response:
     properties:
@@ -404,6 +746,28 @@ definitions:
       personTitles:
         items:
           $ref: '#/definitions/repository.MasterRecord'
+        type: array
+    type: object
+  feature.YearlyTotalsDTO:
+    properties:
+      totalNetPay:
+        type: number
+      totalPf:
+        type: number
+      totalSso:
+        type: number
+      totalTax:
+        type: number
+    type: object
+  filteroptions.Response:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      entities:
+        items:
+          type: string
         type: array
     type: object
   ft.CreateRequest:
@@ -502,6 +866,24 @@ definitions:
       workDate:
         type: string
     type: object
+  hrms_modules_activitylog_internal_feature_list.Meta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  hrms_modules_activitylog_internal_feature_list.Response:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/entity.ActivityLog'
+        type: array
+      meta:
+        $ref: '#/definitions/hrms_modules_activitylog_internal_feature_list.Meta'
+    type: object
   hrms_modules_bonus_internal_dto.Cycle:
     properties:
       bonusYear:
@@ -544,6 +926,8 @@ definitions:
       employeeNumber:
         type: string
       id:
+        type: string
+      photoId:
         type: string
       stats:
         $ref: '#/definitions/hrms_modules_bonus_internal_dto.Stats'
@@ -609,6 +993,11 @@ definitions:
         type: string
       bonusYear:
         type: integer
+      branchID:
+        type: string
+      companyID:
+        type: string
+      eb: {}
       payrollMonthDate:
         type: string
       periodEndDate:
@@ -709,6 +1098,8 @@ definitions:
         type: string
       id:
         type: string
+      photoId:
+        type: string
       stats:
         $ref: '#/definitions/hrms_modules_bonus_internal_dto.Stats'
       tenureDays:
@@ -726,6 +1117,26 @@ definitions:
         $ref: '#/definitions/hrms_modules_bonus_internal_dto.Meta'
     type: object
   hrms_modules_bonus_internal_repository.Repository:
+    type: object
+  hrms_modules_branch_internal_feature_update.UpdateRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      status:
+        enum:
+        - active
+        - suspended
+        type: string
+    required:
+    - code
+    - name
+    - status
     type: object
   hrms_modules_debt_internal_dto.Item:
     properties:
@@ -881,7 +1292,7 @@ definitions:
       basePayAmount:
         type: number
       departmentId:
-        type: string
+        $ref: '#/definitions/create.OptionalUUID'
       email:
         type: string
       employeeNumber:
@@ -903,9 +1314,9 @@ definitions:
       phone:
         type: string
       photoId:
-        type: string
+        $ref: '#/definitions/create.OptionalUUID'
       positionId:
-        type: string
+        $ref: '#/definitions/create.OptionalUUID'
       providentFundContribute:
         type: boolean
       providentFundRateEmployee:
@@ -983,10 +1394,141 @@ definitions:
         type: string
       titleId:
         type: string
+      titleName:
+        type: string
       updatedAt:
         type: string
       withholdTax:
         type: boolean
+    type: object
+  hrms_modules_employee_internal_feature_doctype_create.Response:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_employee_internal_feature_doctype_list.Response:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repository.DocumentTypeRecord'
+        type: array
+    type: object
+  hrms_modules_employee_internal_feature_doctype_update.Response:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_employee_internal_feature_doctype_update.requestBody:
+    properties:
+      code:
+        type: string
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  hrms_modules_employee_internal_feature_document_list.Response:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repository.DocumentRecord'
+        type: array
+    type: object
+  hrms_modules_employee_internal_feature_document_update.Response:
+    properties:
+      checksumMd5:
+        type: string
+      contentType:
+        type: string
+      createdAt:
+        type: string
+      documentNumber:
+        type: string
+      documentTypeCode:
+        description: Joined fields
+        type: string
+      documentTypeId:
+        type: string
+      documentTypeNameEn:
+        type: string
+      documentTypeNameTh:
+        type: string
+      employeeId:
+        type: string
+      expiryDate:
+        type: string
+      fileName:
+        type: string
+      fileSizeBytes:
+        type: integer
+      id:
+        type: string
+      issueDate:
+        type: string
+      notes:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  hrms_modules_employee_internal_feature_document_update.requestBody:
+    properties:
+      documentNumber:
+        type: string
+      documentTypeId:
+        type: string
+      expiryDate:
+        type: string
+      issueDate:
+        type: string
+      notes:
+        type: string
+    type: object
+  hrms_modules_employee_internal_feature_document_upload.Response:
+    properties:
+      checksumMd5:
+        type: string
+      contentType:
+        type: string
+      documentNumber:
+        type: string
+      expiryDate:
+        type: string
+      fileName:
+        type: string
+      fileSizeBytes:
+        type: integer
+      id:
+        type: string
+      issueDate:
+        type: string
     type: object
   hrms_modules_employee_internal_feature_get.Response:
     properties:
@@ -1050,6 +1592,8 @@ definitions:
         type: string
       titleId:
         type: string
+      titleName:
+        type: string
       updatedAt:
         type: string
       withholdTax:
@@ -1063,6 +1607,19 @@ definitions:
         type: array
       meta:
         $ref: '#/definitions/hrms_modules_employee_internal_dto.Meta'
+    type: object
+  hrms_modules_employee_internal_feature_photo_upload.Response:
+    properties:
+      checksumMd5:
+        type: string
+      contentType:
+        type: string
+      fileName:
+        type: string
+      fileSizeBytes:
+        type: integer
+      id:
+        type: string
     type: object
   hrms_modules_employee_internal_feature_update.Response:
     properties:
@@ -1126,6 +1683,8 @@ definitions:
         type: string
       titleId:
         type: string
+      titleName:
+        type: string
       updatedAt:
         type: string
       withholdTax:
@@ -1135,6 +1694,7 @@ definitions:
     properties:
       actor:
         type: string
+      eb: {}
       employeeId:
         type: string
       repo:
@@ -1159,6 +1719,15 @@ definitions:
       payout:
         $ref: '#/definitions/repository.Payout'
     type: object
+  hrms_modules_payoutpt_internal_feature_list.Meta:
+    properties:
+      currentPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
   hrms_modules_payoutpt_internal_feature_list.Response:
     properties:
       data:
@@ -1166,7 +1735,7 @@ definitions:
           $ref: '#/definitions/repository.Payout'
         type: array
       meta:
-        $ref: '#/definitions/list.Meta'
+        $ref: '#/definitions/hrms_modules_payoutpt_internal_feature_list.Meta'
     type: object
   hrms_modules_payoutpt_internal_repository.Repository:
     type: object
@@ -1513,6 +2082,8 @@ definitions:
         type: number
       otHours:
         type: number
+      photoId:
+        type: string
       positionName:
         type: string
       providentFundContribute:
@@ -1701,6 +2272,8 @@ definitions:
         type: number
       otHours:
         type: number
+      photoId:
+        type: string
       positionName:
         type: string
       providentFundContribute:
@@ -1741,6 +2314,7 @@ definitions:
         type: string
       actorRole:
         type: string
+      eb: {}
       id:
         type: string
       payDate:
@@ -1934,6 +2508,8 @@ definitions:
         type: number
       newSsoWage:
         type: number
+      photoId:
+        type: string
       raiseAmount:
         type: number
       raisePercent:
@@ -1969,15 +2545,10 @@ definitions:
     type: object
   hrms_modules_salaryraise_internal_feature_create.Command:
     properties:
-      actorID:
-        type: string
       periodEndDate:
         type: string
       periodStartDate:
         type: string
-      repo:
-        $ref: '#/definitions/hrms_modules_salaryraise_internal_repository.Repository'
-      tx: {}
     type: object
   hrms_modules_salaryraise_internal_feature_create.Response:
     properties:
@@ -2086,6 +2657,8 @@ definitions:
         type: number
       newSsoWage:
         type: number
+      photoId:
+        type: string
       raiseAmount:
         type: number
       raisePercent:
@@ -2098,6 +2671,24 @@ definitions:
         type: string
     type: object
   hrms_modules_salaryraise_internal_repository.Repository:
+    type: object
+  hrms_modules_superadmin_internal_feature_company_create.Response:
+    properties:
+      adminUserId:
+        type: string
+      branch:
+        $ref: '#/definitions/contracts.BranchDTO'
+      company:
+        $ref: '#/definitions/contracts.CompanyDTO'
+    type: object
+  hrms_modules_superadmin_internal_feature_company_update.UpdateRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
     type: object
   hrms_modules_user_internal_dto.Meta:
     properties:
@@ -2239,6 +2830,8 @@ definitions:
         type: number
       pfMonthAmount:
         type: number
+      photoId:
+        type: string
       positionName:
         type: string
       providentFundContribute:
@@ -2349,6 +2942,7 @@ definitions:
     properties:
       actorID:
         type: string
+      eb: {}
       id:
         type: string
       newSsoWage:
@@ -2380,6 +2974,8 @@ definitions:
         type: number
       newSsoWage:
         type: number
+      photoId:
+        type: string
       raiseAmount:
         type: number
       raisePercent:
@@ -2390,15 +2986,6 @@ definitions:
         type: integer
       updatedAt:
         type: string
-    type: object
-  list.Meta:
-    properties:
-      currentPage:
-        type: integer
-      totalItems:
-        type: integer
-      totalPages:
-        type: integer
     type: object
   login.RequestBody:
     properties:
@@ -2411,6 +2998,14 @@ definitions:
     properties:
       accessToken:
         type: string
+      branches:
+        items:
+          $ref: '#/definitions/repository.BranchInfo'
+        type: array
+      companies:
+        items:
+          $ref: '#/definitions/repository.CompanyInfo'
+        type: array
       expiresIn:
         type: integer
       refreshToken:
@@ -2673,9 +3268,162 @@ definitions:
       updatedBy:
         type: string
     type: object
+  repository.Branch:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  repository.BranchAccess:
+    properties:
+      branchId:
+        type: string
+      code:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+    type: object
+  repository.BranchInfo:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  repository.CompanyInfo:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+    type: object
+  repository.CompanyUser:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  repository.DocumentRecord:
+    properties:
+      checksumMd5:
+        type: string
+      contentType:
+        type: string
+      createdAt:
+        type: string
+      documentNumber:
+        type: string
+      documentTypeCode:
+        description: Joined fields
+        type: string
+      documentTypeId:
+        type: string
+      documentTypeNameEn:
+        type: string
+      documentTypeNameTh:
+        type: string
+      employeeId:
+        type: string
+      expiryDate:
+        type: string
+      fileName:
+        type: string
+      fileSizeBytes:
+        type: integer
+      id:
+        type: string
+      issueDate:
+        type: string
+      notes:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  repository.DocumentTypeRecord:
+    properties:
+      code:
+        type: string
+      companyId:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  repository.ExpiringDocumentRecord:
+    properties:
+      daysUntilExpiry:
+        type: integer
+      documentId:
+        type: string
+      documentTypeCode:
+        type: string
+      documentTypeNameEn:
+        type: string
+      documentTypeNameTh:
+        type: string
+      employeeId:
+        type: string
+      employeeNumber:
+        type: string
+      expiryDate:
+        type: string
+      fileName:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+    type: object
   repository.LogoRecord:
     properties:
       checksumMD5:
+        type: string
+      companyID:
         type: string
       contentType:
         type: string
@@ -2785,6 +3533,48 @@ definitions:
       type:
         type: string
     type: object
+  setbranches.SetBranchesRequest:
+    properties:
+      branchIds:
+        items:
+          type: string
+        type: array
+    type: object
+  switch_tenant.Response:
+    properties:
+      accessToken:
+        type: string
+      branches:
+        items:
+          $ref: '#/definitions/repository.BranchInfo'
+        type: array
+      company:
+        $ref: '#/definitions/repository.CompanyInfo'
+      expiresIn:
+        type: integer
+      refreshToken:
+        type: string
+      tokenType:
+        type: string
+    type: object
+  switch_tenant.switchRequest:
+    properties:
+      branchIds:
+        items:
+          type: string
+        type: array
+      companyId:
+        type: string
+    type: object
+  update.DocumentTypeRequest:
+    properties:
+      code:
+        type: string
+      nameEn:
+        type: string
+      nameTh:
+        type: string
+    type: object
   update.Request:
     properties:
       advanceDate:
@@ -2799,19 +3589,6 @@ definitions:
   updaterole.RequestBody:
     properties:
       role:
-        type: string
-    type: object
-  upload.Response:
-    properties:
-      checksumMd5:
-        type: string
-      contentType:
-        type: string
-      fileName:
-        type: string
-      fileSizeBytes:
-        type: integer
-      id:
         type: string
     type: object
   uploadlogo.Response:
@@ -2848,6 +3625,235 @@ info:
   title: HR Payroll API
   version: "1.0"
 paths:
+  /admin/activity-logs:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by action
+        in: query
+        name: action
+        type: string
+      - description: Filter by entity
+        in: query
+        name: entity
+        type: string
+      - description: Filter from date (YYYY-MM-DD)
+        in: query
+        name: fromDate
+        type: string
+      - description: Filter to date (YYYY-MM-DD)
+        in: query
+        name: toDate
+        type: string
+      - description: Filter by username
+        in: query
+        name: userName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_activitylog_internal_feature_list.Response'
+      security:
+      - BearerAuth: []
+      summary: List activity logs
+      tags:
+      - ActivityLog
+  /admin/activity-logs/filter-options:
+    get:
+      description: Returns distinct actions and entities for filtering
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/filteroptions.Response'
+      security:
+      - BearerAuth: []
+      summary: Get filter options for activity logs
+      tags:
+      - ActivityLog
+  /admin/branches:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/repository.Branch'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List all branches
+      tags:
+      - Branches
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: branch payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/create.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/repository.Branch'
+      security:
+      - BearerAuth: []
+      summary: Create a new branch
+      tags:
+      - Branches
+  /admin/branches/{id}:
+    delete:
+      description: Soft deletes a branch. Branch must be archived before deletion.
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Branch must be archived before deletion
+          schema:
+            $ref: '#/definitions/response.Problem'
+      security:
+      - BearerAuth: []
+      summary: Delete a branch (soft delete)
+      tags:
+      - Branches
+    get:
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repository.Branch'
+      security:
+      - BearerAuth: []
+      summary: Get a branch by ID
+      tags:
+      - Branches
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: branch payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_branch_internal_feature_update.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repository.Branch'
+      security:
+      - BearerAuth: []
+      summary: Update a branch
+      tags:
+      - Branches
+  /admin/branches/{id}/default:
+    put:
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Set a branch as default
+      tags:
+      - Branches
+  /admin/branches/{id}/employee-count:
+    get:
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/employeecount.EmployeeCountResponse'
+      security:
+      - BearerAuth: []
+      summary: Get employee count for a branch
+      tags:
+      - Branches
+  /admin/branches/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: status payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/changestatus.StatusChangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/changestatus.StatusChangeResponse'
+      security:
+      - BearerAuth: []
+      summary: Change branch status
+      tags:
+      - Branches
   /admin/payroll-configs:
     get:
       description: ดึงประวัติการตั้งค่าทั้งหมด (Admin)
@@ -3122,36 +4128,20 @@ paths:
       - Payroll Org Profile
   /admin/users:
     get:
-      description: ดึงรายชื่อผู้ใช้งานทั้งหมด (Admin)
-      parameters:
-      - description: page
-        in: query
-        name: page
-        type: integer
-      - description: limit
-        in: query
-        name: limit
-        type: integer
-      - description: role filter
-        in: query
-        name: role
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_user_internal_feature_list.Response'
-        "401":
-          description: Unauthorized
-        "403":
-          description: Forbidden
+            items:
+              $ref: '#/definitions/repository.CompanyUser'
+            type: array
       security:
       - BearerAuth: []
-      summary: List users
+      summary: List company users
       tags:
-      - Admin Users
+      - UserBranch
     post:
       consumes:
       - application/json
@@ -3311,6 +4301,57 @@ paths:
       summary: Admin reset password
       tags:
       - Admin Users
+  /admin/users/{userId}/branches:
+    get:
+      parameters:
+      - description: user ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/repository.BranchAccess'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get user's branch access
+      tags:
+      - UserBranch
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: user ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: branch IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/setbranches.SetBranchesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/repository.BranchAccess'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Set user's branch access
+      tags:
+      - UserBranch
   /auth/login:
     post:
       consumes:
@@ -3387,6 +4428,36 @@ paths:
         "401":
           description: Unauthorized
       summary: Refresh token
+      tags:
+      - Auth
+  /auth/switch:
+    post:
+      consumes:
+      - application/json
+      description: Switch to a different company/branch context and get new tokens
+      parameters:
+      - description: switch request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/switch_tenant.switchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/switch_tenant.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Switch tenant context
       tags:
       - Auth
   /bonus-cycles:
@@ -3578,6 +4649,108 @@ paths:
       summary: Update bonus item
       tags:
       - Bonus
+  /dashboard/attendance-summary:
+    get:
+      description: Get attendance statistics with optional grouping and filtering
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: startDate
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: endDate
+        required: true
+        type: string
+      - description: 'Group by: month or day (default: month)'
+        in: query
+        name: groupBy
+        type: string
+      - description: Filter by department ID
+        in: query
+        name: departmentId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.AttendanceSummaryResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get attendance summary
+      tags:
+      - Dashboard
+  /dashboard/employee-summary:
+    get:
+      description: Get aggregated employee statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.EmployeeSummaryResponse'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get employee summary
+      tags:
+      - Dashboard
+  /dashboard/financial-summary:
+    get:
+      description: Get pending financial items (advances, loans, bonus cycles, etc.)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.FinancialSummaryResponse'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get financial summary
+      tags:
+      - Dashboard
+  /dashboard/payroll-summary:
+    get:
+      description: Get payroll statistics including latest run and yearly totals
+      parameters:
+      - description: 'Year (default: current year)'
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/feature.PayrollSummaryResponse'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get payroll summary
+      tags:
+      - Dashboard
   /debt-txns:
     get:
       description: ดูรายการหนี้/กู้/ผ่อน/ชำระ
@@ -3797,6 +4970,131 @@ paths:
       summary: Create repayment
       tags:
       - Debt
+  /documents/expiring:
+    get:
+      description: ดึงรายการเอกสารที่จะหมดอายุภายใน N วัน
+      parameters:
+      - description: Days ahead (default 30)
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/expiring.Response'
+        "401":
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: List documents expiring soon
+      tags:
+      - Employee Documents
+  /employee-document-types:
+    get:
+      description: ดึงรายการประเภทเอกสารพนักงานทั้งหมด
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_doctype_list.Response'
+        "401":
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: List employee document types
+      tags:
+      - Employee Document Types
+    post:
+      consumes:
+      - application/json
+      description: สร้างประเภทเอกสารพนักงานใหม่
+      parameters:
+      - description: payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/create.requestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_doctype_create.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "409":
+          description: Conflict
+      security:
+      - BearerAuth: []
+      summary: Create employee document type
+      tags:
+      - Employee Document Types
+  /employee-document-types/{id}:
+    delete:
+      description: ลบประเภทเอกสารพนักงาน (soft delete)
+      parameters:
+      - description: Document Type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete employee document type
+      tags:
+      - Employee Document Types
+    put:
+      consumes:
+      - application/json
+      description: อัปเดตประเภทเอกสารพนักงาน
+      parameters:
+      - description: Document Type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_employee_internal_feature_doctype_update.requestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_doctype_update.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "409":
+          description: Conflict
+      security:
+      - BearerAuth: []
+      summary: Update employee document type
+      tags:
+      - Employee Document Types
   /employees:
     get:
       description: ค้นหาและดึงรายชื่อพนักงาน (Admin, Staff)
@@ -4000,6 +5298,204 @@ paths:
       summary: Upsert accumulation
       tags:
       - Employees
+  /employees/{id}/documents:
+    get:
+      description: ดึงรายการเอกสารของพนักงาน
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_document_list.Response'
+        "401":
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: List documents for employee
+      tags:
+      - Employee Documents
+    post:
+      consumes:
+      - multipart/form-data
+      description: อัปโหลดเอกสารพนักงาน (PDF, JPG, PNG <= 10MB)
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Document file (<=10MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Document Type ID
+        in: formData
+        name: documentTypeId
+        required: true
+        type: string
+      - description: Document number
+        in: formData
+        name: documentNumber
+        type: string
+      - description: Issue date (YYYY-MM-DD)
+        in: formData
+        name: issueDate
+        type: string
+      - description: Expiry date (YYYY-MM-DD)
+        in: formData
+        name: expiryDate
+        type: string
+      - description: Notes
+        in: formData
+        name: notes
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_document_upload.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "409":
+          description: Conflict
+      security:
+      - BearerAuth: []
+      summary: Upload document for employee
+      tags:
+      - Employee Documents
+  /employees/{id}/documents/{docId}:
+    delete:
+      description: ลบเอกสารพนักงาน (soft delete)
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Document ID
+        in: path
+        name: docId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete document
+      tags:
+      - Employee Documents
+    put:
+      consumes:
+      - application/json
+      description: อัปเดตข้อมูลเอกสารพนักงาน (ไม่รวมไฟล์)
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Document ID
+        in: path
+        name: docId
+        required: true
+        type: string
+      - description: payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_employee_internal_feature_document_update.requestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_document_update.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update document metadata
+      tags:
+      - Employee Documents
+  /employees/{id}/documents/{docId}/file:
+    get:
+      description: ดาวน์โหลดไฟล์เอกสารพนักงาน
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Document ID
+        in: path
+        name: docId
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Download document file
+      tags:
+      - Employee Documents
+  /employees/{id}/photo:
+    delete:
+      description: ลบรูปพนักงาน (เคลียร์ photoId ของ employee และลบไฟล์รูปเดิมออกจาก
+        employee_photo)
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete employee photo
+      tags:
+      - Employees
   /employees/accumulations/{accumId}:
     delete:
       parameters:
@@ -4035,7 +5531,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/upload.Response'
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_photo_upload.Response'
         "400":
           description: Bad Request
         "401":
@@ -5129,6 +6625,171 @@ paths:
       summary: Update salary raise item
       tags:
       - Salary Raise
+  /super-admin/companies:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/contracts.CompanyDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List all companies
+      tags:
+      - SuperAdmin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: company and admin payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/create.CreateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_superadmin_internal_feature_company_create.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new company with admin user
+      tags:
+      - SuperAdmin
+  /super-admin/companies/{id}:
+    get:
+      parameters:
+      - description: company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contracts.CompanyDTO'
+      security:
+      - BearerAuth: []
+      summary: Get a company by ID
+      tags:
+      - SuperAdmin
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: company payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_superadmin_internal_feature_company_update.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contracts.CompanyDTO'
+      security:
+      - BearerAuth: []
+      summary: Update a company
+      tags:
+      - SuperAdmin
+  /super-admin/employee-document-types:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all system document types
+      tags:
+      - SuperAdmin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: document type payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/create.DocumentTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/contracts.CreateSystemDocTypeResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a system document type
+      tags:
+      - SuperAdmin
+  /super-admin/employee-document-types/{id}:
+    delete:
+      parameters:
+      - description: document type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a system document type
+      tags:
+      - SuperAdmin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: document type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: document type payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/update.DocumentTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contracts.UpdateSystemDocTypeResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a system document type
+      tags:
+      - SuperAdmin
   /worklogs/ft:
     get:
       description: รายการ worklog (Full-time)

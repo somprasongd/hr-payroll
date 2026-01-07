@@ -4,13 +4,13 @@ import (
 	"hrms/modules/masterdata/internal/feature"
 	"hrms/modules/masterdata/internal/feature/department"
 	"hrms/modules/masterdata/internal/feature/employeeposition"
+	"hrms/modules/masterdata/internal/feature/list"
 	"hrms/modules/masterdata/internal/repository"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/jwt"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -23,18 +23,19 @@ type Module struct {
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
+	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
 		ctx:      ctx,
-		repo:     repository.NewRepository(ctx.DBCtx),
+		repo:     repo,
 		tokenSvc: tokenSvc,
 	}
 }
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
-	mediator.Register[*feature.Query, *feature.Response](feature.NewHandler(m.repo))
+	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*department.CreateCommand, *department.Response](department.NewCreateHandler(m.repo, eb))
 	mediator.Register[*department.UpdateCommand, *department.Response](department.NewUpdateHandler(m.repo, eb))
 	mediator.Register[*department.DeleteCommand, mediator.NoResponse](department.NewDeleteHandler(m.repo, eb))
@@ -45,6 +46,6 @@ func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/master", middleware.Auth(m.tokenSvc))
+	group := r.Group("/master", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	feature.Register(group)
 }

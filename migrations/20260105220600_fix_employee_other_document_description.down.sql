@@ -1,0 +1,1 @@
+-- No easy way to revert 'ไม่ระบุ' back to NULL reliably without knowing which ones were originally NULL.

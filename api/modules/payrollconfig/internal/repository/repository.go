@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -45,6 +46,7 @@ type Record struct {
 	LateRatePerMinute          float64     `db:"late_rate_per_minute"`
 	LateGraceMinutes           int         `db:"late_grace_minutes"`
 	Note                       *string     `db:"note"`
+	CompanyID                  uuid.UUID   `db:"company_id"`
 	CreatedAt                  time.Time   `db:"created_at"`
 	UpdatedAt                  time.Time   `db:"updated_at"`
 }
@@ -54,7 +56,7 @@ type ListResult struct {
 	Total int
 }
 
-func (r Repository) List(ctx context.Context, page, limit int) (ListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -90,14 +92,15 @@ SELECT
   late_rate_per_minute,
   late_grace_minutes,
   note,
+  company_id,
   created_at,
   updated_at
 FROM payroll_config
-WHERE effective_daterange IS NOT NULL
+WHERE effective_daterange IS NOT NULL AND company_id = $1
 ORDER BY version_no DESC
-LIMIT $1 OFFSET $2`
+LIMIT $2 OFFSET $3`
 
-	rows, err := db.QueryxContext(ctx, baseQuery, limit, offset)
+	rows, err := db.QueryxContext(ctx, baseQuery, tenant.CompanyID, limit, offset)
 	if err != nil {
 		return ListResult{}, err
 	}
@@ -112,16 +115,16 @@ LIMIT $1 OFFSET $2`
 		items = append(items, rec)
 	}
 
-	const countQ = `SELECT COUNT(1) FROM payroll_config WHERE effective_daterange IS NOT NULL`
+	const countQ = `SELECT COUNT(1) FROM payroll_config WHERE effective_daterange IS NOT NULL AND company_id=$1`
 	var total int
-	if err := db.GetContext(ctx, &total, countQ); err != nil {
+	if err := db.GetContext(ctx, &total, countQ, tenant.CompanyID); err != nil {
 		return ListResult{}, err
 	}
 
 	return ListResult{Rows: items, Total: total}, nil
 }
 
-func (r Repository) GetEffective(ctx context.Context, date time.Time) (*Record, error) {
+func (r Repository) GetEffective(ctx context.Context, tenant contextx.TenantInfo, date time.Time) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT
@@ -154,21 +157,30 @@ SELECT
   note,
   created_at,
   updated_at
-FROM get_effective_payroll_config($1) pc
-WHERE pc.id IS NOT NULL
+FROM payroll_config
+WHERE effective_daterange @> $1::date AND company_id=$2
+ORDER BY version_no DESC
 LIMIT 1`
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, date); err != nil {
+	if err := db.GetContext(ctx, &rec, q, date, tenant.CompanyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
-func (r Repository) Create(ctx context.Context, payload Record, actor uuid.UUID) (*Record, error) {
+func (r Repository) Create(ctx context.Context, payload Record, companyID, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
+WITH next_version AS (
+  SELECT
+    pg_advisory_xact_lock(hashtext(($24::uuid)::text)::bigint) AS locked,
+    COALESCE(MAX(version_no), 0) + 1 AS version_no
+  FROM payroll_config
+  WHERE company_id = $24::uuid
+)
 INSERT INTO payroll_config (
   effective_daterange,
+  version_no,
   hourly_rate,
   ot_hourly_rate,
   attendance_bonus_no_late,
@@ -191,12 +203,15 @@ INSERT INTO payroll_config (
   late_rate_per_minute,
   late_grace_minutes,
   note,
+  company_id,
   created_by,
   updated_by
-) VALUES (
-  daterange($1, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25
 )
+SELECT
+  daterange($1, NULL, '[)'),
+  next_version.version_no,
+  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$25
+FROM next_version
 RETURNING
   id,
   COALESCE(version_no, 0) AS version_no,
@@ -225,6 +240,7 @@ RETURNING
   late_rate_per_minute,
   late_grace_minutes,
   note,
+  company_id,
   created_at,
   updated_at`
 
@@ -253,7 +269,7 @@ RETURNING
 		payload.LateRatePerMinute,
 		payload.LateGraceMinutes,
 		payload.Note,
-		actor,
+		companyID,
 		actor,
 	)
 	if err != nil {

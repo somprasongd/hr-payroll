@@ -17,10 +17,12 @@ import { Pagination } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 
-interface ActionConfig<T> {
+export interface ActionConfig<T> {
   label: string;
-  onClick: (item: T) => void;
+  onClick?: (item: T) => void;
+  href?: string | ((item: T) => string);
   icon?: React.ReactNode;
   variant?: 'default' | 'destructive' | 'outline' | 'secondary';
   condition?: (item: T) => boolean;
@@ -63,27 +65,75 @@ export function GenericDataTable<T>({
 
     if (visibleActions.length === 0) return null;
 
-    if (visibleActions.length <= 2) {
-      // Render actions directly if there are 1-2 actions
-      return (
-        <div className="flex items-center gap-2">
-          {visibleActions.map((action, idx) => (
+    const renderAction = (action: ActionConfig<T>, idx: number, asButton = true) => {
+      const href = typeof action.href === 'function' ? action.href(item) : action.href;
+      
+      if (href) {
+        // Render as Link for navigation
+        if (asButton) {
+          return (
             <Button
               key={idx}
               variant="ghost"
               size="icon"
-              className={cn(
-                "h-8 w-8",
-                action.variant === 'destructive' && "text-red-600 hover:text-red-700 hover:bg-red-50"
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                action.onClick(item);
-              }}
+              className="h-8 w-8"
+              asChild
             >
-              {action.icon}
+              <Link href={href}>{action.icon}</Link>
             </Button>
-          ))}
+          );
+        } else {
+          return (
+            <DropdownMenuItem key={idx} asChild>
+              <Link href={href} className="flex items-center">
+                {action.icon && <span className="mr-2">{action.icon}</span>}
+                {action.label}
+              </Link>
+            </DropdownMenuItem>
+          );
+        }
+      }
+      
+      // Render as Button for onClick
+      if (asButton) {
+        return (
+          <Button
+            key={idx}
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-8 w-8",
+              action.variant === 'destructive' && "text-red-600 hover:text-red-700 hover:bg-red-50"
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick?.(item);
+            }}
+          >
+            {action.icon}
+          </Button>
+        );
+      } else {
+        return (
+          <DropdownMenuItem
+            key={idx}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick?.(item);
+            }}
+          >
+            {action.icon && <span className="mr-2">{action.icon}</span>}
+            {action.label}
+          </DropdownMenuItem>
+        );
+      }
+    };
+
+    if (visibleActions.length <= 2) {
+      // Render actions directly if there are 1-2 actions
+      return (
+        <div className="flex items-center gap-2">
+          {visibleActions.map((action, idx) => renderAction(action, idx, true))}
         </div>
       );
     } else {
@@ -96,18 +146,7 @@ export function GenericDataTable<T>({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {visibleActions.map((action, idx) => (
-              <DropdownMenuItem
-                key={idx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  action.onClick(item);
-                }}
-              >
-                {action.icon && <span className="mr-2">{action.icon}</span>}
-                {action.label}
-              </DropdownMenuItem>
-            ))}
+            {visibleActions.map((action, idx) => renderAction(action, idx, false))}
           </DropdownMenuContent>
         </DropdownMenu>
       );

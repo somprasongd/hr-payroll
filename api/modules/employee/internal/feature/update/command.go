@@ -13,6 +13,7 @@ import (
 
 	"hrms/modules/employee/internal/dto"
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -24,7 +25,6 @@ import (
 type Command struct {
 	ID      uuid.UUID
 	Payload RequestBody
-	ActorID uuid.UUID
 }
 
 type Response struct {
@@ -48,6 +48,16 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	if err := validatePayload(cmd.Payload); err != nil {
 		return nil, err
 	}
@@ -72,12 +82,12 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	var updated *repository.DetailRecord
 	err = h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
-		prev, err := h.repo.Get(ctxWithTx, cmd.ID)
+		prev, err := h.repo.Get(ctxWithTx, tenant, cmd.ID)
 		if err != nil {
 			return err
 		}
 
-		updated, err = h.repo.Update(ctxWithTx, cmd.ID, recPayload, cmd.ActorID)
+		updated, err = h.repo.Update(ctxWithTx, tenant, cmd.ID, recPayload, user.ID)
 		if err != nil {
 			return err
 		}
@@ -90,7 +100,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 		hook(func(ctx context.Context) error {
 			h.eb.Publish(events.LogEvent{
-				ActorID:    cmd.ActorID,
+				ActorID:    user.ID,
+				CompanyID:  &tenant.CompanyID,
+				BranchID:   tenant.BranchIDPtr(),
 				Action:     "UPDATE",
 				EntityName: "EMPLOYEE",
 				EntityID:   cmd.ID.String(),

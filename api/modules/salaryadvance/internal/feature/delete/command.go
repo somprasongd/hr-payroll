@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/salaryadvance/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -18,8 +19,7 @@ import (
 )
 
 type Command struct {
-	ID    uuid.UUID
-	Actor uuid.UUID
+	ID uuid.UUID
 }
 
 type Handler struct {
@@ -34,7 +34,17 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	rec, err := h.repo.Get(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
+
+	rec, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("salary advance not found")
@@ -45,7 +55,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if rec.Status != "pending" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete processed salary advance")
 	}
-	if err := h.repo.SoftDelete(ctx, cmd.ID, cmd.Actor); err != nil {
+	if err := h.repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("salary advance not found")
 		}
@@ -53,7 +63,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		return mediator.NoResponse{}, errs.Internal("failed to delete salary advance")
 	}
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "DELETE",
 		EntityName: "SALARY_ADVANCE",
 		EntityID:   cmd.ID.String(),

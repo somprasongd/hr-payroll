@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -38,6 +39,8 @@ type ListRecord struct {
 type DetailRecord struct {
 	ID                          uuid.UUID  `db:"id"`
 	EmployeeNumber              string     `db:"employee_number"`
+	CompanyID                   uuid.UUID  `db:"company_id"`
+	BranchID                    uuid.UUID  `db:"branch_id"`
 	TitleID                     uuid.UUID  `db:"title_id"`
 	TitleName                   *string    `db:"title_name"`
 	FirstName                   string     `db:"first_name"`
@@ -87,6 +90,7 @@ type ListResult struct {
 
 type PhotoRecord struct {
 	ID            uuid.UUID `db:"id"`
+	CompanyID     uuid.UUID `db:"company_id"`
 	FileName      string    `db:"file_name"`
 	ContentType   string    `db:"content_type"`
 	FileSizeBytes int64     `db:"file_size_bytes"`
@@ -105,7 +109,7 @@ type AccumRecord struct {
 	UpdatedBy uuid.UUID `db:"updated_by" json:"updatedBy"`
 }
 
-func (r Repository) List(ctx context.Context, page, limit int, search, status, employeeTypeID string, hasOutstandingDebt bool) (ListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, search, status, employeeTypeID string, hasOutstandingDebt bool) (ListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -117,6 +121,16 @@ func (r Repository) List(ctx context.Context, page, limit int, search, status, e
 		args  []interface{}
 	)
 	where = append(where, "e.deleted_at IS NULL")
+
+	// Filter by Company
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	// Filter by Branch (single branch from dropdown)
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
+	}
 
 	switch status {
 	case "terminated":
@@ -149,7 +163,7 @@ func (r Repository) List(ctx context.Context, page, limit int, search, status, e
 SELECT 
   e.id,
   e.employee_number,
-  (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS full_name_th,
+  (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS full_name_th,
   pt.name_th AS title_name,
   et.name_th AS employee_type_name,
   e.phone,
@@ -216,12 +230,14 @@ func (r Repository) GetIDDocumentTypeCode(ctx context.Context, id uuid.UUID) (st
 	return code, nil
 }
 
-func (r Repository) Get(ctx context.Context, id uuid.UUID) (*DetailRecord, error) {
+func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 SELECT 
   e.id,
   e.employee_number,
+  e.company_id,
+  e.branch_id,
   e.title_id,
   e.first_name,
   e.last_name,
@@ -260,10 +276,16 @@ SELECT
   pt.name_th AS title_name
 FROM employees e
 LEFT JOIN person_title pt ON pt.id = e.title_id
-WHERE e.id = $1 AND e.deleted_at IS NULL
+WHERE e.id = $1 AND e.company_id = $2 AND e.deleted_at IS NULL
 LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = strings.Replace(q, "WHERE e.id = $1 AND e.company_id = $2 AND e.deleted_at IS NULL",
+			"WHERE e.id = $1 AND e.company_id = $2 AND e.branch_id = $3 AND e.deleted_at IS NULL", 1)
+		args = append(args, tenant.BranchID)
+	}
 	var rec DetailRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -306,7 +328,7 @@ func (r Repository) DeleteAccum(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r Repository) Create(ctx context.Context, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
+func (r Repository) Create(ctx context.Context, payload DetailRecord, companyID, branchID, actor uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO employees (
@@ -320,6 +342,7 @@ INSERT INTO employees (
   withhold_tax,
   allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
   allow_attendance_bonus_nolate, allow_attendance_bonus_noleave,
+	company_id, branch_id,
   created_by, updated_by
 ) VALUES (
   :employee_number, :title_id, :first_name, :last_name, :nickname,
@@ -332,6 +355,7 @@ INSERT INTO employees (
   :withhold_tax,
   :allow_housing, :allow_water, :allow_electric, :allow_internet, :allow_doctor_fee,
   :allow_attendance_bonus_nolate, :allow_attendance_bonus_noleave,
+  :company_id, :branch_id,
   :created_by, :updated_by
 ) RETURNING *`
 
@@ -379,6 +403,8 @@ INSERT INTO employees (
 		"allow_doctor_fee":               payload.AllowDoctorFee,
 		"allow_attendance_bonus_nolate":  payload.AllowAttendanceBonusNoLate,
 		"allow_attendance_bonus_noleave": payload.AllowAttendanceBonusNoLeave,
+		"company_id":                     companyID,
+		"branch_id":                      branchID,
 		"created_by":                     actor,
 		"updated_by":                     actor,
 	}
@@ -390,9 +416,9 @@ INSERT INTO employees (
 	return &rec, nil
 }
 
-func (r Repository) Update(ctx context.Context, id uuid.UUID, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
+func (r Repository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, payload DetailRecord, actor uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE employees SET
   employee_number=:employee_number,
   title_id=:title_id,
@@ -428,8 +454,15 @@ UPDATE employees SET
   allow_attendance_bonus_nolate=:allow_attendance_bonus_nolate,
   allow_attendance_bonus_noleave=:allow_attendance_bonus_noleave,
   updated_by=:updated_by
-WHERE id=:id AND deleted_at IS NULL
+WHERE id=:id AND company_id=:company_id AND deleted_at IS NULL
 RETURNING *`
+	if tenant.HasBranchID() {
+		q = strings.Replace(q,
+			"WHERE id=:id AND company_id=:company_id AND deleted_at IS NULL",
+			"WHERE id=:id AND company_id=:company_id AND branch_id=:branch_id AND deleted_at IS NULL",
+			1,
+		)
+	}
 
 	stmt, err := db.PrepareNamedContext(ctx, q)
 	if err != nil {
@@ -439,6 +472,7 @@ RETURNING *`
 
 	params := map[string]interface{}{
 		"id":                             id,
+		"company_id":                     tenant.CompanyID,
 		"employee_number":                payload.EmployeeNumber,
 		"title_id":                       payload.TitleID,
 		"first_name":                     payload.FirstName,
@@ -474,6 +508,9 @@ RETURNING *`
 		"allow_attendance_bonus_noleave": payload.AllowAttendanceBonusNoLeave,
 		"updated_by":                     actor,
 	}
+	if tenant.HasBranchID() {
+		params["branch_id"] = tenant.BranchID
+	}
 
 	var rec DetailRecord
 	if err := stmt.GetContext(ctx, &rec, params); err != nil {
@@ -482,10 +519,15 @@ RETURNING *`
 	return &rec, nil
 }
 
-func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r Repository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id)
+	q := `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND company_id = $3 AND deleted_at IS NULL`
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `UPDATE employees SET deleted_at = now(), deleted_by = $1 WHERE id = $2 AND company_id = $3 AND branch_id = $4 AND deleted_at IS NULL`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
@@ -498,13 +540,24 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 func (r Repository) InsertPhoto(ctx context.Context, input PhotoRecord) (*PhotoRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-INSERT INTO employee_photo (file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by`
+WITH ins AS (
+  INSERT INTO employee_photo (company_id, file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
+  ON CONFLICT (company_id, checksum_md5) DO NOTHING
+  RETURNING id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+)
+SELECT id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+FROM ins
+UNION ALL
+SELECT id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+FROM employee_photo
+WHERE company_id = $1 AND checksum_md5 = $6
+LIMIT 1`
 
 	var rec PhotoRecord
 	if err := db.GetContext(ctx, &rec,
 		q,
+		input.CompanyID,
 		input.FileName,
 		input.ContentType,
 		input.FileSizeBytes,
@@ -517,15 +570,15 @@ RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at
 	return &rec, nil
 }
 
-func (r Repository) GetPhoto(ctx context.Context, id uuid.UUID) (*PhotoRecord, error) {
+func (r Repository) GetPhoto(ctx context.Context, id, companyID uuid.UUID) (*PhotoRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-SELECT id, file_name, content_type, file_size_bytes, data, checksum_md5, created_at, created_by
+SELECT id, company_id, file_name, content_type, file_size_bytes, data, checksum_md5, created_at, created_by
 FROM employee_photo
-WHERE id = $1
+WHERE id = $1 AND company_id = $2
 LIMIT 1`
 	var rec PhotoRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, id, companyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil

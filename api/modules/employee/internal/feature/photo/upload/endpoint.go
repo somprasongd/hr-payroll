@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -70,17 +69,11 @@ func NewEndpoint(router fiber.Router) {
 			fileName = "photo"
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
 			FileName:    fileName,
 			ContentType: contentType,
 			Data:        buf.Bytes(),
 			Size:        int64(buf.Len()),
-			ActorID:     user.ID,
 		})
 		if err != nil {
 			return err

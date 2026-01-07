@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
@@ -27,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 // Get default date range (current month)
 const getDefaultStartDate = () => format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -36,6 +38,13 @@ export default function FTWorklogsPage() {
   const t = useTranslations('Worklogs.FT');
   const tCommon = useTranslations('Common');
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+
+  // Read URL query parameters
+  const urlEmployeeId = searchParams.get('employeeId') || '';
+  const urlEntryType = searchParams.get('entryType') || '';
+  const urlStartDate = searchParams.get('startDate') || getDefaultStartDate();
+  const urlEndDate = searchParams.get('endDate') || getDefaultEndDate();
 
   const [worklogs, setWorklogs] = useState<FTWorklog[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -45,12 +54,12 @@ export default function FTWorklogsPage() {
   const [mounted, setMounted] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filters
-  const [employeeFilter, setEmployeeFilter] = useState('');
-  const [entryTypeFilter, setEntryTypeFilter] = useState('');
+  // Filters (initialized from URL params)
+  const [employeeFilter, setEmployeeFilter] = useState(urlEmployeeId);
+  const [entryTypeFilter, setEntryTypeFilter] = useState(urlEntryType);
   const [statusFilter, setStatusFilter] = useState('');
-  const [startDateFilter, setStartDateFilter] = useState(getDefaultStartDate());
-  const [endDateFilter, setEndDateFilter] = useState(getDefaultEndDate());
+  const [startDateFilter, setStartDateFilter] = useState(urlStartDate);
+  const [endDateFilter, setEndDateFilter] = useState(urlEndDate);
 
   // Form state
   const [formOpen, setFormOpen] = useState(false);
@@ -61,6 +70,7 @@ export default function FTWorklogsPage() {
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [worklogToDelete, setWorklogToDelete] = useState<FTWorklog | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Ensure component is mounted before rendering portals
   useEffect(() => {
@@ -68,10 +78,24 @@ export default function FTWorklogsPage() {
     return () => setMounted(false);
   }, []);
 
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployees();
+    setEmployeeFilter('');
+    setEntryTypeFilter('');
+    setStatusFilter('');
+    setStartDateFilter(getDefaultStartDate());
+    setEndDateFilter(getDefaultEndDate());
+    setCurrentPage(1);
+    setWorklogs([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
+  }, []));
+
   useEffect(() => {
     fetchEmployees();
     fetchWorklogs();
-  }, [currentPage, employeeFilter, entryTypeFilter, statusFilter, startDateFilter, endDateFilter]);
+  }, [currentPage, employeeFilter, entryTypeFilter, statusFilter, startDateFilter, endDateFilter, refreshKey]);
 
   // Cleanup on unmount to prevent portal errors
   useEffect(() => {

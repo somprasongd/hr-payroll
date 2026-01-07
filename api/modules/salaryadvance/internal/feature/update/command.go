@@ -12,6 +12,7 @@ import (
 
 	"hrms/modules/salaryadvance/internal/dto"
 	"hrms/modules/salaryadvance/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -23,7 +24,6 @@ import (
 type Command struct {
 	ID      uuid.UUID
 	Payload Request
-	ActorID uuid.UUID
 }
 
 type Response struct {
@@ -53,12 +53,22 @@ type Request struct {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	advDate, payrollMonth, err := validate(cmd.Payload)
 	if err != nil {
 		return nil, err
 	}
 
-	curr, err := h.repo.Get(ctx, cmd.ID)
+	curr, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("salary advance not found")
@@ -79,7 +89,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var updated *repository.Record
 	err = h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		updated, err = h.repo.Update(ctxTx, cmd.ID, rec, cmd.ActorID)
+		updated, err = h.repo.Update(ctxTx, tenant, cmd.ID, rec, user.ID)
 		return err
 	})
 	if err != nil {
@@ -91,7 +101,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE",
 		EntityName: "SALARY_ADVANCE",
 		EntityID:   updated.ID.String(),

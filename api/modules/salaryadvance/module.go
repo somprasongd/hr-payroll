@@ -12,29 +12,29 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 type Module struct {
-	ctx      *module.ModuleContext
-	repo     repository.Repository
-	tokenSvc *jwt.TokenService
-	eb       eventbus.EventBus
+	ctx        *module.ModuleContext
+	repo       repository.Repository
+	tokenSvc   *jwt.TokenService
+	eb         eventbus.EventBus
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
+	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:      ctx,
-		repo:     repository.NewRepository(ctx.DBCtx),
-		tokenSvc: tokenSvc,
+		ctx:        ctx,
+		repo:       repo,
+		tokenSvc:   tokenSvc,
 	}
 }
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
@@ -45,7 +45,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/salary-advances", middleware.Auth(m.tokenSvc))
+	group := r.Group("/salary-advances", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	list.NewEndpoint(group)
 	get.NewEndpoint(group)
 	create.NewEndpoint(group)

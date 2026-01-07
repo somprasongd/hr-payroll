@@ -313,22 +313,24 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
               <CardTitle>{t('fields.itemCount')} ({payout.itemCount})</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('fields.workDate')}</TableHead>
-                    <TableHead>{t('fields.totalHours')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payout.items?.map((item) => (
-                    <TableRow key={item.worklogId}>
-                      <TableCell>{format(new Date(item.workDate), 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>{item.totalHours.toFixed(2)}</TableCell>
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('fields.workDate')}</TableHead>
+                      <TableHead>{t('fields.totalHours')}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {payout.items?.map((item) => (
+                      <TableRow key={item.worklogId}>
+                        <TableCell>{format(new Date(item.workDate), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>{item.totalHours.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </div>

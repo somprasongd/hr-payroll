@@ -1,6 +1,7 @@
 package employee
 
 import (
+	"hrms/modules/employee/doctype"
 	accdelete "hrms/modules/employee/internal/feature/accum/delete"
 	acclist "hrms/modules/employee/internal/feature/accum/list"
 	accupsert "hrms/modules/employee/internal/feature/accum/upsert"
@@ -28,28 +29,28 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 type Module struct {
-	ctx      *module.ModuleContext
-	repo     repository.Repository
-	tokenSvc *jwt.TokenService
+	ctx        *module.ModuleContext
+	repo       repository.Repository
+	tokenSvc   *jwt.TokenService
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
+	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:      ctx,
-		repo:     repository.NewRepository(ctx.DBCtx),
-		tokenSvc: tokenSvc,
+		ctx:        ctx,
+		repo:       repo,
+		tokenSvc:   tokenSvc,
 	}
 }
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) error {
+func (m *Module) Init(eventBus eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
 	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eventBus))
@@ -62,11 +63,14 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 	mediator.Register[*photodownload.Query, *photodownload.Response](photodownload.NewHandler(m.repo))
 	mediator.Register[*photodelete.Command, mediator.NoResponse](photodelete.NewHandler(m.repo, m.ctx.Transactor, eventBus))
 
-	// Document Type handlers
+	// Document Type handlers (custom types - company admin)
 	mediator.Register[*doctypelist.Query, *doctypelist.Response](doctypelist.NewHandler(m.repo))
 	mediator.Register[*doctypecreate.Command, *doctypecreate.Response](doctypecreate.NewHandler(m.repo, eventBus))
 	mediator.Register[*doctypeupdate.Command, *doctypeupdate.Response](doctypeupdate.NewHandler(m.repo, eventBus))
 	mediator.Register[*doctypedelete.Command, mediator.NoResponse](doctypedelete.NewHandler(m.repo, eventBus))
+
+	// System Document Type handlers (superadmin) - uses public doctype package
+	doctype.RegisterSystemHandlers(m.repo, eventBus)
 
 	// Document handlers
 	mediator.Register[*doclist.Query, *doclist.Response](doclist.NewHandler(m.repo))
@@ -80,7 +84,7 @@ func (m *Module) Init(_ registry.ServiceRegistry, eventBus eventbus.EventBus) er
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/employees", middleware.Auth(m.tokenSvc))
+	group := r.Group("/employees", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	// Staff & Admin
 	list.NewEndpoint(group)
 	create.NewEndpoint(group)
@@ -109,15 +113,15 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	accupsert.NewEndpoint(admin)
 	accdelete.NewEndpoint(admin)
 
-	// Document Types - separate top-level route
-	docTypes := r.Group("/employee-document-types", middleware.Auth(m.tokenSvc))
+	// Document Types - separate top-level route (with tenant context)
+	docTypes := r.Group("/employee-document-types", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	doctypelist.NewEndpoint(docTypes)
 	adminDocTypes := docTypes.Group("", middleware.RequireRoles("admin"))
 	doctypecreate.NewEndpoint(adminDocTypes)
 	doctypeupdate.NewEndpoint(adminDocTypes)
 	doctypedelete.NewEndpoint(adminDocTypes)
 
-	// Expiring documents - separate route for dashboard
-	docsAdmin := r.Group("/documents", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"))
+	// Expiring documents - separate route for dashboard (with tenant context)
+	docsAdmin := r.Group("/documents", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin", "hr"), middleware.TenantMiddleware())
 	docexpiring.NewEndpoint(docsAdmin)
 }

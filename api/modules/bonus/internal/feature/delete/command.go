@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/bonus/internal/repository"
+	"hrms/shared/common/contextx"
+
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -18,20 +20,32 @@ import (
 )
 
 type Command struct {
-	ID    uuid.UUID
-	Actor uuid.UUID
-	Repo  repository.Repository
-	Eb    eventbus.EventBus
+	ID uuid.UUID
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
+}
 
 var _ mediator.RequestHandler[*Command, mediator.NoResponse] = (*Handler)(nil)
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
-	cycle, _, err := cmd.Repo.Get(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
+
+	cycle, _, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("bonus cycle not found")
@@ -42,15 +56,17 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 	if cycle.Status == "approved" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete approved cycle")
 	}
-	if err := cmd.Repo.DeleteCycle(ctx, cmd.ID, cmd.Actor); err != nil {
+	if err := h.repo.DeleteCycle(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("bonus cycle not found")
 		}
 		logger.FromContext(ctx).Error("failed to delete bonus cycle", zap.Error(err))
 		return mediator.NoResponse{}, errs.Internal("failed to delete bonus cycle")
 	}
-	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+	h.eb.Publish(events.LogEvent{
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "DELETE",
 		EntityName: "BONUS_CYCLE",
 		EntityID:   cmd.ID.String(),

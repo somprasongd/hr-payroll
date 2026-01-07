@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/payrollorgprofile/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -48,6 +49,11 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	if len(cmd.Data) == 0 {
 		return nil, errs.BadRequest("file is empty")
 	}
@@ -76,6 +82,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   nil,
 		Action:     "UPLOAD_LOGO",
 		EntityName: "PAYROLL_ORG_LOGO",
 		EntityID:   rec.ID.String(),

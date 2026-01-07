@@ -50,38 +50,52 @@ func (r Repository) IDDocumentTypes(ctx context.Context) ([]MasterRecord, error)
 	return out, nil
 }
 
-func (r Repository) Departments(ctx context.Context) ([]MasterRecord, error) {
+func (r Repository) Departments(ctx context.Context, companyID uuid.UUID) ([]MasterRecord, error) {
 	db := r.dbCtx(ctx)
 	var out []MasterRecord
-	if err := db.SelectContext(ctx, &out, `SELECT id, code, name_th FROM department WHERE deleted_at IS NULL ORDER BY name_th`); err != nil {
-		return nil, err
+	if companyID == uuid.Nil {
+		// Fallback for backward compatibility - return all
+		if err := db.SelectContext(ctx, &out, `SELECT id, code, name_th FROM department WHERE deleted_at IS NULL ORDER BY name_th`); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := db.SelectContext(ctx, &out, `SELECT id, code, name_th FROM department WHERE deleted_at IS NULL AND company_id = $1 ORDER BY name_th`, companyID); err != nil {
+			return nil, err
+		}
 	}
 	return out, nil
 }
 
-func (r Repository) EmployeePositions(ctx context.Context) ([]MasterRecord, error) {
+func (r Repository) EmployeePositions(ctx context.Context, companyID uuid.UUID) ([]MasterRecord, error) {
 	db := r.dbCtx(ctx)
 	var out []MasterRecord
-	if err := db.SelectContext(ctx, &out, `SELECT id, code, name_th FROM employee_position WHERE deleted_at IS NULL ORDER BY name_th`); err != nil {
-		return nil, err
+	if companyID == uuid.Nil {
+		// Fallback for backward compatibility - return all
+		if err := db.SelectContext(ctx, &out, `SELECT id, code, name_th FROM employee_position WHERE deleted_at IS NULL ORDER BY name_th`); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := db.SelectContext(ctx, &out, `SELECT id, code, name_th FROM employee_position WHERE deleted_at IS NULL AND company_id = $1 ORDER BY name_th`, companyID); err != nil {
+			return nil, err
+		}
 	}
 	return out, nil
 }
 
-func (r Repository) CreateDepartment(ctx context.Context, code, name string, actor uuid.UUID) (*MasterRecord, error) {
+func (r Repository) CreateDepartment(ctx context.Context, code, name string, companyID, actor uuid.UUID) (*MasterRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-INSERT INTO department (code, name_th, created_by, updated_by)
-VALUES ($1, $2, $3, $3)
+INSERT INTO department (code, name_th, company_id, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $4)
 RETURNING id, code, name_th`
 	var rec MasterRecord
-	if err := db.GetContext(ctx, &rec, q, code, name, actor); err != nil {
+	if err := db.GetContext(ctx, &rec, q, code, name, companyID, actor); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
-func (r Repository) UpdateDepartment(ctx context.Context, id uuid.UUID, code, name string, actor uuid.UUID) (*MasterRecord, error) {
+func (r Repository) UpdateDepartment(ctx context.Context, id uuid.UUID, code, name string, companyID, actor uuid.UUID) (*MasterRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 UPDATE department
@@ -91,18 +105,18 @@ SET code = $1,
     updated_at = now(),
     deleted_at = NULL,
     deleted_by = NULL
-WHERE id = $4 AND deleted_at IS NULL
+WHERE id = $4 AND company_id = $5 AND deleted_at IS NULL
 RETURNING id, code, name_th`
 	var rec MasterRecord
-	if err := db.GetContext(ctx, &rec, q, code, name, actor, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, code, name, actor, id, companyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
-func (r Repository) SoftDeleteDepartment(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r Repository) SoftDeleteDepartment(ctx context.Context, id uuid.UUID, companyID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	res, err := db.ExecContext(ctx, `UPDATE department SET deleted_at = now(), deleted_by = $2 WHERE id = $1 AND deleted_at IS NULL`, id, actor)
+	res, err := db.ExecContext(ctx, `UPDATE department SET deleted_at = now(), deleted_by = $2 WHERE id = $1 AND company_id = $3 AND deleted_at IS NULL`, id, actor, companyID)
 	if err != nil {
 		return err
 	}
@@ -112,20 +126,20 @@ func (r Repository) SoftDeleteDepartment(ctx context.Context, id uuid.UUID, acto
 	return nil
 }
 
-func (r Repository) CreateEmployeePosition(ctx context.Context, code, name string, actor uuid.UUID) (*MasterRecord, error) {
+func (r Repository) CreateEmployeePosition(ctx context.Context, code, name string, companyID, actor uuid.UUID) (*MasterRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
-INSERT INTO employee_position (code, name_th, created_by, updated_by)
-VALUES ($1, $2, $3, $3)
+INSERT INTO employee_position (code, name_th, company_id, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $4)
 RETURNING id, code, name_th`
 	var rec MasterRecord
-	if err := db.GetContext(ctx, &rec, q, code, name, actor); err != nil {
+	if err := db.GetContext(ctx, &rec, q, code, name, companyID, actor); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
-func (r Repository) UpdateEmployeePosition(ctx context.Context, id uuid.UUID, code, name string, actor uuid.UUID) (*MasterRecord, error) {
+func (r Repository) UpdateEmployeePosition(ctx context.Context, id uuid.UUID, code, name string, companyID, actor uuid.UUID) (*MasterRecord, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 UPDATE employee_position
@@ -135,18 +149,18 @@ SET code = $1,
     updated_at = now(),
     deleted_at = NULL,
     deleted_by = NULL
-WHERE id = $4 AND deleted_at IS NULL
+WHERE id = $4 AND company_id = $5 AND deleted_at IS NULL
 RETURNING id, code, name_th`
 	var rec MasterRecord
-	if err := db.GetContext(ctx, &rec, q, code, name, actor, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, code, name, actor, id, companyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
-func (r Repository) SoftDeleteEmployeePosition(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r Repository) SoftDeleteEmployeePosition(ctx context.Context, id uuid.UUID, companyID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	res, err := db.ExecContext(ctx, `UPDATE employee_position SET deleted_at = now(), deleted_by = $2 WHERE id = $1 AND deleted_at IS NULL`, id, actor)
+	res, err := db.ExecContext(ctx, `UPDATE employee_position SET deleted_at = now(), deleted_by = $2 WHERE id = $1 AND company_id = $3 AND deleted_at IS NULL`, id, actor, companyID)
 	if err != nil {
 		return err
 	}

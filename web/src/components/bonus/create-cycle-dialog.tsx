@@ -202,9 +202,28 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       });
       onSuccess(createdCycle.id);
     } catch (error: any) {
-      if (error.response?.status === 409) {
-        const detail = error.response?.data?.detail || error.response?.data?.title || '';
-        if (detail.includes('pending bonus cycle')) {
+      console.log('API Error:', error);
+      
+      // Error is now ApiError from api-client.ts
+      const statusCode = error.statusCode;
+      const detail = error.detail || '';
+      
+      console.log('Status:', statusCode);
+      console.log('Detail:', detail);
+      
+      if (statusCode === 409 || statusCode === 500) {
+        // Known error codes from API
+        const knownErrorCodes = [
+          'BONUS_CYCLE_APPROVED_EXISTS',
+          'BONUS_CYCLE_PENDING_EXISTS',
+          'BONUS_CYCLE_PERIOD_EXISTS',
+          'BONUS_CYCLE_CREATE_FAILED'
+        ];
+        
+        if (knownErrorCodes.includes(detail)) {
+          console.log('Found known error code, translating:', `errors.${detail}`);
+          setErrorMessage(t(`errors.${detail}`));
+        } else if (detail.includes('pending bonus cycle')) {
           setErrorMessage(t('errors.conflictPending'));
         } else if (detail.includes('approved bonus cycle')) {
           setErrorMessage(t('errors.conflictApproved'));

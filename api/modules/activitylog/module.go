@@ -1,14 +1,17 @@
 package activitylog
 
 import (
+	"hrms/modules/activitylog/internal/feature/filteroptions"
+	"hrms/modules/activitylog/internal/feature/list"
+	"hrms/modules/activitylog/internal/feature/superadminfilteroptions"
+	"hrms/modules/activitylog/internal/feature/superadminlist"
 	"hrms/modules/activitylog/internal/repository"
 	"hrms/modules/activitylog/internal/subscriber"
-	"hrms/modules/activitylog/internal/transport/http"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/jwt"
+	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -20,10 +23,11 @@ type Module struct {
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
+	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
 		ctx:      ctx,
 		tokenSvc: tokenSvc,
-		repo:     repository.NewRepository(ctx.DBCtx),
+		repo:     repo,
 	}
 }
 
@@ -31,20 +35,30 @@ func (m *Module) APIVersion() string {
 	return "v1"
 }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
-	sub := subscriber.NewLogSubscriber(m.repo)
+func (m *Module) Init(eb eventbus.EventBus) error {
+	// Register handlers with mediator
+	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
+	mediator.Register[*filteroptions.Query, *filteroptions.Response](filteroptions.NewHandler(m.repo))
 
+	// Super admin handlers
+	mediator.Register[*superadminlist.Query, *superadminlist.Response](superadminlist.NewHandler(m.repo))
+	mediator.Register[*superadminfilteroptions.Query, *superadminfilteroptions.Response](superadminfilteroptions.NewHandler(m.repo))
+
+	// Subscribe to events
+	sub := subscriber.NewLogSubscriber(m.repo)
 	eb.Subscribe("LogEvent", sub.HandleLogActivity)
 
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	handler := http.NewHandler(m.repo)
-
 	// Admin only
-	g := r.Group("/admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
-	g.Get("/", handler.ListLogs)
-	g.Get("/latest", handler.ListLogs)
-	g.Get("/filter-options", handler.GetFilterOptions)
+	g := r.Group("/admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
+	list.NewEndpoint(g)
+	filteroptions.NewEndpoint(g)
+
+	// Super admin only (no TenantMiddleware - for system-level logs)
+	sa := r.Group("/super-admin/activity-logs", middleware.Auth(m.tokenSvc), middleware.RequireRoles("superadmin"))
+	superadminlist.NewEndpoint(sa)
+	superadminfilteroptions.NewEndpoint(sa)
 }

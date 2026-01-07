@@ -1,33 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { Link, useRouter } from '@/i18n/routing';
-import { Button } from '@/components/ui/button';
-import { Plus, Search, Edit, Trash2, Filter, RotateCcw } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { employeeService, Employee, EmployeeType } from '@/services/employee.service';
-import { GenericDataTable } from '@/components/common/generic-data-table';
-import { FilterBar } from '@/components/common/filter-bar';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
-import { ActionDropdown } from '@/components/common/action-dropdown';
 import { EmployeePhoto } from '@/components/common/employee-photo';
 import { EmployeeTypeBadge } from '@/components/common/employee-type-badge';
+import { FilterBar } from '@/components/common/filter-bar';
+import { GenericDataTable } from '@/components/common/generic-data-table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useBranchChange } from '@/hooks/use-branch-change';
+import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
+import { Employee, employeeService, EmployeeType } from '@/services/employee.service';
+import { Edit, Filter, Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function EmployeesPage() {
   const t = useTranslations('Employees');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlEmployeeType = searchParams.get('employeeType'); // FT, PT from URL
+  
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeeTypes, setEmployeeTypes] = useState<EmployeeType[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [employeeTypeFilter, setEmployeeTypeFilter] = useState('all');
+  const [employeeTypeCodeFilter, setEmployeeTypeCodeFilter] = useState<string | null>(urlEmployeeType);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployeeTypes();
+    fetchEmployees();
+  }, []));
 
   useEffect(() => {
     fetchEmployeeTypes();
@@ -36,12 +47,20 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     fetchEmployees();
-  }, [statusFilter, employeeTypeFilter, currentPage]);
+  }, [statusFilter, employeeTypeFilter, employeeTypeCodeFilter, currentPage]);
 
   const fetchEmployeeTypes = async () => {
     try {
       const response = await employeeService.getEmployeeTypes();
       setEmployeeTypes(response || []);
+      
+      // If we have a URL employeeType code, find the matching type ID and set it as filter
+      if (urlEmployeeType && response) {
+        const matchingType = response.find(t => t.code === urlEmployeeType);
+        if (matchingType) {
+          setEmployeeTypeFilter(matchingType.id);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch employee types', error);
     }
@@ -54,6 +73,7 @@ export default function EmployeesPage() {
         search,
         status: statusFilter === 'all' ? undefined : statusFilter,
         employeeTypeId: employeeTypeFilter === 'all' ? undefined : employeeTypeFilter,
+        employeeTypeCode: employeeTypeCodeFilter || undefined,
         page: currentPage,
         limit: 20
       });
@@ -230,6 +250,7 @@ export default function EmployeesPage() {
         onClearAll={() => {
           setSearch('');
           setEmployeeTypeFilter('all');
+          setEmployeeTypeCodeFilter(null);
           setStatusFilter('all');
           setCurrentPage(1);
           fetchEmployees();

@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -19,6 +21,7 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 
 type Record struct {
 	ID              uuid.UUID  `db:"id"`
+	CompanyID       uuid.UUID  `db:"company_id"`
 	VersionNo       int64      `db:"version_no"`
 	StartDate       time.Time  `db:"start_date"`
 	EndDate         *time.Time `db:"end_date"`
@@ -45,6 +48,7 @@ type Record struct {
 
 type LogoRecord struct {
 	ID            uuid.UUID `db:"id"`
+	CompanyID     uuid.UUID `db:"company_id"`
 	FileName      string    `db:"file_name"`
 	ContentType   string    `db:"content_type"`
 	FileSizeBytes int64     `db:"file_size_bytes"`
@@ -60,6 +64,11 @@ type ListResult struct {
 }
 
 func (r Repository) List(ctx context.Context, page, limit int) (ListResult, error) {
+	companyID, err := requireCompany(ctx)
+	if err != nil {
+		return ListResult{}, err
+	}
+
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	if offset < 0 {
@@ -69,6 +78,7 @@ func (r Repository) List(ctx context.Context, page, limit int) (ListResult, erro
 	const baseQuery = `
 SELECT
   id,
+  company_id,
   COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
@@ -92,10 +102,11 @@ SELECT
   updated_by,
   status = 'active' AS effective_active
 FROM payroll_org_profile
+WHERE company_id = $1
 ORDER BY version_no DESC
-LIMIT $1 OFFSET $2`
+LIMIT $2 OFFSET $3`
 
-	rows, err := db.QueryxContext(ctx, baseQuery, limit, offset)
+	rows, err := db.QueryxContext(ctx, baseQuery, companyID, limit, offset)
 	if err != nil {
 		return ListResult{}, err
 	}
@@ -110,9 +121,9 @@ LIMIT $1 OFFSET $2`
 		items = append(items, rec)
 	}
 
-	const countQ = `SELECT COUNT(1) FROM payroll_org_profile`
+	const countQ = `SELECT COUNT(1) FROM payroll_org_profile WHERE company_id = $1`
 	var total int
-	if err := db.GetContext(ctx, &total, countQ); err != nil {
+	if err := db.GetContext(ctx, &total, countQ, companyID); err != nil {
 		return ListResult{}, err
 	}
 
@@ -120,10 +131,16 @@ LIMIT $1 OFFSET $2`
 }
 
 func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Record, error) {
+	companyID, err := requireCompany(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT
   id,
+  company_id,
   COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
@@ -147,20 +164,26 @@ SELECT
   updated_by,
   status = 'active' AS effective_active
 FROM payroll_org_profile
-WHERE id = $1
+WHERE id = $1 AND company_id = $2
 LIMIT 1`
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, id, companyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
 }
 
 func (r Repository) GetEffective(ctx context.Context, date time.Time) (*Record, error) {
+	companyID, err := requireCompany(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := r.dbCtx(ctx)
 	const q = `
 SELECT
   id,
+  company_id,
   COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
@@ -183,11 +206,14 @@ SELECT
   created_by,
   updated_by,
   status = 'active' AS effective_active
-FROM get_effective_org_profile($1)
-WHERE id IS NOT NULL
+FROM payroll_org_profile
+WHERE company_id = $2
+  AND status = 'active'
+  AND effective_daterange @> $1::date
+ORDER BY lower(effective_daterange) DESC, version_no DESC
 LIMIT 1`
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, date); err != nil {
+	if err := db.GetContext(ctx, &rec, q, date, companyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -212,10 +238,28 @@ type UpsertPayload struct {
 }
 
 func (r Repository) Create(ctx context.Context, payload UpsertPayload, actor uuid.UUID) (*Record, error) {
+	companyID, err := requireCompany(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.CreateDirect(ctx, companyID, payload, actor)
+}
+
+// CreateDirect creates an org profile with an explicit companyID (used when creating a new company)
+func (r Repository) CreateDirect(ctx context.Context, companyID uuid.UUID, payload UpsertPayload, actor uuid.UUID) (*Record, error) {
 	db := r.dbCtx(ctx)
 	const q = `
+WITH next_version AS (
+  SELECT
+    pg_advisory_xact_lock(hashtext(($2::uuid)::text)::bigint) AS locked,
+    COALESCE(MAX(version_no), 0) + 1 AS version_no
+  FROM payroll_org_profile
+  WHERE company_id = $2::uuid
+)
 INSERT INTO payroll_org_profile (
   effective_daterange,
+  company_id,
+  version_no,
   company_name,
   address_line1,
   address_line2,
@@ -232,12 +276,16 @@ INSERT INTO payroll_org_profile (
   status,
   created_by,
   updated_by
-) VALUES (
+) OVERRIDING SYSTEM VALUE
+SELECT
   daterange($1::date, NULL, '[)'),
-  $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,COALESCE($15::config_status, 'active'::config_status),$16,$16
-)
+  $2::uuid,
+  next_version.version_no,
+  $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::config_status, 'active'::config_status),$17,$17
+FROM next_version
 RETURNING
   id,
+  company_id,
   COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
@@ -264,6 +312,7 @@ RETURNING
 	var rec Record
 	if err := db.GetContext(ctx, &rec, q,
 		payload.StartDate,
+		companyID,
 		payload.CompanyName,
 		payload.AddressLine1,
 		payload.AddressLine2,
@@ -286,6 +335,11 @@ RETURNING
 }
 
 func (r Repository) Update(ctx context.Context, id uuid.UUID, payload UpsertPayload, actor uuid.UUID) (*Record, error) {
+	companyID, err := requireCompany(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := r.dbCtx(ctx)
 	const q = `
 UPDATE payroll_org_profile
@@ -307,9 +361,10 @@ SET
   status = COALESCE($15::config_status, status),
   updated_by = $16,
   updated_at = now()
-WHERE id = $17
+WHERE id = $17 AND company_id = $18
 RETURNING
   id,
+  company_id,
   COALESCE(version_no, 0) AS version_no,
   lower(effective_daterange) AS start_date,
   NULLIF(upper(effective_daterange), 'infinity') AS end_date,
@@ -352,6 +407,7 @@ RETURNING
 		payload.Status,
 		actor,
 		id,
+		companyID,
 	); err != nil {
 		return nil, err
 	}
@@ -359,24 +415,30 @@ RETURNING
 }
 
 func (r Repository) InsertLogo(ctx context.Context, input LogoRecord) (*LogoRecord, error) {
+	companyID, err := requireCompany(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := r.dbCtx(ctx)
 	const q = `
 WITH ins AS (
-  INSERT INTO payroll_org_logo (file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
-  VALUES ($1, $2, $3, $4, $5, $6)
-  ON CONFLICT (checksum_md5) DO NOTHING
-  RETURNING id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+  INSERT INTO payroll_org_logo (company_id, file_name, content_type, file_size_bytes, data, checksum_md5, created_by)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
+  ON CONFLICT (company_id, checksum_md5) DO NOTHING
+  RETURNING id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
 )
-SELECT id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+SELECT id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
 FROM ins
 UNION ALL
-SELECT id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
+SELECT id, company_id, file_name, content_type, file_size_bytes, checksum_md5, created_at, created_by
 FROM payroll_org_logo
-WHERE checksum_md5 = $5
+WHERE company_id = $1 AND checksum_md5 = $6
 LIMIT 1`
 
 	var rec LogoRecord
 	if err := db.GetContext(ctx, &rec, q,
+		companyID,
 		input.FileName,
 		input.ContentType,
 		input.FileSizeBytes,
@@ -390,15 +452,58 @@ LIMIT 1`
 }
 
 func (r Repository) GetLogo(ctx context.Context, id uuid.UUID) (*LogoRecord, error) {
+	companyID, err := requireCompany(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := r.dbCtx(ctx)
 	const q = `
-SELECT id, file_name, content_type, file_size_bytes, data, checksum_md5, created_at, created_by
+SELECT id, company_id, file_name, content_type, file_size_bytes, data, checksum_md5, created_at, created_by
 FROM payroll_org_logo
-WHERE id = $1
+WHERE id = $1 AND company_id = $2
 LIMIT 1`
 	var rec LogoRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, id, companyID); err != nil {
 		return nil, err
 	}
 	return &rec, nil
+}
+
+func requireCompany(ctx context.Context) (uuid.UUID, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return uuid.Nil, errors.New("tenant company not found in context")
+	}
+	return tenant.CompanyID, nil
+}
+
+// Tenant middleware helpers
+func (r Repository) HasCompanyAccess(userID, companyID uuid.UUID) bool {
+	db := r.dbCtx(context.Background())
+	var count int
+	err := db.GetContext(context.Background(), &count,
+		`SELECT COUNT(*) FROM user_company_roles WHERE user_id = $1 AND company_id = $2`,
+		userID, companyID)
+	return err == nil && count > 0
+}
+
+func (r Repository) GetUserBranches(userID, companyID uuid.UUID) ([]uuid.UUID, error) {
+	db := r.dbCtx(context.Background())
+	var ids []uuid.UUID
+	err := db.SelectContext(context.Background(), &ids,
+		`SELECT branch_id FROM user_branch_access uba
+		 JOIN branches b ON b.id = uba.branch_id
+		 WHERE uba.user_id = $1 AND b.company_id = $2`,
+		userID, companyID)
+	return ids, err
+}
+
+func (r Repository) IsAdmin(userID, companyID uuid.UUID) bool {
+	db := r.dbCtx(context.Background())
+	var role string
+	err := db.GetContext(context.Background(), &role,
+		`SELECT role FROM user_company_roles WHERE user_id = $1 AND company_id = $2`,
+		userID, companyID)
+	return err == nil && role == "admin"
 }

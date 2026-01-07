@@ -10,6 +10,7 @@ import (
 
 	"hrms/modules/payrollconfig/internal/dto"
 	"hrms/modules/payrollconfig/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -44,6 +45,11 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	applyDefaults(&cmd.Payload)
 
 	if err := validatePayload(cmd.Payload); err != nil {
@@ -55,7 +61,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var created *repository.Record
 	err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = h.repo.Create(ctxTx, recPayload, cmd.ActorID)
+		created, err = h.repo.Create(ctxTx, recPayload, tenant.CompanyID, cmd.ActorID)
 		return err
 	})
 	if err != nil {
@@ -65,6 +71,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
 		Action:     "CREATE",
 		EntityName: "PAYROLL_CONFIG",
 		EntityID:   created.ID.String(),
@@ -170,7 +177,7 @@ const (
 	defaultTaxStandardExpenseCap      = 100000.00
 	defaultTaxPersonalAllowanceAmount = 60000.00
 	defaultWithholdingTaxRateService  = 0.03
-	defaultSocialSecurityWageCap      = 15000.00
+	defaultSocialSecurityWageCap      = 17500.00
 	defaultWorkHoursPerDay            = 8.0
 	defaultLateRatePerMinute          = 5.0
 	defaultLateGraceMinutes           = 15

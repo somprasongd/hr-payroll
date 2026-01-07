@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export function DebtList() {
   const t = useTranslations('Debt');
@@ -52,7 +53,7 @@ export function DebtList() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [employeeFilter, setEmployeeFilter] = useState<string>(searchParams.get('employeeId') || 'all');
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -63,7 +64,23 @@ export function DebtList() {
   const [pendingInstallments, setPendingInstallments] = useState(0);
   const [hasOutstandingFilter, setHasOutstandingFilter] = useState(true);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployees();
+    setEmployeeFilter('all');
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setHasOutstandingFilter(true);
+    setPage(1);
+    setData([]);
+    setOutstandingDebt(0);
+    setPendingInstallments(0);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
+  }, []));
 
   useEffect(() => {
     fetchEmployees();
@@ -154,7 +171,7 @@ export function DebtList() {
 
   useEffect(() => {
     fetchData();
-  }, [page, statusFilter, typeFilter, employeeFilter]);
+  }, [page, statusFilter, typeFilter, employeeFilter, refreshKey]);
 
   const handleDelete = async () => {
     if (!deleteItem) return;
@@ -297,7 +314,7 @@ export function DebtList() {
                 employees={employees}
                 selectedEmployeeId={employeeFilter}
                 onSelect={setEmployeeFilter}
-                placeholder={t('fields.employee')}
+                placeholder={t('filters.selectEmployee')}
                 searchPlaceholder={tCommon('search')}
                 emptyText={tCommon('noData')}
               />

@@ -1,5 +1,5 @@
 CREATE TABLE activity_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID NOT NULL REFERENCES users(id),
     action VARCHAR(50) NOT NULL,
     entity VARCHAR(100) NOT NULL,

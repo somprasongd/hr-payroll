@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Upload, Download, Trash2, FileText, Image, Loader2, Eye, Calendar } from 'lucide-react';
+import { 
+  Upload, Download, Trash2, FileText, Image, Loader2, Eye, Calendar,
+  ChevronsUpDown, Check, X, ChevronDown
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +44,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 import { 
   employeeDocumentService, 
@@ -60,6 +81,9 @@ export function DocumentTab({ employeeId }: DocumentTabProps) {
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filter state
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string[]>([]);
   
   // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -109,6 +133,26 @@ export function DocumentTab({ employeeId }: DocumentTabProps) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const groupedDocuments = useMemo(() => {
+    // 1. Filter documents based on selected types
+    let filtered = documents;
+    if (selectedTypeFilter.length > 0) {
+      filtered = documents.filter(doc => selectedTypeFilter.includes(doc.documentTypeId));
+    }
+
+    // 2. Group by documentTypeId
+    const groups: Record<string, EmployeeDocument[]> = {};
+    filtered.forEach(doc => {
+      const typeId = doc.documentTypeId;
+      if (!groups[typeId]) {
+        groups[typeId] = [];
+      }
+      groups[typeId].push(doc);
+    });
+
+    return groups;
+  }, [documents, selectedTypeFilter]);
 
   const handleUpload = async () => {
     if (!selectedFile || !selectedTypeId) {
@@ -274,101 +318,190 @@ export function DocumentTab({ employeeId }: DocumentTabProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>{t('title')}</CardTitle>
-            <CardDescription>{t('description')}</CardDescription>
-          </div>
-          <Button type="button" onClick={() => setUploadDialogOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            {t('upload')}
-          </Button>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[250px] justify-between">
+                {selectedTypeFilter.length > 0 ? (
+                  <>
+                    <span className="truncate">
+                      {selectedTypeFilter.map(id => {
+                        const type = documentTypes.find(t => t.id === id);
+                        return locale === 'th' ? type?.nameTh : type?.nameEn;
+                      }).join(', ')}
+                    </span>
+                    <Badge variant="secondary" className="ml-2 shrink-0">{selectedTypeFilter.length}</Badge>
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">{t('filterByType')}</span>
+                )}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[250px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder={t('searchType')} />
+                <CommandList>
+                  <CommandEmpty>{t('noTypeFound')}</CommandEmpty>
+                  <CommandGroup>
+                    {documentTypes.map((type) => {
+                      const isSelected = selectedTypeFilter.includes(type.id);
+                      return (
+                        <CommandItem
+                          key={type.id}
+                          onSelect={() => {
+                            setSelectedTypeFilter(prev => {
+                              if (isSelected) {
+                                return prev.filter(id => id !== type.id);
+                              } else {
+                                return [...prev, type.id];
+                              }
+                            });
+                          }}
+                        >
+                          <div className={cn(
+                            "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                            isSelected ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible"
+                          )}>
+                            <Check className={cn("h-4 w-4")} />
+                          </div>
+                          {locale === 'th' ? type.nameTh : type.nameEn}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          
+          {selectedTypeFilter.length > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setSelectedTypeFilter([])}
+              className="h-8 px-2 lg:px-3"
+            >
+              {t('clearFilter')}
+              <X className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
-      </CardHeader>
-      <CardContent>
-        {documents.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>{t('noDocuments')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {documents.map((doc) => (
-              <div
-                key={doc.id}
-                className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+        
+        <Button type="button" onClick={() => setUploadDialogOpen(true)}>
+          <Upload className="h-4 w-4 mr-2" />
+          {t('upload')}
+        </Button>
+      </div>
+
+      {Object.keys(groupedDocuments).length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
+          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>{documents.length === 0 ? t('noDocuments') : t('noDocumentsMatchFilter')}</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(groupedDocuments).map(([typeId, docs]) => {
+            const type = documentTypes.find(t => t.id === typeId);
+            const typeName = type ? (locale === 'th' ? type.nameTh : type.nameEn) : t('other');
+            
+            return (
+              <Collapsible
+                key={typeId}
+                defaultOpen={true}
+                className="border rounded-lg bg-card"
               >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0">
-                    {getFileIcon(doc.contentType)}
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-4 font-medium hover:bg-muted/50 rounded-t-lg">
+                  <div className="flex items-center gap-2">
+                    {typeName}
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {docs.length}
+                    </Badge>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate" title={doc.fileName}>
-                      {doc.fileName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {getTypeName(doc)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(doc.fileSizeBytes)}
-                    </p>
-                    {doc.expiryDate && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Calendar className="h-3 w-3" />
-                        <span className="text-xs">
-                          {t('expiryLabel')}: {new Date(doc.expiryDate).toLocaleDateString(locale)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="mt-2">
-                      {getExpiryBadge(doc)}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-1 mt-3">
-                  {(doc.contentType.startsWith('image/') || doc.contentType === 'application/pdf') && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => handlePreview(doc)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>{t('preview')}</TooltipContent>
-                    </Tooltip>
-                  )}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => handleDownload(doc)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('download')}</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        variant="outline" 
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => {
-                          setDocumentToDelete(doc);
-                          setDeleteDialogOpen(true);
-                        }}
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="p-4 pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t">
+                    {docs.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-background"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('delete')}</TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0">
+                            {getFileIcon(doc.contentType)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate" title={doc.fileName}>
+                              {doc.fileName}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {getTypeName(doc)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatFileSize(doc.fileSizeBytes)}
+                            </p>
+                            {doc.expiryDate && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Calendar className="h-3 w-3" />
+                                <span className="text-xs">
+                                  {t('expiryLabel')}: {new Date(doc.expiryDate).toLocaleDateString(locale)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="mt-2">
+                              {getExpiryBadge(doc)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 mt-3">
+                          {(doc.contentType.startsWith('image/') || doc.contentType === 'application/pdf') && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => handlePreview(doc)}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t('preview')}</TooltipContent>
+                            </Tooltip>
+                          )}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => handleDownload(doc)}>
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('download')}</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                type="button"
+                                variant="outline" 
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  setDocumentToDelete(doc);
+                                  setDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('delete')}</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
+        </div>
+      )}
 
       {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={(open) => {
@@ -571,6 +704,6 @@ export function DocumentTab({ employeeId }: DocumentTabProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </div>
   );
 }

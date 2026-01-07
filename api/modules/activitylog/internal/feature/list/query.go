@@ -1,0 +1,72 @@
+package list
+
+import (
+	"context"
+
+	"go.uber.org/zap"
+
+	"hrms/modules/activitylog/internal/entity"
+	"hrms/modules/activitylog/internal/repository"
+	"hrms/shared/common/contextx"
+	"hrms/shared/common/errs"
+	"hrms/shared/common/logger"
+)
+
+type Query struct {
+	Page     int
+	Limit    int
+	Action   string
+	Entity   string
+	FromDate string
+	ToDate   string
+	UserName string
+}
+
+type Meta struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+	Total int `json:"total"`
+}
+
+type Response struct {
+	Data []entity.ActivityLog `json:"data"`
+	Meta Meta                 `json:"meta"`
+}
+
+type queryHandler struct {
+	repo *repository.Repository
+}
+
+func NewHandler(repo *repository.Repository) *queryHandler {
+	return &queryHandler{repo: repo}
+}
+
+func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	filter := repository.ListFilter{
+		Action:   q.Action,
+		Entity:   q.Entity,
+		FromDate: q.FromDate,
+		ToDate:   q.ToDate,
+		UserName: q.UserName,
+	}
+
+	logs, total, err := h.repo.ListLogs(ctx, tenant, filter, q.Page, q.Limit)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to list activity logs", zap.Error(err))
+		return nil, errs.Internal("failed to list activity logs")
+	}
+
+	return &Response{
+		Data: logs,
+		Meta: Meta{
+			Page:  q.Page,
+			Limit: q.Limit,
+			Total: total,
+		},
+	}, nil
+}

@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -21,7 +22,6 @@ type Command struct {
 	AccumType  string    `json:"accumType"`
 	AccumYear  *int      `json:"accumYear"`
 	Amount     float64   `json:"amount"`
-	Actor      uuid.UUID
 }
 
 type Response struct {
@@ -40,6 +40,16 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	cmd.AccumType = strings.TrimSpace(cmd.AccumType)
 	validTypes := map[string]struct{}{
 		"tax": {}, "sso": {}, "sso_employer": {}, "income": {}, "pf": {}, "pf_employer": {}, "loan_outstanding": {},
@@ -63,7 +73,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		AccumYear: cmd.AccumYear,
 		Amount:    cmd.Amount,
 	}
-	out, err := h.repo.CreateAccum(ctx, cmd.EmployeeID, rec, cmd.Actor)
+	out, err := h.repo.CreateAccum(ctx, cmd.EmployeeID, rec, user.ID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to upsert accumulation", zap.Error(err))
 		return nil, errs.Internal("failed to upsert accumulation")
@@ -78,7 +88,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPSERT",
 		EntityName: "EMPLOYEE_ACCUM",
 		EntityID:   cmd.EmployeeID.String(),

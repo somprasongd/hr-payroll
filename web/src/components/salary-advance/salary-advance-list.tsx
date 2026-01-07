@@ -1,7 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Filter, Plus, Trash2, SquarePen, RotateCcw, MoreHorizontal } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -10,23 +21,13 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, MoreHorizontal, Filter, Plus, X, Trash2, Pencil, Search, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { ColumnDef } from '@tanstack/react-table';
 import { salaryAdvanceService, SalaryAdvance } from '@/services/salary-advance-service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
@@ -43,29 +44,43 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Combobox } from "@/components/ui/combobox";
 import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
+import { useBranchChange } from '@/hooks/use-branch-change';
 import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
 
 export function SalaryAdvanceList() {
   const t = useTranslations('SalaryAdvance');
   const tCommon = useTranslations('Common');
   const { toast } = useToast();
   const user = useAuthStore((state) => state.user);
+  const searchParams = useSearchParams();
   
   const [data, setData] = useState<SalaryAdvance[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
   const [employeeFilter, setEmployeeFilter] = useState<string>('all');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [editItem, setEditItem] = useState<SalaryAdvance | null>(null);
   const [deleteItem, setDeleteItem] = useState<SalaryAdvance | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployees();
+    setEmployeeFilter('all');
+    setStatusFilter('all');
+    setPage(1);
+    setData([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
+  }, []));
 
   useEffect(() => {
     fetchEmployees();
@@ -105,7 +120,7 @@ export function SalaryAdvanceList() {
 
   useEffect(() => {
     fetchData();
-  }, [page, statusFilter, employeeFilter]);
+  }, [page, statusFilter, employeeFilter, refreshKey]);
 
   const handleDelete = async () => {
     if (!deleteItem) return;
@@ -133,6 +148,53 @@ export function SalaryAdvanceList() {
     setEmployeeFilter('all');
     setPage(1);
   };
+
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<SalaryAdvance>[] = useMemo(() => [
+    {
+      accessorKey: 'advanceDate',
+      header: t('advanceDate'),
+      cell: ({ row }) => format(new Date(row.original.advanceDate), 'dd/MM/yyyy'),
+    },
+    {
+      accessorKey: 'amount',
+      header: t('amount'),
+      cell: ({ row }) => row.original.amount.toLocaleString(),
+    },
+    {
+      accessorKey: 'payrollMonthDate',
+      header: t('payrollMonth'),
+      cell: ({ row }) => format(new Date(row.original.payrollMonthDate), 'MM/yyyy'),
+    },
+    {
+      accessorKey: 'status',
+      header: t('status'),
+      cell: ({ row }) => (
+        <Badge variant={row.original.status === 'processed' ? 'default' : 'secondary'}>
+          {t(`status${row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}`)}
+        </Badge>
+      ),
+    },
+  ], [t]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<SalaryAdvance>[] = useMemo(() => [
+    {
+      label: tCommon('edit'),
+      icon: <SquarePen className="h-4 w-4" />,
+      onClick: (item) => setEditItem(item),
+      condition: (item) => item.status === 'pending' && user?.role === 'admin',
+      showInDropdown: true,
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: (item) => setDeleteItem(item),
+      condition: (item) => item.status === 'pending' && user?.role === 'admin',
+      showInDropdown: true,
+    },
+  ], [tCommon, user]);
 
   return (
     <div className="space-y-6">
@@ -249,26 +311,23 @@ export function SalaryAdvanceList() {
                   </TableCell>
                   <TableCell>
                     {item.status === 'pending' && user?.role === 'admin' && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditItem(item)}>
-                            <Pencil className="w-4 h-4 mr-2" />
-                            {tCommon('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={() => setDeleteItem(item)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {tCommon('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setEditItem(item)}
+                        >
+                          <SquarePen className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => setDeleteItem(item)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>

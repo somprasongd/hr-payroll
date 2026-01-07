@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { Eye, Trash2, Filter, Plus, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,23 +14,25 @@ import { format } from 'date-fns';
 import { GenericDataTable } from '@/components/common/generic-data-table';
 import { FilterBar } from '@/components/common/filter-bar';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export default function BonusListPage() {
   const t = useTranslations('Bonus');
   const tCommon = useTranslations('Common');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [cycles, setCycles] = useState<BonusCycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 13 }, (_, i) => currentYear - 10 + i);
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - i);
 
   const fetchCycles = async () => {
     try {
@@ -58,9 +61,16 @@ export default function BonusListPage() {
     }
   };
 
+  // Refetch when branch changes
+  const currentBranchId = useBranchChange(useCallback(() => {
+    setStatusFilter('all');
+    setYearFilter('all');
+    setCurrentPage(1);
+  }, []));
+
   useEffect(() => {
     fetchCycles();
-  }, [statusFilter, yearFilter, currentPage]);
+  }, [statusFilter, yearFilter, currentPage, currentBranchId]);
 
   const clearFilters = () => {
     setStatusFilter('all');
@@ -197,6 +207,15 @@ export default function BonusListPage() {
       <FilterBar
         filters={[
           {
+            id: 'year',
+            label: t('filters.year'),
+            type: 'select' as const,
+            options: [
+              { value: 'all', label: t('status.allYears') },
+              ...years.map(year => ({ value: year.toString(), label: year.toString() }))
+            ]
+          },
+          {
             id: 'status',
             label: t('filters.status'),
             type: 'select' as const,
@@ -205,15 +224,6 @@ export default function BonusListPage() {
               { value: 'pending', label: t('status.pending') },
               { value: 'approved', label: t('status.approved') },
               { value: 'rejected', label: t('status.rejected') }
-            ]
-          },
-          {
-            id: 'year',
-            label: t('filters.year'),
-            type: 'select' as const,
-            options: [
-              { value: 'all', label: t('status.allYears') },
-              ...years.map(year => ({ value: year.toString(), label: year.toString() }))
             ]
           }
         ]}

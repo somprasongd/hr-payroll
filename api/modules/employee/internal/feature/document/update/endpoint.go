@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -52,11 +51,6 @@ func NewEndpoint(router fiber.Router) {
 			return errs.BadRequest("invalid documentTypeId")
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		var issueDate *time.Time
 		if body.IssueDate != nil && *body.IssueDate != "" {
 			if t, err := time.Parse("2006-01-02", *body.IssueDate); err == nil {
@@ -78,7 +72,6 @@ func NewEndpoint(router fiber.Router) {
 			IssueDate:      issueDate,
 			ExpiryDate:     expiryDate,
 			Notes:          body.Notes,
-			ActorID:        user.ID,
 		})
 		if err != nil {
 			return err

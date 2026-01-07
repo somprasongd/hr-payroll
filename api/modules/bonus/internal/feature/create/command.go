@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -22,10 +22,6 @@ type Command struct {
 	BonusYear    *int   `json:"bonusYear,omitempty"`
 	PeriodStart  string `json:"periodStartDate"`
 	PeriodEnd    string `json:"periodEndDate"`
-	ActorID      uuid.UUID
-	Repo         repository.Repository
-	Tx           transactor.Transactor
-	Eb           eventbus.EventBus
 
 	ParsedPayrollMonth time.Time `json:"-"`
 	ParsedPeriodStart  time.Time `json:"-"`
@@ -37,7 +33,11 @@ type Response struct {
 	dto.Cycle
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 const dateLayout = "2006-01-02"
 
@@ -70,9 +70,21 @@ func (c *Command) ParseDates() error {
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	if cmd.ParsedPayrollMonth.IsZero() || cmd.ParsedPeriodStart.IsZero() || cmd.ParsedPeriodEnd.IsZero() {
 		return nil, errs.BadRequest("payrollMonthDate, periodStartDate, periodEndDate are required")
 	}
@@ -84,24 +96,28 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	var cycle *repository.Cycle
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedBonusYear, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, cmd.ActorID)
+		cycle, err = h.repo.Create(ctxTx, cmd.ParsedPayrollMonth, cmd.ParsedBonusYear, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, tenant.CompanyID, tenant.BranchID, user.ID)
 		return err
 	}); err != nil {
 		switch {
-		case repository.IsUniqueViolation(err, "bonus_cycle_month_approved_uk"):
-			return nil, errs.Conflict("approved bonus cycle for this payroll month already exists")
-		case repository.IsUniqueViolation(err, "bonus_cycle_pending_one_uk"):
-			return nil, errs.Conflict("pending bonus cycle already exists")
+		case repository.IsUniqueViolation(err, "bonus_cycle_month_branch_approved_uk"):
+			return nil, errs.Conflict("BONUS_CYCLE_APPROVED_EXISTS")
+		case repository.IsUniqueViolation(err, "bonus_cycle_pending_branch_uk"):
+			return nil, errs.Conflict("BONUS_CYCLE_PENDING_EXISTS")
+		case repository.IsUniqueViolation(err, "bonus_cycle_period_tenant_uk"):
+			return nil, errs.Conflict("BONUS_CYCLE_PERIOD_EXISTS")
 		default:
 			logger.FromContext(ctx).Error("failed to create bonus cycle", zap.Error(err))
-			return nil, errs.Internal("failed to create bonus cycle")
+			return nil, errs.Internal("BONUS_CYCLE_CREATE_FAILED")
 		}
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+	h.eb.Publish(events.LogEvent{
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "BONUS_CYCLE",
 		EntityID:   cycle.ID.String(),

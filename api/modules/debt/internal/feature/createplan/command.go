@@ -11,6 +11,7 @@ import (
 
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -57,6 +58,11 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
 	txnDate, parsedInstallments, err := validate(cmd)
 	if err != nil {
 		return nil, err
@@ -84,7 +90,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var createdParent *repository.Record
 	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		createdParent, err = h.repo.InsertParent(ctxTx, parentRec, cmd.ActorID)
+		createdParent, err = h.repo.InsertParent(ctxTx, tenant, parentRec, cmd.ActorID)
 		if err != nil {
 			return err
 		}
@@ -100,7 +106,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 				Reason:       cmd.Reason,
 			})
 		}
-		return h.repo.InsertInstallments(ctxTx, createdParent.ID, cmd.EmployeeID, installments, cmd.ActorID)
+		return h.repo.InsertInstallments(ctxTx, tenant, createdParent.ID, cmd.EmployeeID, installments, cmd.ActorID)
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to create debt plan", zap.Error(err))
 		return nil, errs.Internal("failed to create debt plan")
@@ -113,6 +119,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.ActorID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "DEBT_PLAN",
 		EntityID:   createdParent.ID.String(),

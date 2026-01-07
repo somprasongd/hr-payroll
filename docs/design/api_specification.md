@@ -1,6 +1,6 @@
 # HR Management System - API Specification
 
-Version: 1.1.0 (Revised Schema UUIDv7)
+Version: 1.2.0 (Multi-Tenancy Support)
 
 Base URL: <https://api.hrmsystem.com/v1>
 
@@ -15,7 +15,77 @@ Content-Type: application/json
 - **ID Format:** ใช้ **UUID v7** เป็น Primary Key (`id`) สำหรับทุก Resource แทน integer และ public_id เดิม
 - **Date-only Fields:** ช่องที่เป็นวันที่อย่างเดียวส่งและรับเป็น String รูปแบบ `YYYY-MM-DD` (ไม่พ่วงเวลา)
 
-### 1.2 Error Response Format (RFC 7807)
+### 1.2 Multi-Tenancy
+
+ระบบรองรับการแบ่งแยกข้อมูลระหว่างบริษัท (Company) และสาขา (Branch) ผ่าน PostgreSQL Row-Level Security (RLS)
+
+**Key Concepts:**
+
+- **Company Isolation:** ข้อมูลทุกตารางที่เกี่ยวข้องกับ tenant จะมี `company_id` เพื่อแยกแยะ
+- **Branch Isolation:** ข้อมูลที่ต้องแยกตามสาขาจะมี `branch_id` เพิ่มเติม
+- **User Roles:** ผู้ใช้สามารถมี role ที่แตกต่างกันในแต่ละบริษัท (ผ่าน `user_company_roles`)
+- **Branch Access:** ผู้ใช้สามารถเข้าถึงได้เฉพาะสาขาที่ได้รับสิทธิ์ (ผ่าน `user_branch_access`)
+- **Superadmin:** role พิเศษที่สามารถเข้าถึงข้อมูลข้ามบริษัทได้
+
+**Tenant Tables:**
+
+| Category    | Tables                                                                      |
+| ----------- | --------------------------------------------------------------------------- |
+| Core        | `companies`, `branches`, `user_company_roles`, `user_branch_access`         |
+| Employee    | `employees`, `department`, `employee_position`                              |
+| Payroll     | `payroll_config`, `payroll_run`, `payroll_run_item`, `payroll_accumulation` |
+| Worklog     | `worklog_ft`, `worklog_pt`, `payout_pt`, `payout_pt_item`                   |
+| Bonus/Raise | `bonus_cycle`, `bonus_item`, `salary_raise_cycle`, `salary_raise_item`      |
+| Financial   | `salary_advance`, `debt_txn`                                                |
+| Audit       | `activity_logs`                                                             |
+
+**Automatic Tenant Assignment:**
+
+เมื่อสร้างข้อมูลใหม่ ระบบจะ auto-assign tenant columns ผ่าน database triggers:
+
+- Record ที่มี `employee_id` → copy จาก `employees`
+- Record ที่เป็น child → copy จาก parent table
+- Record อื่นๆ → ใช้ DEFAULT company/branch
+
+**Company Creation Auto-Setup:**
+
+เมื่อสร้าง Company ใหม่ผ่าน Super Admin API ระบบจะสร้าง records ต่อไปนี้อัตโนมัติ:
+
+| Record                | Description           | Default Values                                                     |
+| --------------------- | --------------------- | ------------------------------------------------------------------ |
+| `branches`            | สาขาหลัก (Default HQ) | code: 00000, name: สำนักงานใหญ่, is_default: true                  |
+| `payroll_org_profile` | ข้อมูลองค์กร          | company_name: ใช้ชื่อบริษัท, start_date: วันที่ 1 ของเดือนปัจจุบัน |
+| `payroll_config`      | ตั้งค่า Payroll       | SSO: 5%/17500, Tax: default brackets, อื่นๆ: 0                     |
+
+> **หมายเหตุ:** หากสร้าง record ใดล้มเหลว ทั้ง transaction จะ rollback และไม่สร้าง company
+
+**Required Request Headers:**
+
+API ที่ต้องการ tenant context จะต้องส่ง headers ดังนี้:
+
+| Header         | Description                     | Required                   | Example                       |
+| -------------- | ------------------------------- | -------------------------- | ----------------------------- |
+| `X-Company-ID` | UUID ของบริษัทที่ต้องการเข้าถึง | Yes (สำหรับ Platform APIs) | `019347e8-94ca-7d69-9f3a-...` |
+| `X-Branch-ID`  | UUID ของสาขาที่ต้องการดูข้อมูล  | **Yes** (ต้องส่งเสมอ)      | `019347e8-94ca-7d69-9f3b-...` |
+
+**กฎการส่ง Headers:**
+
+1. **Super Admin Routes** (`/super-admin/*`): ไม่ต้องส่ง headers ทั้ง `X-Company-ID` และ `X-Branch-ID`
+2. **Platform Routes** (employees, payroll, worklogs, etc.): **ต้องส่งทั้งสอง headers**
+3. **Branch Selection**: UI จะต้องเลือกสาขาจาก dropdown และส่ง **1 branch ID ต่อครั้ง**
+4. **Error if Missing**: ถ้าไม่ส่ง `X-Branch-ID` จะได้รับ `400 Bad Request` พร้อมข้อความ "X-Branch-ID header is required"
+
+**Example Request with Tenant Headers:**
+
+```http
+GET /employees HTTP/1.1
+Host: api.hrmsystem.com
+Authorization: Bearer eyJhbGciOiJIUzI1Ni...
+X-Company-ID: 019347e8-94ca-7d69-9f3a-1c3d4e5f6789
+X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
+```
+
+### 1.3 Error Response Format (RFC 7807)
 
 เมื่อเกิด Error ระบบจะคืนค่า HTTP Status Code พร้อม Body ในรูปแบบ `application/problem+json`:
 
@@ -31,7 +101,7 @@ Content-Type: application/json
 
 ---
 
-### 1.3 Pagination Defaults
+### 1.4 Pagination Defaults
 
 - `page` เริ่มต้นที่ 1 ถ้าไม่ส่ง หรือส่งค่าน้อยกว่า 1 ระบบจะรีเซ็ตเป็น 1
 - `limit` เริ่มต้นที่ 20 ถ้าไม่ส่ง หรือส่งค่าน้อยกว่าหรือเท่ากับ 0 ระบบจะรีเซ็ตเป็น 20
@@ -642,7 +712,8 @@ User เปลี่ยนรหัสผ่านด้วยตนเอง
 
 หมายเหตุ:
 
-สาเหตุที่แตก effective_daterange (Postgres Type) ออกเป็น startDate และ endDate ใน JSON ก็เพื่อให้ Frontend นำไปแสดงผลได้ง่าย ไม่ต้องมานั่ง Parse String [2025-01-01, 2026-01-01) เอง
+- เบี้ยขยัน (ไม่สาย) จ่ายเมื่อไม่มีการมาสายเลยในงวดนั้น (late minutes = 0 จาก worklog_ft)
+- สาเหตุที่แตก effective_daterange (Postgres Type) ออกเป็น startDate และ endDate ใน JSON ก็เพื่อให้ Frontend นำไปแสดงผลได้ง่าย ไม่ต้องมานั่ง Parse String [2025-01-01, 2026-01-01) เอง
 
 **Error Responses:**
 
@@ -3592,3 +3663,303 @@ Logic (Database Trigger):
 | --------------- | ------------ | ---------------------------------- |
 | **401**         | Unauthorized | ไม่ได้แนบ Token หรือ Token หมดอายุ |
 | **403**         | Forbidden    | ผู้เรียกไม่ใช่ Role `admin`        |
+
+---
+
+## 19. Branch Management (Admin Only)
+
+กลุ่ม API สำหรับจัดการสาขา (Branch) ของบริษัท
+
+### 19.1 List Branches
+
+ดึงรายการสาขาทั้งหมดของบริษัทปัจจุบัน
+
+- **Endpoint:** `GET /admin/branches`
+- **Access:** Admin
+- **Headers:** `X-Company-ID` (required)
+
+**Success Response Example (200 OK):**
+
+```json
+[
+  {
+    "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
+    "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+    "code": "00000",
+    "name": "สำนักงานใหญ่",
+    "status": "active",
+    "isDefault": true,
+    "createdAt": "2025-11-20T10:00:00Z",
+    "updatedAt": "2025-11-20T10:00:00Z"
+  },
+  {
+    "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6790",
+    "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+    "code": "00001",
+    "name": "สาขากะทู้",
+    "status": "active",
+    "isDefault": false,
+    "createdAt": "2025-11-21T09:00:00Z",
+    "updatedAt": "2025-11-21T09:00:00Z"
+  }
+]
+```
+
+**Response Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                | **ประเภท (Type)** | **Required** |
+| --------------- | ----------------------------------------- | ----------------- | ------------ |
+| `id`            | รหัสสาขา (UUIDv7)                         | UUID              | **Yes**      |
+| `companyId`     | รหัสบริษัท                                | UUID              | **Yes**      |
+| `code`          | รหัสสาขา (unique ในบริษัท)                | String            | **Yes**      |
+| `name`          | ชื่อสาขา                                  | String            | **Yes**      |
+| `status`        | สถานะ (`active`, `suspended`, `archived`) | Enum              | **Yes**      |
+| `isDefault`     | เป็นสาขาหลักหรือไม่                       | Boolean           | **Yes**      |
+| `createdAt`     | เวลาที่สร้าง                              | String (ISO 8601) | **Yes**      |
+| `updatedAt`     | เวลาที่แก้ไขล่าสุด                        | String (ISO 8601) | **Yes**      |
+
+**Note:** สาขาที่ถูก soft delete (`deleted_at` IS NOT NULL) จะไม่แสดงในรายการ
+
+---
+
+### 19.2 Create Branch
+
+สร้างสาขาใหม่
+
+- **Endpoint:** `POST /admin/branches`
+- **Access:** Admin
+- **Headers:** `X-Company-ID` (required)
+
+**Request Body Example:**
+
+```json
+{
+  "code": "BR001",
+  "name": "สาขาเซ็นทรัล"
+}
+```
+
+**Request Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** |
+| --------------- | -------------------------- | ----------------- | ------------ |
+| `code`          | รหัสสาขา (1-10 ตัวอักษร)   | String            | **Yes**      |
+| `name`          | ชื่อสาขา (1-100 ตัวอักษร)  | String            | **Yes**      |
+
+**Success Response Example (201 Created):**
+
+```json
+{
+  "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6791",
+  "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+  "code": "BR001",
+  "name": "สาขาเซ็นทรัล",
+  "status": "active",
+  "isDefault": false,
+  "createdAt": "2025-12-19T10:00:00Z",
+  "updatedAt": "2025-12-19T10:00:00Z"
+}
+```
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**      |
+| --------------- | ----------- | --------------------------- |
+| **400**         | Bad Request | ข้อมูลไม่ครบถ้วน            |
+| **409**         | Conflict    | รหัสสาขาซ้ำกับที่มีอยู่แล้ว |
+
+---
+
+### 19.3 Get Branch Detail
+
+ดูรายละเอียดสาขา
+
+- **Endpoint:** `GET /admin/branches/{id}`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Success Response Example (200 OK):** เหมือน 19.1
+
+**Error Responses:**
+
+| **HTTP Status** | **Title** | **Description/Reason** |
+| --------------- | --------- | ---------------------- |
+| **404**         | Not Found | ไม่พบสาขา              |
+
+---
+
+### 19.4 Update Branch
+
+แก้ไขข้อมูลสาขา (เฉพาะสาขาที่มีสถานะ `active` เท่านั้น)
+
+- **Endpoint:** `PATCH /admin/branches/{id}`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Request Body Example:**
+
+```json
+{
+  "code": "BR001",
+  "name": "สาขาเซ็นทรัล พัทยา",
+  "status": "active"
+}
+```
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**                        |
+| --------------- | ----------- | --------------------------------------------- |
+| **400**         | Bad Request | ไม่สามารถแก้ไขสาขาที่ suspended หรือ archived |
+| **404**         | Not Found   | ไม่พบสาขา                                     |
+
+---
+
+### 19.5 Delete Branch (Soft Delete)
+
+ลบสาขา (Soft Delete) **เฉพาะสาขาที่มีสถานะ `archived` เท่านั้น**
+
+- **Endpoint:** `DELETE /admin/branches/{id}`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Business Rules:**
+
+1. **ไม่สามารถลบ Default Branch ได้** - ต้องเปลี่ยน default ไปสาขาอื่นก่อน
+2. **ต้องเก็บถาวร (archive) ก่อน** - สาขาต้องมีสถานะ `archived` ก่อนจึงจะลบได้
+
+**Delete Flow:**
+
+```
+active → archived → deleted (soft delete)
+    ↓
+suspended → archived → deleted (soft delete)
+```
+
+**Success Response:**
+
+- **Status:** `204 No Content`
+- **Body:** Empty
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**                    |
+| --------------- | ----------- | ----------------------------------------- |
+| **400**         | Bad Request | `cannot delete default branch`            |
+| **400**         | Bad Request | `branch must be archived before deletion` |
+| **404**         | Not Found   | ไม่พบสาขา (หรือถูกลบไปแล้ว)               |
+
+**Database Implementation:**
+
+```sql
+-- Soft delete: ไม่ลบจริงแต่ set deleted_at
+UPDATE branches
+SET deleted_at = now(), deleted_by = :actor_id
+WHERE id = :id
+  AND company_id = :company_id
+  AND status = 'archived'
+  AND is_default = FALSE;
+```
+
+---
+
+### 19.6 Set Default Branch
+
+กำหนดสาขาเป็นค่าเริ่มต้น
+
+- **Endpoint:** `PUT /admin/branches/{id}/default`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Success Response:**
+
+- **Status:** `204 No Content`
+
+**Error Responses:**
+
+| **HTTP Status** | **Title** | **Description/Reason** |
+| --------------- | --------- | ---------------------- |
+| **404**         | Not Found | ไม่พบสาขา              |
+
+---
+
+### 19.7 Change Branch Status
+
+เปลี่ยนสถานะสาขา
+
+- **Endpoint:** `PATCH /admin/branches/{id}/status`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Request Body Example:**
+
+```json
+{
+  "status": "suspended"
+}
+```
+
+**Request Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                    | **ประเภท (Type)** | **Required** |
+| --------------- | --------------------------------------------- | ----------------- | ------------ |
+| `status`        | สถานะใหม่ (`active`, `suspended`, `archived`) | Enum              | **Yes**      |
+
+**Status Transitions:**
+
+| From        | To                      | Allowed                |
+| ----------- | ----------------------- | ---------------------- |
+| `active`    | `suspended`, `archived` | ✅ (ถ้าไม่ใช่ default) |
+| `suspended` | `active`, `archived`    | ✅                     |
+| `archived`  | `active`                | ✅                     |
+| `archived`  | `suspended`             | ❌                     |
+| (any)       | non-active (if default) | ❌                     |
+
+**Success Response Example (200 OK):**
+
+```json
+{
+  "branch": {
+    "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6790",
+    "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f0001",
+    "code": "00001",
+    "name": "สาขากะทู้",
+    "status": "suspended",
+    "isDefault": false,
+    "createdAt": "2025-11-21T09:00:00Z",
+    "updatedAt": "2025-12-19T11:00:00Z"
+  },
+  "employeeCount": 5
+}
+```
+
+**Error Responses:**
+
+| **HTTP Status** | **Title**   | **Description/Reason**                               |
+| --------------- | ----------- | ---------------------------------------------------- |
+| **400**         | Bad Request | ไม่สามารถเปลี่ยนสถานะ default branch เป็น non-active |
+| **400**         | Bad Request | ไม่สามารถเปลี่ยนจาก archived เป็น suspended          |
+
+---
+
+### 19.8 Get Branch Employee Count
+
+ดึงจำนวนพนักงานในสาขา (สำหรับแสดง warning ก่อน archive)
+
+- **Endpoint:** `GET /admin/branches/{id}/employee-count`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Success Response Example (200 OK):**
+
+```json
+{
+  "count": 15
+}
+```
+
+**Response Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)** | **ประเภท (Type)** | **Required** |
+| --------------- | -------------------------- | ----------------- | ------------ |
+| `count`         | จำนวนพนักงานในสาขา         | Integer           | **Yes**      |

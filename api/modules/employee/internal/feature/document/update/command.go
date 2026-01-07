@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -22,7 +23,6 @@ type Command struct {
 	IssueDate      *time.Time
 	ExpiryDate     *time.Time
 	Notes          *string
-	ActorID        uuid.UUID
 }
 
 type Response struct {
@@ -41,6 +41,16 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	// Validate document type exists
 	docType, err := h.repo.GetDocumentType(ctx, cmd.DocumentTypeID)
 	if err != nil || docType == nil {
@@ -53,7 +63,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		IssueDate:      cmd.IssueDate,
 		ExpiryDate:     cmd.ExpiryDate,
 		Notes:          cmd.Notes,
-	}, cmd.ActorID)
+	}, user.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("document not found")
@@ -62,7 +72,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE",
 		EntityName: "EMPLOYEE_DOCUMENT",
 		EntityID:   rec.ID.String(),

@@ -10,6 +10,7 @@ import (
 
 	"hrms/modules/salaryadvance/internal/dto"
 	"hrms/modules/salaryadvance/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -20,7 +21,6 @@ import (
 
 type Command struct {
 	Payload Request
-	ActorID uuid.UUID
 }
 
 type Response struct {
@@ -51,6 +51,16 @@ type Request struct {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	advDate, payrollMonth, err := validate(cmd.Payload)
 	if err != nil {
 		return nil, err
@@ -67,7 +77,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var created *repository.Record
 	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = h.repo.Create(ctxTx, rec, cmd.ActorID)
+		created, err = h.repo.Create(ctxTx, tenant, rec, user.ID)
 		return err
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to create salary advance", zap.Error(err))
@@ -75,7 +85,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "CREATE",
 		EntityName: "SALARY_ADVANCE",
 		EntityID:   created.ID.String(),

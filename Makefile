@@ -34,6 +34,15 @@ build:
 	-X 'hrms/build.Time=${BUILD_TIME}'" \
 	-o $(BIN_DIR)/hr-payroll-api ./cmd/api
 
+.PHONY: tidy
+tidy:
+	@echo "Tidying shared modules..."
+	@for dir in api/shared/*/; do (cd $$dir && if [ -f go.mod ]; then go mod tidy; fi); done
+	@echo "Tidying service modules..."
+	@for dir in api/modules/*/; do (cd $$dir && if [ -f go.mod ]; then go mod tidy; fi); done
+	@echo "Tidying app module..."
+	@cd api/app && if [ -f go.mod ]; then go mod tidy; fi
+
 .PHONY: image-api
 image-api:
 	docker build \
@@ -93,6 +102,34 @@ mgu:
 .PHONY: mgd
 mgd:
 	docker run --rm --network host -v $(ROOT_DIR)migrations:/migrations migrate/migrate -verbose -path=/migrations/ -database $(DB_DSN) down 1
+
+.PHONY: mgv
+mgv:
+	docker run --rm --network host -v $(ROOT_DIR)migrations:/migrations migrate/migrate -path=/migrations/ -database "$(DB_DSN)" version
+
+.PHONY: mgf
+# Usage: make mgf VERSION=20251217215346
+mgf:
+	docker run --rm --network host -v $(ROOT_DIR)migrations:/migrations migrate/migrate -path=/migrations/ -database "$(DB_DSN)" force $(VERSION)
+
+.PHONY: db-seed seed
+db-seed seed:
+	@for f in migrations/dev-seed/[0-9]*.sql; do \
+		echo "Running $$f..."; \
+		psql "$(DB_DSN)" -f "$$f"; \
+	done
+
+.PHONY: db-seed-clear
+db-seed-clear:
+	psql "$(DB_DSN)" -f migrations/dev-seed/00_clean_data.sql
+
+.PHONY: test-e2e
+test-e2e:
+	cd web && npx playwright test
+
+.PHONY: test-e2e-ui
+test-e2e-ui:
+	cd web && npx playwright test --ui
 
 .PHONY: doc
 # Install swag by using: go install github.com/swaggo/swag/v2/cmd/swag@latest

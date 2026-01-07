@@ -44,6 +44,8 @@ BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 
+-- Create admin user with role 'admin'
+-- Password: 'changeme'
 INSERT INTO users (username, password_hash, user_role)
   VALUES (
     'admin',

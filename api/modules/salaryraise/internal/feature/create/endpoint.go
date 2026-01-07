@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 
 	"hrms/modules/salaryraise/internal/repository"
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -13,7 +12,7 @@ import (
 )
 
 // @Summary Create salary raise cycle
-// @Description สร้างรอบปรับเงินเดือน (pending)
+// @Description สร้างรอบปรับเงินเดือน (pending) มีได้ 1 รอบต่อสาขา
 // @Tags Salary Raise
 // @Accept json
 // @Produce json
@@ -33,11 +32,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		if err := req.ParseDates(); err != nil {
 			return err
 		}
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-		req.ActorID = user.ID
 		req.Repo = repo
 		req.Tx = tx
 		req.Eb = eb

@@ -35,13 +35,37 @@ type UserListResult struct {
 	Total int
 }
 
-func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter string) (UserListResult, error) {
+type CompanyInfo struct {
+	ID     uuid.UUID `db:"id" json:"id"`
+	Code   string    `db:"code" json:"code"`
+	Name   string    `db:"name" json:"name"`
+	Status string    `db:"status" json:"status"`
+	Role   string    `db:"role" json:"role"`
+}
+
+type BranchInfo struct {
+	ID        uuid.UUID `db:"id" json:"id"`
+	CompanyID uuid.UUID `db:"company_id" json:"companyId"`
+	Code      string    `db:"code" json:"code"`
+	Name      string    `db:"name" json:"name"`
+	Status    string    `db:"status" json:"status"`
+	IsDefault bool      `db:"is_default" json:"isDefault"`
+}
+
+func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter string, companyID uuid.UUID) (UserListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 
 	var args []interface{}
 	var where []string
 	where = append(where, "u.deleted_at IS NULL")
+
+	// Always filter by company via user_company_roles
+	if companyID != uuid.Nil {
+		args = append(args, companyID)
+		where = append(where, fmt.Sprintf("ucr.company_id = $%d", len(args)))
+	}
+
 	if roleFilter != "" {
 		args = append(args, roleFilter)
 		where = append(where, fmt.Sprintf("u.user_role = $%d", len(args)))
@@ -50,14 +74,15 @@ func (r Repository) ListUsers(ctx context.Context, page, limit int, roleFilter s
 	whereClause := strings.Join(where, " AND ")
 	args = append(args, limit, offset)
 
-query := fmt.Sprintf(`
-SELECT u.id, u.username, u.password_hash, u.user_role, u.created_at, u.updated_at,
+	query := fmt.Sprintf(`
+SELECT DISTINCT u.id, u.username, u.password_hash, u.user_role, u.created_at, u.updated_at,
   COALESCE((
     SELECT l.login_at FROM user_access_logs l
     WHERE l.user_id = u.id AND l.status = 'success'
     ORDER BY l.login_at DESC LIMIT 1
   ), NULL) AS last_login_at
 FROM users u
+JOIN user_company_roles ucr ON ucr.user_id = u.id
 WHERE %s
 ORDER BY u.username ASC
 LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
@@ -77,13 +102,47 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 		users = append(users, u)
 	}
 
-	countQuery := "SELECT COUNT(1) FROM users u WHERE " + whereClause
+	countQuery := fmt.Sprintf(`
+SELECT COUNT(DISTINCT u.id) 
+FROM users u 
+JOIN user_company_roles ucr ON ucr.user_id = u.id 
+WHERE %s`, whereClause)
 	var total int
 	if err := db.GetContext(ctx, &total, countQuery, args[:len(args)-2]...); err != nil {
 		return UserListResult{}, err
 	}
 
 	return UserListResult{Users: users, Total: total}, nil
+}
+
+func (r Repository) GetUserCompanies(ctx context.Context, userID uuid.UUID) ([]CompanyInfo, error) {
+	db := r.dbCtx(ctx)
+	var out []CompanyInfo
+	const q = `
+		SELECT c.id, c.code, c.name, c.status, ucr.role
+		FROM companies c
+		JOIN user_company_roles ucr ON ucr.company_id = c.id
+		WHERE ucr.user_id = $1 AND c.status = 'active'
+		ORDER BY c.name`
+	if err := db.SelectContext(ctx, &out, q, userID); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r Repository) GetUserBranches(ctx context.Context, userID uuid.UUID) ([]BranchInfo, error) {
+	db := r.dbCtx(ctx)
+	var out []BranchInfo
+	const q = `
+		SELECT b.id, b.company_id, b.code, b.name, b.status, b.is_default
+		FROM branches b
+		JOIN user_branch_access uba ON uba.branch_id = b.id
+		WHERE uba.user_id = $1 AND b.status = 'active'
+		ORDER BY b.is_default DESC, b.name`
+	if err := db.SelectContext(ctx, &out, q, userID); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (r Repository) CreateUser(ctx context.Context, username, passwordHash, role string, actor uuid.UUID) (*UserRecord, error) {
@@ -155,4 +214,26 @@ func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUI
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+// ===== Methods for superadmin contracts =====
+
+// AssignUserToCompany assigns a user to a company with a role
+func (r Repository) AssignUserToCompany(ctx context.Context, userID, companyID uuid.UUID, role string, actorID uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `INSERT INTO user_company_roles (user_id, company_id, role, created_by)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (user_id, company_id) DO UPDATE SET role = EXCLUDED.role`
+	_, err := db.ExecContext(ctx, q, userID, companyID, role, actorID)
+	return err
+}
+
+// AssignUserToBranch assigns a user to a branch
+func (r Repository) AssignUserToBranch(ctx context.Context, userID, branchID, actorID uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `INSERT INTO user_branch_access (user_id, branch_id, created_by)
+		VALUES ($1, $2, $3)
+		ON CONFLICT DO NOTHING`
+	_, err := db.ExecContext(ctx, q, userID, branchID, actorID)
+	return err
 }

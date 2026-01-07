@@ -45,12 +45,13 @@ func newFiber(cfg config.Config, healthCheck HealthCheck) *fiber.App {
 	app.Use(mw.RequestLogger())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Company-ID", "X-Branch-ID"},
 		AllowMethods:     []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
 		AllowCredentials: false,
 	}))
 	app.Use(recover.New())
 	app.Use(mw.ErrorHandler())
+	app.Use(mw.SuperAdminRouteRestriction())
 
 	app.Get("/favicon.ico", func(c fiber.Ctx) error {
 		return c.SendStatus(http.StatusNoContent)
@@ -63,7 +64,7 @@ func newFiber(cfg config.Config, healthCheck HealthCheck) *fiber.App {
 
 func registerHealthRoutes(app *fiber.App, cfg config.Config, healthCheck HealthCheck) {
 	handler := healthHandler(cfg, healthCheck)
-	for _, route := range []string{"/", "/health", "/api/health", "/api/v1/health"} {
+	for _, route := range []string{"/", "/health", "/api/health", "/api/v1/health", "/api/version"} {
 		app.Get(route, handler)
 	}
 }

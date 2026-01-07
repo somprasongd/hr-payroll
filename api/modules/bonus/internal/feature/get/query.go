@@ -10,28 +10,35 @@ import (
 
 	"hrms/modules/bonus/internal/dto"
 	"hrms/modules/bonus/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
 )
 
 type Query struct {
-	ID   uuid.UUID
-	Repo repository.Repository
+	ID uuid.UUID
 }
 
 type Response struct {
 	dto.Cycle
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+}
 
 var _ mediator.RequestHandler[*Query, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository) *Handler { return &Handler{repo: repo} }
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	c, items, err := q.Repo.Get(ctx, q.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	c, items, err := h.repo.Get(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("bonus cycle not found")

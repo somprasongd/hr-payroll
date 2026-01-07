@@ -2,13 +2,12 @@ package payrollorgprofile
 
 import (
 	"hrms/modules/payrollorgprofile/internal/feature/create"
+	"hrms/modules/payrollorgprofile/internal/feature/createdirect"
 	"hrms/modules/payrollorgprofile/internal/feature/downloadlogo"
 	"hrms/modules/payrollorgprofile/internal/feature/effective"
 	"hrms/modules/payrollorgprofile/internal/feature/get"
 	"hrms/modules/payrollorgprofile/internal/feature/list"
 	"hrms/modules/payrollorgprofile/internal/feature/metalogo"
-	"hrms/modules/payrollorgprofile/internal/feature/publicbranding"
-	"hrms/modules/payrollorgprofile/internal/feature/publiclogo"
 	"hrms/modules/payrollorgprofile/internal/feature/uploadlogo"
 	"hrms/modules/payrollorgprofile/internal/repository"
 	"hrms/shared/common/eventbus"
@@ -16,7 +15,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
-	"hrms/shared/common/registry"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -38,7 +37,7 @@ func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 
 func (m *Module) APIVersion() string { return "v1" }
 
-func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
+func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
@@ -47,27 +46,34 @@ func (m *Module) Init(_ registry.ServiceRegistry, eb eventbus.EventBus) error {
 	mediator.Register[*uploadlogo.Command, *uploadlogo.Response](uploadlogo.NewHandler(m.repo, eb))
 	mediator.Register[*downloadlogo.Query, *downloadlogo.Response](downloadlogo.NewHandler(m.repo))
 	mediator.Register[*metalogo.Query, *metalogo.Response](metalogo.NewHandler(m.repo))
-	// Public branding endpoints (no auth required)
-	mediator.Register[*publicbranding.Query, *publicbranding.Response](publicbranding.NewHandler(m.repo))
-	mediator.Register[*publiclogo.Query, *publiclogo.Response](publiclogo.NewHandler(m.repo))
+
+	// Register contract handler for company creation (bypasses tenant context)
+	mediator.Register[*contracts.CreateOrgProfileDirectCommand, *contracts.CreateOrgProfileDirectResponse](createdirect.NewHandler(m.repo))
+
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	admin := r.Group("/admin/payroll-org-profiles", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
+	admin := r.Group(
+		"/admin/payroll-org-profiles",
+		middleware.Auth(m.tokenSvc),
+		middleware.RequireRoles("admin"),
+		middleware.TenantMiddleware(),
+	)
 	list.NewEndpoint(admin)
 	effective.NewEndpoint(admin)
 	get.NewEndpoint(admin)
 	create.NewEndpoint(admin)
 
-	logo := r.Group("/admin/payroll-org-logos", middleware.Auth(m.tokenSvc), middleware.RequireRoles("admin"))
+	logo := r.Group(
+		"/admin/payroll-org-logos",
+		middleware.Auth(m.tokenSvc),
+		middleware.RequireRoles("admin"),
+		middleware.TenantMiddleware(),
+	)
 	uploadlogo.NewEndpoint(logo)
 	downloadlogo.NewEndpoint(logo)
 	metalogo.NewEndpoint(logo)
 
-	// Public branding routes (no auth required)
-	public := r.Group("/public/branding")
-	publicbranding.NewEndpoint(public)
-	publiclogo.NewEndpoint(public)
-
+	// Note: Public branding routes removed - login page uses static branding
 }

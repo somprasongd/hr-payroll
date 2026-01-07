@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { format } from 'date-fns';
@@ -20,6 +20,7 @@ import {
 import { CreateCycleDialog } from '@/components/payroll/create-cycle-dialog';
 import { payrollService, PayrollRun } from '@/services/payroll.service';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 export default function PayrollPage() {
   const router = useRouter();
@@ -55,6 +56,11 @@ export default function PayrollPage() {
       setLoading(false);
     }
   };
+
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchRuns();
+  }, []));
 
   useEffect(() => {
     fetchRuns();

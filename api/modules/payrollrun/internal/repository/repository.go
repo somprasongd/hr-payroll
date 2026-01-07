@@ -10,6 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"hrms/shared/common/contextx"
+
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -69,12 +71,24 @@ COALESCE(income_total,0)
 
 const deductionExpr = `(COALESCE(income_total,0) - (` + netPayExpr + `))`
 
-func (r Repository) List(ctx context.Context, page, limit int, status string, year *int, month *time.Time) (RunListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, status string, year *int, month *time.Time) (RunListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
 	where = append(where, "deleted_at IS NULL")
+
+	// Company Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("company_id = $%d", len(args)))
+
+	// Branch Filter - Assuming payroll_run has branch_id if created per branch?
+	// Based on Create method: it has branch_id column.
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("branch_id = $%d", len(args)))
+	}
+
 	if s := strings.TrimSpace(status); s != "" && s != "all" {
 		args = append(args, s)
 		where = append(where, fmt.Sprintf("status = $%d", len(args)))
@@ -127,8 +141,15 @@ LIMIT $%d OFFSET $%d`, netPayExpr, deductionExpr, whereClause, len(args)-1, len(
 	return RunListResult{Rows: runs, Total: total}, nil
 }
 
-func (r Repository) Get(ctx context.Context, id uuid.UUID) (*Run, error) {
+func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
+	where := "id=$1 AND deleted_at IS NULL AND company_id=$2"
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		where += " AND branch_id=$3"
+		args = append(args, tenant.BranchID)
+	}
+
 	q := fmt.Sprintf(`
 SELECT id, payroll_month_date, period_start_date, pay_date, status,
        created_at, updated_at, deleted_at, approved_at, approved_by,
@@ -151,23 +172,23 @@ SELECT id, payroll_month_date, period_start_date, pay_date, status,
        COALESCE((SELECT SUM(sso_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_sso,
        COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund
 FROM payroll_run
-WHERE id=$1 AND deleted_at IS NULL
-LIMIT 1`, netPayExpr, deductionExpr)
+WHERE %s
+LIMIT 1`, netPayExpr, deductionExpr, where)
 	var run Run
-	if err := db.GetContext(ctx, &run, q, id); err != nil {
+	if err := db.GetContext(ctx, &run, q, args...); err != nil {
 		return nil, err
 	}
 	return &run, nil
 }
 
-func (r Repository) Create(ctx context.Context, run Run, actor uuid.UUID) (*Run, error) {
+func (r Repository) Create(ctx context.Context, run Run, companyID, branchID, actor uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO payroll_run (
   payroll_month_date, period_start_date, pay_date,
   social_security_rate_employee, social_security_rate_employer,
-  status, created_by, updated_by
-) VALUES ($1,$2,$3,$4,$5,'pending',$6,$6)
+  status, company_id, branch_id, created_by, updated_by
+) VALUES ($1,$2,$3,$4,$5,'pending',$6,$7,$8,$8)
 RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
@@ -177,25 +198,31 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
 	if err := db.GetContext(ctx, &out, q,
 		run.PayrollMonth, run.PeriodStart, run.PayDate,
 		run.SSORateEmp, run.SSORateEmployer,
-		actor,
+		companyID, branchID, actor,
 	); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (r Repository) UpdateStatus(ctx context.Context, id uuid.UUID, status string, payDate *time.Time, actor uuid.UUID) (*Run, error) {
+func (r Repository) UpdateStatus(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, status string, payDate *time.Time, actor uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
-	args := []interface{}{status, actor, id}
+	args := []interface{}{status, actor, id, tenant.CompanyID}
+	where := "id=$3 AND deleted_at IS NULL AND company_id=$4"
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += fmt.Sprintf(" AND branch_id=$%d", len(args))
+	}
+
 	setPayDate := ""
 	if payDate != nil {
-		setPayDate = ", pay_date = $4"
-		args = []interface{}{status, actor, id, *payDate}
+		args = append(args, *payDate)
+		setPayDate = fmt.Sprintf(", pay_date = $%d", len(args))
 	}
 	const base = `
 UPDATE payroll_run
 SET status=$1, updated_by=$2%s
-WHERE id=$3 AND deleted_at IS NULL
+WHERE %s
 RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
@@ -206,7 +233,7 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           COALESCE((SELECT SUM(tax_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_tax,
           COALESCE((SELECT SUM(sso_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_sso,
           COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund`
-	q := fmt.Sprintf(base, setPayDate, netPayExpr, deductionExpr)
+	q := fmt.Sprintf(base, setPayDate, where, netPayExpr, deductionExpr)
 
 	var run Run
 	if err := db.GetContext(ctx, &run, q, args...); err != nil {
@@ -215,12 +242,19 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
 	return &run, nil
 }
 
-func (r Repository) Approve(ctx context.Context, id uuid.UUID, actor uuid.UUID) (*Run, error) {
+func (r Repository) Approve(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) (*Run, error) {
 	db := r.dbCtx(ctx)
+	where := "id=$2 AND deleted_at IS NULL AND status <> 'approved' AND company_id=$3"
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += " AND branch_id=$4"
+	}
+
 	q := fmt.Sprintf(`
 UPDATE payroll_run
 SET status='approved', approved_by=$1, approved_at=COALESCE(approved_at, now()), updated_by=$1
-WHERE id=$2 AND deleted_at IS NULL AND status <> 'approved'
+WHERE %s
 RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           created_at, updated_at, deleted_at, approved_at, approved_by,
           social_security_rate_employee, social_security_rate_employer,
@@ -230,18 +264,24 @@ RETURNING id, payroll_month_date, period_start_date, pay_date, status,
           COALESCE((SELECT SUM(%s) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_deduction,
           COALESCE((SELECT SUM(tax_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_tax,
           COALESCE((SELECT SUM(sso_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_sso,
-          COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund`, netPayExpr, deductionExpr)
+          COALESCE((SELECT SUM(pf_month_amount) FROM payroll_run_item pri WHERE pri.run_id = payroll_run.id),0) AS total_provident_fund`, where, netPayExpr, deductionExpr)
 	var run Run
-	if err := db.GetContext(ctx, &run, q, actor, id); err != nil {
+	if err := db.GetContext(ctx, &run, q, args...); err != nil {
 		return nil, err
 	}
 	return &run, nil
 }
 
-func (r Repository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r Repository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE payroll_run SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL AND status = 'pending'`
-	res, err := db.ExecContext(ctx, q, actor, id)
+	where := "id=$2 AND deleted_at IS NULL AND status = 'pending' AND company_id=$3"
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += " AND branch_id=$4"
+	}
+	q := fmt.Sprintf(`UPDATE payroll_run SET deleted_at=now(), deleted_by=$1 WHERE %s`, where)
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
@@ -301,14 +341,30 @@ type ItemListResult struct {
 	Total int
 }
 
-func (r Repository) ListItems(ctx context.Context, runID uuid.UUID, page, limit int, search string, employeeTypeCode string) (ItemListResult, error) {
+func (r Repository) ListItems(ctx context.Context, tenant contextx.TenantInfo, runID uuid.UUID, page, limit int, search string, employeeTypeCode string) (ItemListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
+
+	// Ensure run_id belongs to company/branch accessed?
+	// Or filter items via employee's company/branch.
+	// Since items join employees, filtering on employee's company is safer.
+
 	where = append(where, "run_id = $1")
 	args = append(args, runID)
-	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', ''))"
+
+	// Company Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	// Branch Filter
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
+	}
+
+	fullNameExpr := "(pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', ''))"
 	if s := strings.TrimSpace(search); s != "" {
 		args = append(args, "%"+s+"%")
 		where = append(where, fmt.Sprintf("(%s ILIKE $%d OR e.employee_number ILIKE $%d)", fullNameExpr, len(args), len(args)))
@@ -362,7 +418,7 @@ LIMIT $%d OFFSET $%d`, fullNameExpr, netPayExpr, deductionExpr, whereClause, ful
 	return ItemListResult{Rows: list, Total: total}, nil
 }
 
-func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUID, fields map[string]interface{}) (*Item, error) {
+func (r Repository) UpdateItem(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID, fields map[string]interface{}) (*Item, error) {
 	db := r.dbCtx(ctx)
 	sets := []string{}
 	args := []interface{}{}
@@ -375,10 +431,27 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	sets = append(sets, fmt.Sprintf("updated_by=$%d", i))
 	args = append(args, actor)
 	i++
+
+	// id index
+	idIdx := i
 	args = append(args, id)
+	i++
+
+	// company index
+	compIdx := i
+	args = append(args, tenant.CompanyID)
+	i++
+
+	where := fmt.Sprintf("id=$%d AND company_id=$%d", idIdx, compIdx)
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += fmt.Sprintf(" AND branch_id=$%d", i)
+		i++
+	}
+
 	setClause := strings.Join(sets, ",")
-	q := fmt.Sprintf(`UPDATE payroll_run_item SET %s WHERE id=$%d RETURNING id, run_id, employee_id,
-       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
+	q := fmt.Sprintf(`UPDATE payroll_run_item SET %s WHERE %s RETURNING id, run_id, employee_id,
+       (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = payroll_run_item.employee_id) AS employee_name,
        (SELECT employee_number FROM employees e WHERE e.id = payroll_run_item.employee_id) AS employee_number,
        (SELECT photo_id FROM employees e WHERE e.id = payroll_run_item.employee_id) AS photo_id,
        (SELECT et.code FROM employees e JOIN employee_type et ON et.id = e.employee_type_id WHERE e.id = payroll_run_item.employee_id) AS employee_type_code,
@@ -396,7 +469,7 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
         (SELECT allow_water FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_water,
         (SELECT allow_electric FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_electric,
         (SELECT allow_internet FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_internet,
-        (SELECT allow_doctor_fee FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_doctor_fee`, setClause, i, netPayExpr, deductionExpr)
+        (SELECT allow_doctor_fee FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_doctor_fee`, setClause, where, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
@@ -404,9 +477,16 @@ func (r Repository) UpdateItem(ctx context.Context, id uuid.UUID, actor uuid.UUI
 	return &it, nil
 }
 
-func (r Repository) GetItem(ctx context.Context, id uuid.UUID) (*Item, error) {
+func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*Item, error) {
 	db := r.dbCtx(ctx)
-	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
+	where := "pri.id=$1 AND pri.company_id=$2"
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += " AND pri.branch_id=$3"
+	}
+
+	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id, (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
        e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
@@ -422,9 +502,9 @@ FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
 JOIN employee_type et ON et.id = e.employee_type_id
-WHERE pri.id=$1 LIMIT 1`, netPayExpr, deductionExpr)
+WHERE %s LIMIT 1`, netPayExpr, deductionExpr, where)
 	var it Item
-	if err := db.GetContext(ctx, &it, q, id); err != nil {
+	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
 	}
 	return &it, nil
@@ -468,10 +548,17 @@ type ItemDetail struct {
 	ElectricityRatePerUnit  float64   `db:"electricity_rate_per_unit"`
 }
 
-func (r Repository) GetItemDetail(ctx context.Context, id uuid.UUID) (*ItemDetail, error) {
+func (r Repository) GetItemDetail(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*ItemDetail, error) {
 	db := r.dbCtx(ctx)
+	where := "pri.id = $1 AND pri.company_id = $2"
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where += " AND pri.branch_id = $3"
+	}
+
 	q := fmt.Sprintf(`SELECT pri.id, pri.run_id, pri.employee_id,
-       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || e.nickname || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
+       (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) AS employee_name, e.employee_number, et.code AS employee_type_code,
        e.photo_id,
        pri.employee_type_name, pri.department_name, pri.position_name, pri.bank_name, pri.bank_account_no,
        pri.salary_amount, pri.pt_hours_worked, pri.pt_hourly_rate, pri.ot_hours, pri.ot_amount, pri.bonus_amount,
@@ -499,9 +586,9 @@ FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
 JOIN employee_type et ON et.id = e.employee_type_id
-WHERE pri.id = $1`, netPayExpr, deductionExpr)
+WHERE %s`, netPayExpr, deductionExpr, where)
 	var it ItemDetail
-	if err := db.GetContext(ctx, &it, q, id); err != nil {
+	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
 	}
 	return &it, nil

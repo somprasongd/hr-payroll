@@ -10,6 +10,7 @@ import (
 
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -34,7 +35,12 @@ func NewHandler(repo repository.Repository) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	rec, err := h.repo.Get(ctx, q.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	rec, err := h.repo.Get(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("debt transaction not found")
@@ -44,7 +50,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	}
 	item := dto.FromRecord(*rec)
 	if rec.TxnType == "loan" || rec.TxnType == "other" {
-		children, err := h.repo.GetInstallments(ctx, rec.ID)
+		children, err := h.repo.GetInstallments(ctx, tenant, rec.ID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			logger.FromContext(ctx).Error("failed to load installments", zap.Error(err))
 			return nil, errs.Internal("failed to load installments")

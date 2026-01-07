@@ -16,6 +16,23 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface CompanyInfo {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+  role: string;
+}
+
+export interface BranchInfo {
+  id: string;
+  companyId: string;
+  code: string;
+  name: string;
+  status: string;
+  isDefault: boolean;
+}
+
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
@@ -26,6 +43,9 @@ export interface LoginResponse {
     username: string;
     role: string;
   };
+  // Optional: returned when user has company access
+  companies?: CompanyInfo[];
+  branches?: BranchInfo[];
 }
 
 export interface RefreshTokenResponse {
@@ -69,5 +89,14 @@ export const authService = {
    */
   async me(): Promise<LoginResponse['user']> {
     return apiClient.get<LoginResponse['user']>('/me');
+  },
+
+  /**
+   * Get user's companies and branches (for tenant selection)
+   */
+  async getUserCompanies(): Promise<{ companies: CompanyInfo[]; branches: BranchInfo[] }> {
+    // API wraps payload as { data: { companies, branches } }, so we need to unwrap it
+    const response = await apiClient.get<{ data: { companies: CompanyInfo[]; branches: BranchInfo[] } }>('/me/companies');
+    return response.data;
   },
 };

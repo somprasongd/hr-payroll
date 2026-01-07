@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
 interface UserFormProps {
-  onSuccess: () => void;
+  onSuccess: (userId: string) => void;
 }
 
 export function UserForm({ onSuccess }: UserFormProps) {
@@ -56,12 +56,12 @@ export function UserForm({ onSuccess }: UserFormProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsSubmitting(true);
-      await userService.createUser(values);
+      const createdUser = await userService.createUser(values);
       toast({
         title: t('success.userCreated'),
       });
       form.reset();
-      onSuccess();
+      onSuccess(createdUser.id);
     } catch (error: any) {
       console.error('Failed to create user:', error);
       if (error.statusCode === 409) {

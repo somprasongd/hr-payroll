@@ -1,988 +1,130 @@
 {
-  "Index": {
-    "welcomeBack": "Welcome Back",
-    "signInDescription": "Sign in to your HR & Payroll account",
-    "username": "Username",
-    "usernamePlaceholder": "Enter your username",
-    "password": "Password",
-    "passwordPlaceholder": "Enter your password",
-    "rememberMe": "Remember Me",
-    "login": "Login",
-    "loggingIn": "Logging in...",
-    "copyright": "© 2024 Your Company. All Rights Reserved",
-    "validation": {
-      "usernameRequired": "Username is required",
-      "usernameLength": "Username must be at least 3 characters",
-      "passwordLength": "Password must be at least 6 characters"
-    },
-    "errors": {
-      "loginFailed": "Login failed. Please check your username and password"
-    }
-  },
-  "Dashboard": {
-    "title": "Dashboard",
-    "mainContentArea": "Main Content Area",
-    "mainContentDescription": "Content for the selected menu item will be displayed here.",
-    "mainContentExample": "For example, a dashboard with charts, a table of employees, or a payroll processing form",
-    "welcome": "Welcome, {name}",
-    "loggedInAs": "You are logged in as {role}",
-    "logout": "Log out",
-    "profile": "My Profile",
-    "searchPlaceholder": "Search employees...",
-    "expiringDocuments": {
-      "title": "Expiring Documents",
-      "description": "Employee documents expiring within 30 days",
-      "noExpiring": "No documents expiring soon",
-      "error": "Failed to load documents",
-      "expired": "Expired",
-      "days": "{days} days left",
-      "viewAll": "View all ({count} items)"
-    },
-    "employeeStats": {
-      "title": "Employee Summary",
-      "activeEmployees": "Active Employees",
-      "fullTime": "Full-Time",
-      "partTime": "Part-Time",
-      "newThisMonth": "New This Month",
-      "terminated": "Terminated This Month",
-      "error": "Failed to load employee data",
-      "noData": "No employee data"
-    },
-    "attendance": {
-      "title": "Attendance Statistics",
-      "yearlyOverview": "Year {year} Overview",
-      "late": "Late",
-      "leaveDay": "Leave (Days)",
-      "leaveDouble": "Leave (Double)",
-      "leaveHours": "Leave (Hours)",
-      "ot": "Overtime",
-      "count": "times",
-      "minutes": "min",
-      "hours": "hrs",
-      "days": "days",
-      "error": "Failed to load data",
-      "noData": "No data available"
-    },
-    "payroll": {
-      "title": "Payroll Summary",
-      "yearly": "Year {year} Total",
-      "latestRun": "Latest Run",
-      "totalNetPay": "Net Pay",
-      "totalTax": "Withholding Tax",
-      "totalSso": "Social Security",
-      "totalPf": "Provident Fund",
-      "employees": "Employees",
-      "people": "people",
-      "error": "Failed to load data",
-      "noData": "No data available"
-    },
-    "pending": {
-      "title": "Pending Items",
-      "description": "Financial items awaiting approval or processing",
-      "items": "items",
-      "advances": "Salary Advances",
-      "loans": "Pending Loans",
-      "installments": "Outstanding Installments",
-      "bonusCycles": "Pending Bonus Cycles",
-      "salaryRaise": "Pending Salary Raises",
-      "error": "Failed to load data",
-      "noData": "No data available"
-    }
-  },
-  "Menu": {
-    "dashboard": "Dashboard",
-    "employeeManagement": "Employee Management",
-    "attendance": "Attendance",
-    "worklogFT": "Full-Time",
-    "worklogPT": "Part-Time",
-    "payoutPT": "Advance Payout (Part-time)",
-    "leaveManagement": "Leave Management",
-    "payrollExpenses": "Payroll & Expenses",
-    "reports": "Reports",
-    "humanResources": "Human Resources",
-    "systemManagement": "System Management",
-    "settings": "Settings",
-    "users": "User Management",
-    "salaryRaise": "Salary Raise",
-    "salaryAdvance": "Salary Advance",
-    "bonus": "Bonus Management",
-    "debt": "Debt Management",
-    "deductions": "Advance/Loan",
-    "worklog": "Work Logs",
-    "compensation": "Compensation",
-    "collapse": "Collapse",
-    "payroll": "Payroll",
-    "activityLogs": "Activity Logs"
-  },
-  "Payroll": {
-    "title": "Payroll",
-    "description": "Manage payroll cycles and payslips",
-    "createTitle": "Create Payroll Cycle",
-    "createDescription": "Create a new payroll cycle for the selected month.",
-    "fields": {
-      "month": "Payroll Month",
-      "periodStart": "Period Start Date",
-      "payDate": "Pay Date",
-      "ssoEmployee": "SSO Employee (%)",
-      "ssoEmployer": "SSO Employer (%)",
-      "period": "Period",
-      "status": "Status",
-      "totalEmployees": "Total Employees",
-      "totalNetPay": "Total Net Pay",
-      "totalTax": "Total Tax",
-      "totalSocialSecurity": "Total Social Security",
-      "totalProvidentFund": "Total Provident Fund"
-    },
-    "status": {
-      "approved": "Approved",
-      "paid": "Paid",
-      "pending": "Pending",
-      "processing": "Processing"
-    },
-    "filters": {
-      "year": "Year",
-      "status": "Status",
-      "allStatuses": "All Statuses"
-    },
-    "actions": {
-      "view": "View Details",
-      "title": "Actions",
-      "approve": "Approve"
-    },
-    "approve": {
-      "title": "Approve Payroll",
-      "description": "Are you sure you want to approve this payroll? This action cannot be undone."
-    },
-    "detail": {
-      "title": "Payroll Details",
-      "backToList": "Back to List",
-      "employeeList": "Employee List",
-      "searchPlaceholder": "Search by number or name...",
-      "filterByType": "Employee Type"
-    },
-    "payslip": {
-      "editTitle": "Edit Payslip",
-      "viewTitle": "View Payslip",
-      "tabs": {
-        "income": "Income",
-        "attendance": "Attendance Deductions",
-        "deductions": "Deductions",
-        "loans": "Loans"
-      },
-      "fields": {
-        "employee": "Employee",
-        "salary": "Salary",
-        "ot": "Overtime",
-        "otHours": "hours",
-        "bonus": "Bonus",
-        "housingAllowance": "Housing Allowance",
-        "attendanceBonus": "Attendance Bonus",
-        "attendanceBonusNoLate": "Attendance Bonus (No Late)",
-        "attendanceBonusNoLeave": "Attendance Bonus (No Leave)",
-        "leaveCompensation": "Leave Compensation",
-        "doctorFee": "Doctor Fee",
-        "othersIncome": "Other Income",
-        "othersDeduction": "Other Deductions",
-        "tax": "Withholding Tax",
-        "sso": "Social Security",
-        "providentFund": "Provident Fund",
-        "lateMinutes": "Late Minutes",
-        "lateDeduction": "Late Deduction",
-        "leaveDays": "Leave Days",
-        "leaveDeduction": "Leave Deduction",
-        "leaveDouble": "Leave (Double)",
-        "leaveDoubleDeduction": "Leave Double Deduction",
-        "leaveHours": "Leave Hours",
-        "leaveHoursDeduction": "Leave Hours Deduction",
-        "utilities": "Utilities",
-        "waterMeterPrev": "Water Meter (Prev)",
-        "waterMeterCurr": "Water Meter (Curr)",
-        "waterAmount": "Water Amount",
-        "electricMeterPrev": "Electric Meter (Prev)",
-        "electricMeterCurr": "Electric Meter (Curr)",
-        "electricAmount": "Electric Amount",
-        "internetAmount": "Internet",
-        "advanceRepay": "Salary Advance Deduction",
-        "loanRepayments": "Debt Repayment Deduction",
-        "incomeTotal": "Total Income",
-        "deductionTotal": "Total Deductions",
-        "netPay": "Net Pay"
-      },
-      "addItem": "Add Item",
-      "removeItem": "Remove",
-      "itemName": "Name",
-      "itemValue": "Amount"
-    },
-    "print": {
-      "title": "Pay Slip",
-      "original": "Original",
-      "copy": "Copy",
-      "button": "Print Slip",
-      "batchButton": "Print All Slips",
-      "selectEmployees": "Select Employees to Print",
-      "selectAll": "Select All",
-      "deselectAll": "Deselect All",
-      "selectedCount": "Selected {count}"
-    }
-  },
-  "Settings": {
-    "title": "Payroll System Settings",
-    "description": "Manage constant values for payroll calculation and benefits",
-    "viewHistory": "View History",
-    "configurationHistory": "Configuration History",
-    "historyDescription": "View all past configuration changes",
-    "version": "Version",
-    "startDate": "Start Date",
-    "endDate": "End Date",
-    "status": "Status",
-    "note": "Note",
-    "error": "Error",
-    "success": "Success",
-    "saveSuccess": "Settings saved successfully",
-    "currentConfig": "Current Configuration",
-    "currentConfigDescription": "Currently using version {version} effective from {startDate}",
-    "rates": "Wage Rates",
-    "bonuses": "Bonuses & Benefits",
-    "utilities": "Utilities",
-    "socialSecurity": "Social Security",
-    "wageRates": "Wage Rates",
-    "wageRatesDescription": "Set hourly rates and overtime rates",
-    "hourlyRate": "Hourly Rate",
-    "hourlyRateHint": "Hourly wage for part-time employees (THB)",
-    "otHourlyRate": "OT Hourly Rate",
-    "otHourlyRateHint": "Overtime rate per hour (THB)",
-    "effectiveDate": "Effective Date",
-    "effectiveDateHint": "Date when this configuration takes effect",
-    "attendanceBonuses": "Attendance Bonuses & Benefits",
-    "attendanceBonusesDescription": "Set attendance bonuses and housing allowance",
-    "bonusNoLate": "Bonus (No Late)",
-    "bonusNoLateHint": "Bonus for employees with no late arrivals (THB/month)",
-    "bonusNoLeave": "Bonus (No Leave)",
-    "bonusNoLeaveHint": "Bonus for employees with no absences (THB/month)",
-    "housingAllowance": "Housing Allowance",
-    "housingAllowanceHint": "Housing benefit allowance (THB/month)",
-    "utilityRates": "Utility Rates",
-    "utilityRatesDescription": "Set rates for water, electricity, and internet",
-    "waterRate": "Water Rate per Unit",
-    "waterRateHint": "Water rate per unit (THB)",
-    "electricityRate": "Electricity Rate per Unit",
-    "electricityRateHint": "Electricity rate per unit (THB)",
-    "internetFee": "Monthly Internet Fee",
-    "internetFeeHint": "Monthly internet fee (THB)",
-    "socialSecurityRates": "Social Security Rates",
-    "socialSecurityRatesDescription": "Set deduction rates for employee and employer contributions",
-    "employeeRate": "Employee Rate",
-    "employeeRateHint": "Employee social security deduction percentage (enter 5 for 5%)",
-    "employerRate": "Employer Rate",
-    "employerRateHint": "Employer social security contribution percentage (enter 5 for 5%)",
-    "ssoWageCap": "SSO Wage Cap (max base)",
-    "ssoWageCapHint": "Maximum wage base used for SSO calculation (THB).",
-    "notes": "Notes",
-    "notesDescription": "Record reasons or details for this change",
-    "notesPlaceholder": "e.g. Adjusted wages according to new law or Updated electricity rates to actual costs",
-    "reset": "Reset",
-    "saveChanges": "Save Changes",
-    "saving": "Saving...",
-    "next": "Next",
-    "back": "Back",
-    "tax": "Tax",
-    "taxSection40_1Title": "Income Tax Section 40(1) - Regular Employees",
-    "taxSection40_1Description": "Settings for regular employees with payslip and social security (salary income)",
-    "taxApplyStandardExpense": "Apply Standard Expense Deduction",
-    "taxApplyStandardExpenseHint": "Enable/disable 50% standard expense deduction (max 100,000 THB)",
-    "taxStandardExpenseRate": "Standard Expense Rate",
-    "taxStandardExpenseCap": "Standard Expense Cap",
-    "taxStandardExpenseCapHint": "Maximum allowable standard expense deduction (THB)",
-    "taxApplyPersonalAllowance": "Apply Personal Allowance",
-    "taxApplyPersonalAllowanceHint": "Enable/disable personal allowance deduction (60,000 THB)",
-    "taxPersonalAllowanceAmount": "Personal Allowance Amount",
-    "taxPersonalAllowanceAmountHint": "Personal allowance per year (THB)",
-    "taxProgressiveBrackets": "Progressive Tax Brackets (0-35%)",
-    "taxProgressiveBracketsHint": "Configure tax brackets according to Section 40(1)",
-    "addBracket": "Add Bracket",
-    "bracketMin": "Income (Min)",
-    "bracketMax": "Income (Max)",
-    "bracketRate": "Tax Rate",
-    "taxSection40_2Title": "Tax Section 40(2) - Freelance/Contract",
-    "taxSection40_2Description": "Settings for contract/freelance workers without social security (withholding tax)",
-    "withholdingTaxRateService": "Withholding Tax Rate",
-    "withholdingTaxRateServiceHint": "Percentage the employer must withhold for tax, e.g. 3%",
-    "leaveDeductionSettings": "Leave/Late Deduction Settings",
-    "leaveDeductionSettingsDescription": "Configure settings for calculating leave and late deductions",
-    "workHoursPerDay": "Work Hours Per Day",
-    "workHoursPerDayHint": "Working hours per day for leave hours calculation (e.g., 8 hrs)",
-    "lateRatePerMinute": "Late Deduction Rate (per minute)",
-    "lateRatePerMinuteHint": "Amount deducted per minute when late exceeds grace period (THB/min)",
-    "lateGraceMinutes": "Late Grace Period (minutes)",
-    "lateGraceMinutesHint": "Grace period before late deduction applies (e.g., 15 mins)",
-    "taxBracketValidation": {
-      "prevMaxNull": "Please specify the maximum income for row {row} first",
-      "minMismatch": "Minimum income for row {row} must be {expected} (previous max + 1), but current value is {actual}",
-      "maxLessThanMin": "Maximum income for row {row} must be greater than minimum (min: {min}, max: {max})"
-    }
-  },
-  "Employees": {
-    "title": "Employee Management",
-    "description": "Manage employee information, contracts, and benefits",
-    "listTitle": "Employee List",
-    "createTitle": "Create New Employee",
-    "editTitle": "Edit Employee",
-    "searchPlaceholder": "Search by name, ID...",
-    "createButton": "Add Employee",
-    "personalInfo": "Personal Information",
-    "employmentInfo": "Employment Details",
-    "financialInfo": "Financial & Benefits",
-    "fields": {
-      "employeeNumber": "Employee ID",
-      "firstName": "First Name",
-      "lastName": "Last Name",
-      "title": "Title",
-      "idCardType": "ID Document Type",
-      "idCardNumber": "ID Document Number",
-      "idDocumentOtherDescription": "ID Document Other Description",
-      "nickname": "Nickname",
-      "phone": "Phone",
-      "email": "Email",
-      "employeeType": "Employee Type",
-      "startDate": "Start Date",
-      "endDate": "End Date",
-      "basePay": "Base Pay / Hourly Wage",
-      "bank": "Bank",
-      "accountNo": "Account Number",
-      "sso": "Social Security",
-      "ssoWage": "SSO Declared Wage",
-      "ssoHospitalName": "SSO Hospital Name",
-      "pvd": "Provident Fund",
-      "pvdRateEmployee": "PVD Employee Rate (%)",
-      "pvdRateEmployer": "PVD Employer Rate (%)",
-      "tax": "Withhold Tax",
-      "allowances": "Allowances",
-      "utilities": "Utilities (deduct from payroll)",
-      "utilitiesHint": "For deductions such as water, electricity, and internet usage",
-      "housing": "Housing",
-      "water": "Water",
-      "electric": "Electricity",
-      "internet": "Internet",
-      "doctorFee": "Doctor Fee",
-      "allowAttendanceBonusNoLate": "Diligence Bonus (No Late)",
-      "allowAttendanceBonusNoLeave": "Diligence Bonus (No Leave)",
-      "status": "Status",
-      "photo": "Employee Photo",
-      "department": "Department",
-      "position": "Position"
-    },
-    "status": {
-      "active": "Active",
-      "terminated": "Terminated",
-      "all": "All",
-      "allStatuses": "All Statuses"
-    },
-    "employeeTypes": {
-      "full_time": "Full-time",
-      "part_time": "Part-time",
-      "ft": "Full-time",
-      "pt": "Part-time",
-      "allTypes": "All Types"
-    },
-    "messages": {
-      "createSuccess": "Employee created successfully",
-      "updateSuccess": "Employee updated successfully",
-      "deleteSuccess": "Employee deleted successfully",
-      "deleteTitle": "Delete Employee",
-      "confirmDelete": "Are you sure you want to delete this employee?",
-      "noEmployeesFound": "No employees found"
-    },
-    "actions": {
-      "title": "Actions",
-      "edit": "Edit",
-      "delete": "Delete",
-      "openMenu": "Open menu",
-      "cancel": "Cancel"
-    },
-    "loading": "Loading...",
-    "search": "Search",
-    "clearFilters": "Clear Filters",
-    "placeholders": {
-      "selectTitle": "Select title",
-      "selectType": "Select type",
-      "selectDepartment": "Select department",
-      "selectPosition": "Select position"
-    },
-    "photoUploadSuccess": "Photo uploaded successfully",
-    "photoUploadError": "Failed to upload photo",
-    "photoDuplicateError": "This image has already been uploaded. Please select a different image.",
-    "photoDeleteConfirmTitle": "Confirm Photo Deletion",
-    "photoDeleteConfirmDescription": "Are you sure you want to delete this employee photo?",
-    "photoDeleteSuccess": "Photo deleted successfully",
-    "photoDeleteError": "Failed to delete photo",
-    "photoHint": "Upload employee photo (image file, max 2MB)",
-    "uploadPhoto": "Upload Photo",
-    "changePhoto": "Change Photo",
-    "removePhoto": "Remove Photo",
-    "photoUploading": "Uploading...",
-    "cancel": "Cancel",
-    "next": "Next",
-    "back": "Back",
-    "validation": {
-      "required": "This field is required",
-      "email": "Invalid email address",
-      "positive": "Value must be positive"
-    },
-    "submitError": "Failed to save employee. Please try again."
-  },
   "Accumulation": {
-    "title": "Accumulation",
-    "adjustTitle": "Adjust Accumulation",
     "adjustDescription": "Update the accumulation amount for {type}",
-    "types": {
-      "sso": "Social Security",
-      "tax": "Withholding Tax",
-      "pf": "Provident Fund",
-      "loan_outstanding": "Accumulated Debt",
-      "income": "Accumulated Income"
-    },
+    "adjustTitle": "Adjust Accumulation",
     "amount": "Amount",
-    "selectYear": "Select Year",
-    "yearly": "Yearly",
+    "cancel": "Cancel",
     "lifetime": "Lifetime",
     "lifetimeGroup": "Lifetime Accumulated",
-    "cancel": "Cancel",
-    "save": "Save"
-  },
-  "Profile": {
-    "title": "My Profile",
-    "description": "Manage your personal information and password",
-    "personalInfo": "User Information",
-    "personalInfoDescription": "Your account details",
-    "username": "Username",
-    "role": "Role",
-    "lastLogin": "Last Login",
-    "loading": "Loading...",
-    "errorLoadingProfile": "Failed to load profile",
-    "password": {
-      "title": "Change Password",
-      "description": "Update your password for security",
-      "currentPassword": "Current Password",
-      "newPassword": "New Password",
-      "confirmPassword": "Confirm New Password",
-      "submit": "Change Password",
-      "successTitle": "Success",
-      "success": "Password changed successfully",
-      "errorTitle": "Error",
-      "error": "Failed to change password. Please check your current password.",
-      "passwordsDoNotMatch": "Passwords do not match",
-      "minLength": "Password must be at least 6 characters",
-      "required": "Required"
-    }
-  },
-  "Users": {
-    "title": "User Management",
-    "description": "Manage user accounts and access roles",
-    "createUser": "Create User",
-    "createUserDescription": "Create a new user account for system access",
-    "loading": "Loading...",
-    "fields": {
-      "username": "Username",
-      "password": "Password",
-      "role": "Role",
-      "createdAt": "Created At",
-      "lastLoginAt": "Last Login",
-      "newPassword": "New Password"
-    },
-    "roles": {
-      "admin": "Admin",
-      "hr": "HR"
-    },
-    "actions": {
-      "title": "Actions",
-      "openMenu": "Open menu",
-      "editRole": "Edit Role",
-      "resetPassword": "Reset Password",
-      "delete": "Delete User",
-      "create": "Create",
-      "creating": "Creating...",
-      "save": "Save",
-      "saving": "Saving...",
-      "cancel": "Cancel"
-    },
-    "placeholders": {
-      "selectRole": "Select a role"
-    },
-    "validation": {
-      "usernameMin": "Username must be at least 3 characters",
-      "passwordMin": "Password must be at least 8 characters",
-      "roleRequired": "Please select a role"
-    },
-    "errors": {
-      "fetchFailed": "Failed to fetch users",
-      "fetchFailedDescription": "Please try again later",
-      "createFailed": "Failed to create user",
-      "createFailedDescription": "Please try again later",
-      "usernameExists": "Username already exists",
-      "resetFailed": "Failed to reset password",
-      "resetFailedDescription": "Please try again later",
-      "updateFailed": "Failed to update user",
-      "updateFailedDescription": "Please try again later",
-      "deleteFailed": "Failed to delete user",
-      "deleteFailedDescription": "Please try again later"
-    },
-    "success": {
-      "userCreated": "User created successfully",
-      "passwordReset": "Password reset successfully",
-      "roleUpdated": "Role updated successfully",
-      "userDeleted": "User deleted successfully"
-    },
-    "resetPasswordDescription": "Set a new password for user {username}",
-    "editRoleDescription": "Update role for user {username}",
-    "deleteConfirmTitle": "Are you sure?",
-    "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user {username}.",
-    "noData": "No users found"
-  },
-  "Worklogs": {
-    "FT": {
-      "title": "Full-Time Worklogs",
-      "description": "Manage late, leave, and overtime records for full-time employees",
-      "createButton": "Create New Record",
-      "createTitle": "Create New Record",
-      "editTitle": "Edit Record",
-      "formDescription": "Fill in worklog details",
-      "noData": "No worklogs found",
-      "fields": {
-        "employee": "Employee",
-        "workDate": "Date",
-        "startDate": "Start Date",
-        "endDate": "End Date",
-        "entryType": "Type",
-        "quantity": "Quantity",
-        "leaveDuration": "Leave Duration"
-      },
-      "placeholders": {
-        "selectEmployee": "Select employee",
-        "quantity": "Enter quantity"
-      },
-      "entryTypes": {
-        "late": "Late",
-        "leave_day": "Leave (Days)",
-        "leave_double": "Leave (Double Pay)",
-        "leave_hours": "Leave (Hours)",
-        "ot": "Overtime"
-      },
-      "statuses": {
-        "pending": "Pending",
-        "approved": "Approved"
-      },
-      "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
-      },
-      "filters": {
-        "employee": "Employee",
-        "entryType": "Type",
-        "status": "Status",
-        "startDate": "Start Date",
-        "endDate": "End Date",
-        "allEmployees": "All Employees",
-        "allTypes": "All Types",
-        "allStatuses": "All Statuses",
-        "searchEmployee": "Search employee...",
-        "searchPlaceholder": "Search...",
-        "noEmployeeFound": "No employee found"
-      },
-      "table": {
-        "employee": "Employee",
-        "workDate": "Date",
-        "entryType": "Type",
-        "quantity": "Quantity",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "pagination": {
-        "page": "Page",
-        "of": "of",
-        "previous": "Previous",
-        "next": "Next"
-      },
-      "validation": {
-        "employeeRequired": "Please select an employee",
-        "workDateRequired": "Please select a date",
-        "endDateRequired": "Please select an end date",
-        "quantityRequired": "Please enter a valid quantity"
-      },
-      "success": {
-        "created": "Created Successfully",
-        "createdDescription": "Worklog record created",
-        "updated": "Updated Successfully",
-        "updatedDescription": "Worklog record updated",
-        "deleted": "Deleted Successfully",
-        "deletedDescription": "Worklog record deleted"
-      },
-      "errors": {
-        "fetchFailed": "Failed to load data",
-        "fetchFailedDescription": "Please try again",
-        "saveFailed": "Failed to save",
-        "saveFailedDescription": "Please check your data and try again",
-        "deleteFailed": "Failed to delete",
-        "deleteFailedDescription": "Please try again",
-        "cannotEdit": "Cannot Edit",
-        "cannotEditDescription": "Only pending records can be edited",
-        "cannotDelete": "Cannot Delete",
-        "cannotDeleteDescription": "Only pending records can be deleted",
-        "duplicateWorklog": "A worklog already exists for this employee, date, and type"
-      },
-      "deleteDialog": {
-        "title": "Confirm Delete",
-        "description": "Are you sure you want to delete this record?"
-      }
-    },
-    "PT": {
-      "title": "Part-Time Worklogs",
-      "description": "Manage time entries for part-time employees",
-      "createButton": "Record Time",
-      "createTitle": "Record Work Time",
-      "edit Title": "Edit Work Time",
-      "formDescription": "Record employee clock in/out times",
-      "noData": "No time records found",
-      "totalHours": "Total Hours",
-      "fields": {
-        "employee": "Employee",
-        "workDate": "Date",
-        "morningShift": "Morning Shift",
-        "eveningShift": "Evening Shift",
-        "timeIn": "In",
-        "timeOut": "Out"
-      },
-      "placeholders": {
-        "selectEmployee": "Select employee"
-      },
-      "statuses": {
-        "pending": "Pending",
-        "approved": "Approved",
-        "to_pay": "To Pay",
-        "paid": "Paid"
-      },
-      "units": {
-        "hours": "hours"
-      },
-      "filters": {
-        "employee": "Employee",
-        "status": "Status",
-        "startDate": "Start Date",
-        "endDate": "End Date",
-        "allEmployees": "All Employees",
-        "allStatuses": "All Statuses"
-      },
-      "table": {
-        "employee": "Employee",
-        "workDate": "Date",
-        "morningShift": "Morning Shift",
-        "eveningShift": "Evening Shift",
-        "totalHours": "Total Hours",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "pagination": {
-        "page": "Page",
-        "of": "of",
-        "previous": "Previous",
-        "next": "Next"
-      },
-      "validation": {
-        "employeeRequired": "Please select an employee",
-        "workDateRequired": "Please select a date",
-        "atLeastOneShift": "Please fill in at least one shift",
-        "completeMorningShift": "Please complete morning shift (in and out)",
-        "completeEveningShift": "Please complete evening shift (in and out)"
-      },
-      "success": {
-        "created": "Created Successfully",
-        "createdDescription": "Time record created",
-        "updated": "Updated Successfully",
-        "updatedDescription": "Time record updated",
-        "deleted": "Deleted Successfully",
-        "deletedDescription": "Time record deleted"
-      },
-      "errors": {
-        "fetchFailed": "Failed to load data",
-        "fetchFailedDescription": "Please try again",
-        "saveFailed": "Failed to save",
-        "saveFailedDescription": "Please check your data and try again",
-        "deleteFailed": "Failed to delete",
-        "deleteFailedDescription": "Please try again",
-        "cannotEdit": "Cannot Edit",
-        "cannotEditDescription": "Only pending records can be edited",
-        "cannotDelete": "Cannot Delete",
-        "cannotDeleteDescription": "Only pending records can be deleted",
-        "duplicateWorklog": "A worklog already exists for this employee on this date",
-        "submitFailed": "Failed to save the worklog"
-      },
-      "deleteDialog": {
-        "title": "Confirm Delete",
-        "description": "Are you sure you want to delete this record?"
-      }
-    }
-  },
-  "Common": {
     "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "view": "View",
-    "create": "Create",
-    "search": "Search",
-    "filter": "Filter",
-    "export": "Export",
-    "import": "Import",
-    "confirm": "Confirm",
-    "currentMonth": "Current Month",
-    "errorLoadingData": "Error loading data",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "submit": "Submit",
-    "reset": "Reset",
-    "close": "Close",
-    "yes": "Yes",
-    "no": "No",
-    "error": "Error",
-    "success": "Success",
-    "loading": "Loading...",
-    "saving": "Saving...",
-    "all": "All",
-    "clearFilter": "Clear Filter",
-    "noData": "No data",
-    "confirmDeleteTitle": "Confirm Delete",
-    "confirmDeleteDescription": "Are you sure you want to delete this item? This action cannot be undone.",
-    "saveSuccess": "Saved successfully",
-    "actions": "Actions"
-  },
-  "Payouts": {
-    "PT": {
-      "title": "Part-Time Payouts",
-      "description": "Manage payouts for part-time employees",
-      "createButton": "Create Payout",
-      "createTitle": "Create New Payout",
-      "detailTitle": "Payout Details",
-      "listTitle": "Payout History",
-      "noData": "No payouts found",
-      "fields": {
-        "employee": "Employee",
-        "status": "Status",
-        "totalHours": "Total Hours",
-        "amountTotal": "Total Amount",
-        "itemCount": "Items",
-        "createdAt": "Created At",
-        "paidAt": "Paid At",
-        "paidBy": "Paid By",
-        "workDate": "Work Date"
-      },
-      "statuses": {
-        "to_pay": "To Pay",
-        "paid": "Paid"
-      },
-      "actions": {
-        "view": "View Details",
-        "markAsPaid": "Approve Payment"
-      },
-      "deleteSuccess": "Payout deleted successfully",
-      "deleteError": "Failed to delete payout",
-      "filters": {
-        "allStatuses": "All Statuses",
-        "allEmployees": "All Employees",
-        "selectEmployee": "Select Employee",
-        "startDate": "Start Date",
-        "endDate": "End Date"
-      },
-      "create": {
-        "createTitle": "Create Payout",
-        "step1": "Select Employee",
-        "step2": "Select Worklogs",
-        "step3": "Confirm",
-        "selectEmployeePlaceholder": "Select an employee to proceed",
-        "noPendingWorklogs": "No pending worklogs found for this employee",
-        "selectedWorklogs": "Selected Worklogs: {count}",
-        "totalHours": "Total Hours: {hours}",
-        "hourlyRate": "Hourly Rate: {rate}",
-        "estimatedAmount": "Estimated Amount: {amount}"
-      },
-      "success": {
-        "created": "Payout created successfully",
-        "paid": "Payout marked as paid"
-      },
-      "errors": {
-        "createFailed": "Failed to create payout",
-        "payFailed": "Failed to mark as paid"
-      },
-      "confirmPay": {
-        "title": "Confirm Payment",
-        "description": "Are you sure you want to mark this payout as paid? This action cannot be undone."
-      }
-    }
-  },
-  "SalaryRaise": {
-    "title": "Salary Raise Management",
-    "description": "Manage annual salary adjustments and raise cycles",
-    "listTitle": "Salary Raise Cycles",
-    "createTitle": "Create New Cycle",
-    "detailTitle": "Cycle Details",
-    "createButton": "Create",
-    "fields": {
-      "year": "Year",
-      "period": "Evaluation Period",
-      "status": "Status",
-      "totalEmployees": "Total Employees",
-      "totalRaiseAmount": "Total Raise Amount",
-      "createdAt": "Created At",
-      "updatedAt": "Updated At",
-      "note": "Note",
-      "employee": "Employee",
-      "employeeNumber": "Employee No.",
-      "currentSalary": "Current Salary",
-      "tenure": "Tenure (Days)",
-      "raisePercent": "Raise %",
-      "raiseAmount": "Raise Amount",
-      "newSalary": "New Salary",
-      "stats": "Stats (Late/Leave/OT)",
-      "newSsoWage": "New SSO Wage"
+    "selectYear": "Select Year",
+    "title": "Accumulation",
+    "types": {
+      "income": "Accumulated Income",
+      "loan_outstanding": "Accumulated Debt",
+      "pf": "Provident Fund",
+      "sso": "Social Security",
+      "tax": "Withholding Tax"
     },
-    "status": {
-      "pending": "Awaiting Approval",
-      "approved": "Approved",
-      "rejected": "Rejected",
-      "all": "All",
-      "allStatuses": "All Statuses",
-      "allYears": "All Years"
-    },
+    "yearly": "Yearly"
+  },
+  "ActivityLog": {
     "actions": {
-      "view": "View Details",
-      "edit": "Edit",
-      "delete": "Delete",
-      "approve": "Approve",
-      "reject": "Reject",
-      "editItem": "Edit Raise"
+      "search": "Search",
+      "viewDetails": "View Details"
     },
-    "delete": {
-      "title": "Delete Salary Raise Cycle",
-      "description": "Are you sure you want to delete this salary raise cycle? This action cannot be undone.",
-      "success": "Salary raise cycle deleted successfully",
-      "error": "Failed to delete salary raise cycle"
+    "description": "View history of user actions and system changes",
+    "detailsTitle": "Change Details",
+    "fields": {
+      "action": "Action",
+      "entity": "Entity",
+      "entityId": "Entity ID",
+      "timestamp": "Timestamp",
+      "user": "User"
     },
-    "create": {
-      "title": "Create Salary Raise Cycle",
-      "description": "Select the evaluation period for this cycle. The system will automatically calculate statistics for all full-time employees.",
-      "startDate": "Period Start Date",
-      "endDate": "Period End Date",
-      "success": "Cycle created successfully",
-      "error": {
-        "overlapOrPending": "Cannot create cycle (Pending cycle exists or date overlap)"
-      },
-      "note": "Note: Only one pending cycle can be created at a time."
+    "filters": {
+      "action": "Action",
+      "all": "All",
+      "dateRange": "Date Range",
+      "entity": "Type",
+      "title": "Filters",
+      "user": "User",
+      "userPlaceholder": "Search username..."
     },
-    "editItem": {
-      "title": "Edit Raise: {name}",
-      "description": "Adjust raise amount or percentage",
-      "currentSalary": "Current Salary: {amount}",
-      "newSalary": "New Salary: {amount}",
-      "saveSuccess": "Raise updated successfully"
-    },
-    "approve": {
-      "title": "Approve Cycle",
-      "description": "Are you sure you want to approve this cycle? This will update the base salary for all employees in this cycle immediately.",
-      "success": "Cycle approved successfully"
-    },
-    "reject": {
-      "title": "Reject Cycle",
-      "description": "Are you sure you want to reject this cycle?",
-      "success": "Cycle rejected successfully"
-    },
-    "stats": {
-      "late": "Late: {minutes} min",
-      "leave": "Leave: {days} days",
-      "leaveDouble": "Double Leave: {days} days",
-      "leaveHours": "Leave (Hr): {hours} hrs",
-      "ot": "OT: {hours} hrs"
-    },
-    "units": {
-      "years": "years",
-      "months": "months",
-      "days": "d"
-    }
-  },
-  "SalaryAdvance": {
-    "title": "Salary Advance",
-    "description": "Manage employee salary advance requests",
-    "searchPlaceholder": "Search...",
-    "listTitle": "Salary Advance List",
-    "filterStatus": "Status",
-
-    "allStatuses": "All Statuses",
-    "statusPending": "Pending",
-    "statusProcessed": "Processed",
-    "create": "Create Request",
-    "employee": "Employee",
-    "amount": "Amount",
-    "advanceDate": "Advance Date",
-    "payrollMonth": "Payroll Month",
-    "payrollYear": "Year",
-    "status": "Status",
-    "validating": "Validating...",
-    "createTitle": "Create Salary Advance Request",
-    "editTitle": "Edit Salary Advance Request",
-    "selectEmployee": "Select Employee",
-    "createSuccess": "Request created successfully",
-    "createError": "Error creating request",
-    "updateSuccess": "Request updated successfully",
-    "updateError": "Error updating request",
-    "deleteTitle": "Confirm Delete",
-    "deleteConfirm": "Are you sure you want to delete this request? This action cannot be undone.",
-    "deleteSuccess": "Request deleted successfully",
-    "deleteError": "Error deleting request",
-    "searchEmployee": "Search employee...",
-    "noEmployeeFound": "No employee found",
-    "selectEmployeeToView": "Please select an employee to view data",
-    "errors": {
-      "invalidPayrollMonth": "The selected payroll cycle does not exist or has not been approved yet. Please select a different cycle.",
-      "amountMinError": "Amount must be greater than 0"
-    }
+    "noData": "No activity logs found",
+    "title": "Activity Logs"
   },
   "Bonus": {
-    "title": "Bonus Management",
-    "description": "Manage bonus cycles and adjust employee bonus amounts",
-    "listTitle": "Bonus History",
-    "createTitle": "Create Bonus Cycle",
-    "detailTitle": "Bonus Cycle Details",
-    "noData": "No data",
-    "cycleNotFound": "Cycle not found",
-    "createButton": "Create",
-    "fields": {
-      "payrollMonth": "Payroll Month",
+    "actions": {
+      "approve": "Approve",
+      "delete": "Delete",
+      "editItem": "Edit Amount",
+      "reject": "Reject",
+      "view": "View Details"
+    },
+    "approve": {
+      "description": "Are you sure you want to approve this bonus cycle? This action cannot be undone.",
+      "success": "Bonus cycle approved successfully",
+      "title": "Confirm Approval"
+    },
+    "confirmReject": "Confirm Rejection",
+    "create": {
       "bonusYear": "Bonus Year",
-      "period": "Evaluation Period",
-      "periodStart": "Start Date",
-      "periodEnd": "End Date",
-      "status": "Status",
-      "totalEmployees": "Total Employees",
-      "totalAmount": "Total Amount",
+      "description": "Define the payroll period and evaluation period. The system will automatically calculate employee work statistics.",
+      "endDate": "End Date",
+      "error": "An error occurred. Please try again.",
+      "errors": {
+        "BONUS_CYCLE_APPROVED_EXISTS": "An approved bonus cycle already exists for this payroll month.",
+        "BONUS_CYCLE_APPROVE_FAILED": "Failed to approve bonus cycle. Please try again.",
+        "BONUS_CYCLE_CREATE_FAILED": "Failed to create bonus cycle. Please try again.",
+        "BONUS_CYCLE_PENDING_EXISTS": "A pending bonus cycle already exists. Please complete that cycle first.",
+        "BONUS_CYCLE_PERIOD_EXISTS": "A bonus cycle with this evaluation period already exists. Please choose a different period.",
+        "conflictApproved": "An approved bonus cycle already exists for this month.",
+        "conflictPending": "A pending bonus cycle already exists (only 1 allowed)."
+      },
+      "note": "Note: Only one pending cycle can be created at a time",
+      "payrollMonth": "Payroll Month",
+      "startDate": "Start Date",
+      "success": "Bonus cycle created successfully",
+      "title": "Create New Cycle"
+    },
+    "createButton": "Create",
+    "createTitle": "Create Bonus Cycle",
+    "cycleNotFound": "Cycle not found",
+    "delete": {
+      "description": "Are you sure you want to delete this bonus cycle? This action cannot be undone.",
+      "success": "Deleted successfully",
+      "title": "Delete Bonus Cycle"
+    },
+    "description": "Manage bonus cycles and adjust employee bonus amounts",
+    "detailTitle": "Bonus Cycle Details",
+    "editItem": {
+      "bonusAmount": "Bonus Amount (baht)",
+      "bonusMonths": "Multiplier (months)",
+      "description": "Specify the bonus multiplier or amount to pay.",
+      "saveError": "Failed to save changes. Please try again.",
+      "saveSuccess": "Saved successfully",
+      "title": "Edit Bonus: {name}"
+    },
+    "fields": {
+      "bonusAmount": "Bonus Amount",
+      "bonusMonths": "Bonus Months",
+      "bonusYear": "Bonus Year",
       "createdAt": "Created At",
+      "currentSalary": "Current Salary",
       "employee": "Employee",
       "employeeNumber": "Employee No.",
-      "currentSalary": "Current Salary",
+      "payrollMonth": "Payroll Month",
+      "period": "Evaluation Period",
+      "periodEnd": "End Date",
+      "periodStart": "Start Date",
+      "stats": "Statistics",
+      "status": "Status",
       "tenure": "Tenure",
-      "bonusMonths": "Bonus Months",
-      "bonusAmount": "Bonus Amount",
-      "stats": "Statistics"
+      "totalAmount": "Total Amount",
+      "totalEmployees": "Total Employees"
     },
     "filters": {
       "status": "Status",
       "year": "Year"
     },
-    "units": {
-      "years": "years",
-      "months": "months",
-      "days": "days",
-      "minutes": "min",
-      "hours": "hrs"
+    "listTitle": "Bonus History",
+    "noData": "No data",
+    "reject": {
+      "description": "Are you sure you want to reject this bonus cycle? This action cannot be undone.",
+      "title": "Confirm Rejection"
     },
+    "rejectConfirmMessage": "Are you sure you want to reject this bonus cycle?",
     "stats": {
       "late": "Late",
       "leave": "Leave",
@@ -991,360 +133,1402 @@
       "ot": "OT"
     },
     "status": {
-      "pending": "Awaiting Approval",
-      "approved": "Approved",
-      "rejected": "Rejected",
       "allStatuses": "All Statuses",
-      "allYears": "All Years"
+      "allYears": "All Years",
+      "approved": "Approved",
+      "pending": "Awaiting Approval",
+      "rejected": "Rejected"
     },
-    "actions": {
-      "view": "View Details",
-      "delete": "Delete",
-      "approve": "Approve",
-      "reject": "Reject",
-      "editItem": "Edit Amount"
-    },
-    "approve": {
-      "title": "Confirm Approval",
-      "description": "Are you sure you want to approve this bonus cycle? This action cannot be undone."
-    },
-    "reject": {
-      "title": "Confirm Rejection",
-      "description": "Are you sure you want to reject this bonus cycle? This action cannot be undone."
-    },
-    "rejectConfirmMessage": "Are you sure you want to reject this bonus cycle?",
-    "confirmReject": "Confirm Rejection",
-    "create": {
-      "title": "Create New Cycle",
-      "description": "Define the payroll period and evaluation period. The system will automatically calculate employee work statistics.",
-      "note": "Note: Only one pending cycle can be created at a time",
-      "payrollMonth": "Payroll Month",
-      "bonusYear": "Bonus Year",
-      "startDate": "Start Date",
-      "endDate": "End Date",
-      "success": "Bonus cycle created successfully",
-      "error": "An error occurred. Please try again.",
-      "errors": {
-        "conflictPending": "A pending bonus cycle already exists (only 1 allowed).",
-        "conflictApproved": "An approved bonus cycle already exists for this month."
-      }
-    },
-    "editItem": {
-      "title": "Edit Bonus: {name}",
-      "description": "Specify the bonus multiplier or amount to pay.",
-      "bonusMonths": "Multiplier (months)",
-      "bonusAmount": "Bonus Amount (baht)",
-      "saveSuccess": "Saved successfully",
-      "saveError": "Failed to save changes. Please try again."
-    },
-    "delete": {
-      "title": "Delete Bonus Cycle",
-      "description": "Are you sure you want to delete this bonus cycle? This action cannot be undone.",
-      "success": "Deleted successfully"
+    "title": "Bonus Management",
+    "units": {
+      "days": "days",
+      "hours": "hrs",
+      "minutes": "min",
+      "months": "months",
+      "years": "years"
     }
   },
-  "Debt": {
-    "title": "Debt Management",
-    "description": "Manage employee loans, debts, and repayments",
-    "listTitle": "Debt Transactions",
-    "createTitle": "Create New Debt/Loan",
-    "detailTitle": "Debt Details",
-    "createButton": "Create Debt",
+  "Branches": {
+    "cannotEdit": "Cannot edit suspended or archived branch",
+    "createButton": "Create Branch",
+    "createDescription": "Enter branch information",
+    "createError": "Failed to create branch",
+    "createSuccess": "Branch created successfully",
+    "createTitle": "Create New Branch",
+    "default": "Default",
+    "deleteDescription": "Are you sure you want to delete {name}? This action cannot be undone.",
+    "deleteError": "Failed to delete branch",
+    "deleteSuccess": "Branch deleted successfully",
+    "deleteTitle": "Confirm Delete",
+    "description": "Manage branches in your company",
+    "editDescription": "Update branch information",
+    "editTitle": "Edit Branch",
+    "fetchError": "Failed to load branches",
     "fields": {
-      "employee": "Employee",
-      "txnDate": "Transaction Date",
-      "txnType": "Type",
-      "amount": "Amount",
-      "reason": "Reason",
-      "otherDesc": "Description",
-      "status": "Status",
-      "payrollMonth": "Payroll Month",
-      "installments": "Installments",
-      "outstandingBalance": "Outstanding Balance",
-      "currentOutstanding": "Current Outstanding",
-      "newOutstanding": "New Outstanding",
-      "month": "Month"
+      "code": "Branch Code",
+      "name": "Branch Name",
+      "status": "Status"
     },
-    "types": {
-      "loan": "Loan",
-      "other": "Other Debt",
-      "repayment": "Repayment",
-      "installment": "Installment",
-      "all": "All Types"
+    "noData": "No branches found",
+    "placeholders": {
+      "code": "e.g. HQ, BR01",
+      "name": "e.g. Headquarters"
     },
+    "setDefault": "Set as Default",
+    "setDefaultError": "Failed to set default branch",
+    "setDefaultSuccess": "Default branch set successfully",
     "status": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "all": "All Statuses"
+      "active": "Active",
+      "archived": "Archived",
+      "suspended": "Suspended"
     },
-    "filters": {
-      "hasOutstanding": "Only with outstanding"
+    "statusChange": {
+      "activate": "Activate",
+      "archive": "Archive",
+      "cannotChangeDefault": "Cannot change status of default branch",
+      "confirmActivate": "Confirm reactivating branch \"{name}\"?",
+      "confirmArchive": "Confirm archiving branch \"{name}\"?",
+      "confirmArchiveWithEmployees": "Branch \"{name}\" has {count} employee(s). Confirm archiving?",
+      "confirmSuspend": "Confirm suspending branch \"{name}\"?",
+      "error": "Failed to change branch status",
+      "success": "Branch status changed successfully",
+      "suspend": "Suspend",
+      "title": "Change Branch Status"
     },
-    "installmentStatus": {
-      "pending": "Pending Transaction",
-      "approved": "Paid"
+    "title": "Branch Management",
+    "updateError": "Failed to update branch",
+    "updateSuccess": "Branch updated successfully",
+    "validation": {
+      "codeRequired": "Please enter branch code",
+      "nameRequired": "Please enter branch name"
+    }
+  },
+  "Common": {
+    "actions": "Actions",
+    "admin": "Admin",
+    "all": "All",
+    "back": "Back",
+    "barChart": "Bar Chart",
+    "branch": "Branch",
+    "cancel": "Cancel",
+    "clearFilter": "Clear Filter",
+    "clearFilters": "Clear Filters",
+    "close": "Close",
+    "confirm": "Confirm",
+    "confirmDeleteDescription": "Are you sure you want to delete this item? This action cannot be undone.",
+    "confirmDeleteTitle": "Confirm Delete",
+    "create": "Create",
+    "currentMonth": "Current Month",
+    "default": "Default",
+    "defaultBranch": "Default Branch",
+    "delete": "Delete",
+    "edit": "Edit",
+    "error": "Error",
+    "errorLoadingData": "Error loading data",
+    "export": "Export",
+    "filter": "Filter",
+    "import": "Import",
+    "lineChart": "Line Chart",
+    "loading": "Loading...",
+    "next": "Next",
+    "no": "No",
+    "noData": "No data",
+    "previous": "Previous",
+    "reset": "Reset",
+    "save": "Save",
+    "saveSuccess": "Saved successfully",
+    "saving": "Saving...",
+    "search": "Search",
+    "selectBranch": "Select Branch",
+    "submit": "Submit",
+    "success": "Success",
+    "view": "View",
+    "yes": "Yes"
+  },
+  "Dashboard": {
+    "attendance": {
+      "count": "times",
+      "days": "days",
+      "error": "Failed to load data",
+      "hours": "hrs",
+      "late": "Late",
+      "leave": "Leave",
+      "leaveDay": "Leave (Days)",
+      "leaveDouble": "Leave (Double)",
+      "leaveHours": "Leave (Hours)",
+      "minutes": "min",
+      "noData": "No data available",
+      "ot": "Overtime",
+      "overview": "Overview",
+      "title": "Attendance Statistics",
+      "yearlyOverview": "Year {year} Overview"
     },
+    "employeeStats": {
+      "activeEmployees": "Active Employees",
+      "error": "Failed to load employee data",
+      "fullTime": "Full-Time",
+      "newThisMonth": "New This Month",
+      "noData": "No employee data",
+      "partTime": "Part-Time",
+      "terminated": "Terminated This Month",
+      "title": "Employee Summary"
+    },
+    "expiringDocuments": {
+      "days": "{days} days left",
+      "description": "Employee documents expiring within 30 days",
+      "error": "Failed to load documents",
+      "expired": "Expired",
+      "noExpiring": "No documents expiring soon",
+      "title": "Expiring Documents",
+      "viewAll": "View all ({count} items)"
+    },
+    "loggedInAs": "You are logged in as {role}",
+    "logout": "Log out",
+    "mainContentArea": "Main Content Area",
+    "mainContentDescription": "Content for the selected menu item will be displayed here.",
+    "mainContentExample": "For example, a dashboard with charts, a table of employees, or a payroll processing form",
+    "payroll": {
+      "employees": "Employees",
+      "error": "Failed to load data",
+      "latestRun": "Latest Run",
+      "noData": "No data available",
+      "people": "people",
+      "title": "Payroll Summary",
+      "totalNetPay": "Net Pay",
+      "totalPf": "Provident Fund",
+      "totalSso": "Social Security",
+      "totalTax": "Withholding Tax",
+      "yearly": "Year {year} Total"
+    },
+    "pending": {
+      "advances": "Salary Advances",
+      "bonusCycles": "Pending Bonus Cycles",
+      "description": "Financial items awaiting approval or processing",
+      "error": "Failed to load data",
+      "installments": "Outstanding Installments",
+      "items": "items",
+      "loans": "Pending Loans",
+      "noData": "No data available",
+      "salaryRaise": "Pending Salary Raises",
+      "title": "Pending Items"
+    },
+    "profile": "My Profile",
+    "searchPlaceholder": "Search employees...",
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}"
+  },
+  "Debt": {
     "actions": {
-      "view": "View Details",
-      "delete": "Delete",
       "approve": "Approve",
-      "repay": "Repayment"
+      "delete": "Delete",
+      "repay": "Repayment",
+      "view": "View Details"
+    },
+    "approve": {
+      "description": "Are you sure you want to approve this request? This action will make the debt effective immediately.",
+      "success": "Approved successfully",
+      "title": "Confirm Approval"
     },
     "create": {
-      "title": "Create Debt Plan",
-      "description": "Create a new loan or debt record with optional installment plan.",
-      "hasInstallment": "Has Installment Plan?",
       "autoGenerate": "Auto Generate Installments",
-      "startMonth": "Start Month",
-      "months": "Number of Months",
-      "generate": "Generate",
-      "totalInstallment": "Total Installment Amount",
+      "description": "Create a new loan or debt record with optional installment plan.",
       "diff": "Difference",
+      "error": "Error creating record",
+      "generate": "Generate",
+      "hasInstallment": "Has Installment Plan?",
+      "installmentPlan": "Installment Plan",
+      "months": "Number of Months",
       "mustMatchAmount": "Total installments must equal loan amount",
-      "success": "Debt plan created successfully"
+      "startMonth": "Start Month",
+      "success": "Debt plan created successfully",
+      "title": "Create Debt Plan",
+      "totalAmountMismatch": "Total installments must match loan amount",
+      "totalInstallment": "Total Installment Amount"
     },
+    "createButton": "Create Debt",
+    "createTitle": "Create New Debt/Loan",
+    "delete": {
+      "description": "Are you sure you want to delete this item? This action cannot be undone.",
+      "success": "Deleted successfully",
+      "title": "Delete Item"
+    },
+    "description": "Manage employee loans, debts, and repayments",
+    "detailTitle": "Debt Details",
     "errors": {
       "sumMismatch": "Total installments must equal the loan amount."
+    },
+    "fields": {
+      "amount": "Amount",
+      "currentOutstanding": "Current Outstanding",
+      "employee": "Employee",
+      "installments": "Installments",
+      "month": "Month",
+      "newOutstanding": "New Outstanding",
+      "otherDesc": "Description",
+      "outstandingBalance": "Outstanding Balance",
+      "payrollMonth": "Payroll Month",
+      "reason": "Reason",
+      "status": "Status",
+      "txnDate": "Transaction Date",
+      "txnType": "Type"
+    },
+    "filters": {
+      "hasOutstanding": "Only with outstanding",
+      "selectEmployee": "Select Employee"
+    },
+    "installmentStatus": {
+      "approved": "Paid",
+      "pending": "Pending Transaction"
+    },
+    "listTitle": "Debt Transactions",
+    "selectEmployeeToView": "Please select an employee to view data",
+    "status": {
+      "all": "All Statuses",
+      "allStatuses": "All Statuses",
+      "allTypes": "All Types",
+      "approved": "Approved",
+      "pending": "Pending"
     },
     "summary": {
       "outstandingDebt": "Total Outstanding Debt",
       "pendingInstallments": "Pending Installments"
     },
-    "approve": {
-      "title": "Confirm Approval",
-      "description": "Are you sure you want to approve this request? This action will make the debt effective immediately.",
-      "success": "Approved successfully"
-    },
-    "delete": {
-      "title": "Delete Item",
-      "description": "Are you sure you want to delete this item? This action cannot be undone.",
-      "success": "Deleted successfully"
-    }
-  },
-  "Nav": {
-    "orgProfile": "Org Profile",
-    "departments": "Departments",
-    "positions": "Positions",
-    "documentTypes": "Document Types"
-  },
-  "DocumentTypes": {
-    "title": "Document Type Management",
-    "description": "Manage employee document types",
-    "listTitle": "Document Types",
-    "listDescription": "Document types used for employee document storage",
-    "createTitle": "Create Document Type",
-    "createDescription": "Enter details for the new document type",
-    "editTitle": "Edit Document Type",
-    "editDescription": "Update document type details",
-    "deleteDescription": "Are you sure you want to delete {name}? This will prevent new uploads with this type.",
-    "fields": {
-      "code": "Code",
-      "nameTh": "Name (Thai)",
-      "nameEn": "Name (English)"
-    },
-    "placeholders": {
-      "code": "e.g. PASSPORT, VISA",
-      "nameTh": "e.g. หนังสือเดินทาง",
-      "nameEn": "e.g. Passport"
-    },
-    "noData": "No document types found",
-    "success": {
-      "created": "Document type created successfully",
-      "updated": "Document type updated successfully",
-      "deleted": "Document type deleted successfully"
-    },
-    "errors": {
-      "fetchFailed": "Failed to load document types",
-      "saveFailed": "Failed to save",
-      "deleteFailed": "Failed to delete"
+    "title": "Debt Management",
+    "types": {
+      "all": "All Types",
+      "installment": "Installment",
+      "loan": "Loan",
+      "other": "Other Debt",
+      "repayment": "Repayment"
     }
   },
   "Departments": {
-    "title": "Department Management",
-    "description": "Manage organization departments",
-    "createTitle": "Create Department",
     "createDescription": "Enter details for the new department",
-    "editTitle": "Edit Department",
+    "createTitle": "Create Department",
+    "description": "Manage organization departments",
     "editDescription": "Update department details",
+    "editTitle": "Edit Department",
+    "errors": {
+      "deleteFailed": "Failed to delete",
+      "fetchFailed": "Failed to load departments",
+      "saveFailed": "Failed to save"
+    },
     "fields": {
       "code": "Code",
       "name": "Name"
     },
+    "noData": "No departments found",
     "placeholders": {
       "code": "e.g. HR, IT, FIN",
       "name": "e.g. Human Resources"
     },
-    "noData": "No departments found",
     "success": {
       "created": "Department created successfully",
-      "updated": "Department updated successfully",
-      "deleted": "Department deleted successfully"
+      "deleted": "Department deleted successfully",
+      "updated": "Department updated successfully"
     },
-    "errors": {
-      "fetchFailed": "Failed to load departments",
-      "saveFailed": "Failed to save",
-      "deleteFailed": "Failed to delete"
-    },
+    "title": "Department Management",
     "validation": {
       "codeRequired": "Please enter department code",
       "nameRequired": "Please enter department name"
     }
   },
-  "Positions": {
-    "title": "Position Management",
-    "description": "Manage organization positions",
-    "createTitle": "Create Position",
-    "createDescription": "Enter details for the new position",
-    "editTitle": "Edit Position",
-    "editDescription": "Update position details",
+  "DocumentTypes": {
+    "createDescription": "Enter details for the new document type",
+    "createTitle": "Create Document Type",
+    "customType": "Custom",
+    "deleteDescription": "Are you sure you want to delete {name}? This will prevent new uploads with this type.",
+    "description": "Manage employee document types",
+    "editDescription": "Update document type details",
+    "editTitle": "Edit Document Type",
+    "errors": {
+      "deleteFailed": "Failed to delete",
+      "fetchFailed": "Failed to load document types",
+      "saveFailed": "Failed to save"
+    },
     "fields": {
       "code": "Code",
-      "name": "Name"
+      "nameEn": "Name (English)",
+      "nameTh": "Name (Thai)",
+      "type": "Type"
     },
+    "listDescription": "Document types used for employee document storage",
+    "listTitle": "Document Types",
+    "noData": "No document types found",
     "placeholders": {
-      "code": "e.g. MGR, STAFF, ENG",
-      "name": "e.g. Manager"
+      "code": "e.g. PASSPORT, VISA",
+      "nameEn": "e.g. Passport",
+      "nameTh": "e.g. หนังสือเดินทาง"
     },
-    "noData": "No positions found",
     "success": {
-      "created": "Position created successfully",
-      "updated": "Position updated successfully",
-      "deleted": "Position deleted successfully"
+      "created": "Document type created successfully",
+      "deleted": "Document type deleted successfully",
+      "updated": "Document type updated successfully"
     },
-    "errors": {
-      "fetchFailed": "Failed to load positions",
-      "saveFailed": "Failed to save",
-      "deleteFailed": "Failed to delete"
+    "systemType": "System",
+    "title": "Document Type Management"
+  },
+  "Documents": {
+    "cancel": "Cancel",
+    "clearFilter": "Clear Filter",
+    "delete": "Delete",
+    "deleteDialog": {
+      "description": "Are you sure you want to delete {name}? This action cannot be undone.",
+      "title": "Confirm Delete"
     },
+    "description": "Manage employee documents such as ID cards, passports, work permits",
+    "download": "Download",
+    "duplicateDocumentError": "This document has already been uploaded. Please select a different file.",
+    "expired": "Expired",
+    "expiringDays": "Expires in {days} days",
+    "expiryLabel": "Expires",
+    "fetchError": "Failed to load documents",
+    "filterByType": "Filter by Type",
+    "noDocuments": "No documents uploaded",
+    "noDocumentsMatchFilter": "No documents match the selected filter",
+    "noTypeFound": "No type found",
+    "preview": "Preview",
+    "previewError": "Unable to preview",
+    "searchType": "Search Type",
+    "tabTitle": "Documents",
+    "title": "Employee Documents",
+    "upload": "Upload",
+    "uploadDialog": {
+      "description": "Upload a new document for this employee.",
+      "documentNumber": "Document No.",
+      "documentNumberPlaceholder": "e.g. ID Card Number",
+      "expiryDate": "Expiry Date",
+      "file": "File",
+      "fileHint": "PDF, JPG, PNG max 10MB",
+      "issueDate": "Issue Date",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional notes about this document...",
+      "selectType": "Select document type",
+      "title": "Upload Document",
+      "type": "Document Type"
+    },
+    "uploadError": "Failed to upload document",
+    "uploading": "Uploading...",
     "validation": {
-      "codeRequired": "Please enter position code",
-      "nameRequired": "Please enter position name"
+      "fileAndTypeRequired": "Please select a file and document type",
+      "fileTooLarge": "File is too large (maximum 10MB)"
     }
   },
+  "Employees": {
+    "actions": {
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "openMenu": "Open menu",
+      "title": "Actions"
+    },
+    "back": "Back",
+    "cancel": "Cancel",
+    "changePhoto": "Change Photo",
+    "clearFilters": "Clear Filters",
+    "createButton": "Add Employee",
+    "createTitle": "Create New Employee",
+    "description": "Manage employee information, contracts, and benefits",
+    "editTitle": "Edit Employee",
+    "employeeNumberDuplicate": "This employee number is already in use. Please use a different one.",
+    "employeeTypes": {
+      "allTypes": "All Types",
+      "ft": "Full-time",
+      "full_time": "Full-time",
+      "part_time": "Part-time",
+      "pt": "Part-time"
+    },
+    "employmentInfo": "Employment Details",
+    "fields": {
+      "accountNo": "Account Number",
+      "allowAttendanceBonusNoLate": "Diligence Bonus (No Late)",
+      "allowAttendanceBonusNoLeave": "Diligence Bonus (No Leave)",
+      "allowances": "Allowances",
+      "bank": "Bank",
+      "basePay": "Base Pay / Hourly Wage",
+      "department": "Department",
+      "doctorFee": "Doctor Fee",
+      "electric": "Electricity",
+      "email": "Email",
+      "employeeNumber": "Employee ID",
+      "employeeType": "Employee Type",
+      "endDate": "End Date",
+      "firstName": "First Name",
+      "housing": "Housing",
+      "idCardNumber": "ID Document Number",
+      "idCardType": "ID Document Type",
+      "idDocumentOtherDescription": "ID Document Other Description",
+      "internet": "Internet",
+      "lastName": "Last Name",
+      "nickname": "Nickname",
+      "phone": "Phone",
+      "photo": "Employee Photo",
+      "position": "Position",
+      "pvd": "Provident Fund",
+      "pvdRateEmployee": "PVD Employee Rate (%)",
+      "pvdRateEmployer": "PVD Employer Rate (%)",
+      "sso": "Social Security",
+      "ssoHospitalName": "SSO Hospital Name",
+      "ssoWage": "SSO Declared Wage",
+      "startDate": "Start Date",
+      "status": "Status",
+      "tax": "Withhold Tax",
+      "title": "Title",
+      "utilities": "Utilities (deduct from payroll)",
+      "utilitiesHint": "For deductions such as water, electricity, and internet usage",
+      "water": "Water"
+    },
+    "financialInfo": "Financial & Benefits",
+    "listTitle": "Employee List",
+    "loading": "Loading...",
+    "messages": {
+      "confirmDelete": "Are you sure you want to delete this employee?",
+      "createSuccess": "Employee created successfully",
+      "deleteSuccess": "Employee deleted successfully",
+      "deleteTitle": "Delete Employee",
+      "noEmployeesFound": "No employees found",
+      "updateSuccess": "Employee updated successfully"
+    },
+    "next": "Next",
+    "personalInfo": "Personal Information",
+    "photoDeleteConfirmDescription": "Are you sure you want to delete this employee photo?",
+    "photoDeleteConfirmTitle": "Confirm Photo Deletion",
+    "photoDeleteError": "Failed to delete photo",
+    "photoDeleteSuccess": "Photo deleted successfully",
+    "photoDuplicateError": "This image has already been uploaded. Please select a different image.",
+    "photoHint": "Upload employee photo (image file, max 2MB)",
+    "photoUploadError": "Failed to upload photo",
+    "photoUploadSuccess": "Photo uploaded successfully",
+    "photoUploading": "Uploading...",
+    "placeholders": {
+      "selectDepartment": "Select department",
+      "selectPosition": "Select position",
+      "selectTitle": "Select title",
+      "selectType": "Select type"
+    },
+    "removePhoto": "Remove Photo",
+    "search": "Search",
+    "searchPlaceholder": "Search by name, ID...",
+    "status": {
+      "active": "Active",
+      "all": "All",
+      "allStatuses": "All Statuses",
+      "allYears": "All Years",
+      "terminated": "Terminated"
+    },
+    "submitError": "Failed to save employee. Please try again.",
+    "title": "Employee Management",
+    "uploadPhoto": "Upload Photo",
+    "validation": {
+      "email": "Invalid email address",
+      "incompleteData": "Incomplete Data",
+      "positive": "Value must be positive",
+      "required": "This field is required",
+      "tabsWithErrors": "Please check the following tabs: {tabs}"
+    }
+  },
+  "Index": {
+    "copyright": "© 2024 Your Company. All Rights Reserved",
+    "errors": {
+      "loginFailed": "Login failed. Please check your username and password",
+      "noActiveCompany": "Your company has been suspended or cancelled. Please contact administrator."
+    },
+    "loggingIn": "Logging in...",
+    "login": "Login",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "rememberMe": "Remember Me",
+    "signInDescription": "Sign in to your HR & Payroll account",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "validation": {
+      "passwordLength": "Password must be at least 6 characters",
+      "usernameLength": "Username must be at least 3 characters",
+      "usernameRequired": "Username is required"
+    },
+    "welcomeBack": "Welcome Back"
+  },
+  "Menu": {
+    "activityLogs": "Activity Logs",
+    "attendance": "Attendance",
+    "bonus": "Bonus Management",
+    "collapse": "Collapse",
+    "companies": "Manage Companies",
+    "compensation": "Compensation",
+    "dashboard": "Dashboard",
+    "debt": "Debt Management",
+    "deductions": "Advance/Loan",
+    "employeeManagement": "Employee Management",
+    "humanResources": "Human Resources",
+    "leaveManagement": "Leave Management",
+    "payoutPT": "Advance Payout (Part-time)",
+    "payroll": "Payroll",
+    "payrollExpenses": "Payroll & Expenses",
+    "reports": "Reports",
+    "salaryAdvance": "Salary Advance",
+    "salaryRaise": "Salary Raise",
+    "settings": "Settings",
+    "systemManagement": "System Management",
+    "users": "User Management",
+    "worklog": "Work Logs",
+    "worklogFT": "Full-Time",
+    "worklogPT": "Part-Time"
+  },
+  "Nav": {
+    "branches": "Branches",
+    "departments": "Departments",
+    "documentTypes": "Document Types",
+    "orgProfile": "Org Profile",
+    "positions": "Positions"
+  },
   "OrgProfile": {
-    "title": "Organization Profile (Slip Header)",
-    "description": "Manage organization info displayed on payslips",
-    "viewHistory": "View History",
-    "configurationHistory": "Configuration History",
-    "historyDescription": "List of organization profile changes over time",
-    "version": "Version",
-    "startDate": "Effective Date",
-    "endDate": "End Date",
-    "status": "Status",
-    "currentConfig": "Current Configuration",
-    "currentConfigDescription": "Using version {version} since {startDate}",
-    "companyInfo": "Company Info",
-    "companyInfoDescription": "Basic company information",
-    "companyName": "Company Name",
-    "companyNameHint": "Company name displayed on payslips",
-    "taxId": "Tax ID",
-    "taxIdHint": "13-digit tax identification number",
-    "effectiveDate": "Effective Date",
-    "effectiveDateHint": "Date when this profile takes effect",
     "addressInfo": "Address",
     "addressInfoDescription": "Company address",
     "addressLine1": "Address Line 1",
     "addressLine1Hint": "Street number, alley, road",
     "addressLine2": "Address Line 2",
     "addressLine2Hint": "Additional details (optional)",
-    "subdistrict": "Subdistrict",
-    "district": "District",
-    "province": "Province",
-    "postalCode": "Postal Code",
+    "back": "Back",
+    "changeLogo": "Change Logo",
+    "companyInfo": "Company Info",
+    "companyInfoDescription": "Basic company information",
+    "companyName": "Company Name",
+    "companyNameHint": "Company name displayed on payslips",
+    "configurationHistory": "Configuration History",
     "contactInfo": "Contact Info",
     "contactInfoDescription": "Company contact information",
-    "phoneMain": "Main Phone",
-    "phoneMainHint": "Main phone number",
-    "phoneAlt": "Alternate Phone",
-    "phoneAltHint": "Alternate phone (optional)",
+    "currentConfig": "Current Configuration",
+    "currentConfigDescription": "Using version {version} since {startDate}",
+    "description": "Manage organization info displayed on payslips",
+    "district": "District",
+    "effectiveDate": "Effective Date",
+    "effectiveDateHint": "Date when this profile takes effect",
     "email": "Email",
     "emailHint": "Company email address",
-    "slipSettings": "Slip Settings",
-    "slipSettingsDescription": "Additional payslip settings",
-    "slipFooterNote": "Slip Footer Note",
-    "slipFooterNoteHint": "Text displayed at the bottom of payslips",
+    "endDate": "End Date",
+    "error": "Error",
+    "historyDescription": "List of organization profile changes over time",
     "logo": "Company Logo",
     "logoHint": "Upload company logo (image file, max 2MB)",
-    "uploadLogo": "Upload Logo",
-    "changeLogo": "Change Logo",
-    "removeLogo": "Remove Logo",
-    "logoUploading": "Uploading...",
-    "logoUploadSuccess": "Logo uploaded successfully",
     "logoUploadError": "Failed to upload logo",
-    "saveChanges": "Save Changes",
-    "saving": "Saving...",
-    "saveSuccess": "Profile saved successfully",
-    "reset": "Reset",
-    "back": "Back",
+    "logoUploadSuccess": "Logo uploaded successfully",
+    "logoUploading": "Uploading...",
     "next": "Next",
-    "error": "Error",
-    "success": "Success"
+    "phoneAlt": "Alternate Phone",
+    "phoneAltHint": "Alternate phone (optional)",
+    "phoneMain": "Main Phone",
+    "phoneMainHint": "Main phone number",
+    "postalCode": "Postal Code",
+    "province": "Province",
+    "removeLogo": "Remove Logo",
+    "reset": "Reset",
+    "saveChanges": "Save Changes",
+    "saveSuccess": "Profile saved successfully",
+    "saving": "Saving...",
+    "slipFooterNote": "Slip Footer Note",
+    "slipFooterNoteHint": "Text displayed at the bottom of payslips",
+    "slipSettings": "Slip Settings",
+    "slipSettingsDescription": "Additional payslip settings",
+    "startDate": "Effective Date",
+    "status": "Status",
+    "subdistrict": "Subdistrict",
+    "success": "Success",
+    "taxId": "Tax ID",
+    "taxIdHint": "13-digit tax identification number",
+    "title": "Organization Profile (Slip Header)",
+    "uploadLogo": "Upload Logo",
+    "version": "Version",
+    "viewHistory": "View History"
   },
-  "Documents": {
-    "tabTitle": "Documents",
-    "title": "Employee Documents",
-    "description": "Manage employee documents such as ID cards, passports, work permits",
-    "upload": "Upload",
-    "download": "Download",
-    "preview": "Preview",
-    "delete": "Delete",
-    "cancel": "Cancel",
-    "uploading": "Uploading...",
-    "noDocuments": "No documents uploaded",
-    "fetchError": "Failed to load documents",
-    "uploadError": "Failed to upload document",
-    "duplicateDocumentError": "This document has already been uploaded. Please select a different file.",
-    "previewError": "Unable to preview",
-    "expiryLabel": "Expires",
-    "expired": "Expired",
-    "expiringDays": "Expires in {days} days",
-    "validation": {
-      "fileAndTypeRequired": "Please select a file and document type",
-      "fileTooLarge": "File is too large (maximum 10MB)"
-    },
-    "uploadDialog": {
-      "title": "Upload Document",
-      "description": "Select a file and fill in document details",
-      "file": "File",
-      "fileHint": "PDF, JPG, PNG up to 10MB",
-      "type": "Document Type",
-      "selectType": "Select type",
-      "documentNumber": "Document Number",
-      "documentNumberPlaceholder": "e.g. Passport number",
-      "issueDate": "Issue Date",
-      "expiryDate": "Expiry Date",
-      "notes": "Notes",
-      "notesPlaceholder": "Additional notes..."
-    },
-    "deleteDialog": {
-      "title": "Confirm Delete",
-      "description": "Are you sure you want to delete {name}? This action cannot be undone."
+  "Payouts": {
+    "PT": {
+      "actions": {
+        "markAsPaid": "Approve Payment",
+        "view": "View Details"
+      },
+      "confirmPay": {
+        "description": "Are you sure you want to mark this payout as paid? This action cannot be undone.",
+        "title": "Confirm Payment"
+      },
+      "create": {
+        "createTitle": "Create Payout",
+        "estimatedAmount": "Estimated Amount: {amount}",
+        "hourlyRate": "Hourly Rate: {rate}",
+        "noPendingWorklogs": "No pending worklogs found for this employee",
+        "selectEmployeePlaceholder": "Select an employee to proceed",
+        "selectedWorklogs": "Selected Worklogs: {count}",
+        "step1": "Select Employee",
+        "step2": "Select Worklogs",
+        "step3": "Confirm",
+        "totalHours": "Total Hours: {hours}"
+      },
+      "createButton": "Create Payout",
+      "createTitle": "Create New Payout",
+      "deleteError": "Failed to delete payout",
+      "deleteSuccess": "Payout deleted successfully",
+      "description": "Manage payouts for part-time employees",
+      "detailTitle": "Payout Details",
+      "errors": {
+        "createFailed": "Failed to create payout",
+        "payFailed": "Failed to mark as paid"
+      },
+      "fields": {
+        "amountTotal": "Total Amount",
+        "createdAt": "Created At",
+        "employee": "Employee",
+        "itemCount": "Items",
+        "paidAt": "Paid At",
+        "paidBy": "Paid By",
+        "status": "Status",
+        "totalHours": "Total Hours",
+        "workDate": "Work Date"
+      },
+      "filters": {
+        "allEmployees": "All Employees",
+        "allStatuses": "All Statuses",
+        "endDate": "End Date",
+        "selectEmployee": "Select Employee",
+        "startDate": "Start Date"
+      },
+      "listTitle": "Payout History",
+      "noData": "No payouts found",
+      "statuses": {
+        "paid": "Paid",
+        "to_pay": "To Pay"
+      },
+      "success": {
+        "created": "Payout created successfully",
+        "paid": "Payout marked as paid"
+      },
+      "title": "Part-Time Payouts"
     }
   },
-  "ActivityLog": {
-    "title": "Activity Logs",
-    "description": "View history of user actions and system changes",
-    "fields": {
-      "timestamp": "Timestamp",
-      "user": "User",
-      "action": "Action",
-      "entity": "Entity",
-      "entityId": "Entity ID"
-    },
+  "Payroll": {
     "actions": {
-      "viewDetails": "View Details",
-      "search": "Search"
+      "approve": "Approve",
+      "title": "Actions",
+      "view": "View Details"
     },
-    "detailsTitle": "Change Details",
-    "noData": "No activity logs found",
+    "approve": {
+      "description": "Are you sure you want to approve this payroll? This action cannot be undone.",
+      "title": "Approve Payroll"
+    },
+    "createDescription": "Create a new payroll cycle for the selected month.",
+    "createTitle": "Create Payroll Cycle",
+    "description": "Manage payroll cycles and payslips",
+    "detail": {
+      "backToList": "Back to List",
+      "employeeList": "Employee List",
+      "filterByType": "Employee Type",
+      "searchPlaceholder": "Search by number or name...",
+      "title": "Payroll Details"
+    },
+    "fields": {
+      "month": "Payroll Month",
+      "payDate": "Pay Date",
+      "period": "Period",
+      "periodStart": "Period Start Date",
+      "ssoEmployee": "SSO Employee (%)",
+      "ssoEmployer": "SSO Employer (%)",
+      "status": "Status",
+      "totalEmployees": "Total Employees",
+      "totalNetPay": "Total Net Pay",
+      "totalProvidentFund": "Total Provident Fund",
+      "totalSocialSecurity": "Total Social Security",
+      "totalTax": "Total Tax"
+    },
     "filters": {
-      "title": "Filters",
-      "dateRange": "Date Range",
-      "user": "User",
-      "userPlaceholder": "Search username...",
-      "action": "Action",
-      "entity": "Type",
-      "all": "All"
+      "allStatuses": "All Statuses",
+      "status": "Status",
+      "year": "Year"
+    },
+    "payslip": {
+      "addItem": "Add Item",
+      "editTitle": "Edit Payslip",
+      "fields": {
+        "advanceRepay": "Salary Advance Deduction",
+        "attendanceBonus": "Attendance Bonus",
+        "attendanceBonusNoLate": "Attendance Bonus (No Late)",
+        "attendanceBonusNoLeave": "Attendance Bonus (No Leave)",
+        "bonus": "Bonus",
+        "deductionTotal": "Total Deductions",
+        "doctorFee": "Doctor Fee",
+        "electricAmount": "Electric Amount",
+        "electricMeterCurr": "Electric Meter (Curr)",
+        "electricMeterPrev": "Electric Meter (Prev)",
+        "employee": "Employee",
+        "housingAllowance": "Housing Allowance",
+        "incomeTotal": "Total Income",
+        "internetAmount": "Internet",
+        "lateDeduction": "Late Deduction",
+        "lateMinutes": "Late Minutes",
+        "leaveCompensation": "Leave Compensation",
+        "leaveDays": "Leave Days",
+        "leaveDeduction": "Leave Deduction",
+        "leaveDouble": "Leave (Double)",
+        "leaveDoubleDeduction": "Leave Double Deduction",
+        "leaveHours": "Leave Hours",
+        "leaveHoursDeduction": "Leave Hours Deduction",
+        "loanRepayments": "Debt Repayment Deduction",
+        "netPay": "Net Pay",
+        "ot": "Overtime",
+        "otHours": "hours",
+        "othersDeduction": "Other Deductions",
+        "othersIncome": "Other Income",
+        "providentFund": "Provident Fund",
+        "salary": "Salary",
+        "sso": "Social Security",
+        "tax": "Withholding Tax",
+        "utilities": "Utilities",
+        "waterAmount": "Water Amount",
+        "waterMeterCurr": "Water Meter (Curr)",
+        "waterMeterPrev": "Water Meter (Prev)"
+      },
+      "itemName": "Name",
+      "itemValue": "Amount",
+      "removeItem": "Remove",
+      "tabs": {
+        "attendance": "Attendance Deductions",
+        "deductions": "Deductions",
+        "income": "Income",
+        "loans": "Loans"
+      },
+      "viewTitle": "View Payslip"
+    },
+    "print": {
+      "batchButton": "Print All Slips",
+      "button": "Print Slip",
+      "copy": "Copy",
+      "deselectAll": "Deselect All",
+      "original": "Original",
+      "selectAll": "Select All",
+      "selectEmployees": "Select Employees to Print",
+      "selectedCount": "Selected {count}",
+      "title": "Pay Slip"
+    },
+    "status": {
+      "approved": "Approved",
+      "paid": "Paid",
+      "pending": "Pending",
+      "processing": "Processing"
+    },
+    "title": "Payroll"
+  },
+  "Positions": {
+    "createDescription": "Enter details for the new position",
+    "createTitle": "Create Position",
+    "description": "Manage organization positions",
+    "editDescription": "Update position details",
+    "editTitle": "Edit Position",
+    "errors": {
+      "deleteFailed": "Failed to delete",
+      "fetchFailed": "Failed to load positions",
+      "saveFailed": "Failed to save"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name"
+    },
+    "noData": "No positions found",
+    "placeholders": {
+      "code": "e.g. MGR, STAFF, ENG",
+      "name": "e.g. Manager"
+    },
+    "success": {
+      "created": "Position created successfully",
+      "deleted": "Position deleted successfully",
+      "updated": "Position updated successfully"
+    },
+    "title": "Position Management",
+    "validation": {
+      "codeRequired": "Please enter position code",
+      "nameRequired": "Please enter position name"
+    }
+  },
+  "Profile": {
+    "description": "Manage your personal information and password",
+    "errorLoadingProfile": "Failed to load profile",
+    "lastLogin": "Last Login",
+    "loading": "Loading...",
+    "password": {
+      "confirmPassword": "Confirm New Password",
+      "currentPassword": "Current Password",
+      "description": "Update your password for security",
+      "error": "Failed to change password. Please check your current password.",
+      "errorTitle": "Error",
+      "minLength": "Password must be at least 6 characters",
+      "newPassword": "New Password",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "required": "Required",
+      "submit": "Change Password",
+      "success": "Password changed successfully",
+      "successTitle": "Success",
+      "title": "Change Password"
+    },
+    "personalInfo": "User Information",
+    "personalInfoDescription": "Your account details",
+    "role": "Role",
+    "title": "My Profile",
+    "username": "Username"
+  },
+  "SalaryAdvance": {
+    "advanceDate": "Advance Date",
+    "allStatuses": "All Statuses",
+    "amount": "Amount",
+    "create": "Create Request",
+    "createError": "Error creating request",
+    "createSuccess": "Request created successfully",
+    "createTitle": "Create Salary Advance Request",
+    "deleteConfirm": "Are you sure you want to delete this request? This action cannot be undone.",
+    "deleteError": "Error deleting request",
+    "deleteSuccess": "Request deleted successfully",
+    "deleteTitle": "Confirm Delete",
+    "description": "Manage employee salary advance requests",
+    "editTitle": "Edit Salary Advance Request",
+    "employee": "Employee",
+    "errors": {
+      "amountMinError": "Amount must be greater than 0",
+      "invalidPayrollMonth": "The selected payroll cycle does not exist or has not been approved yet. Please select a different cycle."
+    },
+    "filterStatus": "Status",
+    "listTitle": "Salary Advance List",
+    "noEmployeeFound": "No employee found",
+    "payrollMonth": "Payroll Month",
+    "payrollYear": "Year",
+    "searchEmployee": "Search employee...",
+    "searchPlaceholder": "Search...",
+    "selectEmployee": "Select Employee",
+    "selectEmployeeToView": "Please select an employee to view data",
+    "status": "Status",
+    "statusPending": "Pending",
+    "statusProcessed": "Processed",
+    "title": "Salary Advance",
+    "updateError": "Error updating request",
+    "updateSuccess": "Request updated successfully",
+    "validating": "Validating..."
+  },
+  "SalaryRaise": {
+    "actions": {
+      "approve": "Approve",
+      "delete": "Delete",
+      "edit": "Edit",
+      "editItem": "Edit Raise",
+      "reject": "Reject",
+      "view": "View Details"
+    },
+    "approve": {
+      "description": "Are you sure you want to approve this cycle? This will update the base salary for all employees in this cycle immediately.",
+      "success": "Cycle approved successfully",
+      "title": "Approve Cycle"
+    },
+    "confirmReject": "Are you sure you want to reject this cycle?",
+    "create": {
+      "description": "Select the evaluation period for this cycle. The system will automatically calculate statistics for all full-time employees.",
+      "endDate": "Period End Date",
+      "error": {
+        "overlapOrPending": "Cannot create cycle (Pending cycle exists or date overlap)"
+      },
+      "note": "Note: Only one pending cycle can be created at a time.",
+      "startDate": "Period Start Date",
+      "success": "Cycle created successfully",
+      "title": "Create Salary Raise Cycle"
+    },
+    "createButton": "Create",
+    "createTitle": "Create New Cycle",
+    "delete": {
+      "description": "Are you sure you want to delete this salary raise cycle? This action cannot be undone.",
+      "error": "Failed to delete salary raise cycle",
+      "success": "Salary raise cycle deleted successfully",
+      "title": "Delete Salary Raise Cycle"
+    },
+    "description": "Manage annual salary adjustments and raise cycles",
+    "detailTitle": "Cycle Details",
+    "editItem": {
+      "currentSalary": "Current Salary: {amount}",
+      "description": "Adjust raise amount or percentage",
+      "newSalary": "New Salary: {amount}",
+      "saveSuccess": "Raise updated successfully",
+      "title": "Edit Raise: {name}"
+    },
+    "fields": {
+      "createdAt": "Created At",
+      "currentSalary": "Current Salary",
+      "employee": "Employee",
+      "employeeNumber": "Employee No.",
+      "newSalary": "New Salary",
+      "newSsoWage": "New SSO Wage",
+      "note": "Note",
+      "period": "Evaluation Period",
+      "raiseAmount": "Raise Amount",
+      "raisePercent": "Raise %",
+      "stats": "Stats (Late/Leave/OT)",
+      "status": "Status",
+      "tenure": "Tenure (Days)",
+      "totalEmployees": "Total Employees",
+      "totalRaiseAmount": "Total Raise Amount",
+      "updatedAt": "Updated At",
+      "year": "Year"
+    },
+    "listTitle": "Salary Raise Cycles",
+    "noData": "No cycles found",
+    "noItemsFound": "No items found",
+    "reject": {
+      "description": "Are you sure you want to reject this cycle?",
+      "success": "Cycle rejected successfully",
+      "title": "Reject Cycle"
+    },
+    "rejectConfirmMessage": "Are you sure you want to reject this salary raise cycle?",
+    "stats": {
+      "late": "Late: {minutes} min",
+      "leave": "Leave: {days} days",
+      "leaveDouble": "Double Leave: {days} days",
+      "leaveHours": "Leave (Hr): {hours} hrs",
+      "ot": "OT: {hours} hrs"
+    },
+    "status": {
+      "all": "All",
+      "allStatuses": "All Statuses",
+      "allYears": "All Years",
+      "approved": "Approved",
+      "pending": "Awaiting Approval",
+      "rejected": "Rejected"
+    },
+    "title": "Salary Raise Management",
+    "units": {
+      "days": "d",
+      "hours": "hours",
+      "minutes": "minutes",
+      "months": "months",
+      "years": "years"
+    }
+  },
+  "Settings": {
+    "addBracket": "Add Bracket",
+    "attendanceBonuses": "Attendance Bonuses & Benefits",
+    "attendanceBonusesDescription": "Set attendance bonuses and housing allowance",
+    "back": "Back",
+    "bonusNoLate": "Bonus (No Late)",
+    "bonusNoLateHint": "Bonus for employees with no late arrivals (THB/month)",
+    "bonusNoLeave": "Bonus (No Leave)",
+    "bonusNoLeaveHint": "Bonus for employees with no absences (THB/month)",
+    "bonuses": "Bonuses & Benefits",
+    "bracketMax": "Income (Max)",
+    "bracketMin": "Income (Min)",
+    "bracketRate": "Tax Rate",
+    "configurationHistory": "Configuration History",
+    "currentConfig": "Current Configuration",
+    "currentConfigDescription": "Currently using version {version} effective from {startDate}",
+    "description": "Manage constant values for payroll calculation and benefits",
+    "effectiveDate": "Effective Date",
+    "effectiveDateHint": "Date when this configuration takes effect",
+    "electricityRate": "Electricity Rate per Unit",
+    "electricityRateHint": "Electricity rate per unit (THB)",
+    "employeeRate": "Employee Rate",
+    "employeeRateHint": "Employee social security deduction percentage (enter 5 for 5%)",
+    "employerRate": "Employer Rate",
+    "employerRateHint": "Employer social security contribution percentage (enter 5 for 5%)",
+    "endDate": "End Date",
+    "error": "Error",
+    "historyDescription": "View all past configuration changes",
+    "hourlyRate": "Hourly Rate",
+    "hourlyRateHint": "Hourly wage for part-time employees (THB)",
+    "housingAllowance": "Housing Allowance",
+    "housingAllowanceHint": "Housing benefit allowance (THB/month)",
+    "internetFee": "Monthly Internet Fee",
+    "internetFeeHint": "Monthly internet fee (THB)",
+    "lateGraceMinutes": "Late Grace Period (minutes)",
+    "lateGraceMinutesHint": "Grace period before late deduction applies (e.g., 15 mins)",
+    "lateRatePerMinute": "Late Deduction Rate (per minute)",
+    "lateRatePerMinuteHint": "Amount deducted per minute when late exceeds grace period (THB/min)",
+    "leaveDeductionSettings": "Leave/Late Deduction Settings",
+    "leaveDeductionSettingsDescription": "Configure settings for calculating leave and late deductions",
+    "next": "Next",
+    "note": "Note",
+    "notes": "Notes",
+    "notesDescription": "Record reasons or details for this change",
+    "notesPlaceholder": "e.g. Adjusted wages according to new law or Updated electricity rates to actual costs",
+    "otHourlyRate": "OT Hourly Rate",
+    "otHourlyRateHint": "Overtime rate per hour (THB)",
+    "rates": "Wage Rates",
+    "reset": "Reset",
+    "saveChanges": "Save Changes",
+    "saveSuccess": "Settings saved successfully",
+    "saving": "Saving...",
+    "socialSecurity": "Social Security",
+    "socialSecurityRates": "Social Security Rates",
+    "socialSecurityRatesDescription": "Set deduction rates for employee and employer contributions",
+    "ssoWageCap": "SSO Wage Cap (max base)",
+    "ssoWageCapHint": "Maximum wage base used for SSO calculation (THB).",
+    "startDate": "Start Date",
+    "status": "Status",
+    "success": "Success",
+    "tax": "Tax",
+    "taxApplyPersonalAllowance": "Apply Personal Allowance",
+    "taxApplyPersonalAllowanceHint": "Enable/disable personal allowance deduction (60,000 THB)",
+    "taxApplyStandardExpense": "Apply Standard Expense Deduction",
+    "taxApplyStandardExpenseHint": "Enable/disable 50% standard expense deduction (max 100,000 THB)",
+    "taxBracketValidation": {
+      "maxLessThanMin": "Maximum income for row {row} must be greater than minimum (min: {min}, max: {max})",
+      "minMismatch": "Minimum income for row {row} must be {expected} (previous max + 1), but current value is {actual}",
+      "prevMaxNull": "Please specify the maximum income for row {row} first"
+    },
+    "taxPersonalAllowanceAmount": "Personal Allowance Amount",
+    "taxPersonalAllowanceAmountHint": "Personal allowance per year (THB)",
+    "taxProgressiveBrackets": "Progressive Tax Brackets (0-35%)",
+    "taxProgressiveBracketsHint": "Configure tax brackets according to Section 40(1)",
+    "taxSection40_1Description": "Settings for regular employees with payslip and social security (salary income)",
+    "taxSection40_1Title": "Income Tax Section 40(1) - Regular Employees",
+    "taxSection40_2Description": "Settings for contract/freelance workers without social security (withholding tax)",
+    "taxSection40_2Title": "Tax Section 40(2) - Freelance/Contract",
+    "taxStandardExpenseCap": "Standard Expense Cap",
+    "taxStandardExpenseCapHint": "Maximum allowable standard expense deduction (THB)",
+    "taxStandardExpenseRate": "Standard Expense Rate",
+    "title": "Payroll System Settings",
+    "utilities": "Utilities",
+    "utilityRates": "Utility Rates",
+    "utilityRatesDescription": "Set rates for water, electricity, and internet",
+    "version": "Version",
+    "viewHistory": "View History",
+    "wageRates": "Wage Rates",
+    "wageRatesDescription": "Set hourly rates and overtime rates",
+    "waterRate": "Water Rate per Unit",
+    "waterRateHint": "Water rate per unit (THB)",
+    "withholdingTaxRateService": "Withholding Tax Rate",
+    "withholdingTaxRateServiceHint": "Percentage the employer must withhold for tax, e.g. 3%",
+    "workHoursPerDay": "Work Hours Per Day",
+    "workHoursPerDayHint": "Working hours per day for leave hours calculation (e.g., 8 hrs)"
+  },
+  "SuperAdmin": {
+    "companies": {
+      "adminInfo": "Admin User",
+      "adminInfoDesc": "Create an admin account for this company",
+      "companyInfo": "Company Information",
+      "companyInfoDesc": "Enter company code and name",
+      "create": "Create Company",
+      "createDescription": "Create a new company with default branch and admin user",
+      "createError": "Failed to create company",
+      "createSuccess": "Company created successfully",
+      "description": "View and manage all customer companies in the system",
+      "edit": "Edit Company",
+      "errors": {
+        "duplicateAdminUser": "This username is already taken",
+        "duplicateCompanyCode": "This company code is already taken",
+        "unknown": "An unknown error occurred. Please try again."
+      },
+      "fields": {
+        "adminPassword": "Admin Password",
+        "adminUsername": "Admin Username",
+        "code": "Company Code",
+        "createdAt": "Created At",
+        "name": "Company Name",
+        "status": "Status"
+      },
+      "noData": "No companies found",
+      "notFound": "Company not found",
+      "passwordHint": "Password must be at least 8 characters",
+      "placeholders": {
+        "adminPassword": "Password",
+        "adminUsername": "e.g. admin",
+        "code": "e.g. COMPANY01",
+        "name": "e.g. ABC Company Ltd."
+      },
+      "title": "Manage Companies",
+      "updateError": "Failed to update company",
+      "updateSuccess": "Company updated successfully",
+      "validation": {
+        "passwordLength": "Password must be at least 8 characters",
+        "required": "Please fill in all required fields"
+      }
+    },
+    "documentTypes": {
+      "description": "Manage system-wide document types available to all companies",
+      "title": "System Document Types"
+    },
+    "fetchError": "Failed to fetch data",
+    "status": {
+      "active": "Active",
+      "archived": "Archived",
+      "suspended": "Suspended"
+    },
+    "title": "Super Admin"
+  },
+  "Tenant": {
+    "back": "Back",
+    "branchSwitched": "Branch switched successfully",
+    "branches": "branches",
+    "confirm": "Confirm",
+    "default": "Default",
+    "error": "Error",
+    "mustSelectOneBranch": "Must select at least one branch",
+    "selectBranch": "Select Branch",
+    "selectBranchDescription": "Select the branches you want to work with",
+    "selectBranches": "Select Branches",
+    "selectCompany": "Select Company",
+    "selectCompanyDescription": "Choose the company you want to access",
+    "success": "Success",
+    "switchFailed": "Failed to switch branch"
+  },
+  "UserBranches": {
+    "branchList": "Branch List",
+    "default": "Default",
+    "description": "Select branches this user can access",
+    "deselectAll": "Deselect All",
+    "fetchError": "Failed to load data",
+    "mustSelectOne": "Must select at least one branch",
+    "noBranches": "No branches found",
+    "saveError": "Failed to save",
+    "saveSuccess": "Branches saved successfully",
+    "selectAll": "Select All",
+    "selectBranches": "{count} branches selected",
+    "title": "Manage Branches for {username}"
+  },
+  "Users": {
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating...",
+      "delete": "Delete User",
+      "editRole": "Edit Role",
+      "manageBranches": "Manage Branches",
+      "openMenu": "Open menu",
+      "resetPassword": "Reset Password",
+      "save": "Save",
+      "saving": "Saving...",
+      "title": "Actions"
+    },
+    "createUser": "Create User",
+    "createUserDescription": "Create a new user account for system access",
+    "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user {username}.",
+    "deleteConfirmTitle": "Are you sure?",
+    "description": "Manage user accounts and access roles",
+    "editRoleDescription": "Update role for user {username}",
+    "errors": {
+      "createFailed": "Failed to create user",
+      "createFailedDescription": "Please try again later",
+      "deleteFailed": "Failed to delete user",
+      "deleteFailedDescription": "Please try again later",
+      "fetchFailed": "Failed to fetch users",
+      "fetchFailedDescription": "Please try again later",
+      "resetFailed": "Failed to reset password",
+      "resetFailedDescription": "Please try again later",
+      "updateFailed": "Failed to update user",
+      "updateFailedDescription": "Please try again later",
+      "usernameExists": "Username already exists"
+    },
+    "fields": {
+      "createdAt": "Created At",
+      "lastLoginAt": "Last Login",
+      "newPassword": "New Password",
+      "password": "Password",
+      "role": "Role",
+      "username": "Username"
+    },
+    "loading": "Loading...",
+    "noData": "No users found",
+    "placeholders": {
+      "selectRole": "Select a role"
+    },
+    "resetPasswordDescription": "Set a new password for user {username}",
+    "roles": {
+      "admin": "Admin",
+      "hr": "HR",
+      "superadmin": "Super Admin"
+    },
+    "success": {
+      "passwordReset": "Password reset successfully",
+      "roleUpdated": "Role updated successfully",
+      "userCreated": "User created successfully",
+      "userDeleted": "User deleted successfully"
+    },
+    "title": "User Management",
+    "validation": {
+      "passwordMin": "Password must be at least 8 characters",
+      "roleRequired": "Please select a role",
+      "usernameMin": "Username must be at least 3 characters"
+    }
+  },
+  "Worklogs": {
+    "FT": {
+      "createButton": "Create New Record",
+      "createTitle": "Create New Record",
+      "deleteDialog": {
+        "description": "Are you sure you want to delete this record?",
+        "title": "Confirm Delete"
+      },
+      "description": "Manage late, leave, and overtime records for full-time employees",
+      "editTitle": "Edit Record",
+      "entryTypes": {
+        "late": "Late",
+        "leave_day": "Leave (Days)",
+        "leave_double": "Leave (Double Pay)",
+        "leave_hours": "Leave (Hours)",
+        "ot": "Overtime"
+      },
+      "errors": {
+        "cannotDelete": "Cannot Delete",
+        "cannotDeleteDescription": "Only pending records can be deleted",
+        "cannotEdit": "Cannot Edit",
+        "cannotEditDescription": "Only pending records can be edited",
+        "deleteFailed": "Failed to delete",
+        "deleteFailedDescription": "Please try again",
+        "duplicateWorklog": "A worklog already exists for this employee, date, and type",
+        "fetchFailed": "Failed to load data",
+        "fetchFailedDescription": "Please try again",
+        "saveFailed": "Failed to save",
+        "saveFailedDescription": "Please check your data and try again"
+      },
+      "fields": {
+        "employee": "Employee",
+        "endDate": "End Date",
+        "entryType": "Type",
+        "leaveDuration": "Leave Duration",
+        "quantity": "Quantity",
+        "startDate": "Start Date",
+        "workDate": "Date"
+      },
+      "filters": {
+        "allEmployees": "All Employees",
+        "allStatuses": "All Statuses",
+        "allTypes": "All Types",
+        "employee": "Employee",
+        "endDate": "End Date",
+        "entryType": "Type",
+        "noEmployeeFound": "No employee found",
+        "searchEmployee": "Search employee...",
+        "searchPlaceholder": "Search...",
+        "startDate": "Start Date",
+        "status": "Status"
+      },
+      "formDescription": "Fill in worklog details",
+      "noData": "No worklogs found",
+      "pagination": {
+        "next": "Next",
+        "of": "of",
+        "page": "Page",
+        "previous": "Previous"
+      },
+      "placeholders": {
+        "quantity": "Enter quantity",
+        "selectEmployee": "Select employee"
+      },
+      "statuses": {
+        "approved": "Processed",
+        "pending": "Pending Process"
+      },
+      "success": {
+        "created": "Created Successfully",
+        "createdDescription": "Worklog record created",
+        "deleted": "Deleted Successfully",
+        "deletedDescription": "Worklog record deleted",
+        "updated": "Updated Successfully",
+        "updatedDescription": "Worklog record updated"
+      },
+      "table": {
+        "actions": "Actions",
+        "employee": "Employee",
+        "entryType": "Type",
+        "quantity": "Quantity",
+        "status": "Status",
+        "workDate": "Date"
+      },
+      "title": "Full-Time Worklogs",
+      "units": {
+        "days": "days",
+        "hours": "hours",
+        "minutes": "minutes"
+      },
+      "validation": {
+        "employeeRequired": "Please select an employee",
+        "endDateRequired": "Please select an end date",
+        "quantityRequired": "Please enter a valid quantity",
+        "workDateRequired": "Please select a date"
+      }
+    },
+    "PT": {
+      "createButton": "Record Time",
+      "createTitle": "Record Work Time",
+      "deleteDialog": {
+        "description": "Are you sure you want to delete this record?",
+        "title": "Confirm Delete"
+      },
+      "description": "Manage time entries for part-time employees",
+      "editTitle": "Edit Work Time",
+      "errors": {
+        "cannotDelete": "Cannot Delete",
+        "cannotDeleteDescription": "Only pending records can be deleted",
+        "cannotEdit": "Cannot Edit",
+        "cannotEditDescription": "Only pending records can be edited",
+        "deleteFailed": "Failed to delete",
+        "deleteFailedDescription": "Please try again",
+        "duplicateWorklog": "A worklog already exists for this employee on this date",
+        "fetchFailed": "Failed to load data",
+        "fetchFailedDescription": "Please try again",
+        "saveFailed": "Failed to save",
+        "saveFailedDescription": "Please check your data and try again",
+        "submitFailed": "Failed to save the worklog"
+      },
+      "fields": {
+        "employee": "Employee",
+        "eveningShift": "Evening Shift",
+        "morningShift": "Morning Shift",
+        "timeIn": "In",
+        "timeOut": "Out",
+        "workDate": "Date"
+      },
+      "filters": {
+        "allEmployees": "All Employees",
+        "allStatuses": "All Statuses",
+        "employee": "Employee",
+        "endDate": "End Date",
+        "startDate": "Start Date",
+        "status": "Status"
+      },
+      "formDescription": "Record employee clock in/out times",
+      "noData": "No time records found",
+      "pagination": {
+        "next": "Next",
+        "of": "of",
+        "page": "Page",
+        "previous": "Previous"
+      },
+      "placeholders": {
+        "selectEmployee": "Select employee"
+      },
+      "statuses": {
+        "approved": "Processed",
+        "paid": "Paid",
+        "pending": "Pending Process",
+        "to_pay": "To Pay"
+      },
+      "success": {
+        "created": "Created Successfully",
+        "createdDescription": "Time record created",
+        "deleted": "Deleted Successfully",
+        "deletedDescription": "Time record deleted",
+        "updated": "Updated Successfully",
+        "updatedDescription": "Time record updated"
+      },
+      "table": {
+        "actions": "Actions",
+        "employee": "Employee",
+        "eveningShift": "Evening Shift",
+        "morningShift": "Morning Shift",
+        "status": "Status",
+        "totalHours": "Total Hours",
+        "workDate": "Date"
+      },
+      "title": "Part-Time Worklogs",
+      "totalHours": "Total Hours",
+      "units": {
+        "hours": "hours"
+      },
+      "validation": {
+        "atLeastOneShift": "Please fill in at least one shift",
+        "completeEveningShift": "Please complete evening shift (in and out)",
+        "completeMorningShift": "Please complete morning shift (in and out)",
+        "employeeRequired": "Please select an employee",
+        "workDateRequired": "Please select a date"
+      }
     }
   }
 }

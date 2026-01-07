@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 )
@@ -27,14 +26,8 @@ func NewEndpoint(router fiber.Router) {
 			return errs.BadRequest("invalid document id")
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		_, err = mediator.Send[*Command, mediator.NoResponse](c.Context(), &Command{
 			DocumentID: docID,
-			ActorID:    user.ID,
 		})
 		if err != nil {
 			return err

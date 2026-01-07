@@ -1,12 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, X, RotateCcw, Eye, Trash2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Plus, Filter, RotateCcw, Eye, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -14,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { MobileEmployeeDisplay } from '@/components/common/mobile-employee-display';
 import { EmployeeCellDisplay } from '@/components/common/employee-cell-display';
@@ -44,6 +42,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useTenantStore } from '@/store/tenant-store';
+import { GenericDataTable, ActionConfig } from '@/components/common/generic-data-table';
+import { ColumnDef } from '@tanstack/react-table';
 
 
 export default function PayoutPtListPage() {
@@ -60,19 +61,34 @@ export default function PayoutPtListPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
+  // Get current branch from tenant store
+  const { currentBranch } = useTenantStore();
+  const currentBranchId = currentBranch?.id;
+  
   // Filters - initialize from URL query
   const [status, setStatus] = useState<string>('all');
   const [employeeId, setEmployeeId] = useState<string>(searchParams.get('employeeId') || '');
   const [startDate, setStartDate] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState<string>(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Refetch employees when branch changes
   useEffect(() => {
     fetchEmployees();
-  }, []);
+    // Reset all filters when branch changes
+    setEmployeeId('');
+    setStatus('all');
+    setStartDate(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+    setEndDate(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+    setCurrentPage(1);
+    setPayouts([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
+  }, [currentBranchId]);
 
   useEffect(() => {
     fetchPayouts();
-  }, [status, employeeId, startDate, endDate, currentPage]);
+  }, [status, employeeId, startDate, endDate, currentPage, refreshKey]);
 
   const fetchEmployees = async () => {
     try {
@@ -148,6 +164,52 @@ export default function PayoutPtListPage() {
       setDeleteId(null);
     }
   };
+
+  // Define columns for GenericDataTable
+  const columns: ColumnDef<PayoutPt>[] = useMemo(() => [
+    {
+      accessorKey: 'createdAt',
+      header: t('fields.createdAt'),
+      cell: ({ row }) => 
+        row.original.createdAt && !isNaN(new Date(row.original.createdAt).getTime()) 
+          ? format(new Date(row.original.createdAt), 'dd/MM/yyyy HH:mm') 
+          : '-',
+    },
+    {
+      accessorKey: 'itemCount',
+      header: t('fields.itemCount'),
+    },
+    {
+      accessorKey: 'totalHours',
+      header: t('fields.totalHours'),
+    },
+    {
+      accessorKey: 'amount',
+      header: t('fields.amountTotal'),
+      cell: ({ row }) => (row.original.amount || 0).toLocaleString(),
+    },
+    {
+      accessorKey: 'status',
+      header: t('fields.status'),
+      cell: ({ row }) => getStatusBadge(row.original.status),
+    },
+  ], [t]);
+
+  // Define actions for GenericDataTable
+  const actions: ActionConfig<PayoutPt>[] = useMemo(() => [
+    {
+      label: t('actions.view'),
+      icon: <Eye className="h-4 w-4" />,
+      href: (payout) => `/payouts/pt/${payout.id}`,
+    },
+    {
+      label: tCommon('delete'),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: (payout) => setDeleteId(payout.id),
+      condition: (payout) => payout.status === 'to_pay',
+    },
+  ], [t, tCommon]);
 
   return (
     <div className="space-y-6">

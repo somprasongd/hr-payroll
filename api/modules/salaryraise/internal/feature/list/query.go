@@ -6,6 +6,7 @@ import (
 
 	"hrms/modules/salaryraise/internal/dto"
 	"hrms/modules/salaryraise/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/logger"
 	"hrms/shared/common/mediator"
@@ -40,7 +41,12 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		q.Limit = 1000
 	}
 
-	res, err := q.Repo.List(ctx, q.Page, q.Limit, q.Status, q.Year)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	res, err := q.Repo.List(ctx, tenant, q.Page, q.Limit, q.Status, q.Year)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list salary raise cycles", zap.Error(err))
 		return nil, errs.Internal("failed to list salary raise cycles")

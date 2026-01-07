@@ -2,11 +2,13 @@
  * Axios Instance with Interceptors
  * 
  * Handles automatic token refresh when access token expires
+ * Automatically adds tenant headers (X-Company-ID, X-Branch-ID) to requests
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_CONFIG } from '@/config/api';
 import { useAuthStore } from '@/store/auth-store';
+import { useTenantStore } from '@/store/tenant-store';
 import { removeLocalePrefix } from '@/lib/i18n-utils';
 
 // Create axios instance
@@ -37,13 +39,32 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request interceptor - Add token to requests
+// Request interceptor - Add token and tenant headers to requests
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    let token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    // Fallback to store if not in localStorage (e.g. after hydration but before manual sync?)
+    if (!token) {
+       token = useAuthStore.getState().token;
+    }
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Add tenant headers from store
+    if (typeof window !== 'undefined' && config.headers) {
+      const tenantState = useTenantStore.getState();
+      const { currentCompany, currentBranch } = tenantState;
+      
+      if (currentCompany?.id) {
+        config.headers['X-Company-ID'] = currentCompany.id;
+      }
+      
+      if (currentBranch?.id) {
+        config.headers['X-Branch-ID'] = currentBranch.id;
+      }
     }
 
     // Debug logging in development
@@ -52,6 +73,10 @@ axiosInstance.interceptors.request.use(
         method: config.method?.toUpperCase(),
         url: config.url,
         hasToken: !!token,
+        tenantHeaders: {
+          companyId: config.headers?.['X-Company-ID'],
+          branchId: config.headers?.['X-Branch-ID'],
+        },
       });
     }
 
@@ -68,8 +93,11 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Skip 401 handling for login and refresh requests
-    if (originalRequest?.url?.includes('/auth/login') || originalRequest?.url?.includes('/auth/refresh')) {
+    // Skip 401 handling for login, refresh, and switch requests
+    // (switch needs special handling since it's called right after login)
+    if (originalRequest?.url?.includes('/auth/login') || 
+        originalRequest?.url?.includes('/auth/refresh') ||
+        originalRequest?.url?.includes('/auth/switch')) {
       return Promise.reject(error);
     }
 
@@ -119,9 +147,14 @@ axiosInstance.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+    let refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
 
     if (!refreshToken) {
+      refreshToken = useAuthStore.getState().refreshToken;
+    }
+
+    if (!refreshToken) {
+      console.log('[Axios] No refresh token available in storage or store, performing logout.');
       isRefreshing = false;
       if (typeof window !== 'undefined') {
         const { logout, setReturnUrl, user } = useAuthStore.getState();
@@ -171,6 +204,17 @@ axiosInstance.interceptors.response.use(
       isRefreshing = false;
       return axiosInstance(originalRequest);
     } catch (refreshError) {
+      // Log detailed refresh error for debugging
+      if (axios.isAxiosError(refreshError)) {
+        console.error('[Axios] Refresh token failed:', {
+          status: refreshError.response?.status,
+          data: refreshError.response?.data,
+          message: refreshError.message
+        });
+      } else {
+        console.error('[Axios] Refresh token failed with non-axios error:', refreshError);
+      }
+
       processQueue(refreshError, null);
       isRefreshing = false;
 

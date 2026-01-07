@@ -9,12 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Combobox } from '@/components/ui/combobox';
 import { EmployeeSelector } from '@/components/common/employee-selector';
 import { DateInput } from '@/components/ui/date-input';
 import { Employee } from '@/services/employee.service';
 import { CreateFTWorklogRequest, UpdateFTWorklogRequest, FTWorklog } from '@/services/ft-worklog.service';
 import { format, addDays, parseISO, isAfter, startOfDay } from 'date-fns';
+import { useWorklogForm } from '@/hooks/use-worklog-form';
 
 interface FTWorklogFormProps {
   open: boolean;
@@ -37,14 +37,19 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
   const t = useTranslations('Worklogs.FT');
   const tCommon = useTranslations('Common');
 
-  const [employeeId, setEmployeeId] = useState('');
-  const [workDate, setWorkDate] = useState('');
+  const {
+    employeeId, setEmployeeId,
+    workDate, setWorkDate,
+    isSubmitting,
+    errors, setErrors,
+    submitError, setSubmitError,
+    handleSubmitWrapper,
+    resetFormState,
+  } = useWorklogForm({ mode, lastSelectedEmployeeId });
+
   const [entryType, setEntryType] = useState<'late' | 'leave_day' | 'leave_hours' | 'ot' | 'leave_double'>('late');
   const [quantity, setQuantity] = useState('');
   const [leaveDuration, setLeaveDuration] = useState<'full' | 'half'>('full');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Check if selected date is in the future
   const isFutureDate = (dateStr: string) => {
@@ -123,8 +128,7 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
       setQuantity('');
       setLeaveDuration('full');
     }
-    setErrors({});
-    setSubmitError(null);
+    resetFormState();
   }, [mode, worklog, open, lastSelectedEmployeeId]);
 
   const validate = () => {
@@ -144,65 +148,47 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
     return Object.keys(newErrors).length === 0;
   };
 
+  const submitLogic = async () => {
+    if (mode === 'create') {
+      await onSubmit({
+        employeeId,
+        workDate,
+        entryType,
+        quantity: parseFloat(quantity),
+      } as CreateFTWorklogRequest);
+      
+      // After successful save: clear form and select next date
+      const today = startOfDay(new Date());
+      const currentDate = parseISO(workDate);
+      const nextDate = addDays(currentDate, 1);
+      
+      // Check if next date is valid for current type
+      let newWorkDate: string;
+      if (isRestrictedType(entryType) && isAfter(startOfDay(nextDate), today)) {
+        // Can't go to future for restricted types, stay on today
+        newWorkDate = format(today, 'yyyy-MM-dd');
+      } else {
+        newWorkDate = format(nextDate, 'yyyy-MM-dd');
+      }
+      
+      // Clear form but keep employee and type, move to next date
+      setWorkDate(newWorkDate);
+      setQuantity(isFixedQuantityType(entryType) ? (leaveDuration === 'full' ? '1' : '0.5') : '');
+      setErrors({});
+      // Don't close dialog - let user continue adding entries
+    } else {
+      await onSubmit({
+        quantity: parseFloat(quantity),
+      } as UpdateFTWorklogRequest);
+      onOpenChange(false);
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
 
-    setIsSubmitting(true);
-    setSubmitError(null);
-    try {
-      if (mode === 'create') {
-        await onSubmit({
-          employeeId,
-          workDate,
-          entryType,
-          quantity: parseFloat(quantity),
-        } as CreateFTWorklogRequest);
-        
-        // After successful save: clear form and select next date
-        const today = startOfDay(new Date());
-        const currentDate = parseISO(workDate);
-        const nextDate = addDays(currentDate, 1);
-        
-        // Check if next date is valid for current type
-        let newWorkDate: string;
-        if (isRestrictedType(entryType) && isAfter(startOfDay(nextDate), today)) {
-          // Can't go to future for restricted types, stay on today
-          newWorkDate = format(today, 'yyyy-MM-dd');
-        } else {
-          newWorkDate = format(nextDate, 'yyyy-MM-dd');
-        }
-        
-        // Clear form but keep employee and type, move to next date
-        setWorkDate(newWorkDate);
-        setQuantity(isFixedQuantityType(entryType) ? (leaveDuration === 'full' ? '1' : '0.5') : '');
-        setErrors({});
-        // Don't close dialog - let user continue adding entries
-      } else {
-        await onSubmit({
-          quantity: parseFloat(quantity),
-        } as UpdateFTWorklogRequest);
-        onOpenChange(false);
-      }
-    } catch (error: any) {
-      console.error('Form submit error:', error);
-      // Extract error message from API response
-      const status = error?.response?.status;
-      const detail = error?.response?.data?.detail || '';
-      const errorMessage = error?.message || '';
-      
-      // Check for duplicate worklog conflict (409 Conflict)
-      if (status === 409 || errorMessage.includes('409') || detail.toLowerCase().includes('already exists')) {
-        setSubmitError(t('errors.duplicateWorklog'));
-      } else {
-        setSubmitError(t('errors.saveFailed'));
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    await handleSubmitWrapper(submitLogic, t);
   };
 
   const getQuantityUnit = () => {
@@ -224,13 +210,6 @@ export function FTWorklogForm({ open, onOpenChange, onSubmit, employees, worklog
   const ftEmployees = employees.filter(emp => 
     !emp.employeeTypeName?.includes('พาร์ท') && !emp.employeeTypeName?.toLowerCase().includes('part')
   );
-
-  // Prepare employee options for combobox
-  const employeeOptions = ftEmployees.map(emp => ({
-    value: emp.id,
-    label: `${emp.employeeNumber || ''} - ${emp.fullNameTh || `${emp.firstName} ${emp.lastName}`}`.trim(),
-    searchText: `${emp.employeeNumber || ''} ${emp.fullNameTh || ''} ${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase(),
-  }));
 
   // Handle dialog close - notify parent of selected employee
   const handleDialogClose = (isOpen: boolean) => {

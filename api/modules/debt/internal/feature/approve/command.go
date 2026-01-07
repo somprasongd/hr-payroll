@@ -11,6 +11,7 @@ import (
 
 	"hrms/modules/debt/internal/dto"
 	"hrms/modules/debt/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -46,7 +47,11 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
-	rec, err := h.repo.Get(ctx, cmd.ID)
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+	rec, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("debt transaction not found")
@@ -64,7 +69,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var updated *repository.Record
 	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		updated, err = h.repo.Approve(ctxTx, cmd.ID, cmd.Actor)
+		updated, err = h.repo.Approve(ctxTx, tenant, cmd.ID, cmd.Actor)
 		return err
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -77,6 +82,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	h.eb.Publish(events.LogEvent{
 		ActorID:    cmd.Actor,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "APPROVE",
 		EntityName: "DEBT_PLAN",
 		EntityID:   cmd.ID.String(),

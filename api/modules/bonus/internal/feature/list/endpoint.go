@@ -5,7 +5,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/bonus/internal/repository"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -19,7 +18,7 @@ import (
 // @Security BearerAuth
 // @Success 200 {object} Response
 // @Router /bonus-cycles [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/", func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
@@ -36,7 +35,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 			Limit:  limit,
 			Status: status,
 			Year:   year,
-			Repo:   repo,
 		})
 		if err != nil {
 			return err

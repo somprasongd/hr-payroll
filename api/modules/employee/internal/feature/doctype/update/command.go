@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
@@ -15,11 +16,10 @@ import (
 )
 
 type Command struct {
-	ID      uuid.UUID `json:"-"`
-	Code    string    `json:"code"`
-	NameTh  string    `json:"nameTh"`
-	NameEn  string    `json:"nameEn"`
-	ActorID uuid.UUID `json:"-"`
+	ID     uuid.UUID `json:"-"`
+	Code   string    `json:"code"`
+	NameTh string    `json:"nameTh"`
+	NameEn string    `json:"nameEn"`
 }
 
 type Response struct {
@@ -38,6 +38,11 @@ func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	code := strings.TrimSpace(cmd.Code)
 	if code == "" {
 		return nil, errs.BadRequest("code is required")
@@ -55,7 +60,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		Code:   code,
 		NameTh: nameTh,
 		NameEn: nameEn,
-	}, cmd.ActorID)
+	}, user.ID)
 	if err != nil {
 		if repository.IsUniqueViolation(err) {
 			return nil, errs.Conflict("document type code already exists")
@@ -63,8 +68,16 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, err
 	}
 
+	// Get company ID from tenant context (nil if superadmin)
+	var companyID *uuid.UUID
+	if tenant, ok := contextx.TenantFromContext(ctx); ok {
+		companyID = &tenant.CompanyID
+	}
+
 	h.eb.Publish(events.LogEvent{
-		ActorID:    cmd.ActorID,
+		ActorID:    user.ID,
+		CompanyID:  companyID,
+		BranchID:   nil,
 		Action:     "UPDATE",
 		EntityName: "DOCUMENT_TYPE",
 		EntityID:   rec.ID.String(),

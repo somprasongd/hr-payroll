@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -27,12 +26,6 @@ func NewCreateEndpoint(router fiber.Router) {
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-		req.ActorID = user.ID
 
 		resp, err := mediator.Send[*CreateCommand, *Response](c.Context(), &req)
 		if err != nil {
@@ -67,13 +60,7 @@ func NewUpdateEndpoint(router fiber.Router) {
 			return errs.BadRequest("invalid request body")
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		req.ID = id
-		req.ActorID = user.ID
 
 		resp, err := mediator.Send[*UpdateCommand, *Response](c.Context(), &req)
 		if err != nil {
@@ -100,14 +87,8 @@ func NewDeleteEndpoint(router fiber.Router) {
 			return errs.BadRequest("invalid id")
 		}
 
-		user, ok := contextx.UserFromContext(c.Context())
-		if !ok {
-			return errs.Unauthorized("missing user")
-		}
-
 		_, err = mediator.Send[*DeleteCommand, mediator.NoResponse](c.Context(), &DeleteCommand{
-			ID:      id,
-			ActorID: user.ID,
+			ID: id,
 		})
 		if err != nil {
 			return err

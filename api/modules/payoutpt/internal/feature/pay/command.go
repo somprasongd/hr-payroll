@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"hrms/modules/payoutpt/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -19,11 +20,10 @@ import (
 )
 
 type Command struct {
-	ID    uuid.UUID
-	Actor uuid.UUID
-	Repo  repository.Repository
-	Tx    transactor.Transactor
-	Eb    eventbus.EventBus
+	ID   uuid.UUID
+	Repo repository.Repository
+	Tx   transactor.Transactor
+	Eb   eventbus.EventBus
 }
 
 type Response struct {
@@ -37,10 +37,20 @@ var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 func NewHandler() *Handler { return &Handler{} }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	var payout *repository.Payout
 	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		payout, err = cmd.Repo.MarkPaid(ctxTx, cmd.ID, cmd.Actor)
+		payout, err = cmd.Repo.MarkPaid(ctxTx, tenant, cmd.ID, user.ID)
 		return err
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -51,7 +61,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Internal("failed to mark payout paid")
 	}
 	cmd.Eb.Publish(events.LogEvent{
-		ActorID:    cmd.Actor,
+		ActorID:    user.ID,
+		CompanyID:  &tenant.CompanyID,
+		BranchID:   tenant.BranchIDPtr(),
 		Action:     "UPDATE_STATUS",
 		EntityName: "PAYOUT_PT",
 		EntityID:   payout.ID.String(),

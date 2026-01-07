@@ -13,6 +13,8 @@ import (
 	"hrms/modules/activitylog"
 	"hrms/modules/auth"
 	"hrms/modules/bonus"
+	"hrms/modules/branch"
+	"hrms/modules/company"
 	"hrms/modules/dashboard"
 	"hrms/modules/debt"
 	"hrms/modules/employee"
@@ -23,7 +25,10 @@ import (
 	"hrms/modules/payrollrun"
 	"hrms/modules/salaryadvance"
 	"hrms/modules/salaryraise"
+	"hrms/modules/superadmin"
+	"hrms/modules/tenant"
 	"hrms/modules/user"
+	"hrms/modules/userbranch"
 	"hrms/modules/worklog"
 	"hrms/shared/common/jwt"
 	"hrms/shared/common/logger"
@@ -77,8 +82,14 @@ func main() {
 	tokenSvc := jwt.NewTokenService(cfg.JWTAccessSecret, cfg.JWTRefreshSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
 
 	app.RegisterModules(
+		// Tenant module must be first to register mediator handlers before middleware runs
+		tenant.NewModule(mCtx),
 		auth.NewModule(mCtx, tokenSvc),
 		user.NewModule(mCtx, tokenSvc),
+		company.NewModule(mCtx, tokenSvc),
+		superadmin.NewModule(mCtx, tokenSvc, trans),
+		branch.NewModule(mCtx, tokenSvc),
+		userbranch.NewModule(mCtx, tokenSvc),
 		employee.NewModule(mCtx, tokenSvc),
 		payrollconfig.NewModule(mCtx, tokenSvc),
 		salaryadvance.NewModule(mCtx, tokenSvc),

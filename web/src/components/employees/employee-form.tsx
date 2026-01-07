@@ -1,28 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
-import { Loader2, Upload, X, User } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Upload, User, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
-import { DismissibleAlert } from "@/components/ui/dismissible-alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { EmployeeTypeBadge } from "@/components/common/employee-type-badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,28 +18,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
-  Employee,
   CreateEmployeeRequest,
+  Employee,
   UpdateEmployeeRequest,
   employeeService,
 } from "@/services/employee.service";
 import {
-  masterDataService,
   AllMasterData,
+  masterDataService,
 } from "@/services/master-data.service";
-import { AccumulationView } from "./accumulation-view";
-import { DocumentTab } from "./document-tab";
+import { EmployeeTypeBadge } from "../common/employee-type-badge";
 
 interface EmployeeFormProps {
   initialData?: Employee;
@@ -72,8 +69,6 @@ export function EmployeeForm({
   defaultTab = "personal",
 }: EmployeeFormProps) {
   const t = useTranslations("Employees");
-  const tAccum = useTranslations("Accumulation");
-  const tDocs = useTranslations("Documents");
   const tCommon = useTranslations("Common");
   const router = useRouter();
   const [masterData, setMasterData] = useState<AllMasterData | null>(null);
@@ -81,8 +76,10 @@ export function EmployeeForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [tabValidationError, setTabValidationError] = useState<string | null>(null);
 
   // Refs for auto-focus
+  const personalFirstInputRef = React.useRef<HTMLInputElement>(null);
   const employmentInputRef = React.useRef<HTMLInputElement>(null);
   const financialInputRef = React.useRef<HTMLInputElement>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
@@ -227,6 +224,26 @@ export function EmployeeForm({
     fetchMasterData();
   }, []);
 
+  // Auto-focus first input when tab changes
+  React.useEffect(() => {
+    // Use setTimeout to ensure the tab content is rendered
+    const timeoutId = setTimeout(() => {
+      switch (activeTab) {
+        case 'personal':
+          personalFirstInputRef.current?.focus();
+          break;
+        case 'employment':
+          employmentInputRef.current?.focus();
+          break;
+        case 'financial':
+          financialInputRef.current?.focus();
+          break;
+        // accumulation and documents tabs don't have text inputs to focus
+      }
+    }, 50);
+    return () => clearTimeout(timeoutId);
+  }, [activeTab]);
+
   // Photo upload handler
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -328,12 +345,52 @@ export function EmployeeForm({
       setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (error: any) {
       console.error(error);
-      const errorMessage =
-        error?.response?.data?.message || error?.message || t("submitError");
-      setSubmitError(errorMessage);
-      setSubmitSuccess(false);
+      // Check for 409 Conflict (duplicate employee number)
+      // Support both axios error (response.status) and ApiError (statusCode)
+      const statusCode = error?.response?.status || error?.statusCode;
+      if (statusCode === 409) {
+        setSubmitError(t('employeeNumberDuplicate'));
+      } else {
+        const errorMessage = error?.response?.data?.message || error?.message || t('submitError');
+        setSubmitError(errorMessage);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle form validation errors - show alert and navigate to first tab with error
+  const handleInvalid = () => {
+    const errors = form.formState.errors;
+    const tabsWithErrors: string[] = [];
+
+    // Check personal tab fields
+    if (errors.titleId || errors.firstName || errors.lastName || errors.idDocumentTypeId || errors.idDocumentNumber || errors.idDocumentOtherDescription || errors.phone || errors.email) {
+      tabsWithErrors.push(t("personalInfo"));
+    }
+
+    // Check employment tab fields
+    if (errors.employeeNumber || errors.employeeTypeId || errors.employmentStartDate || errors.employmentEndDate) {
+      tabsWithErrors.push(t("employmentInfo"));
+    }
+
+    // Check financial tab fields
+    if (errors.basePayAmount) {
+      tabsWithErrors.push(t("financialInfo"));
+    }
+
+    if (tabsWithErrors.length > 0) {
+      // Show tab validation error alert
+      setTabValidationError(t("validation.tabsWithErrors", { tabs: tabsWithErrors.join(", ") }));
+
+      // Navigate to first tab with errors
+      if (errors.titleId || errors.firstName || errors.lastName || errors.idDocumentTypeId || errors.idDocumentNumber || errors.idDocumentOtherDescription || errors.phone || errors.email) {
+        setActiveTab("personal");
+      } else if (errors.employeeNumber || errors.employeeTypeId || errors.employmentStartDate || errors.employmentEndDate) {
+        setActiveTab("employment");
+      } else if (errors.basePayAmount) {
+        setActiveTab("financial");
+      }
     }
   };
 
@@ -453,7 +510,7 @@ export function EmployeeForm({
       const currentSsoDeclaredWage = form.getValues("ssoDeclaredWage") || 0;
       if (ssoContribute && isFullTime && (!isEditing || employeeTypeChanged || ssoJustEnabled) && currentSsoDeclaredWage === 0) {
         const currentBasePayAmount = form.getValues("basePayAmount");
-        const wageCap = payrollConfig.socialSecurityWageCap || 15000;
+        const wageCap = payrollConfig.socialSecurityWageCap || 17500;
         const wage = Math.min(currentBasePayAmount || 0, wageCap);
         form.setValue("ssoDeclaredWage", wage);
       }
@@ -521,19 +578,13 @@ export function EmployeeForm({
         setTimeout(() => {
           financialInputRef.current?.focus();
         }, 100);
-      } else if (activeTab === "financial" && isEditing) {
-        setActiveTab("accumulation");
-      } else if (activeTab === "accumulation" && isEditing) {
-        setActiveTab("documents");
       }
     }
   };
 
   const handleBack = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    if (activeTab === "documents") setActiveTab("accumulation");
-    else if (activeTab === "accumulation") setActiveTab("financial");
-    else if (activeTab === "financial") setActiveTab("employment");
+    if (activeTab === "financial") setActiveTab("employment");
     else if (activeTab === "employment") setActiveTab("personal");
   };
 
@@ -544,7 +595,7 @@ export function EmployeeForm({
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="space-y-8">
           {submitError && (
             <DismissibleAlert
               variant="error"
@@ -564,6 +615,17 @@ export function EmployeeForm({
               autoDismiss={true}
             >
               {tCommon("saveSuccess")}
+            </DismissibleAlert>
+          )}
+
+          {tabValidationError && (
+            <DismissibleAlert
+              variant="warning"
+              title={t("validation.incompleteData")}
+              onDismiss={() => setTabValidationError(null)}
+              autoDismiss={false}
+            >
+              {tabValidationError}
             </DismissibleAlert>
           )}
 
@@ -609,23 +671,26 @@ export function EmployeeForm({
             className="w-full"
           >
             <TabsList
-              className={`grid w-full h-auto grid-cols-2 ${
-                isEditing ? "md:grid-cols-5" : "md:grid-cols-3"
-              }`}
+              className="grid w-full h-auto grid-cols-2 md:grid-cols-3"
             >
-              <TabsTrigger value="personal">{t("personalInfo")}</TabsTrigger>
-              <TabsTrigger value="employment">
-                {t("employmentInfo")}
+              <TabsTrigger value="personal" className="relative">
+                {t("personalInfo")}
+                {form.formState.errors.titleId || form.formState.errors.firstName || form.formState.errors.lastName || form.formState.errors.idDocumentTypeId || form.formState.errors.idDocumentNumber || form.formState.errors.idDocumentOtherDescription || form.formState.errors.phone || form.formState.errors.email ? (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                ) : null}
               </TabsTrigger>
-              <TabsTrigger value="financial">{t("financialInfo")}</TabsTrigger>
-              {isEditing && (
-                <TabsTrigger value="accumulation">
-                  {tAccum("title")}
-                </TabsTrigger>
-              )}
-              {isEditing && (
-                <TabsTrigger value="documents">{tDocs("tabTitle")}</TabsTrigger>
-              )}
+              <TabsTrigger value="employment" className="relative">
+                {t("employmentInfo")}
+                {form.formState.errors.employeeNumber || form.formState.errors.employeeTypeId || form.formState.errors.employmentStartDate || form.formState.errors.employmentEndDate ? (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                ) : null}
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="relative">
+                {t("financialInfo")}
+                {form.formState.errors.basePayAmount ? (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                ) : null}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="personal">
@@ -745,7 +810,11 @@ export function EmployeeForm({
                           <FormItem>
                             <FormLabel>{t("fields.firstName")}</FormLabel>
                             <FormControl>
-                              <Input {...field} onFocus={handleFocus} />
+                              <Input {...field} onFocus={handleFocus} ref={(e) => {
+                              field.ref(e);
+                              // @ts-ignore
+                              personalFirstInputRef.current = e;
+                            }} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1452,18 +1521,6 @@ export function EmployeeForm({
                 </CardContent>
               </Card>
             </TabsContent>
-
-            {isEditing && initialData?.id && (
-              <TabsContent value="accumulation">
-                <AccumulationView employeeId={initialData.id} />
-              </TabsContent>
-            )}
-
-            {isEditing && initialData?.id && (
-              <TabsContent value="documents">
-                <DocumentTab employeeId={initialData.id} />
-              </TabsContent>
-            )}
           </Tabs>
 
           <div className="flex justify-end space-x-4">
@@ -1489,19 +1546,6 @@ export function EmployeeForm({
                   {t("next")}
                 </Button>
               </>
-            ) : activeTab === "financial" && isEditing ? (
-              <>
-                <Button type="button" variant="outline" onClick={handleBack}>
-                  {t("back")}
-                </Button>
-                <Button type="button" onClick={handleNext}>
-                  {t("next")}
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {tCommon("save")}
-                </Button>
-              </>
             ) : activeTab === "financial" ? (
               <>
                 <Button type="button" variant="outline" onClick={handleBack}>
@@ -1510,21 +1554,6 @@ export function EmployeeForm({
                 <Button type="submit" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {tCommon("save")}
-                </Button>
-              </>
-            ) : activeTab === "accumulation" ? (
-              <>
-                <Button type="button" variant="outline" onClick={handleBack}>
-                  {t("back")}
-                </Button>
-                <Button type="button" onClick={handleNext}>
-                  {t("next")}
-                </Button>
-              </>
-            ) : activeTab === "documents" ? (
-              <>
-                <Button type="button" variant="outline" onClick={handleBack}>
-                  {t("back")}
                 </Button>
               </>
             ) : (

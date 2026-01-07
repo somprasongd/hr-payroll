@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/storage/sqldb/transactor"
 )
 
@@ -20,6 +21,8 @@ type PTRepository struct {
 
 type PTRecord struct {
 	ID             uuid.UUID  `db:"id"`
+	CompanyID      uuid.UUID  `db:"company_id"`
+	BranchID       uuid.UUID  `db:"branch_id"`
 	EmployeeID     uuid.UUID  `db:"employee_id"`
 	WorkDate       time.Time  `db:"work_date"`
 	MorningIn      *string    `db:"morning_in"`
@@ -48,12 +51,21 @@ func NewPTRepository(dbCtx transactor.DBTXContext) PTRepository {
 	return PTRepository{dbCtx: dbCtx}
 }
 
-func (r PTRepository) List(ctx context.Context, page, limit int, employeeID *uuid.UUID, status string, startDate, endDate *time.Time) (PTListResult, error) {
+func (r PTRepository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, employeeID *uuid.UUID, status string, startDate, endDate *time.Time) (PTListResult, error) {
 	db := r.dbCtx(ctx)
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
 	where = append(where, "wl.deleted_at IS NULL")
+
+	// Tenant Filter
+	args = append(args, tenant.CompanyID)
+	where = append(where, fmt.Sprintf("e.company_id = $%d", len(args)))
+
+	if tenant.HasBranchID() {
+		args = append(args, tenant.BranchID)
+		where = append(where, fmt.Sprintf("e.branch_id = $%d", len(args)))
+	}
 
 	if employeeID != nil {
 		args = append(args, *employeeID)
@@ -77,6 +89,7 @@ func (r PTRepository) List(ctx context.Context, page, limit int, employeeID *uui
 
 	query := fmt.Sprintf(`
 SELECT wl.* FROM worklog_pt wl
+JOIN employees e ON e.id = wl.employee_id
 WHERE %s
 ORDER BY wl.work_date DESC, wl.created_at DESC
 LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
@@ -97,7 +110,7 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 	}
 
 	countArgs := args[:len(args)-2]
-	countQuery := fmt.Sprintf(`SELECT COUNT(1) FROM worklog_pt wl WHERE %s`, whereClause)
+	countQuery := fmt.Sprintf(`SELECT COUNT(1) FROM worklog_pt wl JOIN employees e ON e.id = wl.employee_id WHERE %s`, whereClause)
 	var total int
 	if err := db.GetContext(ctx, &total, countQuery, countArgs...); err != nil {
 		return PTListResult{}, err
@@ -106,11 +119,22 @@ LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
 	return PTListResult{Rows: list, Total: total}, nil
 }
 
-func (r PTRepository) Get(ctx context.Context, id uuid.UUID) (*PTRecord, error) {
+func (r PTRepository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `SELECT * FROM worklog_pt WHERE id=$1 AND deleted_at IS NULL LIMIT 1`
+	q := `
+SELECT wl.* FROM worklog_pt wl
+JOIN employees e ON e.id = wl.employee_id
+WHERE wl.id=$1 AND e.company_id=$2 AND wl.deleted_at IS NULL LIMIT 1`
+	args := []interface{}{id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+SELECT wl.* FROM worklog_pt wl
+JOIN employees e ON e.id = wl.employee_id
+WHERE wl.id=$1 AND e.company_id=$2 AND e.branch_id=$3 AND wl.deleted_at IS NULL LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
 	var rec PTRecord
-	if err := db.GetContext(ctx, &rec, q, id); err != nil {
+	if err := db.GetContext(ctx, &rec, q, args...); err != nil {
 		return nil, err
 	}
 	return &rec, nil
@@ -130,19 +154,31 @@ SELECT EXISTS (
 	return exists, nil
 }
 
-func (r PTRepository) Insert(ctx context.Context, rec PTRecord) (*PTRecord, error) {
+func (r PTRepository) Insert(ctx context.Context, tenant contextx.TenantInfo, rec PTRecord) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	// Validate employee belongs to company and get branch
+	var branchID uuid.UUID
+	q := "SELECT branch_id FROM employees WHERE id=$1 AND company_id=$2"
+	args := []interface{}{rec.EmployeeID, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q += " AND branch_id=$3"
+		args = append(args, tenant.BranchID)
+	}
+	if err := db.GetContext(ctx, &branchID, q, args...); err != nil {
+		return nil, fmt.Errorf("employee not found in this company")
+	}
+
+	const insertQ = `
 INSERT INTO worklog_pt (
-  employee_id, work_date,
+  employee_id, company_id, branch_id, work_date,
   morning_in, morning_out,
   evening_in, evening_out,
   status, created_by, updated_by
-) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 RETURNING *`
 	var out PTRecord
-	if err := db.GetContext(ctx, &out, q,
-		rec.EmployeeID, rec.WorkDate,
+	if err := db.GetContext(ctx, &out, insertQ,
+		rec.EmployeeID, tenant.CompanyID, branchID, rec.WorkDate,
 		rec.MorningIn, rec.MorningOut,
 		rec.EveningIn, rec.EveningOut,
 		rec.Status, rec.CreatedBy, rec.UpdatedBy,
@@ -152,33 +188,61 @@ RETURNING *`
 	return &out, nil
 }
 
-func (r PTRepository) Update(ctx context.Context, id uuid.UUID, rec PTRecord) (*PTRecord, error) {
+func (r PTRepository) Update(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, rec PTRecord) (*PTRecord, error) {
 	db := r.dbCtx(ctx)
-	const q = `
+	q := `
 UPDATE worklog_pt
 SET work_date=$1,
     morning_in=$2, morning_out=$3,
     evening_in=$4, evening_out=$5,
     status=$6,
     updated_by=$7
-WHERE id=$8 AND deleted_at IS NULL
-RETURNING *`
-	var out PTRecord
-	if err := db.GetContext(ctx, &out, q,
+FROM employees e
+WHERE worklog_pt.id=$8 AND worklog_pt.employee_id = e.id AND e.company_id=$9 AND worklog_pt.deleted_at IS NULL
+RETURNING worklog_pt.*`
+	args := []interface{}{
 		rec.WorkDate,
 		rec.MorningIn, rec.MorningOut,
 		rec.EveningIn, rec.EveningOut,
-		rec.Status, rec.UpdatedBy, id,
-	); err != nil {
+		rec.Status, rec.UpdatedBy, id, tenant.CompanyID,
+	}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_pt
+SET work_date=$1,
+    morning_in=$2, morning_out=$3,
+    evening_in=$4, evening_out=$5,
+    status=$6,
+    updated_by=$7
+FROM employees e
+WHERE worklog_pt.id=$8 AND worklog_pt.employee_id = e.id AND e.company_id=$9 AND e.branch_id=$10 AND worklog_pt.deleted_at IS NULL
+RETURNING worklog_pt.*`
+		args = append(args, tenant.BranchID)
+	}
+	var out PTRecord
+	if err := db.GetContext(ctx, &out, q, args...); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (r PTRepository) SoftDelete(ctx context.Context, id uuid.UUID, actor uuid.UUID) error {
+func (r PTRepository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE worklog_pt SET deleted_at=now(), deleted_by=$1 WHERE id=$2 AND deleted_at IS NULL`
-	res, err := db.ExecContext(ctx, q, actor, id)
+	q := `
+UPDATE worklog_pt
+SET deleted_at=now(), deleted_by=$1
+FROM employees e
+WHERE worklog_pt.id=$2 AND worklog_pt.employee_id=e.id AND e.company_id=$3 AND worklog_pt.deleted_at IS NULL`
+	args := []interface{}{actor, id, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `
+UPDATE worklog_pt
+SET deleted_at=now(), deleted_by=$1
+FROM employees e
+WHERE worklog_pt.id=$2 AND worklog_pt.employee_id=e.id AND e.company_id=$3 AND e.branch_id=$4 AND worklog_pt.deleted_at IS NULL`
+		args = append(args, tenant.BranchID)
+	}
+	res, err := db.ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

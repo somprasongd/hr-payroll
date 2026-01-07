@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { useBranchChange } from '@/hooks/use-branch-change';
 
 // Get default date range (current month)
 const getDefaultStartDate = () => format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -60,6 +61,7 @@ export default function PTWorklogsPage() {
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [worklogToDelete, setWorklogToDelete] = useState<PTWorklog | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Ensure component is mounted before rendering portals
   useEffect(() => {
@@ -67,10 +69,23 @@ export default function PTWorklogsPage() {
     return () => setMounted(false);
   }, []);
 
+  // Refetch when branch changes
+  useBranchChange(useCallback(() => {
+    fetchEmployees();
+    setEmployeeFilter('');
+    setStatusFilter('');
+    setStartDateFilter(getDefaultStartDate());
+    setEndDateFilter(getDefaultEndDate());
+    setCurrentPage(1);
+    setWorklogs([]);
+    // Force refetch by incrementing refreshKey
+    setRefreshKey(prev => prev + 1);
+  }, []));
+
   useEffect(() => {
     fetchEmployees();
     fetchWorklogs();
-  }, [currentPage, employeeFilter, statusFilter, startDateFilter, endDateFilter]);
+  }, [currentPage, employeeFilter, statusFilter, startDateFilter, endDateFilter, refreshKey]);
 
   // Cleanup on unmount to prevent portal errors
   useEffect(() => {
@@ -360,8 +375,6 @@ export default function PTWorklogsPage() {
                 <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
                 <SelectItem value="pending">{t('statuses.pending')}</SelectItem>
                 <SelectItem value="approved">{t('statuses.approved')}</SelectItem>
-                <SelectItem value="to_pay">{t('statuses.to_pay')}</SelectItem>
-                <SelectItem value="paid">{t('statuses.paid')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

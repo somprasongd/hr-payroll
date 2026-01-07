@@ -1,17 +1,20 @@
 package errs
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+)
 
 type ErrorCode string
 
 const (
-	CodeBadRequest     ErrorCode = "bad_request"
-	CodeUnauthorized   ErrorCode = "unauthorized"
-	CodeForbidden      ErrorCode = "forbidden"
-	CodeNotFound       ErrorCode = "not_found"
-	CodeConflict       ErrorCode = "conflict"
-	CodeUnprocessable  ErrorCode = "unprocessable"
-	CodeInternal       ErrorCode = "internal_error"
+	CodeBadRequest    ErrorCode = "bad_request"
+	CodeUnauthorized  ErrorCode = "unauthorized"
+	CodeForbidden     ErrorCode = "forbidden"
+	CodeNotFound      ErrorCode = "not_found"
+	CodeConflict      ErrorCode = "conflict"
+	CodeUnprocessable ErrorCode = "unprocessable"
+	CodeInternal      ErrorCode = "internal_error"
 )
 
 // AppError represents domain/http aware error.
@@ -77,4 +80,12 @@ func pickDetail(detail []interface{}) interface{} {
 		return detail[0]
 	}
 	return nil
+}
+
+func IsConflict(err error) bool {
+	var e *AppError
+	if ok := errors.As(err, &e); ok {
+		return e.Code == CodeConflict
+	}
+	return false
 }

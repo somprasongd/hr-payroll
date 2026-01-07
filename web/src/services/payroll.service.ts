@@ -246,7 +246,13 @@ export const payrollService = {
 
   async validatePayrollMonth(payrollMonthDate: string): Promise<{ exists: boolean; approved: boolean }> {
     try {
-      const response = await this.getPayrollRuns({ monthDate: payrollMonthDate, limit: 1 });
+      // Ensure monthDate is in YYYY-MM-DD format
+      let formattedMonthDate = payrollMonthDate;
+      if (formattedMonthDate.includes('T')) {
+        formattedMonthDate = formattedMonthDate.split('T')[0];
+      }
+      
+      const response = await this.getPayrollRuns({ monthDate: formattedMonthDate, limit: 1 });
       if (!response?.data || response.data.length === 0) {
         return { exists: false, approved: false };
       }

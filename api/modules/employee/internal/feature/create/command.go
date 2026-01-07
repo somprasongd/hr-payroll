@@ -12,6 +12,7 @@ import (
 
 	"hrms/modules/employee/internal/dto"
 	"hrms/modules/employee/internal/repository"
+	"hrms/shared/common/contextx"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/eventbus"
 	"hrms/shared/common/logger"
@@ -22,7 +23,6 @@ import (
 
 type Command struct {
 	Payload RequestBody
-	ActorID uuid.UUID
 }
 
 type Response struct {
@@ -46,6 +46,16 @@ func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
+	tenant, ok := contextx.TenantFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing tenant context")
+	}
+
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return nil, errs.Unauthorized("missing user context")
+	}
+
 	if err := validatePayload(cmd.Payload); err != nil {
 		return nil, err
 	}
@@ -71,14 +81,16 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	var created *repository.DetailRecord
 	err = h.tx.WithinTransaction(ctx, func(ctxWithTx context.Context, hook func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = h.repo.Create(ctxWithTx, recPayload, cmd.ActorID)
+		created, err = h.repo.Create(ctxWithTx, recPayload, tenant.CompanyID, tenant.BranchID, user.ID)
 		if err != nil {
 			return err
 		}
 
 		hook(func(ctx context.Context) error {
 			h.eb.Publish(events.LogEvent{
-				ActorID:    cmd.ActorID,
+				ActorID:    user.ID,
+				CompanyID:  &tenant.CompanyID,
+				BranchID:   tenant.BranchIDPtr(),
 				Action:     "CREATE",
 				EntityName: "EMPLOYEE",
 				EntityID:   created.ID.String(),
