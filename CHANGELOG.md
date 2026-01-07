@@ -8,6 +8,13 @@
 
 - update swagger tenant headers and stabilize cookie-based auth (#2) (4d9608f)
 
+- Expand Dockerfile to include dependency caching for additional modules and shared components. (5c25890)
+
+
+### Docs
+
+- Add v2.0.0 release notes and remove previous unreleased entries. (eeb5ef4)
+
 ## v1.4.0 - 2026-01-02
 
 ### Added
