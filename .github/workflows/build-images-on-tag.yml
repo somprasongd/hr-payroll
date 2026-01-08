@@ -11,6 +11,10 @@ jobs:
     env:
       BUILD_VERSION: ${{ github.ref_name }}
       DOCKER_BUILDKIT: 1
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,3 +23,20 @@ jobs:
 
       - name: Build images
         run: make image
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push images
+        run: |
+          IMAGE_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
+          docker tag hr-payroll-api:${BUILD_VERSION} ghcr.io/${IMAGE_OWNER}/hr-payroll-api:${BUILD_VERSION}
+          docker tag hr-payroll-web:${BUILD_VERSION} ghcr.io/${IMAGE_OWNER}/hr-payroll-web:${BUILD_VERSION}
+
+          docker push ghcr.io/${IMAGE_OWNER}/hr-payroll-api:${BUILD_VERSION}
+          docker push ghcr.io/${IMAGE_OWNER}/hr-payroll-web:${BUILD_VERSION}

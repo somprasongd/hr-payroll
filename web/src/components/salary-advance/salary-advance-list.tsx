@@ -63,7 +63,7 @@ export function SalaryAdvanceList() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'pending');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
   const [employeeFilter, setEmployeeFilter] = useState<string>('all');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
@@ -77,7 +77,7 @@ export function SalaryAdvanceList() {
   useBranchChange(useCallback(() => {
     fetchEmployees();
     setEmployeeFilter('all');
-    setStatusFilter('pending');
+    setStatusFilter('all');
     setPage(1);
     setData([]);
     // Force refetch by incrementing refreshKey
@@ -146,7 +146,7 @@ export function SalaryAdvanceList() {
   };
 
   const clearFilters = () => {
-    setStatusFilter('pending');
+    setStatusFilter('all');
     setEmployeeFilter('all');
     setPage(1);
   };
