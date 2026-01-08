@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { format } from 'date-fns';
-import { ArrowLeft, CheckCircle, X, Loader2, Trash2, MoreVertical } from 'lucide-react';
+import { ArrowLeft, CheckCircle, X, Loader2, Trash2, MoreVertical, Printer } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { salaryRaiseService, SalaryRaiseCycle } from '@/services/salary-raise.service';
 import { useAuthStore } from '@/store/auth-store';
+import { SalaryRaisePrintDialog } from './salary-raise-print-dialog';
 
 interface SalaryRaiseCycleDetailProps {
   cycle: SalaryRaiseCycle;
@@ -44,6 +45,7 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
   const [isUpdating, setIsUpdating] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
 
   const handleStatusChange = async (status: 'approved' | 'rejected') => {
     try {
@@ -82,6 +84,7 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
   };
 
   const isPending = cycle.status === 'pending';
+  const isApproved = cycle.status === 'approved';
   const isDeletable = cycle.status === 'pending' || cycle.status === 'rejected';
 
   return (
@@ -102,6 +105,12 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isApproved && (
+            <Button variant="outline" size="sm" onClick={() => setShowPrintDialog(true)}>
+               <Printer className="mr-2 h-4 w-4" />
+               {t('actions.print')}
+            </Button>
+          )}
           {isPending && (
             <>
               {/* Mobile: Single dropdown menu */}
@@ -229,8 +238,14 @@ export function SalaryRaiseCycleDetail({ cycle, onRefresh, onDelete }: SalaryRai
           <div className="text-2xl font-bold text-sm pt-2">
             {format(new Date(cycle.createdAt), 'dd/MM/yyyy HH:mm')}
           </div>
-        </div>
       </div>
+      </div>
+
+      <SalaryRaisePrintDialog 
+        open={showPrintDialog} 
+        onOpenChange={setShowPrintDialog} 
+        cycle={cycle}
+      />
     </div>
   );
 }

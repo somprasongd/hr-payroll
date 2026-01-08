@@ -19,17 +19,17 @@ import (
 )
 
 type Module struct {
-	ctx        *module.ModuleContext
-	repo       repository.Repository
-	tokenSvc   *jwt.TokenService
+	ctx      *module.ModuleContext
+	repo     repository.Repository
+	tokenSvc *jwt.TokenService
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:        ctx,
-		repo:       repo,
-		tokenSvc:   tokenSvc,
+		ctx:      ctx,
+		repo:     repo,
+		tokenSvc: tokenSvc,
 	}
 }
 

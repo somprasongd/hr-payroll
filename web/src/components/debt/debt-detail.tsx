@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, CheckCircle, Wallet } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Wallet, Printer } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { debtService, DebtTxn } from '@/services/debt.service';
 import { useAuthStore } from '@/store/auth-store';
+import { DebtPrintDialog } from './debt-print-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,7 @@ export function DebtDetail({ id }: DebtDetailProps) {
   const [data, setData] = useState<DebtTxn | null>(null);
   const [loading, setLoading] = useState(true);
   const [approveOpen, setApproveOpen] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -89,12 +91,24 @@ export function DebtDetail({ id }: DebtDetailProps) {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{t('detailTitle')}</h1>
             {data.employeeName && (
-              <p className="text-sm text-gray-500 mt-1">{data.employeeName}</p>
+               <div className="mt-1">
+                 <span className="text-sm font-medium text-gray-900">{data.employeeName}</span>
+                 {data.employeeCode && (
+                   <span className="text-sm text-gray-500 ml-2">({data.employeeCode})</span>
+                 )}
+               </div>
             )}
           </div>
         </div>
         
         <div className="flex gap-2">
+          {data.status === 'approved' && (
+             <Button variant="outline" onClick={() => setShowPrintDialog(true)}>
+                <Printer className="w-4 h-4 mr-2" />
+                {data.txnType === 'repayment' ? t('print.receiptButton') : t('print.button')}
+             </Button>
+          )}
+
           {data.status === 'pending' && user?.role === 'admin' && (
             <Button onClick={() => setApproveOpen(true)} className="bg-green-600 hover:bg-green-700">
               <CheckCircle className="w-4 h-4 mr-2" />
@@ -112,7 +126,10 @@ export function DebtDetail({ id }: DebtDetailProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-[200px_1fr] gap-4 text-sm">
               <div className="text-gray-500">{t('fields.employee')}</div>
-              <div className="font-medium">{data.employeeName || data.employeeId}</div>
+              <div className="font-medium">
+                {data.employeeName}
+                {data.employeeCode && <span className="text-gray-500 ml-2">({data.employeeCode})</span>}
+              </div>
               
               <div className="text-gray-500">{t('fields.txnDate')}</div>
               <div className="font-medium">{format(new Date(data.txnDate), 'dd/MM/yyyy')}</div>
@@ -132,6 +149,28 @@ export function DebtDetail({ id }: DebtDetailProps) {
                   {t(`status.${data.status}`)}
                 </Badge>
               </div>
+
+              {data.paymentMethod && (
+                <>
+                  <div className="text-gray-500">{t('fields.paymentMethod')}</div>
+                  <div className="font-medium">
+                    {t(`paymentMethod.${data.paymentMethod}`)}
+                  </div>
+
+                  {data.paymentMethod === 'bank_transfer' && (
+                    <>
+                      <div className="text-gray-500">{t('fields.bankName')}</div>
+                      <div className="font-medium">{data.bankName}</div>
+
+                      <div className="text-gray-500">{t('fields.bankAccountNumber')}</div>
+                      <div className="font-medium">{data.bankAccountNumber}</div>
+
+                      <div className="text-gray-500">{t('fields.transferTime')}</div>
+                      <div className="font-medium">{data.transferTime}</div>
+                    </>
+                  )}
+                </>
+              )}
 
               {data.otherDesc && (
                 <>
@@ -184,6 +223,12 @@ export function DebtDetail({ id }: DebtDetailProps) {
           </Card>
         )}
       </div>
+
+      <DebtPrintDialog 
+        open={showPrintDialog} 
+        onOpenChange={setShowPrintDialog} 
+        debtId={id} 
+      />
 
       <AlertDialog open={approveOpen} onOpenChange={setApproveOpen}>
         <AlertDialogContent>

@@ -12,7 +12,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Plus, Trash2, SquarePen, RotateCcw, MoreHorizontal } from "lucide-react";
+import { Filter, Plus, Trash2, SquarePen, RotateCcw, MoreHorizontal, Printer } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -33,6 +33,7 @@ import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
 import { CreateSalaryAdvanceDialog } from './create-salary-advance-dialog';
 import { EditSalaryAdvanceDialog } from './edit-salary-advance-dialog';
+import { SalaryAdvancePrintDialog } from './salary-advance-print-dialog';
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -68,6 +69,7 @@ export function SalaryAdvanceList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editItem, setEditItem] = useState<SalaryAdvance | null>(null);
   const [deleteItem, setDeleteItem] = useState<SalaryAdvance | null>(null);
+  const [printId, setPrintId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -322,6 +324,14 @@ export function SalaryAdvanceList() {
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          onClick={() => setPrintId(item.id)}
+                          title={t('print')}
+                        >
+                          <Printer className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={() => setDeleteItem(item)}
                         >
@@ -356,6 +366,14 @@ export function SalaryAdvanceList() {
           onOpenChange={(open: boolean) => !open && setEditItem(null)}
           item={editItem}
           onSuccess={fetchData}
+        />
+      )}
+
+      {printId && (
+        <SalaryAdvancePrintDialog
+          open={!!printId}
+          onOpenChange={(open) => !open && setPrintId(null)}
+          salaryAdvanceId={printId}
         />
       )}
 

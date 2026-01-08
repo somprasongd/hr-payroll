@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
-import { ArrowLeft, Loader2, Edit2, CheckCircle, X, Trash2, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Loader2, Edit2, CheckCircle, X, Trash2, MoreVertical, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -40,6 +40,7 @@ import { format } from 'date-fns';
 
 import { useAuthStore } from '@/store/auth-store';
 import { EmployeePhoto } from '@/components/common/employee-photo';
+import { BonusPrintDialog } from '@/components/bonus/bonus-print-dialog';
 
 export default function BonusDetailPage() {
   const t = useTranslations('Bonus');
@@ -57,6 +58,7 @@ export default function BonusDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchCycle = async () => {
@@ -273,8 +275,28 @@ export default function BonusDetailPage() {
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
+
+          {cycle.status === 'approved' && (
+             <Button
+               variant="outline"
+               size="sm"
+               onClick={() => setShowPrintDialog(true)}
+             >
+               <Printer className="mr-2 h-4 w-4" />
+               {t('print.button')}
+             </Button>
+          )}
         </div>
       </div>
+      
+      {/* Print Dialog */}
+      {cycle && (
+        <BonusPrintDialog
+          open={showPrintDialog}
+          onOpenChange={setShowPrintDialog}
+          cycle={cycle}
+        />
+      )}
 
       {/* Error alert */}
       {errorMessage && (

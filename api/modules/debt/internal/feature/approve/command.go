@@ -64,8 +64,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to load debt transaction", zap.Error(err))
 		return nil, errs.Internal("failed to load debt transaction")
 	}
-	if rec.TxnType != "loan" && rec.TxnType != "other" {
-		return nil, errs.BadRequest("only loan/other can be approved")
+	if rec.TxnType != "loan" && rec.TxnType != "other" && rec.TxnType != "repayment" {
+		return nil, errs.BadRequest("only loan/other/repayment can be approved")
 	}
 	if rec.Status != "pending" {
 		return nil, errs.BadRequest("already approved")
@@ -90,14 +90,21 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),
 		Action:     "APPROVE",
-		EntityName: "DEBT_PLAN",
+		EntityName: "DEBT_TRANSACTION",
 		EntityID:   cmd.ID.String(),
 		Details:    map[string]interface{}{},
 		Timestamp:  time.Now(),
 	})
 
+	message := "Transaction approved."
+	if updated.TxnType == "loan" || updated.TxnType == "other" {
+		message = "Loan approved. Installments are now active."
+	} else if updated.TxnType == "repayment" {
+		message = "Repayment approved."
+	}
+
 	return &Response{
 		Item:    dto.FromRecord(*updated),
-		Message: "Loan approved. Installments are now active.",
+		Message: message,
 	}, nil
 }

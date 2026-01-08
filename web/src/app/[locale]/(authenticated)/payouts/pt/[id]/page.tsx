@@ -1,11 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect, use, useRef } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Loader2, DollarSign, Trash2, Printer } from 'lucide-react';
-import { useReactToPrint } from 'react-to-print';
+import { ArrowLeft, Loader2, DollarSign, Trash2, Printer } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -16,14 +15,12 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { payoutPtService, PayoutPt } from '@/services/payout-pt.service';
 import { employeeService, Employee } from '@/services/employee.service';
-import { orgProfileService, OrgProfile } from '@/services/org-profile.service';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
-import { PtPayoutPrintTemplate } from '@/components/payroll/pt-payout-print-template';
+import { PtPayoutPrintDialog } from '@/components/payroll/pt-payout-print-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,49 +56,11 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
   const [markingPaid, setMarkingPaid] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  // Print functionality
-  const printRef = useRef<HTMLDivElement>(null);
-  const [orgProfile, setOrgProfile] = useState<OrgProfile | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [printing, setPrinting] = useState(false);
-  const [printOriginal, setPrintOriginal] = useState(true);
-  const [printCopy, setPrintCopy] = useState(true);
-
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: `PTAdvance_${employee?.employeeNumber || ''}_${employee?.firstName || ''}${employee?.lastName || ''}`,
-    pageStyle: `
-      @page {
-        size: A4 portrait;
-        margin: 5mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-      }
-    `,
-  });
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
 
   useEffect(() => {
     fetchPayout();
-    fetchOrgProfile();
   }, [id]);
-
-  const fetchOrgProfile = async () => {
-    try {
-      const data = await orgProfileService.getEffective();
-      setOrgProfile(data);
-      if (data.logoId) {
-        const url = await orgProfileService.fetchLogoWithCache(data.logoId);
-        setLogoUrl(url);
-      }
-    } catch (error) {
-      console.error('Failed to fetch org profile', error);
-    }
-  };
 
   const fetchPayout = async () => {
     setLoading(true);
@@ -115,7 +74,7 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
       console.error('Failed to fetch payout', error);
       toast({
         variant: 'destructive',
-        title: tErrors('fetchFailed'), // Assuming generic fetch failed exists or use custom
+        title: tErrors('fetchFailed'),
         description: 'Failed to fetch payout details',
       });
     } finally {
@@ -262,41 +221,9 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
         {/* Print Button - Only when paid */}
         {payout.status === 'paid' && (
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">พิมพ์:</span>
-            <div className="flex items-center gap-1">
-              <Checkbox
-                id="printOriginal"
-                checked={printOriginal}
-                onCheckedChange={(checked) => {
-                  if (!checked && !printCopy) return;
-                  setPrintOriginal(checked === true);
-                }}
-                className="h-4 w-4"
-              />
-              <label htmlFor="printOriginal" className="text-sm cursor-pointer">ต้นฉบับ</label>
-            </div>
-            <div className="flex items-center gap-1">
-              <Checkbox
-                id="printCopy"
-                checked={printCopy}
-                onCheckedChange={(checked) => {
-                  if (!checked && !printOriginal) return;
-                  setPrintCopy(checked === true);
-                }}
-                className="h-4 w-4"
-              />
-              <label htmlFor="printCopy" className="text-sm cursor-pointer">สำเนา</label>
-            </div>
             <Button
               variant="outline"
-              onClick={() => {
-                setPrinting(true);
-                setTimeout(() => {
-                  handlePrint();
-                  setPrinting(false);
-                }, 100);
-              }}
-              disabled={printing || (!printOriginal && !printCopy)}
+              onClick={() => setShowPrintDialog(true)}
             >
               <Printer className="w-4 h-4 mr-2" />
               พิมพ์สลิป
@@ -335,7 +262,7 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
           </Card>
         </div>
 
-        {/* Right Column: Summary */}
+      {/* Right Column: Summary */}
         <div className="md:col-span-1 space-y-6">
           <Card>
             <CardHeader>
@@ -393,19 +320,11 @@ export default function PayoutPtDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Hidden Print Template */}
-      <div style={{ display: 'none' }}>
-        <div ref={printRef}>
-          <PtPayoutPrintTemplate
-            payout={payout}
-            employee={employee}
-            orgProfile={orgProfile}
-            logoUrl={logoUrl || undefined}
-            printOriginal={printOriginal}
-            printCopy={printCopy}
-          />
-        </div>
-      </div>
+      <PtPayoutPrintDialog 
+        open={showPrintDialog}
+        onOpenChange={setShowPrintDialog}
+        payoutId={payout.id}
+      />
     </div>
   );
 }

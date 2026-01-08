@@ -21,11 +21,15 @@ import (
 )
 
 type Command struct {
-	EmployeeID uuid.UUID `json:"employeeId" validate:"required"`
-	TxnDateRaw string    `json:"txnDate" validate:"required"`
-	Amount     float64   `json:"amount" validate:"required,gt=0"`
-	Reason     *string   `json:"reason,omitempty"`
-	ActorID    uuid.UUID `validate:"required"`
+	EmployeeID        uuid.UUID `json:"employeeId" validate:"required"`
+	TxnDateRaw        string    `json:"txnDate" validate:"required"`
+	Amount            float64   `json:"amount" validate:"required,gt=0"`
+	Reason            *string   `json:"reason,omitempty"`
+	PaymentMethod     *string   `json:"paymentMethod,omitempty"`
+	BankName          *string   `json:"bankName,omitempty"`
+	BankAccountNumber *string   `json:"bankAccountNumber,omitempty"`
+	TransferTime      *string   `json:"transferTime,omitempty"`
+	ActorID           uuid.UUID `validate:"required"`
 }
 
 type Response struct {
@@ -63,13 +67,29 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if err != nil {
 		return nil, errs.BadRequest("txnDate must be YYYY-MM-DD")
 	}
+
+	if cmd.PaymentMethod != nil && *cmd.PaymentMethod == "bank_transfer" {
+		if cmd.BankName == nil || strings.TrimSpace(*cmd.BankName) == "" {
+			return nil, errs.BadRequest("Bank name is required")
+		}
+		if cmd.BankAccountNumber == nil || strings.TrimSpace(*cmd.BankAccountNumber) == "" {
+			return nil, errs.BadRequest("Bank account number is required")
+		}
+		if cmd.TransferTime == nil || strings.TrimSpace(*cmd.TransferTime) == "" {
+			return nil, errs.BadRequest("Transfer time is required")
+		}
+	}
 	rec := repository.Record{
-		EmployeeID: cmd.EmployeeID,
-		TxnDate:    txnDate,
-		Amount:     cmd.Amount,
-		Reason:     cmd.Reason,
-		TxnType:    "repayment",
-		Status:     "approved",
+		EmployeeID:        cmd.EmployeeID,
+		TxnDate:           txnDate,
+		Amount:            cmd.Amount,
+		Reason:            cmd.Reason,
+		TxnType:           "repayment",
+		Status:            "pending",
+		PaymentMethod:     cmd.PaymentMethod,
+		BankName:          cmd.BankName,
+		BankAccountNumber: cmd.BankAccountNumber,
+		TransferTime:      cmd.TransferTime,
 	}
 
 	var created *repository.Record

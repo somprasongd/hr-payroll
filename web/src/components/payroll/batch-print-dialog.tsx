@@ -23,11 +23,11 @@ import {
 } from '@/services/payroll.service';
 import { orgProfileService } from '@/services/org-profile.service';
 
-interface BatchPrintDialogProps {
+export interface BatchPrintDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   runId: string;
-  items: PayrollItem[];
+  items?: PayrollItem[]; // Optional, kept for compatibility but not used for data source
   orgProfile?: OrgProfileSnapshot;
   bonusYear?: number | null;
   payrollMonthDate: string;
@@ -39,7 +39,7 @@ export function BatchPrintDialog({
   open,
   onOpenChange,
   runId,
-  items,
+  items, // unused
   orgProfile,
   bonusYear,
   payrollMonthDate,
@@ -51,6 +51,10 @@ export function BatchPrintDialog({
 
   // Selected employee IDs (default: all selected)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // All items fetched for this run
+  const [allItems, setAllItems] = useState<PayrollItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
   
   // Print options (default: both checked)
   const [printOriginal, setPrintOriginal] = useState(true);
@@ -69,13 +73,24 @@ export function BatchPrintDialog({
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Initialize selection when dialog opens
+  // Fetch all items when dialog opens
   useEffect(() => {
-    if (open && items.length > 0) {
-      // Select all by default
-      setSelectedIds(new Set(items.map(item => item.id)));
+    if (open && runId) {
+      setLoadingItems(true);
+      payrollService.getPayrollItems(runId, { page: 1, limit: 1000 })
+        .then((response) => {
+          const items = response.data || [];
+          setAllItems(items);
+          setSelectedIds(new Set(items.map(item => item.id)));
+        })
+        .catch((err) => {
+          console.error('Failed to fetch all payroll items', err);
+        })
+        .finally(() => {
+          setLoadingItems(false);
+        });
     }
-  }, [open, items]);
+  }, [open, runId]);
 
   // Fetch logo
   useEffect(() => {
@@ -100,7 +115,7 @@ export function BatchPrintDialog({
 
   // Select all
   const selectAll = () => {
-    setSelectedIds(new Set(items.map(item => item.id)));
+    setSelectedIds(new Set(allItems.map(item => item.id)));
   };
 
   // Deselect all
@@ -212,7 +227,7 @@ export function BatchPrintDialog({
               variant="outline"
               size="sm"
               onClick={selectAll}
-              disabled={selectedIds.size === items.length}
+              disabled={selectedIds.size === allItems.length || loadingItems}
             >
               <CheckSquare className="h-4 w-4 mr-1" />
               {t('print.selectAll')}
@@ -265,33 +280,39 @@ export function BatchPrintDialog({
           {/* Employee List */}
           <div className="h-[400px] border rounded-lg overflow-y-auto">
             <div className="p-2 space-y-1">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 ${
-                    selectedIds.has(item.id) ? 'bg-blue-50' : ''
-                  }`}
-                  onClick={() => toggleItem(item.id)}
-                >
-                  <Checkbox
-                    checked={selectedIds.has(item.id)}
-                    onCheckedChange={() => toggleItem(item.id)}
-                  />
-                  {getEmployeeTypeBadge(item.employeeTypeCode)}
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{item.employeeName}</div>
-                    <div className="text-xs text-gray-500">{item.employeeNumber}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-green-600">
-                      {item.netPay?.toLocaleString('th-TH', {
-                        minimumFractionDigits: 2,
-                      })}
-                    </div>
-                    <div className="text-[10px] text-gray-400">บาท</div>
-                  </div>
+              {loadingItems ? (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  กำลังโหลดรายชื่อพนักงาน...
                 </div>
-              ))}
+              ) : (
+                allItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 ${
+                      selectedIds.has(item.id) ? 'bg-blue-50' : ''
+                    }`}
+                    onClick={() => toggleItem(item.id)}
+                  >
+                    <Checkbox
+                      checked={selectedIds.has(item.id)}
+                      onCheckedChange={() => toggleItem(item.id)}
+                    />
+                    {getEmployeeTypeBadge(item.employeeTypeCode)}
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{item.employeeName}</div>
+                      <div className="text-xs text-gray-500">{item.employeeNumber}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-green-600">
+                        {item.netPay?.toLocaleString('th-TH', {
+                          minimumFractionDigits: 2,
+                        })}
+                      </div>
+                      <div className="text-[10px] text-gray-400">บาท</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

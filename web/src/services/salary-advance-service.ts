@@ -4,6 +4,7 @@ export interface SalaryAdvance {
   id: string;
   employeeId: string;
   employeeName: string;
+  employeeCode?: string;
   amount: number;
   advanceDate: string;
   payrollMonthDate: string;
