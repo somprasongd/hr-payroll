@@ -3,6 +3,7 @@ import { apiClient } from '@/lib/api-client';
 export interface DebtTxn {
   id: string;
   employeeId: string;
+  employeeCode?: string; // Add employeeCode
   employeeName?: string; // Joined from backend or frontend
   txnDate: string;
   txnType: 'loan' | 'other' | 'repayment' | 'installment';
@@ -16,6 +17,10 @@ export interface DebtTxn {
   installments?: DebtTxn[];
   createdAt: string;
   updatedAt: string;
+  paymentMethod?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  transferTime?: string;
 }
 
 export interface CreateDebtPlanRequest {
@@ -36,6 +41,10 @@ export interface ManualRepaymentRequest {
   txnDate: string;
   amount: number;
   reason?: string;
+  paymentMethod?: 'cash' | 'bank_transfer';
+  bankName?: string;
+  bankAccountNumber?: string;
+  transferTime?: string;
 }
 
 export const debtService = {

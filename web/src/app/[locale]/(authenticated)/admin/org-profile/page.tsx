@@ -631,6 +631,7 @@ export default function OrgProfilePage() {
               <CardDescription>{t('slipSettingsDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+{/* 
               <div className="space-y-2">
                 <Label htmlFor="slipFooterNote">{t('slipFooterNote')}</Label>
                 <Textarea
@@ -643,6 +644,7 @@ export default function OrgProfilePage() {
                   rows={3}
                 />
               </div>
+              */}
               
               {/* Logo Upload */}
               <div className="space-y-2">

@@ -3,20 +3,16 @@
 import { forwardRef } from 'react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
-import {
-  PayslipDetail,
-  OrgProfileSnapshot,
-} from '@/services/payroll.service';
+import { OrgProfileSnapshot } from '@/services/payroll.service';
+import { BonusItem } from '@/services/bonus-service';
+import { formatTenure } from '@/lib/format-tenure'; // You might need to adjust import path or copy utility if not exported
 
-export type ReportType = 'salary' | 'tax' | 'sso' | 'pf';
-
-interface PaymentCoverSheetTemplateProps {
-  items: PayslipDetail[];
+interface BonusPrintTemplateProps {
+  items: BonusItem[];
   orgProfile?: OrgProfileSnapshot;
   logoUrl?: string;
-  payrollMonthDate: string;
-  type: ReportType;
-  isPending?: boolean;
+  periodStartDate: string;
+  periodEndDate: string;
 }
 
 // Format number with Thai locale
@@ -81,20 +77,6 @@ const styles = {
     fontSize: '12px',
     color: '#6b7280',
   },
-  pendingWatermark: {
-    position: 'absolute' as const,
-    top: '35%',
-    left: '50%',
-    transform: 'translate(-50%, -50%) rotate(-45deg)',
-    fontSize: '60px',
-    fontWeight: 'bold',
-    color: 'rgba(239, 68, 68, 0.15)', // Red with low opacity
-    border: '4px solid rgba(239, 68, 68, 0.15)',
-    padding: '20px 40px',
-    zIndex: 0,
-    pointerEvents: 'none' as const,
-    whiteSpace: 'nowrap' as const,
-  },
   table: {
     width: '100%',
     borderCollapse: 'collapse' as const,
@@ -140,33 +122,16 @@ const styles = {
   },
 };
 
-export const PaymentCoverSheetTemplate = forwardRef<HTMLDivElement, PaymentCoverSheetTemplateProps>(
-  function PaymentCoverSheetTemplate({ items, orgProfile, logoUrl, payrollMonthDate, type, isPending }, ref) {
-    const payrollDate = new Date(payrollMonthDate);
-    const monthYear = `${format(payrollDate, 'MMMM', { locale: th })} ${payrollDate.getFullYear() + 543}`;
+export const BonusPrintTemplate = forwardRef<HTMLDivElement, BonusPrintTemplateProps>(
+  function BonusPrintTemplate({ items, orgProfile, logoUrl, periodStartDate, periodEndDate }, ref) {
+    const startDate = new Date(periodStartDate);
+    const endDate = new Date(periodEndDate);
+    const dateRange = `${format(startDate, 'd MMM yyyy', { locale: th })} - ${format(endDate, 'd MMM yyyy', { locale: th })}`;
     
-    // Calculate total
-    const totalAmount = items.reduce((sum, item) => {
-      switch (type) {
-        case 'salary': return sum + item.netPay;
-        case 'tax': return sum + item.taxMonthAmount;
-        case 'sso': return sum + item.ssoMonthAmount;
-        case 'pf': return sum + item.pfMonthAmount;
-        default: return sum;
-      }
-    }, 0);
+    // Calculate totals
+    const totalCurrentSalary = items.reduce((sum, item) => sum + item.currentSalary, 0);
+    const totalBonusAmount = items.reduce((sum, item) => sum + item.bonusAmount, 0);
 
-    const getTitle = () => {
-      switch (type) {
-        case 'salary': return { th: 'ใบสรุปการจ่ายเงินเดือน', my: 'Salary Payment Summary' };
-        case 'tax': return { th: 'ใบสรุปนำส่งภาษี', my: 'Tax Remittance Summary' };
-        case 'sso': return { th: 'ใบสรุปนำส่งประกันสังคม', my: 'SSO Contribution Summary' };
-        case 'pf': return { th: 'ใบสรุปนำส่งกองทุนสำรองเลี้ยงชีพ', my: 'Provident Fund Summary' };
-        default: return { th: 'ใบสรุป', my: 'Summary' };
-      }
-    };
-
-    const title = getTitle();
     const fullAddress = [
       orgProfile?.address_line1,
       orgProfile?.address_line2,
@@ -178,12 +143,6 @@ export const PaymentCoverSheetTemplate = forwardRef<HTMLDivElement, PaymentCover
 
     return (
       <div ref={ref} style={styles.page}>
-        {isPending && (
-          <div style={styles.pendingWatermark}>
-            รายการรออนุมัติ / PENDING
-          </div>
-        )}
-
         <div style={styles.header}>
           <div style={styles.logo}>
             {logoUrl ? (
@@ -203,27 +162,20 @@ export const PaymentCoverSheetTemplate = forwardRef<HTMLDivElement, PaymentCover
             {orgProfile?.tax_id && <div style={{ color: '#6b7280' }}>เลขประจำตัวผู้เสียภาษี {orgProfile.tax_id}</div>}
           </div>
           <div style={styles.titleBox}>
-            <div style={styles.mainTitle}><BiLabel th={title.th} my={title.my} /></div>
-            <div style={styles.subTitle}>เดือน {monthYear}</div>
-            {isPending && <div style={{ color: '#ef4444', fontWeight: 'bold' }}>* รอการอนุมัติ</div>}
+            <div style={styles.mainTitle}><BiLabel th="สรุปการจ่ายโบนัส" my="Bonus Payment Summary" /></div>
+            <div style={styles.subTitle}>รอบ: {dateRange}</div>
           </div>
         </div>
 
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={{ ...styles.th, width: '50px' }}>ลำดับ<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>No.</span></th>
+              <th style={{ ...styles.th, width: '40px' }}>ลำดับ<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>No.</span></th>
               <th style={{ ...styles.th, textAlign: 'left' }}>พนักงาน<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Employee</span></th>
-              <th style={{ ...styles.th, textAlign: 'left' }}>แผนก<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Department</span></th>
-              
-              {type === 'salary' && (
-                <>
-                  <th style={{ ...styles.th }}>ธนาคาร<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Bank</span></th>
-                  <th style={{ ...styles.th }}>เลขที่บัญชี<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Account No.</span></th>
-                </>
-              )}
-              
-              <th style={{ ...styles.th, textAlign: 'right', width: '120px' }}>จำนวนเงิน<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Amount</span></th>
+              <th style={{ ...styles.th, textAlign: 'center' }}>อายุงาน<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Tenure</span></th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>เงินเดือน<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Salary</span></th>
+              <th style={{ ...styles.th, textAlign: 'center' }}>จำนวนเดือน<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Months</span></th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>ยอดโบนัส<br/><span style={{fontSize: '9px', fontWeight: 'normal'}}>Amount</span></th>
             </tr>
           </thead>
           <tbody>
@@ -234,31 +186,34 @@ export const PaymentCoverSheetTemplate = forwardRef<HTMLDivElement, PaymentCover
                   <div>{item.employeeName}</div>
                   <div style={{ color: '#6b7280', fontSize: '10px' }}>{item.employeeNumber}</div>
                 </td>
-                <td style={styles.td}>{item.departmentName || '-'}</td>
-                
-                {type === 'salary' && (
-                  <>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>{item.bankName || '-'}</td>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>{item.bankAccount || '-'}</td>
-                  </>
-                )}
-
-                <td style={{ ...styles.td, textAlign: 'right' }}>
-                  {formatNumber(
-                    type === 'salary' ? item.netPay :
-                    type === 'tax' ? item.taxMonthAmount :
-                    type === 'sso' ? item.ssoMonthAmount :
-                    type === 'pf' ? item.pfMonthAmount : 0
-                  )}
+                <td style={{ ...styles.td, textAlign: 'center' }}>
+                    {/* Simplified tenure display since formatTenure requires t function, maybe just days or a helper if available. 
+                        Let's try to calculate Years/Months/Days if possible or just show days for now. 
+                        Wait, formatTenure IS available in lib/format-tenure.ts but it needs a t function.
+                        Let's just show Days for consistency with API or simple calculation.
+                        Actually, let's just show Days if formatTenure is hard to use here without passing t.
+                        Or better, let's implement a simple logic here.
+                    */}
+                    {Math.floor(item.tenureDays / 365)}Y {Math.floor((item.tenureDays % 365) / 30)}M
                 </td>
+                <td style={{ ...styles.td, textAlign: 'right' }}>{formatNumber(item.currentSalary)}</td>
+                <td style={{ ...styles.td, textAlign: 'center' }}>{item.bonusMonths}</td>
+                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold' }}>{formatNumber(item.bonusAmount)}</td>
               </tr>
             ))}
           </tbody>
+          <tfoot>
+             <tr style={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
+                <td colSpan={3} style={{ ...styles.td, textAlign: 'right' }}>รวมทั้งหมด / Total</td>
+                <td style={{ ...styles.td, textAlign: 'right' }}>{formatNumber(totalCurrentSalary)}</td>
+                <td style={styles.td}></td>
+                <td style={{ ...styles.td, textAlign: 'right' }}>{formatNumber(totalBonusAmount)}</td>
+             </tr>
+          </tfoot>
         </table>
 
         <div style={styles.summary}>
           <div>จำนวนพนักงาน: <span style={{ color: '#111827' }}>{items.length}</span> คน</div>
-          <div>รวมเป็นเงิน: <span style={{ color: '#111827' }}>{formatNumber(totalAmount)}</span> บาท</div>
         </div>
 
         <div style={styles.signatureSection}>

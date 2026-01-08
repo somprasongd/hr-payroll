@@ -120,6 +120,12 @@
     },
     "listTitle": "การจัดการโบนัส",
     "noData": "ไม่มีข้อมูล",
+    "print": {
+      "button": "พิมพ์แบบสรุป",
+      "title": "ตัวอย่างก่อนพิมพ์",
+      "printButton": "พิมพ์",
+      "printing": "กำลังพิมพ์..."
+    },
     "reject": {
       "description": "คุณแน่ใจหรือไม่ว่าต้องการไม่อนุมัติรอบโบนัสนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
       "title": "ยืนยันการไม่อนุมัติ"
@@ -222,6 +228,7 @@
     "default": "หลัก",
     "defaultBranch": "สาขาหลัก",
     "delete": "ลบ",
+    "deleteSuccess": "ลบรายการสำเร็จ",
     "edit": "แก้ไข",
     "error": "เกิดข้อผิดพลาด",
     "errorLoadingData": "เกิดข้อผิดพลาดในการโหลดข้อมูล",
@@ -345,7 +352,7 @@
       "totalAmountMismatch": "ยอดรวมของงวดผ่อนชำระไม่ตรงกับจำนวนเงินกู้",
       "totalInstallment": "ยอดรวมผ่อนชำระ"
     },
-    "createButton": "สร้างหนี้สิน",
+    "createButton": "สร้างรายการใหม่",
     "createTitle": "สร้างหนี้สิน/เงินกู้ใหม่",
     "delete": {
       "description": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
@@ -357,8 +364,21 @@
     "errors": {
       "sumMismatch": "ยอดรวมของงวดผ่อนชำระต้องเท่ากับจำนวนเงินกู้"
     },
+    "print": {
+      "button": "พิมพ์สัญญา",
+      "receiptButton": "พิมพ์ใบเสร็จ",
+      "close": "ปิด",
+      "options": {
+        "copy": "สำเนา",
+        "original": "ต้นฉบับ"
+      },
+      "printButton": "สั่งพิมพ์",
+      "title": "พิมพ์เอกสาร"
+    },
     "fields": {
       "amount": "จำนวนเงิน",
+      "bankAccountNumber": "เลขที่บัญชี",
+      "bankName": "ธนาคาร",
       "currentOutstanding": "ยอดหนี้สะสม",
       "employee": "พนักงาน",
       "installments": "งวดการผ่อนชำระ",
@@ -366,11 +386,17 @@
       "newOutstanding": "หนี้คงเหลือ",
       "otherDesc": "คำอธิบาย",
       "outstandingBalance": "ยอดคงเหลือ",
+      "paymentMethod": "ช่องทางชำระ",
       "payrollMonth": "งวดเงินเดือน",
       "reason": "เหตุผล",
       "status": "สถานะ",
       "txnDate": "วันที่ทำรายการ",
-      "txnType": "ประเภท"
+      "txnType": "ประเภท",
+      "transferTime": "เวลาโอน"
+    },
+    "paymentMethod": {
+      "cash": "เงินสด",
+      "bank_transfer": "โอนเงิน"
     },
     "filters": {
       "hasOutstanding": "เฉพาะมียอดคงค้าง",
@@ -400,6 +426,13 @@
       "loan": "เงินกู้",
       "other": "อื่นๆ",
       "repayment": "การชำระคืน"
+    },
+    "validation": {
+      "amountExceedsOutstanding": "จำนวนเงินต้องไม่เกินยอดหนี้คงเหลือ ({amount})",
+      "amountRequired": "จำนวนเงินต้องมากกว่า 0",
+      "bankNameRequired": "กรุณาระบุชื่อธนาคาร",
+      "accountNumberRequired": "กรุณาระบุเลขที่บัญชี",
+      "timeRequired": "กรุณาระบุเวลา"
     }
   },
   "Departments": {
@@ -800,6 +833,16 @@
         "created": "สร้างรายการจ่ายสำเร็จ",
         "paid": "บันทึกการจ่ายเงินสำเร็จ"
       },
+      "print": {
+        "button": "พิมพ์สลิป",
+        "title": "พิมพ์สลิปจ่ายเงิน",
+        "printButton": "พิมพ์",
+        "close": "ปิด",
+        "options": {
+          "original": "ต้นฉบับ",
+          "copy": "สำเนา"
+        }
+      },
       "title": "การจ่ายเงินพาร์ทไทม์"
     }
   },
@@ -1005,6 +1048,7 @@
     "noEmployeeFound": "ไม่พบพนักงาน",
     "payrollMonth": "งวดที่หักคืน",
     "payrollYear": "ปี",
+    "print": "พิมพ์แบบฟอร์ม",
     "searchEmployee": "เลือกพนักงาน",
     "searchPlaceholder": "ค้นหา...",
     "selectEmployee": "เลือกพนักงาน",
@@ -1023,6 +1067,7 @@
       "delete": "ลบ",
       "edit": "แก้ไข",
       "editItem": "แก้ไขยอด",
+      "print": "พิมพ์สรุป",
       "reject": "ไม่อนุมัติ",
       "view": "ดูรายละเอียด"
     },
@@ -1086,6 +1131,13 @@
       "description": "คุณแน่ใจหรือไม่ที่จะปฏิเสธรอบนี้?",
       "success": "ปฏิเสธรอบสำเร็จ",
       "title": "ไม่อนุมัติรอบ"
+    },
+    "print": {
+      "button": "พิมพ์แบบสรุป",
+      "title": "ตัวอย่างก่อนพิมพ์",
+      "printButton": "พิมพ์",
+      "printing": "กำลังพิมพ์...",
+      "close": "ปิด"
     },
     "rejectConfirmMessage": "คุณแน่ใจหรือไม่ที่จะปฏิเสธรอบการปรับเงินเดือนนี้?",
     "stats": {

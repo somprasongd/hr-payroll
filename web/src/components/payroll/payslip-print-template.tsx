@@ -472,6 +472,7 @@ const SlipHalf = ({
         <div style={styles.signatureBox}>
           <div style={styles.signatureLine}></div>
           <div style={styles.signatureLabel}>ลายเซ็น</div>
+          <div style={{ marginTop: '10px', fontSize: '10px' }}>วันที่ ______/______/___________</div>
         </div>
       </div>
     </div>

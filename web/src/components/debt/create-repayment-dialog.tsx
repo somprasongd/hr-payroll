@@ -28,33 +28,66 @@ import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-input";
 import { Combobox } from "@/components/ui/combobox";
 import { EmployeeSelector } from "@/components/common/employee-selector";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { debtService } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { accumulationService } from '@/services/accumulation.service';
 
-const formSchema = z.object({
-  employeeId: z.string().min(1, "Employee is required"),
-  txnDate: z.string().min(1, "Date is required"),
-  amount: z.coerce.number().min(0.01, "Amount must be greater than 0"),
-  reason: z.string().optional(),
-});
+  interface CreateRepaymentDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSuccess: (id?: string) => void;
+    selectedEmployeeId?: string;
+  }
 
-type FormValues = z.infer<typeof formSchema>;
+  
+  export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedEmployeeId }: CreateRepaymentDialogProps) {
+    const t = useTranslations('Debt');
+    const tCommon = useTranslations('Common');
+    const { toast } = useToast();
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [currentDebt, setCurrentDebt] = useState(0);
 
-interface CreateRepaymentDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-  selectedEmployeeId?: string;
-}
+  const createSchema = (maxAmount: number) => z.object({
+    employeeId: z.string().min(1, "Employee is required"),
+    txnDate: z.string().min(1, "Date is required"),
+    amount: z.coerce.number()
+      .min(0.01, t('validation.amountRequired'))
+      .max(maxAmount > 0 ? maxAmount : Number.MAX_SAFE_INTEGER, t('validation.amountExceedsOutstanding', { amount: maxAmount.toLocaleString() })),
+    reason: z.string().optional(),
+    paymentMethod: z.enum(["cash", "bank_transfer"]),
+    bankName: z.string().optional(),
+    bankAccountNumber: z.string().optional(),
+    transferTime: z.string().optional(),
+  }).superRefine((data, ctx) => {
+    if (data.paymentMethod === "bank_transfer") {
+      if (!data.bankName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('validation.bankNameRequired'),
+          path: ["bankName"],
+        });
+      }
+      if (!data.bankAccountNumber) {
+         ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('validation.accountNumberRequired'),
+          path: ["bankAccountNumber"],
+        });
+      }
+      if (!data.transferTime) {
+         ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('validation.timeRequired'),
+          path: ["transferTime"],
+        });
+      }
+    }
+  });
 
-export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedEmployeeId }: CreateRepaymentDialogProps) {
-  const t = useTranslations('Debt');
-  const tCommon = useTranslations('Common');
-  const { toast } = useToast();
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [currentDebt, setCurrentDebt] = useState(0);
+  const formSchema = createSchema(currentDebt);
+  type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -62,6 +95,11 @@ export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedE
       employeeId: '',
       txnDate: format(new Date(), 'yyyy-MM-dd'),
       amount: 0,
+      paymentMethod: "cash",
+      bankName: "",
+      bankAccountNumber: "",
+      transferTime: "",
+      reason: "",
     }
   });
 
@@ -73,6 +111,10 @@ export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedE
         employeeId: initialEmployeeId,
         txnDate: format(new Date(), 'yyyy-MM-dd'),
         amount: 0,
+        paymentMethod: "cash",
+        bankName: "",
+        bankAccountNumber: "",
+        transferTime: "",
         reason: ''
       });
       if (initialEmployeeId) {
@@ -99,7 +141,7 @@ export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedE
 
   const fetchEmployees = async () => {
     try {
-      const response = await employeeService.getEmployees({ limit: 100, status: 'active' });
+      const response = await employeeService.getEmployees({ limit: 100, status: 'active', hasOutstandingDebt: true });
       setEmployees(response.data || []);
     } catch (error) {
       console.error('Failed to fetch employees', error);
@@ -108,11 +150,15 @@ export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedE
 
   const onSubmit = async (data: FormValues) => {
     try {
-      await debtService.createRepayment({
+      const response = await debtService.createRepayment({
         employeeId: data.employeeId,
         amount: data.amount,
         txnDate: data.txnDate,
-        reason: data.reason
+        reason: data.reason,
+        paymentMethod: data.paymentMethod,
+        bankName: data.bankName || undefined,
+        bankAccountNumber: data.bankAccountNumber || undefined,
+        transferTime: data.transferTime || undefined,
       });
       
       toast({
@@ -121,7 +167,7 @@ export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedE
       });
       
       onOpenChange(false);
-      onSuccess();
+      onSuccess(response.id);
     } catch (error: any) {
       console.error(error);
       toast({
@@ -206,6 +252,89 @@ export function CreateRepaymentDialog({ open, onOpenChange, onSuccess, selectedE
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="paymentMethod"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>{t('fields.paymentMethod') || "Type"}</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="cash" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {t('paymentMethod.cash') || "Cash"}
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="bank_transfer" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {t('paymentMethod.bank_transfer') || "Bank Transfer"}
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch('paymentMethod') === 'bank_transfer' && (
+              <div className="space-y-4 border p-4 rounded-md bg-gray-50">
+                <FormField
+                  control={form.control}
+                  name="bankName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('fields.bankName') || "Bank Name"}</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. KBANK" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="bankAccountNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('fields.bankAccountNumber') || "Account No."}</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="transferTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('fields.transferTime') || "Time"}</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </div>
+              </div>
+            )}
 
             <FormField
               control={form.control}

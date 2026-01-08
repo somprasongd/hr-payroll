@@ -37,6 +37,7 @@ type Record struct {
 	UpdatedAt    time.Time  `db:"updated_at"`
 	UpdatedBy    uuid.UUID  `db:"updated_by"`
 	EmployeeName string     `db:"employee_name"`
+	EmployeeCode string     `db:"employee_code"`
 	DeletedAt    *time.Time `db:"deleted_at"`
 	DeletedBy    *uuid.UUID `db:"deleted_by"`
 }
@@ -81,6 +82,7 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 
 	q := fmt.Sprintf(`
 SELECT sa.*,
+  e.employee_number AS employee_code,
   concat_ws(' ', pt.name_th, e.first_name, e.last_name) AS employee_name
 FROM salary_advance sa
 JOIN employees e ON e.id = sa.employee_id
@@ -117,6 +119,7 @@ func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid
 	db := r.dbCtx(ctx)
 	q := `
 SELECT sa.*,
+  e.employee_number AS employee_code,
   (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
 FROM salary_advance sa
 JOIN employees e ON e.id = sa.employee_id
@@ -126,6 +129,7 @@ LIMIT 1`
 	if tenant.HasBranchID() {
 		q = `
 SELECT sa.*,
+  e.employee_number AS employee_code,
   (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = sa.employee_id) AS employee_name
 FROM salary_advance sa
 JOIN employees e ON e.id = sa.employee_id

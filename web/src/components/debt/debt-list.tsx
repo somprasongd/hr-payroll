@@ -449,7 +449,13 @@ export function DebtList() {
       <CreateRepaymentDialog 
         open={repaymentOpen} 
         onOpenChange={setRepaymentOpen} 
-        onSuccess={fetchData} 
+        onSuccess={(id) => {
+          if (id) {
+            router.push(`/${locale}/debt/${id}`);
+          } else {
+            fetchData();
+          }
+        }}
         selectedEmployeeId={employeeFilter}
       />
 

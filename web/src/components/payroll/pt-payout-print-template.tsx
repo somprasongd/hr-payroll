@@ -59,9 +59,13 @@ const styles = {
     gap: '12px',
   },
   logo: {
-    width: '60px',
-    height: '60px',
+    width: '64px',
+    height: '64px',
     objectFit: 'contain' as const,
+    borderRadius: '50%',
+    border: '1px solid #d1d5db',
+    padding: '2px',
+    backgroundColor: 'white',
   },
   logoPlaceholder: {
     width: '60px',
@@ -78,8 +82,8 @@ const styles = {
   },
   companyName: {
     fontWeight: 'bold',
-    fontSize: '16px',
-    marginBottom: '4px',
+    fontSize: '18px',
+    marginBottom: '2px',
   },
   slipTitle: {
     textAlign: 'right' as const,
@@ -210,6 +214,15 @@ const SlipPage = ({
   const employeeNumber = employee?.employeeNumber || employee?.EmployeeNumber || '-';
   const paidDate = payout.paidAt ? new Date(payout.paidAt) : new Date();
 
+  const fullAddress = [
+    orgProfile?.addressLine1,
+    orgProfile?.addressLine2,
+    orgProfile?.subdistrict,
+    orgProfile?.district,
+    orgProfile?.province,
+    orgProfile?.postalCode,
+  ].filter(Boolean).join(' ');
+
   return (
     <div style={styles.slipPage}>
       {/* Header */}
@@ -222,10 +235,13 @@ const SlipPage = ({
           )}
           <div style={styles.companyInfo}>
             <div style={styles.companyName}>{orgProfile?.companyName || 'บริษัท'}</div>
-            <div>{orgProfile?.addressLine1 || ''}</div>
-            <div>โทร. {orgProfile?.phoneMain || '-'}</div>
-            <div>{orgProfile?.email || ''}</div>
-            {orgProfile?.taxId && <div>เลขประจำตัวผู้เสียภาษี {orgProfile.taxId}</div>}
+            <div style={styles.gray}>{fullAddress}</div>
+            <div style={styles.gray}>
+              โทร. {orgProfile?.phoneMain || '-'}
+              {orgProfile?.phoneAlt && <span> / {orgProfile.phoneAlt}</span>}
+            </div>
+            {orgProfile?.email && <div style={styles.gray}>{orgProfile.email}</div>}
+            {orgProfile?.taxId && <div style={styles.gray}>เลขประจำตัวผู้เสียภาษี {orgProfile.taxId}</div>}
           </div>
         </div>
         <div style={styles.slipTitle}>
@@ -296,6 +312,7 @@ const SlipPage = ({
         <div style={styles.signatureBox}>
           <div style={styles.signatureLine}></div>
           <div style={styles.signatureLabel}>ลายเซ็น <span style={{ fontSize: '8px' }}>လက်မှတ်</span></div>
+          <div style={{ marginTop: '10px', fontSize: '10px' }}>วันที่ ______/______/___________</div>
         </div>
       </div>
     </div>
