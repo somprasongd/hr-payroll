@@ -38,7 +38,7 @@ func (m *Module) APIVersion() string { return "v1" }
 func (m *Module) Init(eb eventbus.EventBus) error {
 	// Register internal handlers for company module endpoints
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
-	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo))
+	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, eb))
 
 	// Register contract handlers for superadmin module to use via mediator
 	mediator.Register[*contracts.ListAllCompaniesQuery, *contracts.ListAllCompaniesResponse](listall.NewHandler(m.repo))

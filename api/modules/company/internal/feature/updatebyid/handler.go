@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -14,7 +13,6 @@ import (
 	"hrms/shared/common/logger"
 	"hrms/shared/common/storage/sqldb/transactor"
 	"hrms/shared/contracts"
-	"hrms/shared/events"
 )
 
 type Handler struct {
@@ -43,24 +41,6 @@ func (h *Handler) Handle(ctx context.Context, cmd *contracts.UpdateCompanyByIDCo
 			logger.FromContext(ctxTx).Error("failed to update company", zap.Error(err))
 			return errs.Internal("failed to update company")
 		}
-
-		registerHook(func(ctx context.Context) error {
-			h.eb.Publish(events.LogEvent{
-				ActorID:    cmd.ActorID,
-				CompanyID:  &company.ID,
-				BranchID:   nil,
-				Action:     "UPDATE",
-				EntityName: "COMPANY",
-				EntityID:   company.ID.String(),
-				Details: map[string]interface{}{
-					"code":   company.Code,
-					"name":   company.Name,
-					"status": company.Status,
-				},
-				Timestamp: time.Now(),
-			})
-			return nil
-		})
 
 		return nil
 	})
