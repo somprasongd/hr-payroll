@@ -238,6 +238,20 @@ const styles = {
     fontSize: '11px',
     color: '#6b7280',
   },
+  pendingWatermark: {
+    position: 'absolute' as const,
+    top: '40%',
+    left: '50%',
+    transform: 'translate(-50%, -50%) rotate(-45deg)',
+    fontSize: '60px',
+    fontWeight: 'bold',
+    color: 'rgba(239, 68, 68, 0.15)', // Red with low opacity
+    border: '4px solid rgba(239, 68, 68, 0.15)',
+    padding: '20px 40px',
+    zIndex: 0,
+    pointerEvents: 'none' as const,
+    whiteSpace: 'nowrap' as const,
+  },
   green: { color: '#16a34a' },
   red: { color: '#dc2626' },
   gray: { color: '#6b7280' },
@@ -278,7 +292,12 @@ const SlipHalf = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div style={styles.slipPage}>
+    <div style={{ ...styles.slipPage, position: 'relative' }}>
+      {isPending && (
+        <div style={styles.pendingWatermark}>
+          รายการรออนุมัติ / PENDING
+        </div>
+      )}
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.logo}>

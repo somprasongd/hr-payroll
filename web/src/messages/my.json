@@ -901,10 +901,20 @@
       "copy": "မိတ္တူ",
       "deselectAll": "ရွေးချယ်မှု ဖယ်ရန်",
       "original": "မူရင်း",
+      "paymentCoverSheet": "Payment Cover Sheet",
+      "preview": "Preview",
+      "print": "Print",
+      "reportType": "Report Type",
       "selectAll": "အားလုံး ရွေးချယ်ပါ",
       "selectEmployees": "ပရင့်ထုတ်မည့် ဝန်ထမ်းများ ရွေးချယ်ပါ",
       "selectedCount": "{count} ရွေးချယ်ထား",
-      "title": "လစာစာရွက်"
+      "title": "လစာစာရွက်",
+      "types": {
+        "pf": "Provident Fund Summary",
+        "salary": "Salary Payment Summary",
+        "sso": "SSO Contribution Summary",
+        "tax": "Tax Remittance Summary"
+      }
     },
     "status": {
       "approved": "အတည်ပြုပြီး",

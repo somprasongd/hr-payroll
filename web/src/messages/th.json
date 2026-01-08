@@ -901,10 +901,20 @@
       "copy": "สำเนา",
       "deselectAll": "ยกเลิกเลือกทั้งหมด",
       "original": "ต้นฉบับ",
+      "paymentCoverSheet": "ใบปะหน้า/นำส่ง",
+      "preview": "ดูตัวอย่าง",
+      "print": "สั่งพิมพ์",
+      "reportType": "ประเภทรายงาน",
       "selectAll": "เลือกทั้งหมด",
       "selectEmployees": "เลือกพนักงานที่ต้องการพิมพ์",
       "selectedCount": "เลือก {count} คน",
-      "title": "ใบจ่ายเงินเดือน"
+      "title": "ใบจ่ายเงินเดือน",
+      "types": {
+        "pf": "นำส่งกองทุนสำรองฯ (PF)",
+        "salary": "สรุปจ่ายเงินเดือน (Salary)",
+        "sso": "นำส่งประกันสังคม (SSO)",
+        "tax": "นำส่งภาษี (Tax)"
+      }
     },
     "status": {
       "approved": "อนุมัติแล้ว",

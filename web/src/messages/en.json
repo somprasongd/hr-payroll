@@ -901,10 +901,20 @@
       "copy": "Copy",
       "deselectAll": "Deselect All",
       "original": "Original",
+      "paymentCoverSheet": "Payment Cover Sheet",
+      "preview": "Preview",
+      "print": "Print",
+      "reportType": "Report Type",
       "selectAll": "Select All",
       "selectEmployees": "Select Employees to Print",
       "selectedCount": "Selected {count}",
-      "title": "Pay Slip"
+      "title": "Pay Slip",
+      "types": {
+        "pf": "Provident Fund Summary",
+        "salary": "Salary Payment Summary",
+        "sso": "SSO Contribution Summary",
+        "tax": "Tax Remittance Summary"
+      }
     },
     "status": {
       "approved": "Approved",
