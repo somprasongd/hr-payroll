@@ -78,6 +78,16 @@ export interface PayrollItem {
   incomeTotal: number;
   deductionTotal: number;
   netPay: number;
+  // Contribution flags
+  ssoContribute?: boolean;
+  providentFundContribute?: boolean;
+  withholdTax?: boolean;
+  allowHousing?: boolean;
+  allowWater?: boolean;
+  allowElectric?: boolean;
+  allowInternet?: boolean;
+  allowDoctorFee?: boolean;
+  doctorFee?: number;
 }
 
 export interface PayrollItemsResponse {

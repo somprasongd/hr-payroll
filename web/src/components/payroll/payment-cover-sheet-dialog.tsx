@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Printer, CheckSquare, Square, Eye, FileText } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
@@ -71,6 +71,20 @@ export function PaymentCoverSheetDialog({
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Filter items based on report type
+  const filteredItems = useMemo(() => {
+    return allItems.filter(item => {
+      // If flags are missing/undefined, assume false for safety, or check if logic requires otherwise.
+      // Assuming backend sends false if not eligible.
+      switch (reportType) {
+        case 'tax': return item.withholdTax === true;
+        case 'sso': return item.ssoContribute === true;
+        case 'pf': return item.providentFundContribute === true;
+        case 'salary': default: return true;
+      }
+    });
+  }, [allItems, reportType]);
+
   // Fetch all items when dialog opens
   useEffect(() => {
     if (open && runId) {
@@ -79,6 +93,8 @@ export function PaymentCoverSheetDialog({
         .then((response) => {
           const items = response.data || [];
           setAllItems(items);
+          // Initial selection: all items for salary (default)
+          // We can't use filteredItems here because it's derived, but reportType is 'salary' initially.
           setSelectedIds(new Set(items.map(item => item.id)));
         })
         .catch((err) => {
@@ -89,6 +105,21 @@ export function PaymentCoverSheetDialog({
         });
     }
   }, [open, runId]);
+
+  // Update selection when report type changes?
+  // User didn't explicitly ask to "auto-select" new eligible, but if I switch to 'SSO', 
+  // keeping IDs of people who don't have SSO is weird.
+  // It's safer to re-select "all ELIGIBLE" when report type switches, OR keep current selection derived.
+  // Let's go with: When report type changes, select all eligible employees for that report type.
+  // This provides the best UX for "Prepare SSO Report".
+  useEffect(() => {
+    // Skip initial load (when allItems is empty or just loaded)
+    if (allItems.length > 0) {
+       const newSelected = new Set(filteredItems.map(item => item.id));
+       setSelectedIds(newSelected);
+    }
+  }, [reportType, filteredItems, allItems.length]); // Dependencies carefully chosen
+
 
   // Fetch logo
   useEffect(() => {
@@ -107,7 +138,7 @@ export function PaymentCoverSheetDialog({
     setSelectedIds(newSelected);
   };
 
-  const selectAll = () => setSelectedIds(new Set(allItems.map(item => item.id)));
+  const selectAll = () => setSelectedIds(new Set(filteredItems.map(item => item.id)));
   const deselectAll = () => setSelectedIds(new Set());
 
   const getEmployeeTypeBadge = (typeCode: string) => {
@@ -124,7 +155,7 @@ export function PaymentCoverSheetDialog({
   const prepareData = async () => {
     const selectedItemIds = Array.from(selectedIds);
     // Sort to match the order in the list (items prop)
-    const sortedIds = allItems
+    const sortedIds = filteredItems
       .filter(item => selectedIds.has(item.id))
       .map(item => item.id);
 
@@ -210,7 +241,7 @@ export function PaymentCoverSheetDialog({
           </div>
 
           <div className="flex gap-2 mb-3">
-            <Button variant="outline" size="sm" onClick={selectAll} disabled={selectedIds.size === allItems.length || loadingItems}>
+            <Button variant="outline" size="sm" onClick={selectAll} disabled={selectedIds.size === filteredItems.length || loadingItems}>
               <CheckSquare className="h-4 w-4 mr-1" />
               {t('print.selectAll')}
             </Button>
@@ -229,7 +260,7 @@ export function PaymentCoverSheetDialog({
                 Loading employees...
               </div>
             ) : (
-              allItems.map((item) => (
+              filteredItems.map((item) => (
                 <div
                   key={item.id}
                   className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 ${selectedIds.has(item.id) ? 'bg-blue-50' : ''}`}

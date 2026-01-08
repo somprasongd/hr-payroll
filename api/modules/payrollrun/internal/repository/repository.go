@@ -385,8 +385,14 @@ SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_numb
        pri.sso_month_amount, pri.tax_month_amount, (%s) AS net_pay, 'pending' as status,
        (%s) AS deduction_total,
        pri.doctor_fee,
-       e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
-       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
+       COALESCE((pri.employee_settings_snapshot->>'sso_contribute')::boolean, false) AS sso_contribute,
+       COALESCE((pri.employee_settings_snapshot->>'provident_fund_contribute')::boolean, false) AS provident_fund_contribute,
+       COALESCE((pri.employee_settings_snapshot->>'withhold_tax')::boolean, false) AS withhold_tax,
+       COALESCE((pri.employee_settings_snapshot->>'allow_housing')::boolean, false) AS allow_housing,
+       COALESCE((pri.employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
+       COALESCE((pri.employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
+       COALESCE((pri.employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
+       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
@@ -462,14 +468,14 @@ func (r Repository) UpdateItem(ctx context.Context, tenant contextx.TenantInfo, 
        sso_month_amount, tax_month_amount, (%s) AS net_pay, 'pending' as status,
         (%s) AS deduction_total,
         doctor_fee,
-        (SELECT sso_contribute FROM employees e WHERE e.id = payroll_run_item.employee_id) AS sso_contribute,
-        (SELECT provident_fund_contribute FROM employees e WHERE e.id = payroll_run_item.employee_id) AS provident_fund_contribute,
-        (SELECT withhold_tax FROM employees e WHERE e.id = payroll_run_item.employee_id) AS withhold_tax,
-        (SELECT allow_housing FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_housing,
-        (SELECT allow_water FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_water,
-        (SELECT allow_electric FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_electric,
-        (SELECT allow_internet FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_internet,
-        (SELECT allow_doctor_fee FROM employees e WHERE e.id = payroll_run_item.employee_id) AS allow_doctor_fee`, setClause, where, netPayExpr, deductionExpr)
+        COALESCE((employee_settings_snapshot->>'sso_contribute')::boolean, false) AS sso_contribute,
+        COALESCE((employee_settings_snapshot->>'provident_fund_contribute')::boolean, false) AS provident_fund_contribute,
+        COALESCE((employee_settings_snapshot->>'withhold_tax')::boolean, false) AS withhold_tax,
+        COALESCE((employee_settings_snapshot->>'allow_housing')::boolean, false) AS allow_housing,
+        COALESCE((employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
+        COALESCE((employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
+        COALESCE((employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
+        COALESCE((employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee`, setClause, where, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
@@ -496,8 +502,14 @@ func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id 
        (%s) AS deduction_total,
        pri.advance_amount, pri.loan_outstanding_total,
        pri.doctor_fee,
-       e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
-       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
+       COALESCE((pri.employee_settings_snapshot->>'sso_contribute')::boolean, false) AS sso_contribute,
+       COALESCE((pri.employee_settings_snapshot->>'provident_fund_contribute')::boolean, false) AS provident_fund_contribute,
+       COALESCE((pri.employee_settings_snapshot->>'withhold_tax')::boolean, false) AS withhold_tax,
+       COALESCE((pri.employee_settings_snapshot->>'allow_housing')::boolean, false) AS allow_housing,
+       COALESCE((pri.employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
+       COALESCE((pri.employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
+       COALESCE((pri.employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
+       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
@@ -580,8 +592,14 @@ func (r Repository) GetItemDetail(ctx context.Context, tenant contextx.TenantInf
        pri.water_amount, pri.electric_amount, pri.internet_amount,
        pri.water_meter_prev, pri.water_meter_curr, pri.electric_meter_prev, pri.electric_meter_curr,
        pri.water_rate_per_unit, pri.electricity_rate_per_unit, pri.doctor_fee,
-       e.sso_contribute, e.provident_fund_contribute, e.withhold_tax,
-       e.allow_housing, e.allow_water, e.allow_electric, e.allow_internet, e.allow_doctor_fee
+       COALESCE((pri.employee_settings_snapshot->>'sso_contribute')::boolean, false) AS sso_contribute,
+       COALESCE((pri.employee_settings_snapshot->>'provident_fund_contribute')::boolean, false) AS provident_fund_contribute,
+       COALESCE((pri.employee_settings_snapshot->>'withhold_tax')::boolean, false) AS withhold_tax,
+       COALESCE((pri.employee_settings_snapshot->>'allow_housing')::boolean, false) AS allow_housing,
+       COALESCE((pri.employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
+       COALESCE((pri.employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
+       COALESCE((pri.employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
+       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
