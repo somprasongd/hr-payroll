@@ -63,11 +63,14 @@ class ApiClient {
 
   private handleError(error: unknown): ApiError {
     if (error instanceof AxiosError) {
+      const data = error.response?.data;
+      const detail = data?.detail || data?.details;
+      
       return {
-        message: error.response?.data?.message || error.message || 'An error occurred',
+        message: detail || data?.message || error.message || 'An error occurred',
         statusCode: error.response?.status || 500,
-        errors: error.response?.data?.errors,
-        detail: error.response?.data?.details || error.response?.data?.detail,
+        errors: data?.errors,
+        detail: detail,
       };
     }
 

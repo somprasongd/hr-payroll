@@ -35,17 +35,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const tCommon = useTranslations('Common')
   const pathname = usePathname()
   const { user } = useAuthStore()
-  const [version, setVersion] = React.useState<string>('...')
+  const [version, setVersion] = React.useState<string>(process.env.NEXT_PUBLIC_VERSION || '...')
 
   React.useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/version`)
+    // If NEXT_PUBLIC_VERSION is set, we use it (it reflects the build version)
+    // We still try to fetch from API to get the running API version if it's different
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 
+                    (typeof window !== 'undefined' ? window.location.origin : '');
+    
+    fetch(`${apiBase}/api/version`)
       .then(res => res.json())
       .then(data => {
          if (data.version) {
              setVersion(data.version.replace(/^v/i, ''))
          }
       })
-      .catch(() => setVersion('unknown'))
+      .catch(() => {
+        if (!process.env.NEXT_PUBLIC_VERSION) {
+          setVersion('unknown')
+        }
+      })
   }, [])
 
   // Helper to check active state

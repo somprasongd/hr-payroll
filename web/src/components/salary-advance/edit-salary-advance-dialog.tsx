@@ -129,7 +129,7 @@ export function EditSalaryAdvanceDialog({
       onSuccess();
     } catch (error: any) {
       console.error(error);
-      const errorMessage = error?.response?.data?.message || t('updateError');
+      const errorMessage = error?.response?.data?.detail || error?.response?.data?.message || error?.message || t('updateError');
       setError(errorMessage);
       toast({
         variant: "destructive",

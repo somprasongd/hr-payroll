@@ -149,7 +149,7 @@ export function CreateCycleDialog({ onSuccess, trigger }: CreateCycleDialogProps
       onSuccess(response.id);
     } catch (error: any) {
       console.error('Failed to create cycle:', error);
-      setError(error?.response?.data?.message || 'Failed to create cycle. Please try again.');
+      setError(error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Failed to create cycle. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

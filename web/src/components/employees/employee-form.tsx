@@ -281,8 +281,9 @@ export function EmployeeForm({
       if (axiosError?.response?.status === 409) {
         setSubmitError(t("photoDuplicateError"));
       } else {
-        const apiError = err as Error;
-        setSubmitError(apiError.message || t("photoUploadError"));
+        const apiError = err as any;
+        const errorMessage = apiError?.response?.data?.detail || apiError?.response?.data?.message || apiError?.message || t("photoUploadError");
+        setSubmitError(errorMessage);
       }
     } finally {
       setUploadingPhoto(false);
@@ -351,7 +352,7 @@ export function EmployeeForm({
       if (statusCode === 409) {
         setSubmitError(t('employeeNumberDuplicate'));
       } else {
-        const errorMessage = error?.response?.data?.message || error?.message || t('submitError');
+        const errorMessage = error?.response?.data?.detail || error?.response?.data?.message || error?.message || t('submitError');
         setSubmitError(errorMessage);
       }
     } finally {

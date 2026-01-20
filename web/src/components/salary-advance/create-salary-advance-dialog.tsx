@@ -158,7 +158,7 @@ export function CreateSalaryAdvanceDialog({
       onSuccess();
     } catch (error: any) {
       console.error(error);
-      const errorMessage = error?.response?.data?.message || t('createError');
+      const errorMessage = error?.response?.data?.detail || error?.response?.data?.message || error?.message || t('createError');
       setError(errorMessage);
       toast({
         variant: "destructive",

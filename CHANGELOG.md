@@ -1,10 +1,29 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- hide superadmin company updates from tenant logs and fix duplicate logging (6eef9e0)
+
+- Enhance API error message extraction in frontend components and implement build-time API versioning with improved display. (e234de7)
+
+
+### Fixed
+
+- Normalize empty email before validation in employee endpoints (080fe9d)
+
 ## v2.1.0 - 2026-01-08
 
 ### Added
 
 - Document Printing, Payment Cover Sheets, and Payroll Settings Snapshots (#3) (0184e34)
+
+
+### Chore
+
+- release v2.1.0 (14941ef)
+
 
 ### Docs
 
@@ -19,6 +38,7 @@
 - update swagger tenant headers and stabilize cookie-based auth (#2) (4d9608f)
 
 - Expand Dockerfile to include dependency caching for additional modules and shared components. (5c25890)
+
 
 ### Docs
 
@@ -54,9 +74,11 @@
 
 - Add employee fields for nickname, ID document description, and SSO hospital name with associated validation, UI, and migration updates. (e9a63f2)
 
+
 ### Changed
 
 - adjust route paths and permissions for payroll and user modules (0a42bb1)
+
 
 ### Fixed
 
@@ -78,9 +100,11 @@
 
 - Add radio group for selecting full/half day leave duration in worklog form, automatically setting quantity. (f378f23)
 
+
 ### Changed
 
 - handle SSO declared wage null and update import syntax (bf6e573)
+
 
 ### Fixed
 
@@ -234,15 +258,18 @@
 
 - add CI workflow and migration support to Docker builds (c69f0a8)
 
+
 ### Build
 
 - Add `activitylog`, `dashboard`, and `shared/events` Go module dependencies to Dockerfile. (773e61d)
+
 
 ### CI
 
 - Add steps to start web server and wait for API and web readiness before E2E tests. (1943f34)
 
 - add NEXT_PUBLIC_API_BASE_URL environment variable to E2E standalone build step. (b20640f)
+
 
 ### Changed
 
@@ -254,6 +281,7 @@
 
 - add attendance bonus flags to employee detail DTO (2d3b132)
 
+
 ### Chore
 
 - Add favicon.ico route to return 204 No Content. (53a6844)
@@ -264,11 +292,13 @@
 
 - add v1.0.0 release notes (c48230a)
 
+
 ### Docs
 
 - Add HR Payroll system color palette documentation and its associated image asset. (4d18530)
 
 - add initial CHANGELOG.md with release notes (5ccba9f)
+
 
 ### Fixed
 
@@ -280,12 +310,15 @@
 
 - default position and department data to empty array on null API responses (0bdf061)
 
+
 ### Other
 
 - init api (19a38c7)
 
 - update next.js dependency to version 16.0.10. (38c5564)
 
+
 ### Tests
 
 - update E2E tests for filters functionality (883c2b6)
+

@@ -46,7 +46,10 @@ RUN CGO_ENABLED=0 go install -tags 'postgres' github.com/golang-migrate/migrate/
 # Copy API source
 COPY . .
 
-RUN cd app && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/hr-payroll-api ./cmd/api
+ARG VERSION=dev
+RUN cd app && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags "-s -w -X 'hrms/build.Version=${VERSION}'" \
+    -o /out/hr-payroll-api ./cmd/api
 
 # Copy migrations from additional context for runtime
 COPY --from=migrations / /workspace/migrations
