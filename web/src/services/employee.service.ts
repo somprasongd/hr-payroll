@@ -182,6 +182,14 @@ export const employeeService = {
     return apiClient.delete(`/employees/${id}`);
   },
 
+  checkEmployeeNumberDuplicate: async (employeeNumber: string, excludeId?: string): Promise<boolean> => {
+    const query = new URLSearchParams();
+    query.append('employeeNumber', employeeNumber);
+    if (excludeId) query.append('excludeId', excludeId);
+    const response = await apiClient.get<{ isDuplicate: boolean }>(`/employees/check-duplicate?${query.toString()}`);
+    return response.isDuplicate;
+  },
+
   // Photo upload/download
   uploadPhoto: async (file: File): Promise<PhotoUploadResponse> => {
     const formData = new FormData();

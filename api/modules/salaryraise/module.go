@@ -2,6 +2,7 @@ package salaryraise
 
 import (
 	"hrms/modules/salaryraise/internal/feature/create"
+	"hrms/modules/salaryraise/internal/feature/cyclemgmt"
 	"hrms/modules/salaryraise/internal/feature/delete"
 	"hrms/modules/salaryraise/internal/feature/get"
 	itemslist "hrms/modules/salaryraise/internal/feature/items/list"
@@ -14,6 +15,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -45,6 +47,11 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*itemslist.Query, *itemslist.Response](itemslist.NewHandler())
 	mediator.Register[*itemsupdate.Command, *itemsupdate.Response](itemsupdate.NewHandler(m.repo, m.eb))
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler())
+
+	// Contract handlers for cross-module communication
+	mediator.Register[*contracts.AddToSalaryRaiseCycleCommand, *contracts.AddToSalaryRaiseCycleResponse](cyclemgmt.NewAddHandler(m.repo))
+	mediator.Register[*contracts.RemoveFromSalaryRaiseCycleCommand, *contracts.RemoveFromSalaryRaiseCycleResponse](cyclemgmt.NewRemoveHandler(m.repo))
+
 	return nil
 }
 

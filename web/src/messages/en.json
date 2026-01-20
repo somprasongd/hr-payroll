@@ -659,6 +659,9 @@
       "positive": "Value must be positive",
       "required": "This field is required",
       "tabsWithErrors": "Please check the following tabs: {tabs}"
+    },
+    "errors": {
+      "hasPendingPayoutPT": "Cannot change employee type because there are pending part-time payout records"
     }
   },
   "Index": {

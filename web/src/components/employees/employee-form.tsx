@@ -2,7 +2,7 @@
 
 import { useRouter } from "@/i18n/routing";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Upload, User, X } from "lucide-react";
+import { Check, Loader2, Upload, User, X, AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -90,6 +90,10 @@ export function EmployeeForm({
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePhotoDialogOpen, setDeletePhotoDialogOpen] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
+
+  // Employee number duplicate check state
+  const [employeeNumberCheckState, setEmployeeNumberCheckState] = useState<'idle' | 'checking' | 'valid' | 'duplicate'>('idle');
+  const employeeNumberCheckTimeout = React.useRef<NodeJS.Timeout | null>(null);
 
   // Load existing photo preview
   React.useEffect(() => {
@@ -325,6 +329,15 @@ export function EmployeeForm({
   };
 
   const handleSubmit = async (data: EmployeeFormValues) => {
+    if (employeeNumberCheckState === 'duplicate') {
+      setSubmitError(t('employeeNumberDuplicate'));
+      return;
+    }
+
+    if (employeeNumberCheckState === 'checking') {
+      return;
+    }
+
     setLoading(true);
     setSubmitError(null);
     try {
@@ -403,6 +416,75 @@ export function EmployeeForm({
   const lastName = form.watch("lastName");
   const nickname = form.watch("nickname");
   const employeeNumber = form.watch("employeeNumber");
+  const isEmployeeNumberBlocked =
+    employeeNumberCheckState === "duplicate" ||
+    employeeNumberCheckState === "checking";
+
+  useEffect(() => {
+    const subscription = form.watch((_, { name }) => {
+      if (!name || name === "employeeNumber") return;
+      const fieldState = form.getFieldState(name as keyof EmployeeFormValues);
+      if (fieldState.invalid) {
+        void form.trigger(name as keyof EmployeeFormValues);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Debounced employee number duplicate check
+  useEffect(() => {
+    // Clear previous timeout
+    if (employeeNumberCheckTimeout.current) {
+      clearTimeout(employeeNumberCheckTimeout.current);
+    }
+
+    // If empty, reset to idle
+    if (!employeeNumber || employeeNumber.trim() === "") {
+      setEmployeeNumberCheckState('idle');
+      form.clearErrors('employeeNumber');
+      return;
+    }
+
+    // If same as initial value in edit mode, skip check
+    if (isEditing && initialData?.employeeNumber === employeeNumber) {
+      setEmployeeNumberCheckState('valid');
+      form.clearErrors('employeeNumber');
+      return;
+    }
+
+    // Set checking state
+    setEmployeeNumberCheckState('checking');
+
+    // Debounce the API call (500ms)
+    employeeNumberCheckTimeout.current = setTimeout(async () => {
+      try {
+        const isDuplicate = await employeeService.checkEmployeeNumberDuplicate(
+          employeeNumber,
+          isEditing ? initialData?.id : undefined
+        );
+        if (isDuplicate) {
+          setEmployeeNumberCheckState('duplicate');
+          form.setError('employeeNumber', {
+            type: 'manual',
+            message: t('employeeNumberDuplicate')
+          });
+        } else {
+          setEmployeeNumberCheckState('valid');
+          form.clearErrors('employeeNumber');
+        }
+      } catch (error) {
+        // On error, allow form to proceed (server will validate on submit)
+        setEmployeeNumberCheckState('idle');
+      }
+    }, 500);
+
+    return () => {
+      if (employeeNumberCheckTimeout.current) {
+        clearTimeout(employeeNumberCheckTimeout.current);
+      }
+    };
+  }, [employeeNumber, isEditing, initialData?.employeeNumber, initialData?.id, form, t]);
 
   // Fetch Payroll Config for default hourly rate
   const [payrollConfig, setPayrollConfig] = useState<any>(null);
@@ -413,6 +495,7 @@ export function EmployeeForm({
   const lastEmployeeTypeRef = React.useRef<string | null>(initialData?.employeeTypeId || null);
   // Track previous ssoContribute value to detect toggling from false to true
   const prevSsoContributeRef = React.useRef<boolean>(initialData?.ssoContribute || false);
+
 
   useEffect(() => {
     // Skip if already fetched
@@ -452,8 +535,9 @@ export function EmployeeForm({
       !isIdDocumentOther
     ) {
       form.setValue("idDocumentOtherDescription", "");
+      form.clearErrors("idDocumentOtherDescription");
     }
-  }, [watchIdDocumentTypeId, isIdDocumentOther, masterData?.idDocumentTypes, form.setValue]);
+  }, [watchIdDocumentTypeId, isIdDocumentOther, masterData?.idDocumentTypes, form.setValue, form.clearErrors]);
 
   useEffect(() => {
     if (masterData?.employeeTypes && employeeTypeId && payrollConfig) {
@@ -564,6 +648,10 @@ export function EmployeeForm({
         "employmentStartDate",
         "employmentEndDate"
       );
+    }
+
+    if (activeTab === "employment" && isEmployeeNumberBlocked) {
+      return;
     }
 
     const isValid = await form.trigger(fieldsToValidate);
@@ -1032,18 +1120,37 @@ export function EmployeeForm({
                           <FormItem>
                             <FormLabel>{t("fields.employeeNumber")}</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
-                                disabled={isEditing}
-                                onFocus={handleFocus}
-                                ref={(e) => {
-                                  field.ref(e);
-                                  if (activeTab === "employment") {
-                                    // @ts-ignore
-                                    employmentInputRef.current = e;
+                              <div className="relative">
+                                <Input
+                                  {...field}
+                                  onFocus={handleFocus}
+                                  className={
+                                    employeeNumberCheckState === 'duplicate' 
+                                      ? "border-destructive pr-10" 
+                                      : employeeNumberCheckState === 'valid' 
+                                        ? "border-green-500 pr-10" 
+                                        : "pr-10"
                                   }
-                                }}
-                              />
+                                  ref={(e) => {
+                                    field.ref(e);
+                                    if (activeTab === "employment") {
+                                      // @ts-ignore
+                                      employmentInputRef.current = e;
+                                    }
+                                  }}
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                                  {employeeNumberCheckState === 'checking' && (
+                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                  )}
+                                  {employeeNumberCheckState === 'valid' && (
+                                    <Check className="h-4 w-4 text-green-500" />
+                                  )}
+                                  {employeeNumberCheckState === 'duplicate' && (
+                                    <AlertCircle className="h-4 w-4 text-destructive" />
+                                  )}
+                                </div>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1543,7 +1650,11 @@ export function EmployeeForm({
                 <Button type="button" variant="outline" onClick={handleBack}>
                   {t("back")}
                 </Button>
-                <Button type="button" onClick={handleNext}>
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={isEmployeeNumberBlocked}
+                >
                   {t("next")}
                 </Button>
               </>
@@ -1552,7 +1663,7 @@ export function EmployeeForm({
                 <Button type="button" variant="outline" onClick={handleBack}>
                   {t("back")}
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading || isEmployeeNumberBlocked}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {tCommon("save")}
                 </Button>
@@ -1562,7 +1673,7 @@ export function EmployeeForm({
                 <Button type="button" variant="outline" onClick={handleBack}>
                   {t("back")}
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading || isEmployeeNumberBlocked}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {tCommon("save")}
                 </Button>

@@ -326,3 +326,117 @@ func IsUniqueViolation(err error, constraint string) bool {
 	}
 	return false
 }
+
+// GetPendingCycle returns the pending bonus cycle for the tenant (if any)
+func (r Repository) GetPendingCycle(ctx context.Context, tenant contextx.TenantInfo) (*Cycle, error) {
+	db := r.dbCtx(ctx)
+	q := `SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at
+	      FROM bonus_cycle 
+	      WHERE status='pending' AND company_id=$1 AND deleted_at IS NULL LIMIT 1`
+	args := []interface{}{tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `SELECT id, payroll_month_date, bonus_year, period_start_date, period_end_date, status, created_at, updated_at, deleted_at
+	      FROM bonus_cycle 
+	      WHERE status='pending' AND company_id=$1 AND branch_id=$2 AND deleted_at IS NULL LIMIT 1`
+		args = append(args, tenant.BranchID)
+	}
+	var c Cycle
+	if err := db.GetContext(ctx, &c, q, args...); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+// AddEmployeeToPendingCycle adds an employee to the pending bonus cycle
+func (r Repository) AddEmployeeToPendingCycle(ctx context.Context, tenant contextx.TenantInfo, employeeID uuid.UUID, actor uuid.UUID) error {
+	db := r.dbCtx(ctx)
+
+	// Get pending cycle
+	cycle, err := r.GetPendingCycle(ctx, tenant)
+	if err != nil {
+		return err // includes sql.ErrNoRows if no pending cycle
+	}
+
+	// Insert bonus_item with snapshot data from employee
+	q := `
+INSERT INTO bonus_item (
+    cycle_id, employee_id, tenure_days,
+    current_salary,
+    late_minutes, leave_days, leave_double_days, leave_hours, ot_hours,
+    bonus_months, bonus_amount,
+    created_by, updated_by, company_id, branch_id
+)
+SELECT 
+    $1, e.id,
+    (DATE($2) - e.employment_start_date) AS tenure_days,
+    e.base_pay_amount,
+    -- Snapshot from worklog_ft
+    COALESCE((
+        SELECT SUM(w.quantity)::INT
+        FROM worklog_ft w
+        WHERE w.employee_id = e.id
+          AND w.entry_type = 'late'
+          AND w.work_date BETWEEN $3 AND $4
+          AND w.deleted_at IS NULL
+          AND w.status IN ('pending','approved')
+    ), 0) AS late_minutes,
+    COALESCE((
+        SELECT SUM(w.quantity)::NUMERIC(6,2)
+        FROM worklog_ft w
+        WHERE w.employee_id = e.id
+          AND w.entry_type = 'leave_day'
+          AND w.work_date BETWEEN $3 AND $4
+          AND w.deleted_at IS NULL
+          AND w.status IN ('pending','approved')
+    ), 0.00) AS leave_days,
+    COALESCE((
+        SELECT SUM(w.quantity)::NUMERIC(6,2)
+        FROM worklog_ft w
+        WHERE w.employee_id = e.id
+          AND w.entry_type = 'leave_double'
+          AND w.work_date BETWEEN $3 AND $4
+          AND w.deleted_at IS NULL
+          AND w.status IN ('pending','approved')
+    ), 0.00) AS leave_double_days,
+    COALESCE((
+        SELECT SUM(w.quantity)::NUMERIC(6,2)
+        FROM worklog_ft w
+        WHERE w.employee_id = e.id
+          AND w.entry_type = 'leave_hours'
+          AND w.work_date BETWEEN $3 AND $4
+          AND w.deleted_at IS NULL
+          AND w.status IN ('pending','approved')
+    ), 0.00) AS leave_hours,
+    COALESCE((
+        SELECT SUM(w.quantity)::NUMERIC(6,2)
+        FROM worklog_ft w
+        WHERE w.employee_id = e.id
+          AND w.entry_type = 'ot'
+          AND w.work_date BETWEEN $3 AND $4
+          AND w.deleted_at IS NULL
+          AND w.status IN ('pending','approved')
+    ), 0.00) AS ot_hours,
+    0.00, 0.00,
+    $5, $5, e.company_id, e.branch_id
+FROM employees e
+WHERE e.id = $6 AND e.deleted_at IS NULL
+ON CONFLICT (cycle_id, employee_id) DO NOTHING`
+
+	_, err = db.ExecContext(ctx, q, cycle.ID, cycle.CreatedAt, cycle.PeriodStart, cycle.PeriodEnd, actor, employeeID)
+	return err
+}
+
+// RemoveEmployeeFromPendingCycle removes an employee from the pending bonus cycle
+func (r Repository) RemoveEmployeeFromPendingCycle(ctx context.Context, tenant contextx.TenantInfo, employeeID uuid.UUID) error {
+	db := r.dbCtx(ctx)
+
+	// Get pending cycle
+	cycle, err := r.GetPendingCycle(ctx, tenant)
+	if err != nil {
+		return err // includes sql.ErrNoRows if no pending cycle
+	}
+
+	q := `DELETE FROM bonus_item WHERE cycle_id = $1 AND employee_id = $2`
+	_, err = db.ExecContext(ctx, q, cycle.ID, employeeID)
+	return err
+}

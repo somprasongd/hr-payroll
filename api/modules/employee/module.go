@@ -5,6 +5,7 @@ import (
 	accdelete "hrms/modules/employee/internal/feature/accum/delete"
 	acclist "hrms/modules/employee/internal/feature/accum/list"
 	accupsert "hrms/modules/employee/internal/feature/accum/upsert"
+	"hrms/modules/employee/internal/feature/checkduplicate"
 	"hrms/modules/employee/internal/feature/create"
 	"hrms/modules/employee/internal/feature/delete"
 	doctypecreate "hrms/modules/employee/internal/feature/doctype/create"
@@ -34,17 +35,17 @@ import (
 )
 
 type Module struct {
-	ctx        *module.ModuleContext
-	repo       repository.Repository
-	tokenSvc   *jwt.TokenService
+	ctx      *module.ModuleContext
+	repo     repository.Repository
+	tokenSvc *jwt.TokenService
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:        ctx,
-		repo:       repo,
-		tokenSvc:   tokenSvc,
+		ctx:      ctx,
+		repo:     repo,
+		tokenSvc: tokenSvc,
 	}
 }
 
@@ -53,6 +54,7 @@ func (m *Module) APIVersion() string { return "v1" }
 func (m *Module) Init(eventBus eventbus.EventBus) error {
 	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
+	mediator.Register[*checkduplicate.Query, *checkduplicate.Response](checkduplicate.NewHandler(m.repo))
 	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eventBus))
 	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, m.ctx.Transactor, eventBus))
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, eventBus))
@@ -87,6 +89,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/employees", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	// Staff & Admin
 	list.NewEndpoint(group)
+	checkduplicate.NewEndpoint(group) // Must be before get.NewEndpoint to avoid /:id matching
 	create.NewEndpoint(group)
 	get.NewEndpoint(group)
 	update.NewEndpoint(group)

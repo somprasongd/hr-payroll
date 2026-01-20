@@ -230,6 +230,50 @@ func (r Repository) GetIDDocumentTypeCode(ctx context.Context, id uuid.UUID) (st
 	return code, nil
 }
 
+// GetEmployeeTypeCode returns the code (full_time/part_time) for the given employee_type_id
+func (r Repository) GetEmployeeTypeCode(ctx context.Context, id uuid.UUID) (string, error) {
+	db := r.dbCtx(ctx)
+	var code string
+	const q = `SELECT code FROM employee_type WHERE id=$1 LIMIT 1`
+	if err := db.GetContext(ctx, &code, q, id); err != nil {
+		return "", err
+	}
+	return code, nil
+}
+
+// CheckEmployeeNumberExists checks if an employee number already exists for active employees
+// excludeID can be specified to exclude a specific employee (for edit mode)
+func (r Repository) CheckEmployeeNumberExists(ctx context.Context, tenant contextx.TenantInfo, employeeNumber string, excludeID uuid.UUID) (bool, error) {
+	db := r.dbCtx(ctx)
+
+	var exists bool
+	args := []interface{}{employeeNumber, tenant.CompanyID}
+
+	q := `SELECT EXISTS (
+		SELECT 1 FROM employees 
+		WHERE LOWER(employee_number) = LOWER($1)
+		  AND company_id = $2
+		  AND employment_end_date IS NULL
+		  AND deleted_at IS NULL`
+
+	if excludeID != uuid.Nil {
+		q += ` AND id != $3`
+		args = append(args, excludeID)
+	}
+
+	if tenant.HasBranchID() {
+		q += fmt.Sprintf(` AND branch_id = $%d`, len(args)+1)
+		args = append(args, tenant.BranchID)
+	}
+
+	q += `)`
+
+	if err := db.GetContext(ctx, &exists, q, args...); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (*DetailRecord, error) {
 	db := r.dbCtx(ctx)
 	q := `

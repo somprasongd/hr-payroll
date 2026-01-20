@@ -20,6 +20,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/storage/sqldb/transactor"
 	"hrms/shared/common/validator"
+	"hrms/shared/contracts"
 	"hrms/shared/events"
 )
 
@@ -88,9 +89,88 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 			return err
 		}
 
+		// Check if employee type is changing
+		employeeTypeChanged := prev.EmployeeTypeID != cmd.Payload.EmployeeTypeID
+		var prevTypeCode, newTypeCode string
+
+		if employeeTypeChanged {
+			// Get old and new employee type codes
+			prevTypeCode, err = h.repo.GetEmployeeTypeCode(ctxWithTx, prev.EmployeeTypeID)
+			if err != nil {
+				logger.FromContext(ctx).Error("failed to get previous employee type code", zap.Error(err))
+				return errs.Internal("failed to validate employee type change")
+			}
+
+			newTypeCode, err = h.repo.GetEmployeeTypeCode(ctxWithTx, cmd.Payload.EmployeeTypeID)
+			if err != nil {
+				logger.FromContext(ctx).Error("failed to get new employee type code", zap.Error(err))
+				return errs.Internal("failed to validate employee type change")
+			}
+
+			// If changing FROM part_time, check for pending payout via mediator
+			if prevTypeCode == "part_time" {
+				resp, err := mediator.Send[*contracts.HasPendingPayoutPTQuery, *contracts.HasPendingPayoutPTResponse](
+					ctxWithTx,
+					&contracts.HasPendingPayoutPTQuery{EmployeeID: cmd.ID},
+				)
+				if err != nil {
+					logger.FromContext(ctx).Error("failed to check pending payout", zap.Error(err))
+					return errs.Internal("failed to validate employee type change")
+				}
+				if resp.HasPending {
+					return errs.BadRequest("ไม่สามารถเปลี่ยนประเภทพนักงานได้ เนื่องจากยังมีรายการจ่ายค่าแรง PT ที่รอดำเนินการอยู่")
+				}
+			}
+		}
+
 		updated, err = h.repo.Update(ctxWithTx, tenant, cmd.ID, recPayload, user.ID)
 		if err != nil {
 			return err
+		}
+
+		// Handle employee type change side effects via mediator
+		if employeeTypeChanged {
+			// PT -> FT: Add to pending salary raise and bonus cycles
+			if prevTypeCode == "part_time" && newTypeCode == "full_time" {
+				// Add to salary raise cycle
+				_, err := mediator.Send[*contracts.AddToSalaryRaiseCycleCommand, *contracts.AddToSalaryRaiseCycleResponse](
+					ctxWithTx,
+					&contracts.AddToSalaryRaiseCycleCommand{EmployeeID: cmd.ID, ActorID: user.ID},
+				)
+				if err != nil {
+					logger.FromContext(ctx).Warn("failed to add employee to pending salary raise cycle", zap.Error(err))
+				}
+
+				// Add to bonus cycle
+				_, err = mediator.Send[*contracts.AddToBonusCycleCommand, *contracts.AddToBonusCycleResponse](
+					ctxWithTx,
+					&contracts.AddToBonusCycleCommand{EmployeeID: cmd.ID, ActorID: user.ID},
+				)
+				if err != nil {
+					logger.FromContext(ctx).Warn("failed to add employee to pending bonus cycle", zap.Error(err))
+				}
+			}
+
+			// FT -> PT: Remove from pending salary raise and bonus cycles
+			if prevTypeCode == "full_time" && newTypeCode == "part_time" {
+				// Remove from salary raise cycle
+				_, err := mediator.Send[*contracts.RemoveFromSalaryRaiseCycleCommand, *contracts.RemoveFromSalaryRaiseCycleResponse](
+					ctxWithTx,
+					&contracts.RemoveFromSalaryRaiseCycleCommand{EmployeeID: cmd.ID},
+				)
+				if err != nil {
+					logger.FromContext(ctx).Warn("failed to remove employee from pending salary raise cycle", zap.Error(err))
+				}
+
+				// Remove from bonus cycle
+				_, err = mediator.Send[*contracts.RemoveFromBonusCycleCommand, *contracts.RemoveFromBonusCycleResponse](
+					ctxWithTx,
+					&contracts.RemoveFromBonusCycleCommand{EmployeeID: cmd.ID},
+				)
+				if err != nil {
+					logger.FromContext(ctx).Warn("failed to remove employee from pending bonus cycle", zap.Error(err))
+				}
+			}
 		}
 
 		if prev.PhotoID != nil && !uuidPtrEqual(prev.PhotoID, updated.PhotoID) {
@@ -156,6 +236,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
 			logger.FromContext(ctx).Warn("duplicate employee number", zap.Error(err))
 			return nil, errs.Conflict("employeeNumber already exists for active employee")
+		}
+		// Check if it's already a wrapped error
+		var appErr *errs.AppError
+		if errors.As(err, &appErr) {
+			return nil, err
 		}
 		logger.FromContext(ctx).Error("failed to update employee", zap.Error(err))
 		return nil, errs.Internal("failed to update employee")

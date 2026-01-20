@@ -4,9 +4,15 @@
 
 ### Added
 
+- Implement employee type change logic with new contracts for bonus, salary raise, and payout PT modules, alongside a duplicate employee check and UI updates. (b0d3c0c)
+
+## v2.1.1 - 2026-01-20
+
+### Added
+
 - hide superadmin company updates from tenant logs and fix duplicate logging (6eef9e0)
 
-- Enhance API error message extraction in frontend components and implement build-time API versioning with improved display. (e234de7)
+- Enhance API error message extraction in frontend components and implement build-time API versioning with improved display. (1350c48)
 
 
 ### Fixed

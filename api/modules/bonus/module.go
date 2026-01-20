@@ -3,6 +3,7 @@ package bonus
 import (
 	"hrms/modules/bonus/internal/feature/approve"
 	"hrms/modules/bonus/internal/feature/create"
+	"hrms/modules/bonus/internal/feature/cyclemgmt"
 	"hrms/modules/bonus/internal/feature/delete"
 	"hrms/modules/bonus/internal/feature/get"
 	"hrms/modules/bonus/internal/feature/items"
@@ -13,6 +14,7 @@ import (
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/middleware"
 	"hrms/shared/common/module"
+	"hrms/shared/contracts"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -44,6 +46,11 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*items.ListQuery, *items.ListResponse](items.NewListHandler(m.repo))
 	mediator.Register[*items.UpdateCommand, *items.UpdateResponse](items.NewUpdateHandler(m.repo, m.eb))
 	mediator.Register[*delete.Command, mediator.NoResponse](delete.NewHandler(m.repo, m.eb))
+
+	// Contract handlers for cross-module communication
+	mediator.Register[*contracts.AddToBonusCycleCommand, *contracts.AddToBonusCycleResponse](cyclemgmt.NewAddHandler(m.repo))
+	mediator.Register[*contracts.RemoveFromBonusCycleCommand, *contracts.RemoveFromBonusCycleResponse](cyclemgmt.NewRemoveHandler(m.repo))
+
 	return nil
 }
 

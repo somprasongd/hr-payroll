@@ -269,3 +269,34 @@ WHERE payout_pt.id=$2 AND payout_pt.employee_id = e.id AND e.company_id=$3 AND e
 	}
 	return nil
 }
+
+// HasPendingPayout checks if an employee has any pending payout (status='to_pay')
+func (r Repository) HasPendingPayout(ctx context.Context, tenant contextx.TenantInfo, employeeID uuid.UUID) (bool, error) {
+	db := r.dbCtx(ctx)
+	q := `SELECT EXISTS (
+		SELECT 1 FROM payout_pt p
+		JOIN employees e ON e.id = p.employee_id
+		WHERE p.employee_id = $1 
+		  AND e.company_id = $2
+		  AND p.status = 'to_pay' 
+		  AND p.deleted_at IS NULL
+	)`
+	args := []interface{}{employeeID, tenant.CompanyID}
+	if tenant.HasBranchID() {
+		q = `SELECT EXISTS (
+			SELECT 1 FROM payout_pt p
+			JOIN employees e ON e.id = p.employee_id
+			WHERE p.employee_id = $1 
+			  AND e.company_id = $2
+			  AND e.branch_id = $3
+			  AND p.status = 'to_pay' 
+			  AND p.deleted_at IS NULL
+		)`
+		args = append(args, tenant.BranchID)
+	}
+	var exists bool
+	if err := db.GetContext(ctx, &exists, q, args...); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
