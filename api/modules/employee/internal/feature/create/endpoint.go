@@ -1,6 +1,7 @@
 package create
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -14,7 +15,16 @@ import (
 
 const dateLayout = "2006-01-02"
 
-func (p *RequestBody) ParseDates() error {
+func (p *RequestBody) NormalizeAndParseDates() error {
+	if p.Email != nil {
+		trimmed := strings.TrimSpace(*p.Email)
+		if trimmed == "" {
+			p.Email = nil
+		} else if trimmed != *p.Email {
+			p.Email = &trimmed
+		}
+	}
+
 	start, err := time.Parse(dateLayout, p.EmploymentStartDate)
 	if err != nil {
 		return errs.BadRequest("employmentStartDate must be YYYY-MM-DD")
@@ -140,7 +150,7 @@ func NewEndpoint(router fiber.Router) {
 		if err := c.Bind().Body(&req); err != nil {
 			return errs.BadRequest("invalid request body")
 		}
-		if err := req.ParseDates(); err != nil {
+		if err := req.NormalizeAndParseDates(); err != nil {
 			return err
 		}
 
