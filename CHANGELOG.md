@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## v2.3.1 - 2026-01-27
 
 ### Changed
 
-- Centralize API root URL configuration using `API_CONFIG.rootURL`. (92e6927)
+- Centralize API root URL configuration using `API_CONFIG.rootURL`. (04b8a74)
 
 
 ### Docs
