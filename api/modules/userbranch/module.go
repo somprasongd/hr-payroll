@@ -32,9 +32,9 @@ func (m *Module) APIVersion() string { return "v1" }
 
 func (m *Module) Init(eb eventbus.EventBus) error {
 	// Register handlers with mediator
-	mediator.Register[*listusers.Query, *listusers.Response](listusers.NewHandler())
-	mediator.Register[*getbranches.Query, *getbranches.Response](getbranches.NewHandler())
-	mediator.Register[*setbranches.Command, *setbranches.Response](setbranches.NewHandler(eb))
+	mediator.Register[*listusers.Query, *listusers.Response](listusers.NewHandler(m.repo))
+	mediator.Register[*getbranches.Query, *getbranches.Response](getbranches.NewHandler(m.repo))
+	mediator.Register[*setbranches.Command, *setbranches.Response](setbranches.NewHandler(eb, m.repo))
 
 	return nil
 }
@@ -48,7 +48,7 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 	)
 
 	// Register CQRS endpoints
-	listusers.NewEndpoint(admin, m.repo)
-	getbranches.NewEndpoint(admin, m.repo)
-	setbranches.NewEndpoint(admin, m.repo)
+	listusers.NewEndpoint(admin)
+	getbranches.NewEndpoint(admin)
+	setbranches.NewEndpoint(admin)
 }

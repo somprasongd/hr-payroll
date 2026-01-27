@@ -6,10 +6,8 @@ import (
 
 	"hrms/modules/payoutpt/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 // Payout represents the payout response for documentation
@@ -23,7 +21,7 @@ type Payout = repository.Payout
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /payouts/pt/{id}/pay [post]
-func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Post("/:id/pay", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -31,10 +29,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		}
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &Command{
-			ID:   id,
-			Repo: repo,
-			Tx:   tx,
-			Eb:   eb,
+			ID: id,
 		})
 		if err != nil {
 			return err

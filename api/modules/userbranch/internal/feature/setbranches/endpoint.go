@@ -29,7 +29,7 @@ type RequestBody struct {
 // @Param X-Branch-ID header string false "Branch ID"
 // @Success 200 {array} BranchAccess
 // @Router /admin/users/{userId}/branches [put]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Put("/:userId/branches", func(c fiber.Ctx) error {
 		user, ok := contextx.UserFromContext(c.Context())
 		if !ok {

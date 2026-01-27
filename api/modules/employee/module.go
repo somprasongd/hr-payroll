@@ -87,12 +87,15 @@ func (m *Module) Init(eventBus eventbus.EventBus) error {
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/employees", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
-	// Staff & Admin
-	list.NewEndpoint(group)
-	checkduplicate.NewEndpoint(group) // Must be before get.NewEndpoint to avoid /:id matching
-	create.NewEndpoint(group)
-	get.NewEndpoint(group)
-	update.NewEndpoint(group)
+	// Staff, Admin, HR, and Timekeeper can list/get employees
+	// Timekeeper needs this for worklog employee dropdowns
+	readOnly := group.Group("", middleware.RequireRoles("admin", "hr", "timekeeper"))
+	list.NewEndpoint(readOnly)
+	checkduplicate.NewEndpoint(readOnly) // Must be before get.NewEndpoint to avoid /:id matching
+	get.NewEndpoint(readOnly)
+	// Only Admin and HR can create/update employees
+	create.NewEndpoint(group.Group("", middleware.RequireRoles("admin", "hr")))
+	update.NewEndpoint(group.Group("", middleware.RequireRoles("admin", "hr")))
 
 	photos := group.Group("/photos")
 	// Admin & HR

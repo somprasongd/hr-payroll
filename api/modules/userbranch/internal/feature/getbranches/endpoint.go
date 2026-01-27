@@ -22,7 +22,7 @@ type BranchAccess = repository.BranchAccess
 // @Param X-Branch-ID header string false "Branch ID"
 // @Success 200 {array} BranchAccess
 // @Router /admin/users/{userId}/branches [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/:userId/branches", func(c fiber.Ctx) error {
 		userID, err := uuid.Parse(c.Params("userId"))
 		if err != nil {

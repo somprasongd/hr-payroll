@@ -4,7 +4,13 @@
 
 ### Added
 
-- Implement employee type change logic with new contracts for bonus, salary raise, and payout PT modules, alongside a duplicate employee check and UI updates. (b0d3c0c)
+- Introduce timekeeper role, update API documentation, and enhance HR/Payroll functionalities for dashboard, salary raise, payout, and user branch management. (eecb5a4)
+
+## v2.2.0 - 2026-01-20
+
+### Added
+
+- Implement employee type change logic with new contracts for bonus, salary raise, and payout PT modules, alongside a duplicate employee check and UI updates. (c861bc5)
 
 ## v2.1.1 - 2026-01-20
 

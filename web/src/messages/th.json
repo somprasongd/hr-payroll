@@ -1397,7 +1397,8 @@
     "roles": {
       "admin": "ผู้ดูแลระบบ",
       "hr": "ฝ่ายบุคคล",
-      "superadmin": "ผู้ดูแลสูงสุด"
+      "superadmin": "ผู้ดูแลสูงสุด",
+      "timekeeper": "ผู้ลงเวลา"
     },
     "success": {
       "passwordReset": "รีเซ็ตรหัสผ่านสำเร็จ",

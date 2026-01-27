@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/dashboard/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -29,7 +28,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /dashboard/attendance-summary [get]
-func RegisterAttendanceSummary(router fiber.Router, repo *repository.Repository) {
+func RegisterAttendanceSummary(router fiber.Router) {
 	router.Get("/attendance-summary", func(c fiber.Ctx) error {
 		startDateStr := c.Query("startDate")
 		endDateStr := c.Query("endDate")
@@ -77,7 +76,6 @@ func RegisterAttendanceSummary(router fiber.Router, repo *repository.Repository)
 			GroupBy:      groupBy,
 			DepartmentID: departmentID,
 			EmployeeID:   employeeID,
-			Repo:         repo,
 		})
 		if err != nil {
 			return err

@@ -26,7 +26,7 @@ import (
 type Command struct {
 	Username string    `validate:"required"`
 	Password string    `validate:"required"`
-	Role     string    `validate:"required,oneof=admin hr"`
+	Role     string    `validate:"required,oneof=admin hr timekeeper"`
 	ActorID  uuid.UUID `validate:"required"`
 }
 

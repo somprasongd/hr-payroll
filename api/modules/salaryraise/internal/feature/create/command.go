@@ -19,11 +19,8 @@ import (
 )
 
 type Command struct {
-	PeriodStart string                `json:"periodStartDate" validate:"required"`
-	PeriodEnd   string                `json:"periodEndDate" validate:"required"`
-	Repo        repository.Repository `json:"-"`
-	Tx          transactor.Transactor `json:"-"`
-	Eb          eventbus.EventBus     `json:"-"`
+	PeriodStart string `json:"periodStartDate" validate:"required"`
+	PeriodEnd   string `json:"periodEndDate" validate:"required"`
 
 	ParsedPeriodStart time.Time `json:"-"`
 	ParsedPeriodEnd   time.Time `json:"-"`
@@ -33,7 +30,11 @@ type Response struct {
 	dto.Cycle
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 const dateLayout = "2006-01-02"
 
@@ -53,7 +54,9 @@ func (c *Command) ParseDates() error {
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if err := validator.Validate(cmd); err != nil {
@@ -78,9 +81,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	var cycle *repository.Cycle
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		cycle, err = cmd.Repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, tenant.CompanyID, tenant.BranchID, user.ID)
+		cycle, err = h.repo.Create(ctxTx, cmd.ParsedPeriodStart, cmd.ParsedPeriodEnd, tenant.CompanyID, tenant.BranchID, user.ID)
 		return err
 	}); err != nil {
 		if repository.IsUniqueViolation(err, "salary_raise_cycle_pending_branch_uk") {
@@ -90,7 +93,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Internal("failed to create cycle")
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

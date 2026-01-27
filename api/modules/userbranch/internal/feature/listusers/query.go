@@ -10,26 +10,30 @@ import (
 	"hrms/shared/common/logger"
 )
 
-
-type Query struct {
-	Repo repository.Repository
-}
+type Query struct{}
 
 type Response struct {
 	Users []repository.CompanyUser `json:"users"`
 }
 
-type queryHandler struct{}
+type queryHandler struct {
+	repo repository.Repository
+}
 
-func NewHandler() *queryHandler {
-	return &queryHandler{}
+func NewHandler(repo repository.Repository) *queryHandler {
+	return &queryHandler{repo: repo}
 }
 
 func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	users, err := q.Repo.GetCompanyUsers(ctx)
+	users, err := h.repo.GetCompanyUsers(ctx)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list company users", zap.Error(err))
 		return nil, errs.Internal("failed to list users")
+	}
+
+	// Ensure we return an empty array instead of null in JSON
+	if users == nil {
+		users = []repository.CompanyUser{}
 	}
 
 	return &Response{Users: users}, nil

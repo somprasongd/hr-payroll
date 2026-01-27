@@ -15,7 +15,6 @@ import (
 // PayrollSummaryQuery is the query for payroll summary
 type PayrollSummaryQuery struct {
 	Year int
-	Repo *repository.Repository
 }
 
 // LatestRunDTO is the DTO for latest payroll run
@@ -55,10 +54,12 @@ type PayrollSummaryResponse struct {
 	MonthlyBreakdown []MonthlyBreakdownDTO `json:"monthlyBreakdown"`
 }
 
-type payrollSummaryHandler struct{}
+type payrollSummaryHandler struct {
+	repo *repository.Repository
+}
 
-func NewPayrollSummaryHandler() *payrollSummaryHandler {
-	return &payrollSummaryHandler{}
+func NewPayrollSummaryHandler(repo *repository.Repository) *payrollSummaryHandler {
+	return &payrollSummaryHandler{repo: repo}
 }
 
 func (h *payrollSummaryHandler) Handle(ctx context.Context, q *PayrollSummaryQuery) (*PayrollSummaryResponse, error) {
@@ -68,21 +69,21 @@ func (h *payrollSummaryHandler) Handle(ctx context.Context, q *PayrollSummaryQue
 	}
 
 	// Get latest payroll run
-	latestRun, err := q.Repo.GetLatestPayrollRun(ctx, tenant)
+	latestRun, err := h.repo.GetLatestPayrollRun(ctx, tenant)
 	if err != nil && err != sql.ErrNoRows {
 		logger.FromContext(ctx).Error("failed to get latest payroll run", zap.Error(err))
 		return nil, errs.Internal("failed to get latest payroll run")
 	}
 
 	// Get yearly totals
-	yearlyTotals, err := q.Repo.GetYearlyPayrollTotals(ctx, tenant, q.Year)
+	yearlyTotals, err := h.repo.GetYearlyPayrollTotals(ctx, tenant, q.Year)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get yearly payroll totals", zap.Error(err))
 		return nil, errs.Internal("failed to get yearly payroll totals")
 	}
 
 	// Get monthly breakdown
-	monthlyBreakdown, err := q.Repo.GetMonthlyPayrollBreakdown(ctx, tenant, q.Year)
+	monthlyBreakdown, err := h.repo.GetMonthlyPayrollBreakdown(ctx, tenant, q.Year)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get monthly payroll breakdown", zap.Error(err))
 		return nil, errs.Internal("failed to get monthly payroll breakdown")

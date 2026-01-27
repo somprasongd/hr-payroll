@@ -4,12 +4,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 // @Summary Update/approve payroll run
@@ -28,7 +25,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /payroll-runs/{id} [patch]
-func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -39,9 +36,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 			return errs.BadRequest("invalid request body")
 		}
 		req.ID = id
-		req.Repo = repo
-		req.Tx = tx
-		req.Eb = eb
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &req)
 		if err != nil {

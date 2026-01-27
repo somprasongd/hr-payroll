@@ -11,10 +11,7 @@ import (
 	"hrms/shared/common/logger"
 )
 
-// FinancialSummaryQuery is the query for financial summary
-type FinancialSummaryQuery struct {
-	Repo *repository.Repository
-}
+type FinancialSummaryQuery struct{}
 
 // PendingItemDTO is the DTO for pending items
 type PendingItemDTO struct {
@@ -31,10 +28,12 @@ type FinancialSummaryResponse struct {
 	PendingSalaryRaiseCycles PendingItemDTO `json:"pendingSalaryRaiseCycles"`
 }
 
-type financialSummaryHandler struct{}
+type financialSummaryHandler struct {
+	repo *repository.Repository
+}
 
-func NewFinancialSummaryHandler() *financialSummaryHandler {
-	return &financialSummaryHandler{}
+func NewFinancialSummaryHandler(repo *repository.Repository) *financialSummaryHandler {
+	return &financialSummaryHandler{repo: repo}
 }
 
 func (h *financialSummaryHandler) Handle(ctx context.Context, q *FinancialSummaryQuery) (*FinancialSummaryResponse, error) {
@@ -44,35 +43,35 @@ func (h *financialSummaryHandler) Handle(ctx context.Context, q *FinancialSummar
 	}
 
 	// Get pending advances
-	advances, err := q.Repo.GetPendingAdvances(ctx, tenant)
+	advances, err := h.repo.GetPendingAdvances(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending advances", zap.Error(err))
 		return nil, errs.Internal("failed to get pending advances")
 	}
 
 	// Get pending loans
-	loans, err := q.Repo.GetPendingLoans(ctx, tenant)
+	loans, err := h.repo.GetPendingLoans(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending loans", zap.Error(err))
 		return nil, errs.Internal("failed to get pending loans")
 	}
 
 	// Get outstanding installments
-	installments, err := q.Repo.GetOutstandingInstallments(ctx, tenant)
+	installments, err := h.repo.GetOutstandingInstallments(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get outstanding installments", zap.Error(err))
 		return nil, errs.Internal("failed to get outstanding installments")
 	}
 
 	// Get pending bonus cycles
-	bonusCycles, err := q.Repo.GetPendingBonusCycles(ctx, tenant)
+	bonusCycles, err := h.repo.GetPendingBonusCycles(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending bonus cycles", zap.Error(err))
 		return nil, errs.Internal("failed to get pending bonus cycles")
 	}
 
 	// Get pending salary raise cycles
-	salaryRaiseCycles, err := q.Repo.GetPendingSalaryRaiseCycles(ctx, tenant)
+	salaryRaiseCycles, err := h.repo.GetPendingSalaryRaiseCycles(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get pending salary raise cycles", zap.Error(err))
 		return nil, errs.Internal("failed to get pending salary raise cycles")

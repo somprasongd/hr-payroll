@@ -4,11 +4,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 // @Summary Adjust payroll item
@@ -27,7 +24,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /payroll-items/{id} [patch]
-func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Patch("/:itemId", func(c fiber.Ctx) error {
 		itemID, err := uuid.Parse(c.Params("itemId"))
 		if err != nil {

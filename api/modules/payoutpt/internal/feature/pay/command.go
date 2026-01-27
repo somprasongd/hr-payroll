@@ -21,21 +21,24 @@ import (
 )
 
 type Command struct {
-	ID   uuid.UUID `validate:"required"`
-	Repo repository.Repository
-	Tx   transactor.Transactor
-	Eb   eventbus.EventBus
+	ID uuid.UUID `validate:"required"`
 }
 
 type Response struct {
 	Payout *repository.Payout `json:"payout"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if err := validator.Validate(cmd); err != nil {
@@ -53,9 +56,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	var payout *repository.Payout
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		payout, err = cmd.Repo.MarkPaid(ctxTx, tenant, cmd.ID, user.ID)
+		payout, err = h.repo.MarkPaid(ctxTx, tenant, cmd.ID, user.ID)
 		return err
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -65,7 +68,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to mark payout paid", zap.Error(err))
 		return nil, errs.Internal("failed to mark payout paid")
 	}
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

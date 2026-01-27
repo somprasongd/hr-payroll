@@ -4,9 +4,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 )
 
@@ -21,7 +19,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /salary-raise-cycles/{id} [delete]
-func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Delete("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -29,9 +27,7 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, eb eventbus.Ev
 		}
 
 		if _, err := mediator.Send[*Command, mediator.NoResponse](c.Context(), &Command{
-			ID:   id,
-			Repo: repo,
-			Eb:   eb,
+			ID: id,
 		}); err != nil {
 			return err
 		}

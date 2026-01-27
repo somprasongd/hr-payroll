@@ -41,7 +41,7 @@ export function UserForm({ onSuccess }: UserFormProps) {
     password: z.string().min(8, {
       message: t('validation.passwordMin'),
     }),
-    role: z.enum(['admin', 'hr']),
+    role: z.enum(['admin', 'hr', 'timekeeper']),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -125,6 +125,7 @@ export function UserForm({ onSuccess }: UserFormProps) {
                 <SelectContent>
                   <SelectItem value="hr">{t('roles.hr')}</SelectItem>
                   <SelectItem value="admin">{t('roles.admin')}</SelectItem>
+                  <SelectItem value="timekeeper">{t('roles.timekeeper')}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

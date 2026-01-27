@@ -17,17 +17,20 @@ import (
 )
 
 type GetQuery struct {
-	ID   uuid.UUID
-	Repo repository.Repository
+	ID uuid.UUID
 }
 
 type GetResponse struct {
 	dto.ItemDetail
 }
 
-type getHandler struct{}
+type getHandler struct {
+	repo repository.Repository
+}
 
-func NewGetHandler() *getHandler { return &getHandler{} }
+func NewGetHandler(repo repository.Repository) *getHandler {
+	return &getHandler{repo: repo}
+}
 
 var _ mediator.RequestHandler[*GetQuery, *GetResponse] = (*getHandler)(nil)
 
@@ -36,7 +39,7 @@ func (h *getHandler) Handle(ctx context.Context, q *GetQuery) (*GetResponse, err
 	if !ok {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
-	item, err := q.Repo.GetItemDetail(ctx, tenant, q.ID)
+	item, err := h.repo.GetItemDetail(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll item not found")

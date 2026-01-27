@@ -12,10 +12,7 @@ import (
 	"hrms/shared/common/logger"
 )
 
-// EmployeeSummaryQuery is the query for employee summary
-type EmployeeSummaryQuery struct {
-	Repo *repository.Repository
-}
+type EmployeeSummaryQuery struct{}
 
 // EmployeeSummaryResponse is the response for employee summary
 type EmployeeSummaryResponse struct {
@@ -35,10 +32,12 @@ type DepartmentCountDTO struct {
 	Count          int        `json:"count"`
 }
 
-type employeeSummaryHandler struct{}
+type employeeSummaryHandler struct {
+	repo *repository.Repository
+}
 
-func NewEmployeeSummaryHandler() *employeeSummaryHandler {
-	return &employeeSummaryHandler{}
+func NewEmployeeSummaryHandler(repo *repository.Repository) *employeeSummaryHandler {
+	return &employeeSummaryHandler{repo: repo}
 }
 
 func (h *employeeSummaryHandler) Handle(ctx context.Context, q *EmployeeSummaryQuery) (*EmployeeSummaryResponse, error) {
@@ -47,13 +46,13 @@ func (h *employeeSummaryHandler) Handle(ctx context.Context, q *EmployeeSummaryQ
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	summary, err := q.Repo.GetEmployeeSummary(ctx, tenant)
+	summary, err := h.repo.GetEmployeeSummary(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get employee summary", zap.Error(err))
 		return nil, errs.Internal("failed to get employee summary")
 	}
 
-	deptCounts, err := q.Repo.GetEmployeesByDepartment(ctx, tenant)
+	deptCounts, err := h.repo.GetEmployeesByDepartment(ctx, tenant)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get employees by department", zap.Error(err))
 		return nil, errs.Internal("failed to get employees by department")

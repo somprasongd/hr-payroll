@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -27,7 +26,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /payroll-runs [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/", func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
@@ -54,7 +53,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 			Status: status,
 			Year:   year,
 			Month:  month,
-			Repo:   repo,
 		})
 		if err != nil {
 			return err

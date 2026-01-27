@@ -13,6 +13,9 @@ import { LatestActivityWidget } from '@/components/dashboard/latest-activity-wid
 export default function DashboardPage() {
   const tMenu = useTranslations('Menu');
   const { user } = useAuthStore();
+  
+  // Timekeeper should not see payroll, pending items, expiring docs, or activity widgets
+  const isTimekeeper = user?.role === 'timekeeper';
 
   return (
     <>
@@ -35,17 +38,21 @@ export default function DashboardPage() {
         <AttendanceLeaderboardWidget />
       </div>
       
-      {/* Row 4: Payroll Summary | Pending Items */}
-      <div className="grid gap-4 md:gap-6 lg:grid-cols-2 mb-6">
-        <PayrollSummaryWidget />
-        <PendingItemsWidget />
-      </div>
+      {/* Row 4: Payroll Summary | Pending Items - hidden for timekeeper */}
+      {!isTimekeeper && (
+        <div className="grid gap-4 md:gap-6 lg:grid-cols-2 mb-6">
+          <PayrollSummaryWidget />
+          <PendingItemsWidget />
+        </div>
+      )}
       
-      {/* Row 5: Expiring Documents | Latest Activity (admin only) */}
-      <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
-        <ExpiringDocumentsWidget />
-        {user?.role === 'admin' && <LatestActivityWidget />}
-      </div>
+      {/* Row 5: Expiring Documents | Latest Activity - hidden for timekeeper */}
+      {!isTimekeeper && (
+        <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
+          <ExpiringDocumentsWidget />
+          {user?.role === 'admin' && <LatestActivityWidget />}
+        </div>
+      )}
     </>
   );
 }

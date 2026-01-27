@@ -50,7 +50,7 @@ export function RoleEditDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formSchema = z.object({
-    role: z.enum(['admin', 'hr']),
+    role: z.enum(['admin', 'hr', 'timekeeper']),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -114,6 +114,7 @@ export function RoleEditDialog({
                     <SelectContent>
                       <SelectItem value="hr">{t('roles.hr')}</SelectItem>
                       <SelectItem value="admin">{t('roles.admin')}</SelectItem>
+                      <SelectItem value="timekeeper">{t('roles.timekeeper')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

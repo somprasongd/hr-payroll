@@ -22,20 +22,23 @@ import (
 type Command struct {
 	EmployeeID uuid.UUID   `json:"employeeId" validate:"required"`
 	WorklogIDs []uuid.UUID `json:"worklogIds" validate:"required,min=1"`
-	Repo       repository.Repository
-	Tx         transactor.Transactor
-	Eb         eventbus.EventBus
 }
 
 type Response struct {
 	Payout *repository.Payout `json:"payout"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if err := validator.Validate(cmd); err != nil {
@@ -53,12 +56,12 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	var payout *repository.Payout
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
-		if err := cmd.Repo.ValidateWorklogs(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs); err != nil {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+		if err := h.repo.ValidateWorklogs(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs); err != nil {
 			return errs.BadRequest(err.Error())
 		}
 		var err error
-		payout, err = cmd.Repo.Create(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs, user.ID)
+		payout, err = h.repo.Create(ctxTx, tenant, cmd.EmployeeID, cmd.WorklogIDs, user.ID)
 		return err
 	}); err != nil {
 		var appErr *errs.AppError
@@ -69,7 +72,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		logger.FromContext(ctx).Error("failed to create payout", zap.Error(err))
 		return nil, errs.Internal("failed to create payout")
 	}
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

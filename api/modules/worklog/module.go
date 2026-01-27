@@ -33,28 +33,29 @@ func (m *Module) APIVersion() string { return "v1" }
 func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
 	// FT
-	mediator.Register[*ft.ListQuery, *ft.ListResponse](ft.NewListHandler())
-	mediator.Register[*ft.GetQuery, *ft.GetResponse](ft.NewGetHandler())
-	mediator.Register[*ft.CreateCommand, *ft.CreateResponse](ft.NewCreateHandler())
-	mediator.Register[*ft.UpdateCommand, *ft.UpdateResponse](ft.NewUpdateHandler())
-	mediator.Register[*ft.DeleteCommand, mediator.NoResponse](ft.NewDeleteHandler())
+	mediator.Register[*ft.ListQuery, *ft.ListResponse](ft.NewListHandler(m.repo.FTRepo))
+	mediator.Register[*ft.GetQuery, *ft.GetResponse](ft.NewGetHandler(m.repo.FTRepo))
+	mediator.Register[*ft.CreateCommand, *ft.CreateResponse](ft.NewCreateHandler(m.repo.FTRepo, m.ctx.Transactor, eb))
+	mediator.Register[*ft.UpdateCommand, *ft.UpdateResponse](ft.NewUpdateHandler(m.repo.FTRepo, m.ctx.Transactor, eb))
+	mediator.Register[*ft.DeleteCommand, mediator.NoResponse](ft.NewDeleteHandler(m.repo.FTRepo, eb))
 
 	// PT
-	mediator.Register[*pt.ListQuery, *pt.ListResponse](pt.NewListHandler())
-	mediator.Register[*pt.GetQuery, *pt.GetResponse](pt.NewGetHandler())
-	mediator.Register[*pt.CreateCommand, *pt.CreateResponse](pt.NewCreateHandler())
-	mediator.Register[*pt.UpdateCommand, *pt.UpdateResponse](pt.NewUpdateHandler())
-	mediator.Register[*pt.DeleteCommand, mediator.NoResponse](pt.NewDeleteHandler())
+	mediator.Register[*pt.ListQuery, *pt.ListResponse](pt.NewListHandler(m.repo.PTRepo))
+	mediator.Register[*pt.GetQuery, *pt.GetResponse](pt.NewGetHandler(m.repo.PTRepo))
+	mediator.Register[*pt.CreateCommand, *pt.CreateResponse](pt.NewCreateHandler(m.repo.PTRepo, m.ctx.Transactor, eb))
+	mediator.Register[*pt.UpdateCommand, *pt.UpdateResponse](pt.NewUpdateHandler(m.repo.PTRepo, m.ctx.Transactor, eb))
+	mediator.Register[*pt.DeleteCommand, mediator.NoResponse](pt.NewDeleteHandler(m.repo.PTRepo, eb))
 
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/worklogs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
+	// Allow admin, hr, and timekeeper roles to access worklog endpoints
+	group := r.Group("/worklogs", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr", "timekeeper"))
 	// FT
 	ftGroup := group.Group("/ft")
-	ft.Register(ftGroup, m.repo.FTRepo, m.ctx.Transactor, m.eb)
+	ft.Register(ftGroup)
 	// PT
 	ptGroup := group.Group("/pt")
-	pt.Register(ptGroup, m.repo.PTRepo, m.ctx.Transactor, m.eb)
+	pt.Register(ptGroup)
 }

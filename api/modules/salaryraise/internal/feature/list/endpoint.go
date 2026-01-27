@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -25,7 +24,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /salary-raise-cycles [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/", func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
@@ -52,7 +51,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository) {
 			Limit:  limit,
 			Status: status,
 			Year:   year,
-			Repo:   repo,
 		})
 		if err != nil {
 			return err

@@ -25,7 +25,6 @@ type ListQuery struct {
 	EntryType  string
 	StartDate  *time.Time
 	EndDate    *time.Time
-	Repo       repository.FTRepository
 }
 
 type ListResponse struct {
@@ -37,9 +36,13 @@ type ListResponse struct {
 	} `json:"meta"`
 }
 
-type listHandler struct{}
+type listHandler struct {
+	repo repository.FTRepository
+}
 
-func NewListHandler() *listHandler { return &listHandler{} }
+func NewListHandler(repo repository.FTRepository) *listHandler {
+	return &listHandler{repo: repo}
+}
 
 func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, error) {
 	if q.Page < 1 {
@@ -54,7 +57,7 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	res, err := q.Repo.List(ctx, tenant, q.Page, q.Limit, q.EmployeeID, q.Status, q.EntryType, q.StartDate, q.EndDate)
+	res, err := h.repo.List(ctx, tenant, q.Page, q.Limit, q.EmployeeID, q.Status, q.EntryType, q.StartDate, q.EndDate)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list worklogs", zap.Error(err))
 		return nil, errs.Internal("failed to list worklogs")
@@ -77,17 +80,20 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 }
 
 type GetQuery struct {
-	ID   uuid.UUID
-	Repo repository.FTRepository
+	ID uuid.UUID
 }
 
 type GetResponse struct {
 	dto.FTItem
 }
 
-type getHandler struct{}
+type getHandler struct {
+	repo repository.FTRepository
+}
 
-func NewGetHandler() *getHandler { return &getHandler{} }
+func NewGetHandler(repo repository.FTRepository) *getHandler {
+	return &getHandler{repo: repo}
+}
 
 func (h *getHandler) Handle(ctx context.Context, q *GetQuery) (*GetResponse, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -95,7 +101,7 @@ func (h *getHandler) Handle(ctx context.Context, q *GetQuery) (*GetResponse, err
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	rec, err := q.Repo.Get(ctx, tenant, q.ID)
+	rec, err := h.repo.Get(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")

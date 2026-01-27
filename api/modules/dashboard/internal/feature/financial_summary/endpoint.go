@@ -3,7 +3,6 @@ package financial_summary
 import (
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/dashboard/internal/repository"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -20,11 +19,9 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /dashboard/financial-summary [get]
-func RegisterFinancialSummary(router fiber.Router, repo *repository.Repository) {
+func RegisterFinancialSummary(router fiber.Router) {
 	router.Get("/financial-summary", func(c fiber.Ctx) error {
-		resp, err := mediator.Send[*FinancialSummaryQuery, *FinancialSummaryResponse](c.Context(), &FinancialSummaryQuery{
-			Repo: repo,
-		})
+		resp, err := mediator.Send[*FinancialSummaryQuery, *FinancialSummaryResponse](c.Context(), &FinancialSummaryQuery{})
 		if err != nil {
 			return err
 		}

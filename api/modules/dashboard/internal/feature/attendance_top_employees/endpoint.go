@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/dashboard/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -29,7 +28,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /dashboard/attendance-top-employees [get]
-func RegisterAttendanceTopEmployees(router fiber.Router, repo *repository.Repository) {
+func RegisterAttendanceTopEmployees(router fiber.Router) {
 	router.Get("/attendance-top-employees", func(c fiber.Ctx) error {
 		periodType := c.Query("periodType", "month")
 		yearStr := c.Query("year")
@@ -72,7 +71,6 @@ func RegisterAttendanceTopEmployees(router fiber.Router, repo *repository.Reposi
 			StartDate: startDate,
 			EndDate:   endDate,
 			Limit:     limit,
-			Repo:      repo,
 		})
 		if err != nil {
 			return err

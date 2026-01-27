@@ -21,7 +21,6 @@ type ListQuery struct {
 	Limit            int
 	Search           string
 	EmployeeTypeCode string
-	Repo             repository.Repository
 }
 
 type ListResponse struct {
@@ -29,9 +28,13 @@ type ListResponse struct {
 	Meta dto.Meta   `json:"meta"`
 }
 
-type listHandler struct{}
+type listHandler struct {
+	repo repository.Repository
+}
 
-func NewListHandler() *listHandler { return &listHandler{} }
+func NewListHandler(repo repository.Repository) *listHandler {
+	return &listHandler{repo: repo}
+}
 
 var _ mediator.RequestHandler[*ListQuery, *ListResponse] = (*listHandler)(nil)
 
@@ -51,7 +54,7 @@ func (h *listHandler) Handle(ctx context.Context, q *ListQuery) (*ListResponse, 
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	res, err := q.Repo.ListItems(ctx, tenant, q.RunID, q.Page, q.Limit, q.Search, q.EmployeeTypeCode)
+	res, err := h.repo.ListItems(ctx, tenant, q.RunID, q.Page, q.Limit, q.Search, q.EmployeeTypeCode)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list payroll items", zap.Error(err))
 		return nil, errs.Internal("failed to list payroll items")

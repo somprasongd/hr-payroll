@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -24,15 +23,14 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /payroll-items/{id} [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/:itemId", func(c fiber.Ctx) error {
 		itemID, err := uuid.Parse(c.Params("itemId"))
 		if err != nil {
 			return errs.BadRequest("invalid item id")
 		}
 		resp, err := mediator.Send[*GetQuery, *GetResponse](c.Context(), &GetQuery{
-			ID:   itemID,
-			Repo: repo,
+			ID: itemID,
 		})
 		if err != nil {
 			return err

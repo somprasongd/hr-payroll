@@ -31,18 +31,21 @@ type CreateRequest struct {
 
 type CreateCommand struct {
 	Payload CreateRequest
-	Repo    repository.FTRepository
-	Tx      transactor.Transactor
-	Eb      eventbus.EventBus
 }
 
 type CreateResponse struct {
 	dto.FTItem
 }
 
-type createHandler struct{}
+type createHandler struct {
+	repo repository.FTRepository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
-func NewCreateHandler() *createHandler { return &createHandler{} }
+func NewCreateHandler(repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) *createHandler {
+	return &createHandler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*CreateResponse, error) {
 	cmd.Payload.EntryType = strings.TrimSpace(cmd.Payload.EntryType)
@@ -77,9 +80,9 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	}
 
 	var created *repository.FTRecord
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		exists, err := cmd.Repo.ExistsActiveByEmployeeDateType(ctxTx, rec.EmployeeID, rec.WorkDate, rec.EntryType, nil)
+		exists, err := h.repo.ExistsActiveByEmployeeDateType(ctxTx, rec.EmployeeID, rec.WorkDate, rec.EntryType, nil)
 		if err != nil {
 			return err
 		}
@@ -87,7 +90,7 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 			return errs.Conflict("worklog already exists for this employee, date, and entryType")
 		}
 
-		created, err = cmd.Repo.Insert(ctxTx, tenant, rec)
+		created, err = h.repo.Insert(ctxTx, tenant, rec)
 		if err != nil {
 			if repository.IsUniqueErrFT(err) {
 				return errs.Conflict("worklog already exists for this employee, date, and entryType")
@@ -105,7 +108,7 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		return nil, errs.Internal("failed to create worklog")
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),
@@ -142,18 +145,21 @@ type UpdateRequest struct {
 type UpdateCommand struct {
 	ID      uuid.UUID `validate:"required"`
 	Payload UpdateRequest
-	Repo    repository.FTRepository
-	Tx      transactor.Transactor
-	Eb      eventbus.EventBus
 }
 
 type UpdateResponse struct {
 	dto.FTItem
 }
 
-type updateHandler struct{}
+type updateHandler struct {
+	repo repository.FTRepository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
-func NewUpdateHandler() *updateHandler { return &updateHandler{} }
+func NewUpdateHandler(repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) *updateHandler {
+	return &updateHandler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
 	cmd.Payload.EntryType = strings.TrimSpace(cmd.Payload.EntryType)
@@ -172,7 +178,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	current, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
+	current, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")
@@ -200,10 +206,10 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 
 	var updated *repository.FTRecord
-	err = cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	err = h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
 		if entryType != current.EntryType || !workDate.Equal(current.WorkDate) {
-			exists, err := cmd.Repo.ExistsActiveByEmployeeDateType(ctxTx, current.EmployeeID, workDate, entryType, &cmd.ID)
+			exists, err := h.repo.ExistsActiveByEmployeeDateType(ctxTx, current.EmployeeID, workDate, entryType, &cmd.ID)
 			if err != nil {
 				return err
 			}
@@ -212,7 +218,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 			}
 		}
 
-		updated, err = cmd.Repo.Update(ctxTx, tenant, cmd.ID, rec)
+		updated, err = h.repo.Update(ctxTx, tenant, cmd.ID, rec)
 		if err != nil {
 			if repository.IsUniqueErrFT(err) {
 				return errs.Conflict("worklog already exists for this employee, date, and entryType")
@@ -248,7 +254,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		details["status"] = status
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),
@@ -307,14 +313,17 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.FTRecord) (str
 }
 
 type DeleteCommand struct {
-	ID   uuid.UUID `validate:"required"`
-	Repo repository.FTRepository
-	Eb   eventbus.EventBus
+	ID uuid.UUID `validate:"required"`
 }
 
-type deleteHandler struct{}
+type deleteHandler struct {
+	repo repository.FTRepository
+	eb   eventbus.EventBus
+}
 
-func NewDeleteHandler() *deleteHandler { return &deleteHandler{} }
+func NewDeleteHandler(repo repository.FTRepository, eb eventbus.EventBus) *deleteHandler {
+	return &deleteHandler{repo: repo, eb: eb}
+}
 
 func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
 	if err := validator.Validate(cmd); err != nil {
@@ -331,7 +340,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
 	}
 
-	rec, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
+	rec, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
@@ -342,7 +351,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 	if rec.Status != "pending" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete non-pending worklog")
 	}
-	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
+	if err := h.repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
 		}
@@ -350,7 +359,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		return mediator.NoResponse{}, errs.Internal("failed to delete worklog")
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

@@ -22,7 +22,7 @@ import (
 
 type Command struct {
 	ID    uuid.UUID `validate:"required"`
-	Role  string    `validate:"required,oneof=admin hr"`
+	Role  string    `validate:"required,oneof=admin hr timekeeper"`
 	Actor uuid.UUID `validate:"required"`
 }
 

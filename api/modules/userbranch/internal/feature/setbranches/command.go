@@ -17,7 +17,6 @@ import (
 )
 
 type Command struct {
-	Repo      repository.Repository
 	UserID    uuid.UUID   `validate:"required"`
 	BranchIDs []uuid.UUID `validate:"required,min=1"`
 	ActorID   uuid.UUID   `validate:"required"`
@@ -28,11 +27,12 @@ type Response struct {
 }
 
 type commandHandler struct {
-	eb eventbus.EventBus
+	repo repository.Repository
+	eb   eventbus.EventBus
 }
 
-func NewHandler(eb eventbus.EventBus) *commandHandler {
-	return &commandHandler{eb: eb}
+func NewHandler(eb eventbus.EventBus, repo repository.Repository) *commandHandler {
+	return &commandHandler{eb: eb, repo: repo}
 }
 
 func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
@@ -40,19 +40,19 @@ func (h *commandHandler) Handle(ctx context.Context, cmd *Command) (*Response, e
 		return nil, err
 	}
 
-	existing, err := cmd.Repo.GetUserBranchAccess(ctx, cmd.UserID)
+	existing, err := h.repo.GetUserBranchAccess(ctx, cmd.UserID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get user branches before update", zap.Error(err))
 		return nil, errs.Internal("failed to get user branches")
 	}
 
-	if err := cmd.Repo.SetUserBranches(ctx, cmd.UserID, cmd.BranchIDs, cmd.ActorID); err != nil {
+	if err := h.repo.SetUserBranches(ctx, cmd.UserID, cmd.BranchIDs, cmd.ActorID); err != nil {
 		logger.FromContext(ctx).Error("failed to set user branches", zap.Error(err))
 		return nil, errs.Internal("failed to set user branches")
 	}
 
 	// Return updated branches
-	branches, err := cmd.Repo.GetUserBranchAccess(ctx, cmd.UserID)
+	branches, err := h.repo.GetUserBranchAccess(ctx, cmd.UserID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get user branches after update", zap.Error(err))
 		return nil, errs.Internal("failed to get user branches")

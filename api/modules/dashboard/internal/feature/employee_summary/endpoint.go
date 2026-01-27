@@ -3,7 +3,6 @@ package employee_summary
 import (
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/dashboard/internal/repository"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -20,11 +19,9 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /dashboard/employee-summary [get]
-func RegisterEmployeeSummary(router fiber.Router, repo *repository.Repository) {
+func RegisterEmployeeSummary(router fiber.Router) {
 	router.Get("/employee-summary", func(c fiber.Ctx) error {
-		resp, err := mediator.Send[*EmployeeSummaryQuery, *EmployeeSummaryResponse](c.Context(), &EmployeeSummaryQuery{
-			Repo: repo,
-		})
+		resp, err := mediator.Send[*EmployeeSummaryQuery, *EmployeeSummaryResponse](c.Context(), &EmployeeSummaryQuery{})
 		if err != nil {
 			return err
 		}

@@ -36,7 +36,7 @@ export interface MenuGroup {
 export const menuConfig: MenuGroup[] = [
   {
     label: "Platform",
-    excludedRoles: ['superadmin'],
+    excludedRoles: ['superadmin', 'timekeeper'],
     items: [
       {
         titleKey: "dashboard",
@@ -76,6 +76,26 @@ export const menuConfig: MenuGroup[] = [
         items: [
           { titleKey: "salaryAdvance", href: "/salary-advance" },
           { titleKey: "debt", href: "/debt" }
+        ]
+      }
+    ]
+  },
+  {
+    // Timekeeper-specific menu: only dashboard and worklogs
+    label: "Platform",
+    roles: ['timekeeper'],
+    items: [
+      {
+        titleKey: "dashboard",
+        icon: LayoutDashboard,
+        href: "/dashboard"
+      },
+      {
+        titleKey: "worklog",
+        icon: Clock,
+        items: [
+          { titleKey: "worklogFT", href: "/worklogs/ft" },
+          { titleKey: "worklogPT", href: "/worklogs/pt" }
         ]
       }
     ]

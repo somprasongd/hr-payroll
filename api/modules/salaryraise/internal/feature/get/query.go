@@ -17,19 +17,22 @@ import (
 )
 
 type Query struct {
-	ID   uuid.UUID
-	Repo repository.Repository
+	ID uuid.UUID
 }
 
 type Response struct {
 	dto.Cycle
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+}
 
 var _ mediator.RequestHandler[*Query, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository) *Handler {
+	return &Handler{repo: repo}
+}
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -37,7 +40,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	c, items, err := q.Repo.Get(ctx, tenant, q.ID)
+	c, items, err := h.repo.Get(ctx, tenant, q.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("cycle not found")

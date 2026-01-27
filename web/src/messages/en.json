@@ -1398,7 +1398,8 @@
     "roles": {
       "admin": "Admin",
       "hr": "HR",
-      "superadmin": "Super Admin"
+      "superadmin": "Super Admin",
+      "timekeeper": "Timekeeper"
     },
     "success": {
       "passwordReset": "Password reset successfully",

@@ -18,7 +18,6 @@ type AttendanceTopEmployeesQuery struct {
 	StartDate time.Time
 	EndDate   time.Time
 	Limit     int
-	Repo      *repository.Repository
 }
 
 // TopEmployeeDTO represents an employee in the ranking
@@ -44,10 +43,12 @@ type AttendanceTopEmployeesResponse struct {
 	OT          []TopEmployeeDTO `json:"ot"`
 }
 
-type attendanceTopEmployeesHandler struct{}
+type attendanceTopEmployeesHandler struct {
+	repo *repository.Repository
+}
 
-func NewAttendanceTopEmployeesHandler() *attendanceTopEmployeesHandler {
-	return &attendanceTopEmployeesHandler{}
+func NewAttendanceTopEmployeesHandler(repo *repository.Repository) *attendanceTopEmployeesHandler {
+	return &attendanceTopEmployeesHandler{repo: repo}
 }
 
 func (h *attendanceTopEmployeesHandler) Handle(ctx context.Context, q *AttendanceTopEmployeesQuery) (*AttendanceTopEmployeesResponse, error) {
@@ -56,7 +57,7 @@ func (h *attendanceTopEmployeesHandler) Handle(ctx context.Context, q *Attendanc
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	entries, err := q.Repo.GetTopEmployeesByAttendance(ctx, tenant, q.StartDate, q.EndDate, q.Limit)
+	entries, err := h.repo.GetTopEmployeesByAttendance(ctx, tenant, q.StartDate, q.EndDate, q.Limit)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get top employees by attendance", zap.Error(err))
 		return nil, errs.Internal("failed to get top employees by attendance")

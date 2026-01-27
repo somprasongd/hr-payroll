@@ -8,12 +8,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { dashboardService, EmployeeSummaryResponse } from '@/services/dashboard.service';
 import { useBranchChange } from '@/hooks/use-branch-change';
+import { useAuthStore } from '@/store/auth-store';
 
 export function EmployeeStatsWidget() {
   const t = useTranslations('Dashboard');
+  const { user } = useAuthStore();
   const [data, setData] = useState<EmployeeSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Timekeeper should not be able to click on stat cards
+  const isTimekeeper = user?.role === 'timekeeper';
 
   const fetchData = useCallback(async () => {
     try {
@@ -101,37 +106,49 @@ export function EmployeeStatsWidget() {
     },
   ];
 
+  // Card content component to avoid duplication
+  const StatCardContent = ({ stat }: { stat: typeof stats[0] }) => (
+    <CardContent className="pt-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+          <div className="flex items-center gap-2">
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
+              {!isTimekeeper && <ExternalLink className="h-3 w-3 text-muted-foreground opacity-50" />}
+            </div>
+            {'subtitle' in stat && stat.subtitle && (
+              <span className="text-sm text-red-500 flex items-center gap-1">
+                {'subtitleIcon' in stat && stat.subtitleIcon && <stat.subtitleIcon className="h-3 w-3" />}
+                {stat.subtitle}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className={`rounded-full p-3 ${stat.bgColor}`}>
+          <stat.icon className={`h-5 w-5 ${stat.color}`} />
+        </div>
+      </div>
+    </CardContent>
+  );
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
-        <Link key={index} href={stat.href}>
-          <Card className="hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
-                      <ExternalLink className="h-3 w-3 text-muted-foreground opacity-50" />
-                    </div>
-                    {stat.subtitle && (
-                      <span className="text-sm text-red-500 flex items-center gap-1">
-                        {stat.subtitleIcon && <stat.subtitleIcon className="h-3 w-3" />}
-                        {stat.subtitle}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className={`rounded-full p-3 ${stat.bgColor}`}>
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                </div>
-              </div>
-            </CardContent>
+        isTimekeeper ? (
+          // Timekeeper: non-clickable card
+          <Card key={index}>
+            <StatCardContent stat={stat} />
           </Card>
-        </Link>
+        ) : (
+          // Other roles: clickable card with link
+          <Link key={index} href={stat.href}>
+            <Card className="hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group">
+              <StatCardContent stat={stat} />
+            </Card>
+          </Link>
+        )
       ))}
     </div>
   );
 }
-

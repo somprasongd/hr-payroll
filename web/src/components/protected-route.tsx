@@ -53,6 +53,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           console.log('[ProtectedRoute] Superadmin trying to access non-superadmin route, redirecting');
           router.replace('/super-admin/companies');
         }
+      } else if (user.role === 'timekeeper') {
+        // Timekeeper can only access dashboard, worklogs, and profile
+        const allowedForTimekeeper = 
+          pathname === '/dashboard' || 
+          pathname.startsWith('/worklogs') || 
+          pathname === '/profile';
+        if (!allowedForTimekeeper) {
+          console.log('[ProtectedRoute] Timekeeper trying to access restricted route, redirecting');
+          router.replace('/dashboard');
+        }
       } else {
         // Non-superadmin users cannot access /super-admin/* routes
         if (pathname.startsWith('/super-admin')) {

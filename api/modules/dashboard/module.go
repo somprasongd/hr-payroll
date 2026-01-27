@@ -17,17 +17,17 @@ import (
 )
 
 type Module struct {
-	ctx        *module.ModuleContext
-	repo       *repository.Repository
-	tokenSvc   *jwt.TokenService
+	ctx      *module.ModuleContext
+	repo     *repository.Repository
+	tokenSvc *jwt.TokenService
 }
 
 func NewModule(ctx *module.ModuleContext, tokenSvc *jwt.TokenService) *Module {
 	repo := repository.NewRepository(ctx.DBCtx)
 	return &Module{
-		ctx:        ctx,
-		repo:       repo,
-		tokenSvc:   tokenSvc,
+		ctx:      ctx,
+		repo:     repo,
+		tokenSvc: tokenSvc,
 	}
 }
 
@@ -35,29 +35,30 @@ func (m *Module) APIVersion() string { return "v1" }
 
 func (m *Module) Init(_ eventbus.EventBus) error {
 	// Employee Summary
-	mediator.Register[*employeeSummary.EmployeeSummaryQuery, *employeeSummary.EmployeeSummaryResponse](employeeSummary.NewEmployeeSummaryHandler())
+	mediator.Register[*employeeSummary.EmployeeSummaryQuery, *employeeSummary.EmployeeSummaryResponse](employeeSummary.NewEmployeeSummaryHandler(m.repo))
 
 	// Attendance Summary
-	mediator.Register[*attendanceSummary.AttendanceSummaryQuery, *attendanceSummary.AttendanceSummaryResponse](attendanceSummary.NewAttendanceSummaryHandler())
+	mediator.Register[*attendanceSummary.AttendanceSummaryQuery, *attendanceSummary.AttendanceSummaryResponse](attendanceSummary.NewAttendanceSummaryHandler(m.repo))
 
 	// Attendance Top Employees
-	mediator.Register[*attendanceTopEmployees.AttendanceTopEmployeesQuery, *attendanceTopEmployees.AttendanceTopEmployeesResponse](attendanceTopEmployees.NewAttendanceTopEmployeesHandler())
+	mediator.Register[*attendanceTopEmployees.AttendanceTopEmployeesQuery, *attendanceTopEmployees.AttendanceTopEmployeesResponse](attendanceTopEmployees.NewAttendanceTopEmployeesHandler(m.repo))
 
 	// Payroll Summary
-	mediator.Register[*payrollSummary.PayrollSummaryQuery, *payrollSummary.PayrollSummaryResponse](payrollSummary.NewPayrollSummaryHandler())
+	mediator.Register[*payrollSummary.PayrollSummaryQuery, *payrollSummary.PayrollSummaryResponse](payrollSummary.NewPayrollSummaryHandler(m.repo))
 
 	// Financial Summary
-	mediator.Register[*financialSummary.FinancialSummaryQuery, *financialSummary.FinancialSummaryResponse](financialSummary.NewFinancialSummaryHandler())
+	mediator.Register[*financialSummary.FinancialSummaryQuery, *financialSummary.FinancialSummaryResponse](financialSummary.NewFinancialSummaryHandler(m.repo))
 
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
-	group := r.Group("/dashboard", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
+	// Allow admin, hr, and timekeeper roles to access dashboard endpoints
+	group := r.Group("/dashboard", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr", "timekeeper"))
 
-	employeeSummary.RegisterEmployeeSummary(group, m.repo)
-	attendanceSummary.RegisterAttendanceSummary(group, m.repo)
-	attendanceTopEmployees.RegisterAttendanceTopEmployees(group, m.repo)
-	payrollSummary.RegisterPayrollSummary(group, m.repo)
-	financialSummary.RegisterFinancialSummary(group, m.repo)
+	employeeSummary.RegisterEmployeeSummary(group)
+	attendanceSummary.RegisterAttendanceSummary(group)
+	attendanceTopEmployees.RegisterAttendanceTopEmployees(group)
+	payrollSummary.RegisterPayrollSummary(group)
+	financialSummary.RegisterFinancialSummary(group)
 }

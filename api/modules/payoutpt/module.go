@@ -38,11 +38,11 @@ func (m *Module) APIVersion() string { return "v1" }
 
 func (m *Module) Init(eb eventbus.EventBus) error {
 	m.eb = eb
-	mediator.Register[*create.Command, *create.Response](create.NewHandler())
-	mediator.Register[*list.Query, *list.Response](list.NewHandler())
-	mediator.Register[*get.Query, *get.Response](get.NewHandler())
-	mediator.Register[*pay.Command, *pay.Response](pay.NewHandler())
-	mediator.Register[*cancel.Command, mediator.NoResponse](cancel.NewHandler())
+	mediator.Register[*create.Command, *create.Response](create.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*list.Query, *list.Response](list.NewHandler(m.repo))
+	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
+	mediator.Register[*pay.Command, *pay.Response](pay.NewHandler(m.repo, m.ctx.Transactor, eb))
+	mediator.Register[*cancel.Command, mediator.NoResponse](cancel.NewHandler(m.repo, eb))
 
 	// Contract handlers for cross-module communication
 	mediator.Register[*contracts.HasPendingPayoutPTQuery, *contracts.HasPendingPayoutPTResponse](haspending.NewHandler(m.repo))
@@ -52,11 +52,11 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/payouts/pt", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin", "hr"))
-	create.NewEndpoint(group, m.repo, m.ctx.Transactor, m.eb)
-	list.NewEndpoint(group, m.repo)
-	get.NewEndpoint(group, m.repo)
-	cancel.NewEndpoint(group, m.repo, m.eb)
+	create.NewEndpoint(group)
+	list.NewEndpoint(group)
+	get.NewEndpoint(group)
+	cancel.NewEndpoint(group)
 	// pay admin only
 	admin := group.Group("", middleware.RequireRoles("admin"))
-	pay.NewEndpoint(admin, m.repo, m.ctx.Transactor, m.eb)
+	pay.NewEndpoint(admin)
 }

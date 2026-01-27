@@ -16,18 +16,21 @@ import (
 type Query struct {
 	CycleID uuid.UUID
 	Search  string
-	Repo    repository.Repository
 }
 
 type Response struct {
 	Data []repository.Item `json:"data"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+}
 
 var _ mediator.RequestHandler[*Query, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository) *Handler {
+	return &Handler{repo: repo}
+}
 
 func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 	tenant, ok := contextx.TenantFromContext(ctx)
@@ -35,7 +38,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	items, err := q.Repo.ListItems(ctx, tenant, q.CycleID, q.Search)
+	items, err := h.repo.ListItems(ctx, tenant, q.CycleID, q.Search)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list salary raise items", zap.Error(err))
 		return nil, errs.Internal("failed to list salary raise items")

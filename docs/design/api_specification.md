@@ -1,6 +1,6 @@
 # HR Management System - API Specification
 
-Version: 1.2.0 (Multi-Tenancy Support)
+Version: 1.3.0 (Role & Tenant Updates)
 
 Base URL: <https://api.hrmsystem.com/v1>
 
@@ -26,6 +26,15 @@ Content-Type: application/json
 - **User Roles:** ผู้ใช้สามารถมี role ที่แตกต่างกันในแต่ละบริษัท (ผ่าน `user_company_roles`)
 - **Branch Access:** ผู้ใช้สามารถเข้าถึงได้เฉพาะสาขาที่ได้รับสิทธิ์ (ผ่าน `user_branch_access`)
 - **Superadmin:** role พิเศษที่สามารถเข้าถึงข้อมูลข้ามบริษัทได้
+
+**Available Roles:**
+
+| Role         | Description       | Permissions                                      |
+| ------------ | ----------------- | ------------------------------------------------ |
+| `superadmin` | ผู้ดูแลระบบสูงสุด | เข้าถึงข้อมูลข้ามบริษัท, จัดการ Company          |
+| `admin`      | ผู้ดูแลระบบบริษัท | จัดการผู้ใช้, ตั้งค่า Payroll, ดู Activity Logs  |
+| `hr`         | ฝ่ายบุคคล         | จัดการพนักงาน, Payroll, Worklogs, รายงาน         |
+| `timekeeper` | ผู้ลงเวลา         | เข้าถึงได้เฉพาะ Worklog PT/FT, Dashboard (จำกัด) |
 
 **Tenant Tables:**
 
@@ -146,22 +155,42 @@ X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
     "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
     "username": "admin",
     "role": "admin"
-  }
+  },
+  "companies": [
+    {
+      "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
+      "name": "DEFAULT COMPANY",
+      "code": "HQ",
+      "status": "active"
+    }
+  ],
+  "branches": [
+    {
+      "id": "019347e8-94ca-7d69-9f3b-2c4d5e6f7890",
+      "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
+      "name": "สำนักงานใหญ่",
+      "code": "00000",
+      "isDefault": true,
+      "status": "active"
+    }
+  ]
 }
 ```
 
 **Response Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)**         | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --------------- | ---------------------------------- | ----------------- | ------------ | ---------------------- |
-| `accessToken`   | JWT Token สำหรับใช้เรียก API อื่นๆ | String            | **Yes**      | `"eyJhbGci..."`        |
-| `refreshToken`  | Token สำหรับขอ Access Token ใหม่   | String            | **Yes**      | `"d9b9d..."`           |
-| `tokenType`     | ประเภทของ Token (ปกติคือ Bearer)   | String            | **Yes**      | `"Bearer"`             |
-| `expiresIn`     | อายุของ Access Token (วินาที)      | Integer           | **Yes**      | `900`                  |
-| `user`          | ข้อมูลย่อของผู้ใช้งาน              | Object            | **Yes**      | `{...}`                |
-| `user.id`       | รหัสประจำตัวผู้ใช้งาน (UUIDv7)     | UUID              | **Yes**      | `"019347e8-..."`       |
-| `user.username` | ชื่อผู้ใช้งาน                      | String            | **Yes**      | `"admin"`              |
-| `user.role`     | สิทธิ์การใช้งาน (`admin`, `hr`)    | Enum              | **Yes**      | `"admin"`              |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                    | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | --------------------------------------------- | ----------------- | ------------ | ---------------------- |
+| `accessToken`   | JWT Token สำหรับใช้เรียก API อื่นๆ            | String            | **Yes**      | `"eyJhbGci..."`        |
+| `refreshToken`  | Token สำหรับขอ Access Token ใหม่              | String            | **Yes**      | `"d9b9d..."`           |
+| `tokenType`     | ประเภทของ Token (ปกติคือ Bearer)              | String            | **Yes**      | `"Bearer"`             |
+| `expiresIn`     | อายุของ Access Token (วินาที)                 | Integer           | **Yes**      | `900`                  |
+| `user`          | ข้อมูลย่อของผู้ใช้งาน                         | Object            | **Yes**      | `{...}`                |
+| `user.id`       | รหัสประจำตัวผู้ใช้งาน (UUIDv7)                | UUID              | **Yes**      | `"019347e8-..."`       |
+| `user.username` | ชื่อผู้ใช้งาน                                 | String            | **Yes**      | `"admin"`              |
+| `user.role`     | สิทธิ์การใช้งาน (`admin`, `hr`, `timekeeper`) | Enum              | **Yes**      | `"admin"`              |
+| `companies`     | รายชื่อบริษัทที่ผู้ใช้มีสิทธิ์เข้าใช้งาน      | Array             | No           | `[...]`                |
+| `branches`      | รายชื่อสาขาที่ผู้ใช้มีสิทธิ์เข้าใช้งาน        | Array             | No           | `[...]`                |
 
 **Error Responses:**
 
@@ -255,6 +284,58 @@ X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
 
 ---
 
+### 2.4 Switch Tenant
+
+เปลี่ยนบริบทบริษัทหรือสาขาที่กำลังใช้งาน และรับ Token ชุดใหม่
+
+- **Endpoint:** `POST /auth/switch`
+- **Access:** Authenticated
+
+**Request Body Example:**
+
+```json
+{
+  "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
+  "branchIds": ["019347e8-94ca-7d69-9f3b-2c4d5e6f7890"]
+}
+```
+
+**Request Fields:**
+
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**   | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | ---------------------------- | ----------------- | ------------ | ---------------------- |
+| `companyId`     | ID ของบริษัทที่ต้องการสลับไป | UUID              | **Yes**      | `"019347e8-..."`       |
+| `branchIds`     | รายชื่อ ID ของสาขาที่ต้องการ | Array of UUID     | **Yes**      | `["019347e8-..."]`     |
+
+**Success Response Example (200 OK):**
+
+```json
+{
+  "accessToken": "new_access_token...",
+  "refreshToken": "new_refresh_token...",
+  "tokenType": "Bearer",
+  "expiresIn": 900,
+  "company": {
+    "id": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
+    "name": "DEFAULT COMPANY",
+    "code": "HQ",
+    "status": "active"
+  },
+  "branches": [
+    {
+      "id": "019347e8-94ca-7d69-9f3b-2c4d5e6f7890",
+      "companyId": "019347e8-94ca-7d69-9f3a-1c3d4e5f6789",
+      "name": "สำนักงานใหญ่",
+      "code": "00000",
+      "isDefault": true,
+      "status": "active"
+    }
+  ]
+}
+```
+
+---
+
 ## 3. User Management (Admin Only)
 
 ### 3.1 List Users
@@ -293,7 +374,7 @@ X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
 | `data`               | Array ของข้อมูลผู้ใช้งาน                   | Array             | **Yes**      | `[...]`                |
 | `data[].id`          | รหัสผู้ใช้งาน (UUIDv7)                     | UUID              | **Yes**      | `"019347e8..."`        |
 | `data[].username`    | ชื่อผู้ใช้งาน                              | String            | **Yes**      | `"hr01"`               |
-| `data[].role`        | สิทธิ์ (`hr`, `admin`)                     | Enum              | **Yes**      | `"hr"`                 |
+| `data[].role`        | สิทธิ์ (`hr`, `admin`, `timekeeper`)       | Enum              | **Yes**      | `"hr"`                 |
 | `data[].createdAt`   | เวลาที่สร้างบัญชี (ISO 8601)               | String            | **Yes**      | `"2025-11-20..."`      |
 | `data[].lastLoginAt` | เวลาเข้าสู่ระบบล่าสุด (Null ถ้าไม่เคยเข้า) | String            | No           | `"2025-11-20..."`      |
 | `meta`               | ข้อมูลสำหรับการแบ่งหน้า (Pagination)       | Object            | **Yes**      | `{...}`                |
@@ -329,11 +410,11 @@ X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)**                | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --------------- | ----------------------------------------- | ----------------- | ------------ | ---------------------- |
-| `username`      | ชื่อผู้ใช้งาน (ต้องไม่ซ้ำ)                | String            | **Yes**      | `"new_hr"`             |
-| `password`      | รหัสผ่านเริ่มต้น (ควรมีความยาวตาม Policy) | String            | **Yes**      | `"InitialPassword123"` |
-| `role`          | สิทธิ์การใช้งาน (`hr`, `admin`)           | Enum              | **Yes**      | `"hr"`                 |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                    | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | --------------------------------------------- | ----------------- | ------------ | ---------------------- |
+| `username`      | ชื่อผู้ใช้งาน (ต้องไม่ซ้ำ)                    | String            | **Yes**      | `"new_hr"`             |
+| `password`      | รหัสผ่านเริ่มต้น (ควรมีความยาวตาม Policy)     | String            | **Yes**      | `"InitialPassword123"` |
+| `role`          | สิทธิ์การใช้งาน (`hr`, `admin`, `timekeeper`) | Enum              | **Yes**      | `"hr"`                 |
 
 **Success Response Example (201 Created):**
 
@@ -400,7 +481,7 @@ X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
 
 แก้ไข Role ของผู้ใช้งาน
 
-- **Endpoint:** `PATCH /admin/users/{id}`
+- **Endpoint:** `PUT /admin/users/{id}/role`
 - **Access:** Admin
 - **Params:** `id` (UUIDv7)
 
@@ -414,9 +495,9 @@ X-Branch-ID: 019347e8-94ca-7d69-9f3b-2c4d5e6f7890
 
 **Request Fields:**
 
-| **ชื่อ (Name)** | **คำอธิบาย (Description)**                  | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
-| --------------- | ------------------------------------------- | ----------------- | ------------ | ---------------------- |
-| `role`          | สิทธิ์ใหม่ที่ต้องการตั้งค่า (`hr`, `admin`) | Enum              | **Yes**      | `"admin"`              |
+| **ชื่อ (Name)** | **คำอธิบาย (Description)**                                | **ประเภท (Type)** | **Required** | **ตัวอย่าง (Example)** |
+| --------------- | --------------------------------------------------------- | ----------------- | ------------ | ---------------------- |
+| `role`          | สิทธิ์ใหม่ที่ต้องการตั้งค่า (`hr`, `admin`, `timekeeper`) | Enum              | **Yes**      | `"admin"`              |
 
 **Success Response Example (200 OK):**
 
@@ -496,6 +577,46 @@ Admin ทำการตั้งรหัสผ่านใหม่ให้ U
 | **400**         | Bad Request | `id` ไม่ใช่รูปแบบ UUID ที่ถูกต้อง        |
 | **403**         | Forbidden   | ผู้เรียกไม่ใช่ Role `admin`              |
 | **404**         | Not Found   | ไม่พบข้อมูล User (หรือ User ถูกลบไปแล้ว) |
+
+---
+
+### 3.7 Get User Branch Access
+
+ดูรายการสาขาที่ผู้ใช้งานมีสิทธิ์เข้าถึงในบริษัทปัจจุบัน
+
+- **Endpoint:** `GET /admin/users/{id}/branches`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Success Response Example (200 OK):**
+
+```json
+[
+  {
+    "branchId": "019347e8-94ca-7d69-9f3b-2c4d5e6f7890",
+    "branchName": "สำนักงานใหญ่",
+    "hasAccess": true
+  }
+]
+```
+
+---
+
+### 3.8 Set User Branch Access
+
+กำหนดสิทธิ์การเข้าถึงสาขาให้ผู้ใช้งาน
+
+- **Endpoint:** `PUT /admin/users/{id}/branches`
+- **Access:** Admin
+- **Params:** `id` (UUIDv7)
+
+**Request Body Example:**
+
+```json
+{
+  "branchIds": ["019347e8-94ca-7d69-9f3b-2c4d5e6f7890"]
+}
+```
 
 ---
 

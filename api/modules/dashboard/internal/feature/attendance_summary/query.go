@@ -20,7 +20,6 @@ type AttendanceSummaryQuery struct {
 	GroupBy      string // "month" or "day"
 	DepartmentID *uuid.UUID
 	EmployeeID   *uuid.UUID
-	Repo         *repository.Repository
 }
 
 // AttendanceTotals contains totals for all entry types
@@ -62,10 +61,12 @@ type AttendanceSummaryResponse struct {
 	Breakdown []AttendanceBreakdown `json:"breakdown"`
 }
 
-type attendanceSummaryHandler struct{}
+type attendanceSummaryHandler struct {
+	repo *repository.Repository
+}
 
-func NewAttendanceSummaryHandler() *attendanceSummaryHandler {
-	return &attendanceSummaryHandler{}
+func NewAttendanceSummaryHandler(repo *repository.Repository) *attendanceSummaryHandler {
+	return &attendanceSummaryHandler{repo: repo}
 }
 
 func (h *attendanceSummaryHandler) Handle(ctx context.Context, q *AttendanceSummaryQuery) (*AttendanceSummaryResponse, error) {
@@ -74,7 +75,7 @@ func (h *attendanceSummaryHandler) Handle(ctx context.Context, q *AttendanceSumm
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	entries, err := q.Repo.GetAttendanceSummary(ctx, tenant, q.StartDate, q.EndDate, q.GroupBy, q.DepartmentID, q.EmployeeID)
+	entries, err := h.repo.GetAttendanceSummary(ctx, tenant, q.StartDate, q.EndDate, q.GroupBy, q.DepartmentID, q.EmployeeID)
 
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get attendance summary", zap.Error(err))

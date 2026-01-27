@@ -11,9 +11,7 @@ import (
 	"hrms/shared/common/logger"
 )
 
-
 type Query struct {
-	Repo   repository.Repository
 	UserID uuid.UUID
 }
 
@@ -21,17 +19,24 @@ type Response struct {
 	Branches []repository.BranchAccess `json:"branches"`
 }
 
-type queryHandler struct{}
+type queryHandler struct {
+	repo repository.Repository
+}
 
-func NewHandler() *queryHandler {
-	return &queryHandler{}
+func NewHandler(repo repository.Repository) *queryHandler {
+	return &queryHandler{repo: repo}
 }
 
 func (h *queryHandler) Handle(ctx context.Context, q *Query) (*Response, error) {
-	branches, err := q.Repo.GetUserBranchAccess(ctx, q.UserID)
+	branches, err := h.repo.GetUserBranchAccess(ctx, q.UserID)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to get user branches", zap.Error(err))
 		return nil, errs.Internal("failed to get user branches")
+	}
+
+	// Ensure we return an empty array instead of null in JSON
+	if branches == nil {
+		branches = []repository.BranchAccess{}
 	}
 
 	return &Response{Branches: branches}, nil

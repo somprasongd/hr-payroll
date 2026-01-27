@@ -7,7 +7,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/payrollrun/internal/repository"
 	"hrms/shared/common/errs"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
@@ -31,7 +30,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /payroll-runs/{id}/items [get]
-func NewEndpoint(runRouter fiber.Router, repo repository.Repository) {
+func NewEndpoint(runRouter fiber.Router) {
 	runRouter.Get("/:id/items", func(c fiber.Ctx) error {
 		runID, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -48,7 +47,6 @@ func NewEndpoint(runRouter fiber.Router, repo repository.Repository) {
 			Limit:            limit,
 			Search:           search,
 			EmployeeTypeCode: empType,
-			Repo:             repo,
 		})
 		if err != nil {
 			return err

@@ -19,7 +19,7 @@ type CompanyUser = repository.CompanyUser
 // @Param X-Branch-ID header string false "Branch ID"
 // @Success 200 {array} CompanyUser
 // @Router /admin/users [get]
-func NewEndpoint(router fiber.Router, repo repository.Repository) {
+func NewEndpoint(router fiber.Router) {
 	router.Get("/", func(c fiber.Ctx) error {
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{})
 		if err != nil {

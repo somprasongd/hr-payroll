@@ -17,16 +17,19 @@ import (
 )
 
 type Command struct {
-	ID   uuid.UUID `validate:"required"`
-	Repo repository.Repository
-	Eb   eventbus.EventBus
+	ID uuid.UUID `validate:"required"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, mediator.NoResponse] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse, error) {
 	if err := validator.Validate(cmd); err != nil {
@@ -43,13 +46,13 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (mediator.NoResponse
 		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
 	}
 
-	if err := cmd.Repo.DeleteCycle(ctx, tenant, cmd.ID, user.ID); err != nil {
+	if err := h.repo.DeleteCycle(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if err == sql.ErrNoRows {
 			return mediator.NoResponse{}, errs.NotFound("cycle not found or already deleted")
 		}
 		return mediator.NoResponse{}, errs.Internal("failed to delete cycle")
 	}
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

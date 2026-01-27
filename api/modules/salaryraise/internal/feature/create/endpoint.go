@@ -3,12 +3,9 @@ package create
 import (
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/salaryraise/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 // @Summary Create salary raise cycle
@@ -25,7 +22,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /salary-raise-cycles [post]
-func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) {
+func NewEndpoint(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {
 		var req Command
 		if err := c.Bind().Body(&req); err != nil {
@@ -34,9 +31,6 @@ func NewEndpoint(router fiber.Router, repo repository.Repository, tx transactor.
 		if err := req.ParseDates(); err != nil {
 			return err
 		}
-		req.Repo = repo
-		req.Tx = tx
-		req.Eb = eb
 
 		resp, err := mediator.Send[*Command, *Response](c.Context(), &req)
 		if err != nil {

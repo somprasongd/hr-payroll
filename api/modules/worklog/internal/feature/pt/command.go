@@ -34,18 +34,21 @@ type CreateRequest struct {
 
 type CreateCommand struct {
 	Payload CreateRequest
-	Repo    repository.PTRepository
-	Tx      transactor.Transactor
-	Eb      eventbus.EventBus
 }
 
 type CreateResponse struct {
 	dto.PTItem
 }
 
-type createHandler struct{}
+type createHandler struct {
+	repo repository.PTRepository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
-func NewCreateHandler() *createHandler { return &createHandler{} }
+func NewCreateHandler(repo repository.PTRepository, tx transactor.Transactor, eb eventbus.EventBus) *createHandler {
+	return &createHandler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*CreateResponse, error) {
 	cmd.Payload.Status = strings.TrimSpace(cmd.Payload.Status)
@@ -84,8 +87,8 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 	}
 
 	var created *repository.PTRecord
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
-		exists, err := cmd.Repo.ExistsActiveByEmployeeDate(ctxTx, rec.EmployeeID, rec.WorkDate)
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+		exists, err := h.repo.ExistsActiveByEmployeeDate(ctxTx, rec.EmployeeID, rec.WorkDate)
 		if err != nil {
 			return err
 		}
@@ -93,7 +96,7 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 			return errs.Conflict("worklog already exists for this employee on this date")
 		}
 
-		created, err = cmd.Repo.Insert(ctxTx, tenant, rec)
+		created, err = h.repo.Insert(ctxTx, tenant, rec)
 		if err != nil {
 			if repository.IsUniqueErrPT(err) {
 				return errs.Conflict("worklog already exists for this employee on this date")
@@ -111,7 +114,7 @@ func (h *createHandler) Handle(ctx context.Context, cmd *CreateCommand) (*Create
 		return nil, errs.Internal("failed to create worklog")
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),
@@ -164,18 +167,21 @@ type UpdateRequest struct {
 type UpdateCommand struct {
 	ID      uuid.UUID `validate:"required"`
 	Payload UpdateRequest
-	Repo    repository.PTRepository
-	Tx      transactor.Transactor
-	Eb      eventbus.EventBus
 }
 
 type UpdateResponse struct {
 	dto.PTItem
 }
 
-type updateHandler struct{}
+type updateHandler struct {
+	repo repository.PTRepository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
-func NewUpdateHandler() *updateHandler { return &updateHandler{} }
+func NewUpdateHandler(repo repository.PTRepository, tx transactor.Transactor, eb eventbus.EventBus) *updateHandler {
+	return &updateHandler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*UpdateResponse, error) {
 	cmd.Payload.Status = strings.TrimSpace(cmd.Payload.Status)
@@ -193,7 +199,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		return nil, errs.Unauthorized("missing user context")
 	}
 
-	current, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
+	current, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("worklog not found")
@@ -222,9 +228,9 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	}
 
 	var updated *repository.PTRecord
-	err = cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	err = h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		updated, err = cmd.Repo.Update(ctxTx, tenant, cmd.ID, rec)
+		updated, err = h.repo.Update(ctxTx, tenant, cmd.ID, rec)
 		return err
 	})
 	if err != nil {
@@ -255,7 +261,7 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 		details["status"] = status
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),
@@ -326,14 +332,17 @@ func normalizeUpdatePayload(p *UpdateRequest, current *repository.PTRecord) (tim
 }
 
 type DeleteCommand struct {
-	ID   uuid.UUID `validate:"required"`
-	Repo repository.PTRepository
-	Eb   eventbus.EventBus
+	ID uuid.UUID `validate:"required"`
 }
 
-type deleteHandler struct{}
+type deleteHandler struct {
+	repo repository.PTRepository
+	eb   eventbus.EventBus
+}
 
-func NewDeleteHandler() *deleteHandler { return &deleteHandler{} }
+func NewDeleteHandler(repo repository.PTRepository, eb eventbus.EventBus) *deleteHandler {
+	return &deleteHandler{repo: repo, eb: eb}
+}
 
 func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediator.NoResponse, error) {
 	if err := validator.Validate(cmd); err != nil {
@@ -350,7 +359,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
 	}
 
-	rec, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
+	rec, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
@@ -361,7 +370,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 	if rec.Status != "pending" {
 		return mediator.NoResponse{}, errs.BadRequest("cannot delete non-pending worklog")
 	}
-	if err := cmd.Repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
+	if err := h.repo.SoftDelete(ctx, tenant, cmd.ID, user.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return mediator.NoResponse{}, errs.NotFound("worklog not found")
 		}
@@ -369,7 +378,7 @@ func (h *deleteHandler) Handle(ctx context.Context, cmd *DeleteCommand) (mediato
 		return mediator.NoResponse{}, errs.Internal("failed to delete worklog")
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

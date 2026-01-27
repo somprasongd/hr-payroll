@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 
-	"hrms/modules/dashboard/internal/repository"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
 )
@@ -24,7 +23,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /dashboard/payroll-summary [get]
-func RegisterPayrollSummary(router fiber.Router, repo *repository.Repository) {
+func RegisterPayrollSummary(router fiber.Router) {
 	router.Get("/payroll-summary", func(c fiber.Ctx) error {
 		year := time.Now().Year()
 		if yearStr := c.Query("year"); yearStr != "" {
@@ -35,7 +34,6 @@ func RegisterPayrollSummary(router fiber.Router, repo *repository.Repository) {
 
 		resp, err := mediator.Send[*PayrollSummaryQuery, *PayrollSummaryResponse](c.Context(), &PayrollSummaryQuery{
 			Year: year,
-			Repo: repo,
 		})
 		if err != nil {
 			return err

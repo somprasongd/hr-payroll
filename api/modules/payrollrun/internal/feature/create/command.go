@@ -22,14 +22,11 @@ import (
 )
 
 type Command struct {
-	PayrollMonthRaw string                `json:"payrollMonthDate" validate:"required"`
-	PeriodStartRaw  string                `json:"periodStartDate" validate:"required"`
-	PayDateRaw      string                `json:"payDate" validate:"required"`
-	SSORateEmp      float64               `json:"socialSecurityRateEmployee" validate:"gte=0"`
-	SSORateEmployer float64               `json:"socialSecurityRateEmployer" validate:"gte=0"`
-	Repo            repository.Repository `json:"-"`
-	Tx              transactor.Transactor `json:"-"`
-	Eb              eventbus.EventBus     `json:"-"`
+	PayrollMonthRaw string  `json:"payrollMonthDate" validate:"required"`
+	PeriodStartRaw  string  `json:"periodStartDate" validate:"required"`
+	PayDateRaw      string  `json:"payDate" validate:"required"`
+	SSORateEmp      float64 `json:"socialSecurityRateEmployee" validate:"gte=0"`
+	SSORateEmployer float64 `json:"socialSecurityRateEmployer" validate:"gte=0"`
 }
 
 type Response struct {
@@ -37,11 +34,17 @@ type Response struct {
 	Message string `json:"message"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	if err := validator.Validate(cmd); err != nil {
@@ -87,9 +90,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	var created *repository.Run
-	if err := cmd.Tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
+	if err := h.tx.WithinTransaction(ctx, func(ctxTx context.Context, _ func(transactor.PostCommitHook)) error {
 		var err error
-		created, err = cmd.Repo.Create(ctxTx, run, tenant.CompanyID, tenant.BranchID, user.ID)
+		created, err = h.repo.Create(ctxTx, run, tenant.CompanyID, tenant.BranchID, user.ID)
 		return err
 	}); err != nil {
 		logger.FromContext(ctx).Error("failed to create payroll run", zap.Error(err))
@@ -100,7 +103,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.Internal("failed to create payroll run")
 	}
 
-	cmd.Eb.Publish(events.LogEvent{
+	h.eb.Publish(events.LogEvent{
 		ActorID:    user.ID,
 		CompanyID:  &tenant.CompanyID,
 		BranchID:   tenant.BranchIDPtr(),

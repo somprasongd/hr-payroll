@@ -7,12 +7,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
-	"hrms/modules/worklog/internal/repository"
 	"hrms/shared/common/errs"
-	"hrms/shared/common/eventbus"
 	"hrms/shared/common/mediator"
 	"hrms/shared/common/response"
-	"hrms/shared/common/storage/sqldb/transactor"
 )
 
 // Register list endpoint
@@ -38,7 +35,7 @@ import (
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /worklogs/ft [get]
-func Register(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
+func Register(router fiber.Router) {
 	handler := func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		limit, _ := strconv.Atoi(c.Query("limit", "20"))
@@ -76,7 +73,6 @@ func Register(router fiber.Router, repo repository.FTRepository, tx transactor.T
 			EntryType:  entryType,
 			StartDate:  startDate,
 			EndDate:    endDate,
-			Repo:       repo,
 		})
 		if err != nil {
 			return err
@@ -89,10 +85,10 @@ func Register(router fiber.Router, repo repository.FTRepository, tx transactor.T
 	router.Get("", handler)
 
 	// register detail/create/update/delete
-	registerGet(router, repo)
-	registerCreate(router, repo, tx, eb)
-	registerUpdate(router, repo, tx, eb)
-	registerDelete(router, repo, eb)
+	registerGet(router)
+	registerCreate(router)
+	registerUpdate(router)
+	registerDelete(router)
 }
 
 // @Summary Get worklog FT detail
@@ -109,15 +105,14 @@ func Register(router fiber.Router, repo repository.FTRepository, tx transactor.T
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /worklogs/ft/{id} [get]
-func registerGet(router fiber.Router, repo repository.FTRepository) {
+func registerGet(router fiber.Router) {
 	router.Get("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")
 		}
 		resp, err := mediator.Send[*GetQuery, *GetResponse](c.Context(), &GetQuery{
-			ID:   id,
-			Repo: repo,
+			ID: id,
 		})
 		if err != nil {
 			return err
@@ -141,7 +136,7 @@ func registerGet(router fiber.Router, repo repository.FTRepository) {
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /worklogs/ft [post]
-func registerCreate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
+func registerCreate(router fiber.Router) {
 	router.Post("/", func(c fiber.Ctx) error {
 		var req CreateRequest
 		if err := c.Bind().Body(&req); err != nil {
@@ -149,9 +144,6 @@ func registerCreate(router fiber.Router, repo repository.FTRepository, tx transa
 		}
 		resp, err := mediator.Send[*CreateCommand, *CreateResponse](c.Context(), &CreateCommand{
 			Payload: req,
-			Repo:    repo,
-			Tx:      tx,
-			Eb:      eb,
 		})
 		if err != nil {
 			return err
@@ -177,7 +169,7 @@ func registerCreate(router fiber.Router, repo repository.FTRepository, tx transa
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /worklogs/ft/{id} [patch]
-func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transactor.Transactor, eb eventbus.EventBus) {
+func registerUpdate(router fiber.Router) {
 	router.Patch("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
@@ -190,9 +182,6 @@ func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transa
 		resp, err := mediator.Send[*UpdateCommand, *UpdateResponse](c.Context(), &UpdateCommand{
 			ID:      id,
 			Payload: req,
-			Repo:    repo,
-			Tx:      tx,
-			Eb:      eb,
 		})
 		if err != nil {
 			return err
@@ -214,16 +203,14 @@ func registerUpdate(router fiber.Router, repo repository.FTRepository, tx transa
 // @Param X-Company-ID header string false "Company ID"
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /worklogs/ft/{id} [delete]
-func registerDelete(router fiber.Router, repo repository.FTRepository, eb eventbus.EventBus) {
+func registerDelete(router fiber.Router) {
 	router.Delete("/:id", func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")
 		}
 		if _, err := mediator.Send[*DeleteCommand, mediator.NoResponse](c.Context(), &DeleteCommand{
-			ID:   id,
-			Repo: repo,
-			Eb:   eb,
+			ID: id,
 		}); err != nil {
 			return err
 		}

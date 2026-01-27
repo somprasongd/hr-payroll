@@ -23,12 +23,9 @@ import (
 )
 
 type Command struct {
-	ID      uuid.UUID             `json:"-" validate:"required"`
-	Status  string                `json:"status" validate:"omitempty,oneof=pending approved"`
-	PayDate *string               `json:"payDate"`
-	Repo    repository.Repository `json:"-"`
-	Tx      transactor.Transactor `json:"-"`
-	Eb      eventbus.EventBus     `json:"-"`
+	ID      uuid.UUID `json:"-" validate:"required"`
+	Status  string    `json:"status" validate:"omitempty,oneof=pending approved"`
+	PayDate *string   `json:"payDate"`
 }
 
 type Response struct {
@@ -36,11 +33,17 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
-type Handler struct{}
+type Handler struct {
+	repo repository.Repository
+	tx   transactor.Transactor
+	eb   eventbus.EventBus
+}
 
 var _ mediator.RequestHandler[*Command, *Response] = (*Handler)(nil)
 
-func NewHandler() *Handler { return &Handler{} }
+func NewHandler(repo repository.Repository, tx transactor.Transactor, eb eventbus.EventBus) *Handler {
+	return &Handler{repo: repo, tx: tx, eb: eb}
+}
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	cmd.Status = strings.TrimSpace(cmd.Status)
@@ -71,7 +74,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		payDate = &parsed
 	}
 
-	run, err := cmd.Repo.Get(ctx, tenant, cmd.ID)
+	run, err := h.repo.Get(ctx, tenant, cmd.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errs.NotFound("payroll run not found")
@@ -89,13 +92,13 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 
 	var updated *repository.Run
 	if cmd.Status == "approved" {
-		updated, err = cmd.Repo.Approve(ctx, tenant, cmd.ID, user.ID)
+		updated, err = h.repo.Approve(ctx, tenant, cmd.ID, user.ID)
 	} else {
 		newStatus := run.Status
 		if cmd.Status != "" {
 			newStatus = cmd.Status
 		}
-		updated, err = cmd.Repo.UpdateStatus(ctx, tenant, cmd.ID, newStatus, payDate, user.ID)
+		updated, err = h.repo.UpdateStatus(ctx, tenant, cmd.ID, newStatus, payDate, user.ID)
 	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -114,7 +117,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	if len(details) > 0 {
-		cmd.Eb.Publish(events.LogEvent{
+		h.eb.Publish(events.LogEvent{
 			ActorID:    user.ID,
 			CompanyID:  &tenant.CompanyID,
 			BranchID:   tenant.BranchIDPtr(),
