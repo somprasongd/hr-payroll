@@ -28,6 +28,7 @@ import { switchTenant } from "@/services/tenant.service";
 import { ApiError } from "@/lib/api-client";
 import { DismissibleAlert } from "@/components/ui/dismissible-alert";
 import { CompanySelector } from "@/components/company-selector";
+import { API_CONFIG } from "@/config/api";
 
 export default function LoginPage() {
   const t = useTranslations('Index');
@@ -53,7 +54,7 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/version`)
+    fetch(`${API_CONFIG.rootURL}/api/version`)
       .then(res => res.json())
       .then(data => {
          if (data.version) {

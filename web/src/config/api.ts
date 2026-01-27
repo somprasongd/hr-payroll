@@ -7,6 +7,8 @@
  */
 
 export const API_CONFIG = {
+  rootURL: process.env.NEXT_PUBLIC_API_URL || 
+           (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8080'),
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 
            (process.env.NODE_ENV === 'production' ? '/api/v1' : 'http://localhost:8080/api/v1'),
   timeout: 30000, // 30 seconds

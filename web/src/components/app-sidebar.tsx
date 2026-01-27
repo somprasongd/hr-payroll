@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/routing"
 import { useAuthStore } from "@/store/auth-store"
 import { menuConfig, MenuItem, MenuGroup, SubMenuItem } from "@/config/menu-items"
+import { API_CONFIG } from "@/config/api"
 
 import {
   Collapsible,
@@ -40,8 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   React.useEffect(() => {
     // If NEXT_PUBLIC_VERSION is set, we use it (it reflects the build version)
     // We still try to fetch from API to get the running API version if it's different
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 
-                    (typeof window !== 'undefined' ? window.location.origin : '');
+    const apiBase = API_CONFIG.rootURL;
     
     fetch(`${apiBase}/api/version`)
       .then(res => res.json())
