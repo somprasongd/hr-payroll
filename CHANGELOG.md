@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## v2.3.0 - 2026-01-27
 
 ### Added
 
-- Introduce timekeeper role, update API documentation, and enhance HR/Payroll functionalities for dashboard, salary raise, payout, and user branch management. (eecb5a4)
+- Introduce timekeeper role, update API documentation, and enhance HR/Payroll functionalities for dashboard, salary raise, payout, and user branch management. (6815bc0)
 
 ## v2.2.0 - 2026-01-20
 
