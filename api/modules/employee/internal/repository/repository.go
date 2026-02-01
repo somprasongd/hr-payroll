@@ -243,6 +243,7 @@ func (r Repository) GetEmployeeTypeCode(ctx context.Context, id uuid.UUID) (stri
 
 // CheckEmployeeNumberExists checks if an employee number already exists for active employees
 // excludeID can be specified to exclude a specific employee (for edit mode)
+// Note: This checks at the COMPANY level (not branch) to match the database unique constraint
 func (r Repository) CheckEmployeeNumberExists(ctx context.Context, tenant contextx.TenantInfo, employeeNumber string, excludeID uuid.UUID) (bool, error) {
 	db := r.dbCtx(ctx)
 
@@ -259,11 +260,6 @@ func (r Repository) CheckEmployeeNumberExists(ctx context.Context, tenant contex
 	if excludeID != uuid.Nil {
 		q += ` AND id != $3`
 		args = append(args, excludeID)
-	}
-
-	if tenant.HasBranchID() {
-		q += fmt.Sprintf(` AND branch_id = $%d`, len(args)+1)
-		args = append(args, tenant.BranchID)
 	}
 
 	q += `)`

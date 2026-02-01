@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Docs
+
+- Release version v2.3.1 in CHANGELOG.md. (363b95e)
+
+
+### Fixed
+
+- Remove branch-level filtering from employee number uniqueness check and update web dependencies. (1c92ebe)
+
 ## v2.3.1 - 2026-01-27
 
 ### Changed
