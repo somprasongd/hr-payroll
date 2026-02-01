@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## v2.3.2 - 2026-02-01
 
 ### Docs
 
@@ -9,7 +9,7 @@
 
 ### Fixed
 
-- Remove branch-level filtering from employee number uniqueness check and update web dependencies. (1c92ebe)
+- Remove branch-level filtering from employee number uniqueness check and update web dependencies. (af3f0f9)
 
 ## v2.3.1 - 2026-01-27
 
