@@ -537,7 +537,7 @@ func (r *Repository) GetTopEmployeesByAttendance(ctx context.Context, tenant con
 	}
 
 	query := fmt.Sprintf(`
-WITH ranked AS (
+WITH raw_data AS (
     SELECT 
         wl.employee_id,
         e.employee_number,
@@ -545,19 +545,33 @@ WITH ranked AS (
         e.photo_id,
         wl.entry_type,
         COUNT(*) AS total_count,
-        COALESCE(SUM(wl.quantity), 0) AS total_qty,
-        ROW_NUMBER() OVER (PARTITION BY wl.entry_type ORDER BY COUNT(*) DESC, COALESCE(SUM(wl.quantity), 0) DESC) AS rn
+        COALESCE(SUM(wl.quantity), 0) AS total_qty
     FROM worklog_ft wl
     INNER JOIN employees e ON wl.employee_id = e.id AND e.deleted_at IS NULL
     LEFT JOIN person_title pt ON e.title_id = pt.id
     WHERE %s
     GROUP BY wl.employee_id, e.employee_number, e.first_name, e.last_name, pt.name_th, e.photo_id, wl.entry_type
+),
+ranked AS (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (PARTITION BY entry_type ORDER BY total_qty DESC, total_count DESC) AS rn_magnitude,
+        ROW_NUMBER() OVER (PARTITION BY entry_type ORDER BY total_count DESC, total_qty DESC) AS rn_frequency
+    FROM raw_data
+),
+combined AS (
+    SELECT employee_id, employee_number, full_name, photo_id, entry_type, total_count, total_qty
+    FROM ranked
+    WHERE rn_magnitude <= %d
+    UNION ALL
+    SELECT employee_id, employee_number, full_name, photo_id, 'late_count', total_count, total_qty
+    FROM ranked
+    WHERE entry_type = 'late' AND rn_frequency <= %d
 )
 SELECT employee_id, employee_number, full_name, photo_id, entry_type, total_count, total_qty
-FROM ranked
-WHERE rn <= %d
-ORDER BY entry_type, rn
-`, strings.Join(where, " AND "), limit)
+FROM combined
+ORDER BY entry_type, (CASE WHEN entry_type = 'late_count' THEN total_count ELSE total_qty END) DESC
+`, strings.Join(where, " AND "), limit, limit)
 
 	var results []TopEmployeeAttendance
 	if err := db.SelectContext(ctx, &results, query, args...); err != nil {

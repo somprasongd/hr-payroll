@@ -165,6 +165,7 @@ export interface AttendanceTopEmployeesResponse {
     endDate: string;
   };
   late: TopEmployeeDTO[];
+  lateCount: TopEmployeeDTO[];
   leaveDay: TopEmployeeDTO[];
   leaveDouble: TopEmployeeDTO[];
   leaveHours: TopEmployeeDTO[];

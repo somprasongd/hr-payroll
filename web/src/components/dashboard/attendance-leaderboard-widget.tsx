@@ -91,6 +91,7 @@ export function AttendanceLeaderboardWidget() {
   const getWorklogEntryType = (tabType: string) => {
     const mapping: Record<string, string> = {
       'late': 'late',
+      'lateCount': 'late',
       'leaveDay': 'leave_day',
       'leaveDouble': 'leave_double',
       'leaveHours': 'leave_hours',
@@ -148,7 +149,9 @@ export function AttendanceLeaderboardWidget() {
             </div>
             <div className="text-right">
               <p className="text-sm font-bold">
-                {emp.total.toFixed(unit === t('attendance.count') ? 0 : 1)}
+                {entryType === 'lateCount' 
+                  ? emp.count 
+                  : emp.total.toFixed(unit === t('attendance.count') ? 0 : 1)}
               </p>
               <p className="text-xs text-muted-foreground">{unit}</p>
             </div>
@@ -235,31 +238,38 @@ export function AttendanceLeaderboardWidget() {
           </p>
         ) : (
           <Tabs defaultValue="late">
-            <TabsList className="grid w-full grid-cols-5 mb-4">
+            <TabsList className="grid w-full grid-cols-6 mb-4">
               <TabsTrigger value="late" className="text-xs">
                 <Clock className="h-3 w-3 mr-1" />
-                มาสาย
+                {t('attendance.late')}
+              </TabsTrigger>
+              <TabsTrigger value="lateCount" className="text-xs">
+                <Clock className="h-3 w-3 mr-1" />
+                {t('attendance.lateCount')}
               </TabsTrigger>
               <TabsTrigger value="leaveDay" className="text-xs">
                 <Calendar className="h-3 w-3 mr-1" />
-                ลา(วัน)
+                {t('attendance.leaveDay')}
               </TabsTrigger>
               <TabsTrigger value="leaveDouble" className="text-xs">
                 <Calendar className="h-3 w-3 mr-1" />
-                ลา(2แรง)
+                {t('attendance.leaveDouble')}
               </TabsTrigger>
               <TabsTrigger value="leaveHours" className="text-xs">
                 <Clock3 className="h-3 w-3 mr-1" />
-                ลา(ชม)
+                {t('attendance.leaveHours')}
               </TabsTrigger>
               <TabsTrigger value="ot" className="text-xs">
                 <AlertTriangle className="h-3 w-3 mr-1" />
-                OT
+                {t('attendance.ot')}
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="late">
               {renderEmployeeList(data?.late || [], t('attendance.minutes'), 'late')}
+            </TabsContent>
+            <TabsContent value="lateCount">
+              {renderEmployeeList(data?.lateCount || [], t('attendance.count'), 'lateCount')}
             </TabsContent>
             <TabsContent value="leaveDay">
               {renderEmployeeList(data?.leaveDay || [], t('attendance.days'), 'leaveDay')}

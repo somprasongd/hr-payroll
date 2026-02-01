@@ -37,6 +37,7 @@ type AttendanceTopEmployeesResponse struct {
 		EndDate   string `json:"endDate"`
 	} `json:"period"`
 	Late        []TopEmployeeDTO `json:"late"`
+	LateCount   []TopEmployeeDTO `json:"lateCount"`
 	LeaveDay    []TopEmployeeDTO `json:"leaveDay"`
 	LeaveDouble []TopEmployeeDTO `json:"leaveDouble"`
 	LeaveHours  []TopEmployeeDTO `json:"leaveHours"`
@@ -65,6 +66,7 @@ func (h *attendanceTopEmployeesHandler) Handle(ctx context.Context, q *Attendanc
 
 	resp := &AttendanceTopEmployeesResponse{
 		Late:        make([]TopEmployeeDTO, 0),
+		LateCount:   make([]TopEmployeeDTO, 0),
 		LeaveDay:    make([]TopEmployeeDTO, 0),
 		LeaveDouble: make([]TopEmployeeDTO, 0),
 		LeaveHours:  make([]TopEmployeeDTO, 0),
@@ -86,6 +88,8 @@ func (h *attendanceTopEmployeesHandler) Handle(ctx context.Context, q *Attendanc
 		switch entry.EntryType {
 		case "late":
 			resp.Late = append(resp.Late, dto)
+		case "late_count":
+			resp.LateCount = append(resp.LateCount, dto)
 		case "leave_day":
 			resp.LeaveDay = append(resp.LeaveDay, dto)
 		case "leave_double":

@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Add late count display and data fetching to the attendance leaderboard widget. (7891d79)
+
+
+### Docs
+
+- Update changelog for v2.3.2 release. (988182b)
+
 ## v2.3.2 - 2026-02-01
 
 ### Docs
