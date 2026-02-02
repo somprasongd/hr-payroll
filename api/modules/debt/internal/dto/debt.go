@@ -9,26 +9,27 @@ import (
 )
 
 type Item struct {
-	ID                uuid.UUID  `json:"id"`
-	EmployeeID        uuid.UUID  `json:"employeeId"`
-	TxnDate           time.Time  `json:"txnDate"`
-	TxnType           string     `json:"txnType"`
-	OtherDesc         *string    `json:"otherDesc,omitempty"`
-	Amount            float64    `json:"amount"`
-	Reason            *string    `json:"reason,omitempty"`
-	PayrollMonth      *time.Time `json:"payrollMonthDate,omitempty"`
-	Status            string     `json:"status"`
-	ParentID          *uuid.UUID `json:"parentId,omitempty"`
-	EmployeeName      string     `json:"employeeName,omitempty"`
-	EmployeeCode      string     `json:"employeeCode,omitempty"`
-	CreatedAt         time.Time  `json:"createdAt"`
-	UpdatedAt         time.Time  `json:"updatedAt"`
-	Installments      []Item     `json:"installments,omitempty"`
-	PaymentMethod     *string    `json:"paymentMethod,omitempty"`
-	BankID            *uuid.UUID `json:"bankId,omitempty"`
-	BankName          *string    `json:"bankName,omitempty"`
-	BankAccountNumber *string    `json:"bankAccountNumber,omitempty"`
-	TransferTime      *string    `json:"transferTime,omitempty"`
+	ID                   uuid.UUID  `json:"id"`
+	EmployeeID           uuid.UUID  `json:"employeeId"`
+	TxnDate              time.Time  `json:"txnDate"`
+	TxnType              string     `json:"txnType"`
+	OtherDesc            *string    `json:"otherDesc,omitempty"`
+	Amount               float64    `json:"amount"`
+	Reason               *string    `json:"reason,omitempty"`
+	PayrollMonth         *time.Time `json:"payrollMonthDate,omitempty"`
+	Status               string     `json:"status"`
+	ParentID             *uuid.UUID `json:"parentId,omitempty"`
+	EmployeeName         string     `json:"employeeName,omitempty"`
+	EmployeeCode         string     `json:"employeeCode,omitempty"`
+	CreatedAt            time.Time  `json:"createdAt"`
+	UpdatedAt            time.Time  `json:"updatedAt"`
+	Installments         []Item     `json:"installments,omitempty"`
+	PaymentMethod        *string    `json:"paymentMethod,omitempty"`
+	CompanyBankAccountID *uuid.UUID `json:"companyBankAccountId,omitempty"`
+	BankName             *string    `json:"bankName,omitempty"`
+	BankAccountNumber    *string    `json:"bankAccountNumber,omitempty"`
+	TransferTime         *string    `json:"transferTime,omitempty"`
+	TransferDate         *time.Time `json:"transferDate,omitempty"`
 }
 
 type Meta struct {
@@ -39,24 +40,25 @@ type Meta struct {
 
 func FromRecord(r repository.Record) Item {
 	return Item{
-		ID:                r.ID,
-		EmployeeID:        r.EmployeeID,
-		TxnDate:           r.TxnDate,
-		TxnType:           r.TxnType,
-		OtherDesc:         r.OtherDesc,
-		Amount:            r.Amount,
-		Reason:            r.Reason,
-		PayrollMonth:      r.PayrollMonth,
-		Status:            r.Status,
-		ParentID:          r.ParentID,
-		EmployeeName:      r.EmployeeName,
-		EmployeeCode:      r.EmployeeCode,
-		CreatedAt:         r.CreatedAt,
-		UpdatedAt:         r.UpdatedAt,
-		PaymentMethod:     r.PaymentMethod,
-		BankID:            r.BankID,
-		BankName:          r.BankName,
-		BankAccountNumber: r.BankAccountNumber,
-		TransferTime:      r.TransferTime,
+		ID:                   r.ID,
+		EmployeeID:           r.EmployeeID,
+		TxnDate:              r.TxnDate,
+		TxnType:              r.TxnType,
+		OtherDesc:            r.OtherDesc,
+		Amount:               r.Amount,
+		Reason:               r.Reason,
+		PayrollMonth:         r.PayrollMonth,
+		Status:               r.Status,
+		ParentID:             r.ParentID,
+		EmployeeName:         r.EmployeeName,
+		EmployeeCode:         r.EmployeeCode,
+		CreatedAt:            r.CreatedAt,
+		UpdatedAt:            r.UpdatedAt,
+		PaymentMethod:        r.PaymentMethod,
+		CompanyBankAccountID: r.CompanyBankAccountID,
+		BankName:             r.BankName,
+		BankAccountNumber:    r.BankAccountNumber,
+		TransferTime:         r.TransferTime,
+		TransferDate:         r.TransferDate,
 	}
 }

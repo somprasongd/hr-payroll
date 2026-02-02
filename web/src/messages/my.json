@@ -44,6 +44,52 @@
     "noData": "လှုပ်ရှားမှု မှတ်တမ်းများ မတွေ့ရှိပါ",
     "title": "လှုပ်ရှားမှု မှတ်တမ်းများ"
   },
+  "CompanyBankAccounts": {
+    "title": "ကုမ္ပဏီ ဘဏ်အကောင့်များ",
+    "description": "ငွေလက်ခံရန် ဘဏ်အကောင့်များကို စီမံခန့်ခွဲပါ၊ ဥပမာ ဝန်ထမ်း အကြွေးပြန်ဆပ်ခြင်း",
+    "createTitle": "ဘဏ်အကောင့်အသစ် ထည့်ပါ",
+    "createDescription": "ဘဏ်အကောင့် အချက်အလက်အသစ် ထည့်ပါ",
+    "editTitle": "ဘဏ်အကောင့် ပြင်ဆင်ရန်",
+    "editDescription": "ဘဏ်အကောင့် အချက်အလက်များ ပြင်ဆင်ပါ",
+    "noData": "ဘဏ်အကောင့် မတွေ့ရှိပါ",
+    "fields": {
+      "bank": "ဘဏ်",
+      "accountNumber": "အကောင့်နံပါတ်",
+      "accountName": "အကောင့်အမည်",
+      "accountType": "အကောင့်အမျိုးအစား",
+      "status": "အခြေအနေ",
+      "isActive": "အသုံးပြုနေသည်"
+    },
+    "placeholders": {
+      "selectBank": "ဘဏ်ရွေးချယ်ပါ",
+      "accountNumber": "ဥပမာ 123-4-56789-0",
+      "accountName": "ဥပမာ ABC ကုမ္ပဏီ လီမိတက်"
+    },
+    "hints": {
+      "accountType": "ဗဟိုအကောင့်များကို ဘဏ်ခွဲအားလုံးမှ ကြည့်ရှုနိုင်သည်။ ဘဏ်ခွဲအကောင့်များသည် သက်ဆိုင်ရာ ဘဏ်ခွဲအတွက်သာ ဖြစ်သည်။"
+    },
+    "accountTypes": {
+      "central": "ဗဟိုအကောင့်",
+      "branch": "ဘဏ်ခွဲအကောင့်"
+    },
+    "status": {
+      "active": "အသုံးပြုနေသည်",
+      "inactive": "အသုံးမပြုပါ"
+    },
+    "success": {
+      "created": "ဘဏ်အကောင့် အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ",
+      "updated": "ဘဏ်အကောင့် အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ",
+      "deleted": "ဘဏ်အကောင့် အောင်မြင်စွာ ဖျက်ပြီးပါပြီ"
+    },
+    "errors": {
+      "fetchFailed": "ဘဏ်အကောင့်များ ရယူရန် မအောင်မြင်ပါ",
+      "saveFailed": "သိမ်းဆည်းရန် မအောင်မြင်ပါ",
+      "deleteFailed": "ဖျက်ရန် မအောင်မြင်ပါ"
+    },
+    "validation": {
+      "required": "ကျေးဇူးပြု၍ လိုအပ်သော အကွက်များအားလုံး ဖြည့်စွက်ပါ"
+    }
+  },
   "Banks": {
     "createDescription": "ဘဏ်အချက်အလက်များကို ဖြည့်စွက်ပါ",
     "createTitle": "ဘဏ်အသစ် ဖန်တီးပါ",
@@ -432,10 +478,20 @@
       "outstandingBalance": "လက်ကျန်ငွေ",
       "payrollMonth": "လစာပေးချေသည့်လ",
       "reason": "အကြောင်းပြချက်",
-
+      "paymentMethod": "ငွေပေးချေမှု နည်းလမ်း",
       "status": "အခြေအနေ",
       "txnDate": "ငွေပေးချေသည့်ရက်",
-      "txnType": "အမျိုးအစား"
+      "txnType": "အမျိုးအစား",
+      "transferTime": "လွှဲပြောင်းချိန်",
+      "transferDate": "လွှဲပြောင်းရက်",
+      "companyBankAccount": "ကုမ္ပဏီ ဘဏ်အကောင့်"
+    },
+    "placeholders": {
+      "selectCompanyBankAccount": "ကုမ္ပဏီ ဘဏ်အကောင့် ရွေးချယ်ပါ"
+    },
+    "paymentMethod": {
+      "cash": "ငွေသား",
+      "bank_transfer": "ဘဏ်လွှဲ"
     },
     "filters": {
       "hasOutstanding": "ကြွေးမြီကျန်ရှိသူများသာ",
@@ -465,6 +521,14 @@
       "loan": "ချေးငွေ",
       "other": "အခြား",
       "repayment": "ပြန်ဆပ်ခြင်း"
+    },
+    "validation": {
+      "amountExceedsOutstanding": "ပမာဏသည် ကြွေးလက်ကျန် ({amount}) ထက် မပိုရပါ",
+      "amountRequired": "ပမာဏသည် 0 ထက် ကြီးရမည်",
+      "bankAccountRequired": "ကျေးဇူးပြု၍ ကုမ္ပဏီ ဘဏ်အကောင့် ရွေးချယ်ပါ",
+      "timeRequired": "အချိန် လိုအပ်ပါသည်",
+      "dateRequired": "ရက်စွဲ လိုအပ်ပါသည်",
+      "futureDateNotAllowed": "Date cannot be in the future"
     }
   },
   "Departments": {
@@ -750,6 +814,7 @@
   "Nav": {
     "banks": "ဘဏ်များ",
     "branches": "ဘဏ်ခွဲများ",
+    "companyBanks": "ကုမ္ပဏီ ဘဏ်အကောင့်များ",
     "departments": "ဌာနများ",
     "documentTypes": "စာရွက်စာတမ်း အမျိုးအစား",
     "orgProfile": "အဖွဲ့အစည်း ပရိုဖိုင်",

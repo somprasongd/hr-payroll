@@ -165,6 +165,13 @@ export function DebtDetail({ id }: DebtDetailProps) {
                       <div className="text-gray-500">{t('fields.bankAccountNumber')}</div>
                       <div className="font-medium">{data.bankAccountNumber}</div>
 
+                      {data.transferDate && (
+                        <>
+                          <div className="text-gray-500">{t('fields.transferDate') || "Transfer Date"}</div>
+                          <div className="font-medium">{format(new Date(data.transferDate), 'dd/MM/yyyy')}</div>
+                        </>
+                      )}
+
                       <div className="text-gray-500">{t('fields.transferTime')}</div>
                       <div className="font-medium">{data.transferTime}</div>
                     </>

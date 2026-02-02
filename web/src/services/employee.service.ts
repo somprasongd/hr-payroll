@@ -44,6 +44,7 @@ export interface Employee {
   employeeTypeName?: string;
   fullNameTh?: string;
   status?: 'active' | 'terminated';
+  branchId?: string;
 
   // Compatibility for PascalCase API responses
   ID?: string;
