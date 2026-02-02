@@ -326,7 +326,14 @@ import { masterDataService, Bank } from '@/services/master-data.service';
                         <SelectContent>
                           {banks.filter(b => b.isEnabled || b.id === field.value).map((bank) => (
                             <SelectItem key={bank.id} value={bank.id}>
-                              {bank.nameTh} ({bank.code})
+                              <div className="flex items-center justify-between w-full">
+                                <span>{bank.nameTh} ({bank.code})</span>
+                                {!bank.isEnabled && (
+                                  <span className="ml-2 text-destructive font-medium whitespace-nowrap">
+                                    ({tCommon('inactive')})
+                                  </span>
+                                )}
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>

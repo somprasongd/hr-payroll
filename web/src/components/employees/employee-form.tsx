@@ -163,6 +163,22 @@ export function EmployeeForm({
         });
       }
     }
+
+    // Bank validation
+    if (data.bankId && !data.bankAccountNo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.accountNoRequired"),
+        path: ["bankAccountNo"],
+      });
+    }
+    if (!data.bankId && data.bankAccountNo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.bankRequired"),
+        path: ["bankId"],
+      });
+    }
   });
 
   type EmployeeFormValues = z.infer<typeof employeeSchema>;
@@ -389,7 +405,7 @@ export function EmployeeForm({
     }
 
     // Check financial tab fields
-    if (errors.basePayAmount) {
+    if (errors.basePayAmount || errors.bankId || errors.bankAccountNo) {
       tabsWithErrors.push(t("financialInfo"));
     }
 
@@ -402,7 +418,7 @@ export function EmployeeForm({
         setActiveTab("personal");
       } else if (errors.employeeNumber || errors.employeeTypeId || errors.employmentStartDate || errors.employmentEndDate) {
         setActiveTab("employment");
-      } else if (errors.basePayAmount) {
+      } else if (errors.basePayAmount || errors.bankId || errors.bankAccountNo) {
         setActiveTab("financial");
       }
     }
@@ -1343,7 +1359,14 @@ export function EmployeeForm({
                               </SelectItem>
                               {masterData?.banks?.filter(b => b.isEnabled || b.id === field.value).map((bank) => (
                                 <SelectItem key={bank.id} value={bank.id}>
-                                  {bank.nameTh} ({bank.code})
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>{bank.nameTh} ({bank.code})</span>
+                                    {!bank.isEnabled && (
+                                      <span className="ml-2 text-destructive font-medium whitespace-nowrap">
+                                        ({tCommon('inactive')})
+                                      </span>
+                                    )}
+                                  </div>
                                 </SelectItem>
                               ))}
                             </SelectContent>

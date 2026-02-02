@@ -281,6 +281,7 @@
     "export": "Export",
     "filter": "ตัวกรอง",
     "import": "Import",
+    "inactive": "ไม่ใช้งาน",
     "lineChart": "แบบเส้น",
     "loading": "กำลังโหลด...",
     "next": "ถัดไป",
@@ -706,7 +707,9 @@
       "incompleteData": "ข้อมูลไม่ครบถ้วน",
       "positive": "ค่าต้องเป็นจำนวนบวก",
       "required": "กรุณากรอกข้อมูล",
-      "tabsWithErrors": "กรุณาตรวจสอบข้อมูลใน: {tabs}"
+      "tabsWithErrors": "กรุณาตรวจสอบข้อมูลใน: {tabs}",
+      "bankRequired": "กรุณาเลือกธนาคาร",
+      "accountNoRequired": "กรุณากรอกเลขที่บัญชี"
     },
     "errors": {
       "hasPendingPayoutPT": "ไม่สามารถเปลี่ยนประเภทพนักงานได้ เนื่องจากยังมีรายการจ่ายค่าแรง PT ที่รอดำเนินการอยู่"

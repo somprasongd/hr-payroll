@@ -280,6 +280,7 @@
     "export": "Export",
     "filter": "Filter",
     "import": "Import",
+    "inactive": "Inactive",
     "lineChart": "Line Chart",
     "loading": "Loading...",
     "next": "Next",
@@ -706,7 +707,9 @@
       "incompleteData": "Incomplete Data",
       "positive": "Value must be positive",
       "required": "This field is required",
-      "tabsWithErrors": "Please check the following tabs: {tabs}"
+      "tabsWithErrors": "Please check the following tabs: {tabs}",
+      "bankRequired": "Please select bank",
+      "accountNoRequired": "Please enter account number"
     },
     "errors": {
       "hasPendingPayoutPT": "Cannot change employee type because there are pending part-time payout records"
