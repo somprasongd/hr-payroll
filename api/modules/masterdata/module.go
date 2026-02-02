@@ -50,6 +50,7 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*bank.UpdateCommand, *bank.Response](bank.NewUpdateHandler(m.repo, eb))
 	mediator.Register[*bank.DeleteCommand, mediator.NoResponse](bank.NewDeleteHandler(m.repo, eb))
 	mediator.Register[*bank.ToggleCommand, mediator.NoResponse](bank.NewToggleHandler(m.repo, eb))
+	mediator.Register[*bank.ToggleActiveCommand, mediator.NoResponse](bank.NewToggleActiveHandler(m.repo, eb))
 	return nil
 }
 
@@ -59,6 +60,6 @@ func (m *Module) RegisterRoutes(r fiber.Router) {
 }
 
 func (m *Module) RegisterSuperAdminRoutes(r fiber.Router) {
-	group := r.Group("/master", middleware.Auth(m.tokenSvc), middleware.RequireRoles("superadmin"))
+	group := r.Group("/super-admin/master", middleware.Auth(m.tokenSvc), middleware.RequireRoles("superadmin"))
 	feature.RegisterSystemBanks(group)
 }

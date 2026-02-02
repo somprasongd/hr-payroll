@@ -322,3 +322,36 @@ func NewDeleteSystemBankEndpoint(router fiber.Router) {
 		return c.SendStatus(fiber.StatusNoContent)
 	})
 }
+
+// @Summary Toggle system bank active status (system-wide)
+// @Tags Master
+// @Accept json
+// @Security BearerAuth
+// @Param id path string true "bank id"
+// @Param request body ToggleActiveCommand true "toggle active payload"
+// @Success 204
+// @Failure 400
+// @Failure 41
+// @Failure 403
+// @Router /super-admin/master/system-banks/{id}/toggle [post]
+func NewToggleSystemBankEndpoint(router fiber.Router) {
+	router.Post("/:id/toggle", func(c fiber.Ctx) error {
+		id, err := uuid.Parse(c.Params("id"))
+		if err != nil {
+			return errs.BadRequest("invalid id")
+		}
+
+		var req ToggleActiveCommand
+		if err := c.Bind().Body(&req); err != nil {
+			return errs.BadRequest("invalid request body")
+		}
+
+		req.ID = id
+
+		_, err = mediator.Send[*ToggleActiveCommand, mediator.NoResponse](c.Context(), &req)
+		if err != nil {
+			return err
+		}
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+}

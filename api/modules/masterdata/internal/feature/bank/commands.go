@@ -70,6 +70,11 @@ type ToggleCommand struct {
 	IsEnabled bool `json:"isEnabled"`
 }
 
+type ToggleActiveCommand struct {
+	ID       uuid.UUID `json:"id"`
+	IsActive bool      `json:"isActive"`
+}
+
 type Response struct {
 	Record repository.BankRecord `json:"record"`
 }
@@ -106,6 +111,11 @@ type ToggleHandler struct {
 	eb   eventbus.EventBus
 }
 
+type ToggleActiveHandler struct {
+	repo repository.Repository
+	eb   eventbus.EventBus
+}
+
 // Interface compliance checks
 var (
 	_ mediator.RequestHandler[*ListQuery, *ListResponse]                       = (*ListHandler)(nil)
@@ -114,6 +124,7 @@ var (
 	_ mediator.RequestHandler[*UpdateCommand, *Response]                       = (*UpdateHandler)(nil)
 	_ mediator.RequestHandler[*DeleteCommand, mediator.NoResponse]             = (*DeleteHandler)(nil)
 	_ mediator.RequestHandler[*ToggleCommand, mediator.NoResponse]             = (*ToggleHandler)(nil)
+	_ mediator.RequestHandler[*ToggleActiveCommand, mediator.NoResponse]       = (*ToggleActiveHandler)(nil)
 )
 
 // Constructor functions
@@ -139,6 +150,10 @@ func NewDeleteHandler(repo repository.Repository, eb eventbus.EventBus) *DeleteH
 
 func NewToggleHandler(repo repository.Repository, eb eventbus.EventBus) *ToggleHandler {
 	return &ToggleHandler{repo: repo, eb: eb}
+}
+
+func NewToggleActiveHandler(repo repository.Repository, eb eventbus.EventBus) *ToggleActiveHandler {
+	return &ToggleActiveHandler{repo: repo, eb: eb}
 }
 
 // ==========================================
@@ -310,6 +325,34 @@ func (h *ToggleHandler) Handle(ctx context.Context, cmd *ToggleCommand) (mediato
 		EntityID:   cmd.BankID.String(),
 		Details: map[string]interface{}{
 			"isEnabled": cmd.IsEnabled,
+		},
+		Timestamp: time.Now(),
+	})
+
+	return mediator.NoResponse{}, nil
+}
+
+func (h *ToggleActiveHandler) Handle(ctx context.Context, cmd *ToggleActiveCommand) (mediator.NoResponse, error) {
+	user, ok := contextx.UserFromContext(ctx)
+	if !ok {
+		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
+	}
+
+	if err := h.repo.ToggleActive(ctx, cmd.ID, cmd.IsActive, user.ID); err != nil {
+		if err == sql.ErrNoRows {
+			return mediator.NoResponse{}, errs.NotFound("bank not found")
+		}
+		logger.FromContext(ctx).Error("failed to toggle bank active status", zap.Error(err), zap.String("id", cmd.ID.String()))
+		return mediator.NoResponse{}, errs.Internal("failed to toggle bank active status")
+	}
+
+	h.eb.Publish(events.LogEvent{
+		ActorID:    user.ID,
+		Action:     "TOGGLE_ACTIVE",
+		EntityName: "BANK",
+		EntityID:   cmd.ID.String(),
+		Details: map[string]interface{}{
+			"isActive": cmd.IsActive,
 		},
 		Timestamp: time.Now(),
 	})

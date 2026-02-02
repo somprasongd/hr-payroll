@@ -18,6 +18,7 @@ export interface Bank {
   nameMy: string;
   isSystem: boolean;
   isEnabled: boolean;
+  isActive: boolean;
 }
 
 export interface AllMasterData {
@@ -110,19 +111,22 @@ export const masterDataService = {
 
   // Bank Management (Super Admin)
   getSystemBanks: async (): Promise<Bank[]> => {
-    return apiClient.get<Bank[]>('/master/system-banks'); // Corrected endpoint for superadmin
+    return apiClient.get<Bank[]>('/super-admin/master/system-banks');
   },
 
   createSystemBank: async (data: any): Promise<Bank> => {
-    return apiClient.post<Bank>('/master/system-banks', data);
+    return apiClient.post<Bank>('/super-admin/master/system-banks', data);
   },
 
   updateSystemBank: async (id: string, data: any): Promise<Bank> => {
-    return apiClient.put<Bank>(`/master/system-banks/${id}`, data);
+    return apiClient.put<Bank>(`/super-admin/master/system-banks/${id}`, data);
   },
 
   deleteSystemBank: async (id: string): Promise<void> => {
-    await apiClient.delete(`/master/system-banks/${id}`);
+    await apiClient.delete(`/super-admin/master/system-banks/${id}`);
+  },
+  toggleSystemBank: async (id: string, isActive: boolean): Promise<void> => {
+    await apiClient.post(`/super-admin/master/system-banks/${id}/toggle`, { isActive });
   },
 };
 

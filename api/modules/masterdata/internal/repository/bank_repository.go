@@ -29,13 +29,13 @@ func (r Repository) Banks(ctx context.Context, companyID uuid.UUID) ([]BankRecor
 SELECT 
 	b.id, b.code, b.name_th, b.name_en, b.name_my, b.is_system, b.is_active,
 	CASE 
+		WHEN b.is_active = FALSE THEN FALSE
 		WHEN cbs.is_enabled IS NOT NULL THEN cbs.is_enabled
 		ELSE TRUE
 	END AS is_enabled
 FROM banks b
 LEFT JOIN company_bank_settings cbs ON b.id = cbs.bank_id AND cbs.company_id = $1
 WHERE b.deleted_at IS NULL
-	AND b.is_active = TRUE
 	AND (b.is_system = TRUE OR b.company_id = $1)
 ORDER BY b.is_system DESC, b.name_th
 `
@@ -53,6 +53,7 @@ func (r Repository) BanksForAdmin(ctx context.Context, companyID uuid.UUID) ([]B
 SELECT 
 	b.id, b.code, b.name_th, b.name_en, b.name_my, b.is_system, b.is_active,
 	CASE 
+		WHEN b.is_active = FALSE THEN FALSE
 		WHEN cbs.is_enabled IS NOT NULL THEN cbs.is_enabled
 		ELSE TRUE
 	END AS is_enabled
@@ -152,4 +153,18 @@ ON CONFLICT (company_id, bank_id)
 DO UPDATE SET is_enabled = $3, updated_by = $4, updated_at = now()`
 	_, err := db.ExecContext(ctx, q, companyID, bankID, isEnabled, actor)
 	return err
+}
+
+// ToggleActive toggles whether a bank is active (system-wide)
+func (r Repository) ToggleActive(ctx context.Context, id uuid.UUID, isActive bool, actor uuid.UUID) error {
+	db := r.dbCtx(ctx)
+	const q = `UPDATE banks SET is_active = $1, updated_by = $2, updated_at = now() WHERE id = $3 AND deleted_at IS NULL`
+	res, err := db.ExecContext(ctx, q, isActive, actor, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }

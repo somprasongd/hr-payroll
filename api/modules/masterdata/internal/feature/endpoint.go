@@ -43,4 +43,5 @@ func RegisterSystemBanks(router fiber.Router) {
 	bank.NewCreateSystemBankEndpoint(sysBankGroup)
 	bank.NewUpdateSystemBankEndpoint(sysBankGroup)
 	bank.NewDeleteSystemBankEndpoint(sysBankGroup)
+	bank.NewToggleSystemBankEndpoint(sysBankGroup)
 }

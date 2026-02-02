@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Landmark, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -162,6 +163,21 @@ export default function SystemBanksPage() {
     }
   };
 
+  const handleToggleActive = useCallback(async (id: string, currentStatus: boolean) => {
+    try {
+      await masterDataService.toggleSystemBank(id, !currentStatus);
+      toast({ title: tCommon('success'), description: tBanks('success.statusChanged') });
+      fetchBanks();
+    } catch (error) {
+      console.error('Failed to toggle bank status:', error);
+      toast({
+        title: tCommon('error'),
+        description: tBanks('errors.toggleFailed'),
+        variant: 'destructive',
+      });
+    }
+  }, [fetchBanks, tBanks, tCommon, toast]);
+
   const getDisplayName = (bank: Bank) => {
     return locale === 'th' ? bank.nameTh : bank.nameEn;
   };
@@ -181,7 +197,17 @@ export default function SystemBanksPage() {
       accessorKey: 'nameEn',
       header: tBanks('fields.nameEn'),
     },
-  ], [tBanks]);
+    {
+      accessorKey: 'isActive',
+      header: tBanks('fields.status'),
+      cell: ({ row }) => (
+        <Switch
+          checked={row.original.isActive}
+          onCheckedChange={() => handleToggleActive(row.original.id, row.original.isActive)}
+        />
+      ),
+    },
+  ], [tBanks, handleToggleActive]);
 
   // Define actions for GenericDataTable
   const actions: ActionConfig<Bank>[] = useMemo(() => [
@@ -319,7 +345,7 @@ export default function SystemBanksPage() {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <DialogTitle>{tCommon('confirmDeleteTitle')}</DialogTitle>
+            <AlertDialogTitle>{tCommon('confirmDeleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
               {tCommon('confirmDeleteDescription')}
             </AlertDialogDescription>
