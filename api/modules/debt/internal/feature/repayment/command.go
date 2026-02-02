@@ -68,11 +68,22 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.BadRequest("txnDate must be YYYY-MM-DD")
 	}
 
+	if cmd.CompanyBankAccountID != nil {
+		valid, err := h.repo.ValidateCompanyBankAccount(ctx, tenant, *cmd.CompanyBankAccountID)
+		if err != nil {
+			return nil, errs.Internal("failed to validate bank account", err)
+		}
+		if !valid {
+			return nil, errs.BadRequest("Company bank account not found or does not belong to this company")
+		}
+	}
+
 	var transferDate *time.Time
 	if cmd.PaymentMethod != nil && *cmd.PaymentMethod == "bank_transfer" {
 		if cmd.CompanyBankAccountID == nil {
 			return nil, errs.BadRequest("Company bank account is required")
 		}
+
 		if cmd.TransferTime == nil || strings.TrimSpace(*cmd.TransferTime) == "" {
 			return nil, errs.BadRequest("Transfer time is required")
 		}

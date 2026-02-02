@@ -493,6 +493,21 @@ func (r Repository) SoftDelete(ctx context.Context, tenant contextx.TenantInfo, 
 	return nil
 }
 
+// ValidateCompanyBankAccount checks if the bank account belongs to the tenant
+func (r Repository) ValidateCompanyBankAccount(ctx context.Context, tenant contextx.TenantInfo, id uuid.UUID) (bool, error) {
+	db := r.dbCtx(ctx)
+	var count int
+	const q = `SELECT 1 FROM company_bank_accounts WHERE id = $1 AND company_id = $2`
+	err := db.QueryRowContext(ctx, q, id, tenant.CompanyID).Scan(&count)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
 func IsUniqueViolation(err error) bool {
 	var pqErr *pq.Error
 	if errors.As(err, &pqErr) {
