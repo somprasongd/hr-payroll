@@ -158,7 +158,7 @@ DO UPDATE SET is_enabled = $3, updated_by = $4, updated_at = now()`
 // ToggleActive toggles whether a bank is active (system-wide)
 func (r Repository) ToggleActive(ctx context.Context, id uuid.UUID, isActive bool, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
-	const q = `UPDATE banks SET is_active = $1, updated_by = $2, updated_at = now() WHERE id = $3 AND deleted_at IS NULL`
+	const q = `UPDATE banks SET is_active = $1, updated_by = $2, updated_at = now() WHERE id = $3 AND is_system = TRUE AND deleted_at IS NULL`
 	res, err := db.ExecContext(ctx, q, isActive, actor, id)
 	if err != nil {
 		return err
