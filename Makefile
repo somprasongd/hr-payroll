@@ -142,7 +142,7 @@ doc:
 		--parseDependency --parseInternal --parseDependencyLevel 3
 
 .PHONY: dbml
-# Install swag by using: go install github.com/swaggo/swag/v2/cmd/swag@latest
+# Install cli by using: npm install -g @dbml/cli
 dbml:
 	db2dbml postgres $(DB_DSN) -o ./docs/design/schema.dbml
 

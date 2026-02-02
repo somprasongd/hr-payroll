@@ -21,6 +21,7 @@ export interface DebtTxn {
   bankName?: string;
   bankAccountNumber?: string;
   transferTime?: string;
+  transferDate?: string;
 }
 
 export interface CreateDebtPlanRequest {
@@ -42,10 +43,11 @@ export interface ManualRepaymentRequest {
   amount: number;
   reason?: string;
   paymentMethod?: 'cash' | 'bank_transfer';
-  bankId?: string;
-  bankAccountNumber?: string;
+  companyBankAccountId?: string;
   transferTime?: string;
+  transferDate?: string;
 }
+
 
 export const debtService = {
   async getDebtTxns(params?: {

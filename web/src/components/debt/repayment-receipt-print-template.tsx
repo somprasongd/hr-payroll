@@ -163,7 +163,25 @@ const ReceiptsPage = ({
   // Payment Method Label
   const getPaymentMethodLabel = () => {
     if (debt.paymentMethod === 'bank_transfer') {
-      return `โอนเงินเข้าบัญชี (Bank Transfer) - ${debt.bankName || ''} ${debt.bankAccountNumber || ''} ${debt.transferTime ? `เวลา ${debt.transferTime}` : ''}`;
+      let dateStr = '';
+      if (debt.transferDate) {
+        try {
+            const tDate = new Date(debt.transferDate);
+            dateStr = `วันที่โอน: ${format(tDate, 'd MMMM yyyy', { locale: th })}`;
+        } catch (e) {
+            // ignore
+        }
+      }
+      
+      const timeStr = debt.transferTime ? `เวลา: ${debt.transferTime}` : '';
+      const dateTimeStr = [dateStr, timeStr].filter(Boolean).join(' ');
+
+      return (
+        <div>
+          <div>{`โอนเงินเข้าบัญชี (Bank Transfer) - ${debt.bankName || ''} ${debt.bankAccountNumber || ''}`}</div>
+          {dateTimeStr && <div>{dateTimeStr}</div>}
+        </div>
+      );
     }
     if (debt.paymentMethod === 'cash') {
       return 'เงินสด (Cash)';

@@ -26,32 +26,34 @@ func NewRepository(dbCtx transactor.DBTXContext) Repository {
 }
 
 type Record struct {
-	ID                uuid.UUID  `db:"id" json:"id"`
-	CompanyID         uuid.UUID  `db:"company_id" json:"company_id"`
-	BranchID          uuid.UUID  `db:"branch_id" json:"branch_id"`
-	EmployeeID        uuid.UUID  `db:"employee_id" json:"employee_id"`
-	TxnDate           time.Time  `db:"txn_date" json:"txn_date"`
-	TxnType           string     `db:"txn_type" json:"txn_type"`
-	OtherDesc         *string    `db:"other_desc" json:"other_desc"`
-	Amount            float64    `db:"amount" json:"amount"`
-	Reason            *string    `db:"reason" json:"reason"`
-	PayrollMonth      *time.Time `db:"payroll_month_date" json:"payroll_month_date"`
-	Status            string     `db:"status" json:"status"`
-	ParentID          *uuid.UUID `db:"parent_id" json:"parent_id"`
-	CreatedAt         time.Time  `db:"created_at" json:"created_at"`
-	CreatedBy         uuid.UUID  `db:"created_by" json:"created_by"`
-	UpdatedAt         time.Time  `db:"updated_at" json:"updated_at"`
-	UpdatedBy         uuid.UUID  `db:"updated_by" json:"updated_by"`
-	DeletedAt         *time.Time `db:"deleted_at" json:"deleted_at"`
-	DeletedBy         *uuid.UUID `db:"deleted_by" json:"deleted_by"`
-	EmployeeName      string     `db:"employee_name" json:"employee_name"`
-	EmployeeCode      string     `db:"employee_code" json:"employee_code"`
-	Installments      RecordList `db:"installments" json:"installments"`
-	PaymentMethod     *string    `db:"payment_method" json:"payment_method"`
-	BankID            *uuid.UUID `db:"bank_id" json:"bank_id"`
-	BankName          *string    `db:"bank_name" json:"bank_name"`
-	BankAccountNumber *string    `db:"bank_account_number" json:"bank_account_number"`
-	TransferTime      *string    `db:"transfer_time" json:"transfer_time"`
+	ID                   uuid.UUID  `db:"id" json:"id"`
+	CompanyID            uuid.UUID  `db:"company_id" json:"company_id"`
+	BranchID             uuid.UUID  `db:"branch_id" json:"branch_id"`
+	EmployeeID           uuid.UUID  `db:"employee_id" json:"employee_id"`
+	TxnDate              time.Time  `db:"txn_date" json:"txn_date"`
+	TxnType              string     `db:"txn_type" json:"txn_type"`
+	OtherDesc            *string    `db:"other_desc" json:"other_desc"`
+	Amount               float64    `db:"amount" json:"amount"`
+	Reason               *string    `db:"reason" json:"reason"`
+	PayrollMonth         *time.Time `db:"payroll_month_date" json:"payroll_month_date"`
+	Status               string     `db:"status" json:"status"`
+	ParentID             *uuid.UUID `db:"parent_id" json:"parent_id"`
+	CreatedAt            time.Time  `db:"created_at" json:"created_at"`
+	CreatedBy            uuid.UUID  `db:"created_by" json:"created_by"`
+	UpdatedAt            time.Time  `db:"updated_at" json:"updated_at"`
+	UpdatedBy            uuid.UUID  `db:"updated_by" json:"updated_by"`
+	DeletedAt            *time.Time `db:"deleted_at" json:"deleted_at"`
+	DeletedBy            *uuid.UUID `db:"deleted_by" json:"deleted_by"`
+	EmployeeName         string     `db:"employee_name" json:"employee_name"`
+	EmployeeCode         string     `db:"employee_code" json:"employee_code"`
+	Installments         RecordList `db:"installments" json:"installments"`
+	PaymentMethod        *string    `db:"payment_method" json:"payment_method"`
+	CompanyBankAccountID *uuid.UUID `db:"company_bank_account_id" json:"company_bank_account_id"`
+	TransferTime         *string    `db:"transfer_time" json:"transfer_time"`
+	TransferDate         *time.Time `db:"transfer_date" json:"transfer_date"`
+	// Computed fields from company_bank_accounts join
+	BankName          *string `db:"bank_name" json:"bank_name"`
+	BankAccountNumber *string `db:"bank_account_number" json:"bank_account_number"`
 }
 
 type ListResult struct {
@@ -255,14 +257,18 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 	q := fmt.Sprintf(`
 SELECT t.*,
   e.employee_number AS employee_code,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name,
+  (SELECT (pt.name_th || emp.first_name || ' ' || emp.last_name || COALESCE(' (' || NULLIF(emp.nickname, '') || ')', '')) FROM employees emp LEFT JOIN person_title pt ON pt.id = emp.title_id WHERE emp.id = t.employee_id) AS employee_name,
   COALESCE((
     SELECT json_agg(child ORDER BY child.payroll_month_date)
     FROM debt_txn child
     WHERE child.parent_id = t.id AND child.deleted_at IS NULL
-  ), '[]'::json) AS installments
+  ), '[]'::json) AS installments,
+  b.name_th AS bank_name,
+  cba.account_number AS bank_account_number
 FROM debt_txn t
 JOIN employees e ON e.id = t.employee_id
+LEFT JOIN company_bank_accounts cba ON cba.id = t.company_bank_account_id
+LEFT JOIN banks b ON b.id = cba.bank_id
 WHERE %s
 ORDER BY t.created_at DESC, t.txn_date DESC
 LIMIT $%d OFFSET $%d`, whereClause, len(args)-1, len(args))
@@ -296,18 +302,26 @@ func (r Repository) Get(ctx context.Context, tenant contextx.TenantInfo, id uuid
 	q := `
 SELECT t.*,
   e.employee_number AS employee_code,
-  (SELECT (pt.name_th || e.first_name || ' ' || e.last_name || COALESCE(' (' || NULLIF(e.nickname, '') || ')', '')) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+  (SELECT (pt.name_th || emp.first_name || ' ' || emp.last_name || COALESCE(' (' || NULLIF(emp.nickname, '') || ')', '')) FROM employees emp LEFT JOIN person_title pt ON pt.id = emp.title_id WHERE emp.id = t.employee_id) AS employee_name,
+  b.name_th AS bank_name,
+  cba.account_number AS bank_account_number
 FROM debt_txn t
 JOIN employees e ON e.id = t.employee_id
+LEFT JOIN company_bank_accounts cba ON cba.id = t.company_bank_account_id
+LEFT JOIN banks b ON b.id = cba.bank_id
 WHERE t.id=$1 AND e.company_id=$2 AND t.deleted_at IS NULL LIMIT 1`
 	args := []interface{}{id, tenant.CompanyID}
 	if tenant.HasBranchID() {
 		q = `
 SELECT t.*,
   e.employee_number AS employee_code,
-  (SELECT concat_ws(' ', pt.name_th, e.first_name, e.last_name) FROM employees e LEFT JOIN person_title pt ON pt.id = e.title_id WHERE e.id = t.employee_id) AS employee_name
+  (SELECT concat_ws(' ', pt.name_th, emp.first_name, emp.last_name) FROM employees emp LEFT JOIN person_title pt ON pt.id = emp.title_id WHERE emp.id = t.employee_id) AS employee_name,
+  b.name_th AS bank_name,
+  cba.account_number AS bank_account_number
 FROM debt_txn t
 JOIN employees e ON e.id = t.employee_id
+LEFT JOIN company_bank_accounts cba ON cba.id = t.company_bank_account_id
+LEFT JOIN banks b ON b.id = cba.bank_id
 WHERE t.id=$1 AND e.company_id=$2 AND e.branch_id=$3 AND t.deleted_at IS NULL LIMIT 1`
 		args = append(args, tenant.BranchID)
 	}
@@ -437,14 +451,25 @@ func (r Repository) InsertRepayment(ctx context.Context, tenant contextx.TenantI
 		return nil, err
 	}
 	const q = `
-INSERT INTO debt_txn (
-  employee_id, company_id, branch_id, txn_date, txn_type, amount, reason, status, created_by, updated_by,
-  payment_method, bank_id, bank_name, bank_account_number, transfer_time
-) VALUES ($1,$2,$3,$4,'repayment',$5,$6,'pending',$7,$7,$8,$9,(SELECT name_th FROM banks WHERE id = $9),$10,$11)
-RETURNING *`
+WITH inserted AS (
+  INSERT INTO debt_txn (
+    employee_id, company_id, branch_id, txn_date, txn_type, amount, reason, status, created_by, updated_by,
+    payment_method, company_bank_account_id, transfer_time, transfer_date
+  ) VALUES ($1, $2, $3, $4, 'repayment', $5, $6, 'pending', $7, $7, $8, $9, $10, $11)
+  RETURNING *
+)
+SELECT i.*,
+  e.employee_number AS employee_code,
+  (SELECT (pt.name_th || emp.first_name || ' ' || emp.last_name || COALESCE(' (' || NULLIF(emp.nickname, '') || ')', '')) FROM employees emp LEFT JOIN person_title pt ON pt.id = emp.title_id WHERE emp.id = i.employee_id) AS employee_name,
+  b.name_th AS bank_name,
+  cba.account_number AS bank_account_number
+FROM inserted i
+JOIN employees e ON e.id = i.employee_id
+LEFT JOIN company_bank_accounts cba ON cba.id = i.company_bank_account_id
+LEFT JOIN banks b ON b.id = cba.bank_id`
 	var out Record
 	if err := db.GetContext(ctx, &out, q, rec.EmployeeID, tenant.CompanyID, branchID, rec.TxnDate, rec.Amount, rec.Reason, actor,
-		rec.PaymentMethod, rec.BankID, rec.BankAccountNumber, rec.TransferTime); err != nil {
+		rec.PaymentMethod, rec.CompanyBankAccountID, rec.TransferTime, rec.TransferDate); err != nil {
 		return nil, err
 	}
 	return &out, nil

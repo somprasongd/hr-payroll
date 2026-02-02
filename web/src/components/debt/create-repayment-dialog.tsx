@@ -36,10 +36,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentBranchId } from "@/hooks/use-branch-change";
 import { debtService } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { accumulationService } from '@/services/accumulation.service';
-import { masterDataService, Bank } from '@/services/master-data.service';
+import { companyBankAccountService, CompanyBankAccount } from '@/services/company-bank-account.service';
 
   interface CreateRepaymentDialogProps {
     open: boolean;
@@ -53,35 +54,29 @@ import { masterDataService, Bank } from '@/services/master-data.service';
     const t = useTranslations('Debt');
     const tCommon = useTranslations('Common');
     const { toast } = useToast();
+    const currentBranchId = useCurrentBranchId(); // Get current branch from header selector
     const [employees, setEmployees] = useState<Employee[]>([]);
-    const [banks, setBanks] = useState<Bank[]>([]);
+    const [companyBankAccounts, setCompanyBankAccounts] = useState<CompanyBankAccount[]>([]);
     const [currentDebt, setCurrentDebt] = useState(0);
 
   const createSchema = (maxAmount: number) => z.object({
     employeeId: z.string().min(1, "Employee is required"),
-    txnDate: z.string().min(1, "Date is required"),
+    txnDate: z.string().min(1, "Date is required").refine(date => date <= format(new Date(), 'yyyy-MM-dd'), t('validation.futureDateNotAllowed')),
     amount: z.coerce.number()
       .min(0.01, t('validation.amountRequired'))
       .max(maxAmount > 0 ? maxAmount : Number.MAX_SAFE_INTEGER, t('validation.amountExceedsOutstanding', { amount: maxAmount.toLocaleString() })),
     reason: z.string().optional(),
     paymentMethod: z.enum(["cash", "bank_transfer"]),
-    bankId: z.string().optional(),
-    bankAccountNumber: z.string().optional(),
+    companyBankAccountId: z.string().optional(),
     transferTime: z.string().optional(),
+    transferDate: z.string().optional().refine(date => !date || date <= format(new Date(), 'yyyy-MM-dd'), t('validation.futureDateNotAllowed')),
   }).superRefine((data, ctx) => {
     if (data.paymentMethod === "bank_transfer") {
-      if (!data.bankId) {
+      if (!data.companyBankAccountId) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: t('validation.bankNameRequired'),
-          path: ["bankId"],
-        });
-      }
-      if (!data.bankAccountNumber) {
-         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: t('validation.accountNumberRequired'),
-          path: ["bankAccountNumber"],
+          message: t('validation.bankAccountRequired'),
+          path: ["companyBankAccountId"],
         });
       }
       if (!data.transferTime) {
@@ -89,6 +84,13 @@ import { masterDataService, Bank } from '@/services/master-data.service';
           code: z.ZodIssueCode.custom,
           message: t('validation.timeRequired'),
           path: ["transferTime"],
+        });
+      }
+      if (!data.transferDate) {
+         ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('validation.dateRequired'), // Or reuse existing message if needed
+          path: ["transferDate"],
         });
       }
     }
@@ -104,35 +106,54 @@ import { masterDataService, Bank } from '@/services/master-data.service';
       txnDate: format(new Date(), 'yyyy-MM-dd'),
       amount: 0,
       paymentMethod: "cash",
-      bankId: "",
-      bankAccountNumber: "",
+      companyBankAccountId: "",
       transferTime: "",
+      transferDate: "",
       reason: "",
     }
   });
 
-  const fetchBanks = async () => {
+  // Sync transferDate with txnDate/today by default
+  const txnDate = form.watch('txnDate');
+  useEffect(() => {
+    if (open) {
+       const currentTxnDate = form.getValues('txnDate') || format(new Date(), 'yyyy-MM-dd');
+       // If payment method is bank transfer and no transfer date set, set it. 
+       // Simpler: Just ensure if txnDate updates, we might want to update transferDate if user hasn't manually set it?
+       // For simplicity based on user request "default date matches txn date", let's just init it.
+       // But user said: "if change txn date, change transfer date too".
+       form.setValue('transferDate', currentTxnDate);
+    }
+  }, [txnDate, open, form]);
+
+  const fetchCompanyBankAccounts = async (branchId?: string) => {
     try {
-      const data = await masterDataService.getBanks();
-      setBanks(data || []);
+      // Fetch active accounts: central + employee's branch (if branchId provided)
+      const data = await companyBankAccountService.list({
+        branchId: branchId || undefined,
+        includeCentral: true,
+        isActive: true,
+      });
+      setCompanyBankAccounts(data);
     } catch (error) {
-      console.error('Failed to fetch banks', error);
+      console.error('Failed to fetch company bank accounts', error);
     }
   };
 
   useEffect(() => {
     if (open) {
       fetchEmployees();
-      fetchBanks();
+      // Fetch bank accounts for current branch (central + current branch)
+      fetchCompanyBankAccounts(currentBranchId);
       const initialEmployeeId = selectedEmployeeId && selectedEmployeeId !== 'all' ? selectedEmployeeId : '';
       form.reset({
         employeeId: initialEmployeeId,
         txnDate: format(new Date(), 'yyyy-MM-dd'),
         amount: 0,
         paymentMethod: "cash",
-        bankId: "",
-        bankAccountNumber: "",
+        companyBankAccountId: "",
         transferTime: "",
+        transferDate: format(new Date(), 'yyyy-MM-dd'),
         reason: ''
       });
       if (initialEmployeeId) {
@@ -174,9 +195,9 @@ import { masterDataService, Bank } from '@/services/master-data.service';
         txnDate: data.txnDate,
         reason: data.reason,
         paymentMethod: data.paymentMethod,
-        bankId: data.bankId || undefined,
-        bankAccountNumber: data.bankAccountNumber || undefined,
+        companyBankAccountId: data.companyBankAccountId || undefined,
         transferTime: data.transferTime || undefined,
+        transferDate: data.transferDate || undefined,
       });
       
       toast({
@@ -198,6 +219,7 @@ import { masterDataService, Bank } from '@/services/master-data.service';
 
   const handleEmployeeChange = (value: string) => {
     form.setValue('employeeId', value);
+    form.setValue('companyBankAccountId', ''); // Reset bank account selection
     fetchCurrentDebt(value);
   };
 
@@ -250,7 +272,7 @@ import { masterDataService, Bank } from '@/services/master-data.service';
                 <FormItem>
                   <FormLabel>{t('fields.txnDate')}</FormLabel>
                   <FormControl>
-                    <DateInput {...field} />
+                    <DateInput {...field} max={format(new Date(), 'yyyy-MM-dd')} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -264,7 +286,13 @@ import { masterDataService, Bank } from '@/services/master-data.service';
                 <FormItem>
                   <FormLabel>{t('fields.amount')}</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} value={field.value as number} />
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      {...field} 
+                      value={field.value as number}
+                      onFocus={(e) => e.target.select()}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -310,68 +338,75 @@ import { masterDataService, Bank } from '@/services/master-data.service';
               <div className="space-y-4 border p-4 rounded-md bg-gray-50">
                 <FormField
                   control={form.control}
-                  name="bankId"
+                  name="companyBankAccountId"
+                  render={({ field }) => {
+                    // Bank accounts are already filtered by API (branchId + isActive)
+                    const selectedAccount = companyBankAccounts.find(acc => acc.id === field.value);
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel>{t('fields.companyBankAccount')}</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t('placeholders.selectCompanyBankAccount')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {companyBankAccounts.map((account) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                <div className="flex flex-col">
+                                  <span>{account.accountName}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {account.bankNameTh} ({account.bankCode}) - {account.accountNumber}
+                                    {account.branchId ? ` [${account.branchName}]` : ' [กลาง]'}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedAccount && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            เลขที่บัญชี: {selectedAccount.accountNumber}
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="transferDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('fields.bankName') || "Bank Name"}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Bank" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {banks.filter(b => b.isEnabled || b.id === field.value).map((bank) => (
-                            <SelectItem key={bank.id} value={bank.id}>
-                              <div className="flex items-center justify-between w-full">
-                                <span>{bank.nameTh} ({bank.code})</span>
-                                {!bank.isEnabled && (
-                                  <span className="ml-2 text-destructive font-medium whitespace-nowrap">
-                                    ({tCommon('inactive')})
-                                  </span>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>{t('fields.transferDate') || "Transfer Date"}</FormLabel>
+                      <FormControl>
+                        <DateInput {...field} max={format(new Date(), 'yyyy-MM-dd')} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="bankAccountNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('fields.bankAccountNumber') || "Account No."}</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
-                    <FormField
-                      control={form.control}
-                      name="transferTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('fields.transferTime') || "Time"}</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="transferTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('fields.transferTime') || "Time"}</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             )}
 

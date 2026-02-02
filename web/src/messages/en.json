@@ -44,6 +44,52 @@
     "noData": "No activity logs found",
     "title": "Activity Logs"
   },
+  "CompanyBankAccounts": {
+    "title": "Company Bank Accounts",
+    "description": "Manage bank accounts for receiving payments, such as employee debt repayments",
+    "createTitle": "Add Bank Account",
+    "createDescription": "Enter new bank account details",
+    "editTitle": "Edit Bank Account",
+    "editDescription": "Update bank account details",
+    "noData": "No bank accounts found",
+    "fields": {
+      "bank": "Bank",
+      "accountNumber": "Account Number",
+      "accountName": "Account Name",
+      "accountType": "Account Type",
+      "status": "Status",
+      "isActive": "Active"
+    },
+    "placeholders": {
+      "selectBank": "Select bank",
+      "accountNumber": "e.g. 123-4-56789-0",
+      "accountName": "e.g. ABC Company Ltd."
+    },
+    "hints": {
+      "accountType": "Central accounts are visible to all branches. Branch accounts are branch-specific."
+    },
+    "accountTypes": {
+      "central": "Central Account",
+      "branch": "Branch Account"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "success": {
+      "created": "Bank account created successfully",
+      "updated": "Bank account updated successfully",
+      "deleted": "Bank account deleted successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to load bank accounts",
+      "saveFailed": "Failed to save",
+      "deleteFailed": "Failed to delete"
+    },
+    "validation": {
+      "required": "Please fill in all required fields"
+    }
+  },
   "Banks": {
     "createDescription": "Enter bank details",
     "createTitle": "Create New Bank",
@@ -441,7 +487,12 @@
       "status": "Status",
       "txnDate": "Transaction Date",
       "txnType": "Type",
-      "transferTime": "Transfer Time"
+      "transferTime": "Transfer Time",
+      "transferDate": "Transfer Date",
+      "companyBankAccount": "Company Bank Account"
+    },
+    "placeholders": {
+      "selectCompanyBankAccount": "Select company bank account"
     },
     "paymentMethod": {
       "cash": "Cash",
@@ -480,8 +531,11 @@
       "amountExceedsOutstanding": "Amount cannot exceed outstanding balance ({amount})",
       "amountRequired": "Amount must be greater than 0",
       "bankNameRequired": "Bank name is required",
+      "bankAccountRequired": "Please select a company bank account",
       "accountNumberRequired": "Account number is required",
-      "timeRequired": "Time is required"
+      "timeRequired": "Time is required",
+      "dateRequired": "Date is required",
+      "futureDateNotAllowed": "Date cannot be in the future"
     }
   },
   "Departments": {
@@ -767,6 +821,7 @@
   "Nav": {
     "banks": "Banks",
     "branches": "Branches",
+    "companyBanks": "Company Bank Accounts",
     "departments": "Departments",
     "documentTypes": "Document Types",
     "orgProfile": "Org Profile",

@@ -21,15 +21,15 @@ import (
 )
 
 type Command struct {
-	EmployeeID        uuid.UUID  `json:"employeeId" validate:"required"`
-	TxnDateRaw        string     `json:"txnDate" validate:"required"`
-	Amount            float64    `json:"amount" validate:"required,gt=0"`
-	Reason            *string    `json:"reason,omitempty"`
-	PaymentMethod     *string    `json:"paymentMethod,omitempty"`
-	BankID            *uuid.UUID `json:"bankId,omitempty"`
-	BankAccountNumber *string    `json:"bankAccountNumber,omitempty"`
-	TransferTime      *string    `json:"transferTime,omitempty"`
-	ActorID           uuid.UUID  `validate:"required"`
+	EmployeeID           uuid.UUID  `json:"employeeId" validate:"required"`
+	TxnDateRaw           string     `json:"txnDate" validate:"required"`
+	Amount               float64    `json:"amount" validate:"required,gt=0"`
+	Reason               *string    `json:"reason,omitempty"`
+	PaymentMethod        *string    `json:"paymentMethod,omitempty"`
+	CompanyBankAccountID *uuid.UUID `json:"companyBankAccountId,omitempty"`
+	TransferTime         *string    `json:"transferTime,omitempty"`
+	TransferDateRaw      *string    `json:"transferDate,omitempty"`
+	ActorID              uuid.UUID  `validate:"required"`
 }
 
 type Response struct {
@@ -68,28 +68,34 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		return nil, errs.BadRequest("txnDate must be YYYY-MM-DD")
 	}
 
+	var transferDate *time.Time
 	if cmd.PaymentMethod != nil && *cmd.PaymentMethod == "bank_transfer" {
-		if cmd.BankID == nil {
-			return nil, errs.BadRequest("Bank is required")
-		}
-		if cmd.BankAccountNumber == nil || strings.TrimSpace(*cmd.BankAccountNumber) == "" {
-			return nil, errs.BadRequest("Bank account number is required")
+		if cmd.CompanyBankAccountID == nil {
+			return nil, errs.BadRequest("Company bank account is required")
 		}
 		if cmd.TransferTime == nil || strings.TrimSpace(*cmd.TransferTime) == "" {
 			return nil, errs.BadRequest("Transfer time is required")
 		}
+		if cmd.TransferDateRaw == nil || strings.TrimSpace(*cmd.TransferDateRaw) == "" {
+			return nil, errs.BadRequest("Transfer date is required")
+		}
+		tDate, err := time.Parse("2006-01-02", *cmd.TransferDateRaw)
+		if err != nil {
+			return nil, errs.BadRequest("transferDate must be YYYY-MM-DD")
+		}
+		transferDate = &tDate
 	}
 	rec := repository.Record{
-		EmployeeID:        cmd.EmployeeID,
-		TxnDate:           txnDate,
-		Amount:            cmd.Amount,
-		Reason:            cmd.Reason,
-		TxnType:           "repayment",
-		Status:            "pending",
-		PaymentMethod:     cmd.PaymentMethod,
-		BankID:            cmd.BankID,
-		BankAccountNumber: cmd.BankAccountNumber,
-		TransferTime:      cmd.TransferTime,
+		EmployeeID:           cmd.EmployeeID,
+		TxnDate:              txnDate,
+		Amount:               cmd.Amount,
+		Reason:               cmd.Reason,
+		TxnType:              "repayment",
+		Status:               "pending",
+		PaymentMethod:        cmd.PaymentMethod,
+		CompanyBankAccountID: cmd.CompanyBankAccountID,
+		TransferTime:         cmd.TransferTime,
+		TransferDate:         transferDate,
 	}
 
 	var created *repository.Record

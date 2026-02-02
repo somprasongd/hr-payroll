@@ -122,6 +122,7 @@ export const menuConfig: MenuGroup[] = [
         items: [
           { titleKey: "orgProfile", namespace: "Nav", href: "/admin/org-profile" },
           { titleKey: "branches", namespace: "Nav", href: "/admin/branches" },
+          { titleKey: "companyBanks", namespace: "Nav", href: "/admin/company-banks" },
           { titleKey: "users", href: "/admin/users" },
           { titleKey: "systemSettings", href: "/admin/settings" }
         ]

@@ -44,6 +44,52 @@
     "noData": "ไม่พบข้อมูลประวัติ",
     "title": "ประวัติการใช้งาน"
   },
+  "CompanyBankAccounts": {
+    "title": "บัญชีธนาคารบริษัท",
+    "description": "จัดการบัญชีธนาคารสำหรับรับเงินเข้า เช่น การชำระหนี้ของพนักงาน",
+    "createTitle": "เพิ่มบัญชีธนาคาร",
+    "createDescription": "กรอกข้อมูลบัญชีธนาคารใหม่",
+    "editTitle": "แก้ไขบัญชีธนาคาร",
+    "editDescription": "แก้ไขข้อมูลบัญชีธนาคาร",
+    "noData": "ไม่พบข้อมูลบัญชีธนาคาร",
+    "fields": {
+      "bank": "ธนาคาร",
+      "accountNumber": "เลขที่บัญชี",
+      "accountName": "ชื่อบัญชี",
+      "accountType": "ประเภทบัญชี",
+      "status": "สถานะ",
+      "isActive": "เปิดใช้งาน"
+    },
+    "placeholders": {
+      "selectBank": "เลือกธนาคาร",
+      "accountNumber": "เช่น 123-4-56789-0",
+      "accountName": "เช่น บริษัท ABC จำกัด"
+    },
+    "hints": {
+      "accountType": "บัญชีกลางจะมองเห็นได้ทุกสาขา บัญชีสาขาจะใช้เฉพาะสาขานั้น"
+    },
+    "accountTypes": {
+      "central": "บัญชีกลาง",
+      "branch": "บัญชีสาขา"
+    },
+    "status": {
+      "active": "ใช้งาน",
+      "inactive": "ไม่ใช้งาน"
+    },
+    "success": {
+      "created": "เพิ่มบัญชีธนาคารสำเร็จ",
+      "updated": "แก้ไขบัญชีธนาคารสำเร็จ",
+      "deleted": "ลบบัญชีธนาคารสำเร็จ"
+    },
+    "errors": {
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลบัญชีธนาคารได้",
+      "saveFailed": "บันทึกข้อมูลไม่สำเร็จ",
+      "deleteFailed": "ลบข้อมูลไม่สำเร็จ"
+    },
+    "validation": {
+      "required": "กรุณากรอกข้อมูลให้ครบถ้วน"
+    }
+  },
   "Banks": {
     "createDescription": "กรอกข้อมูลธนาคารที่ต้องการสร้าง",
     "createTitle": "สร้างธนาคารใหม่",
@@ -441,7 +487,12 @@
       "status": "สถานะ",
       "txnDate": "วันที่ทำรายการ",
       "txnType": "ประเภท",
-      "transferTime": "เวลาโอน"
+      "transferTime": "เวลาโอน",
+      "transferDate": "วันที่โอน",
+      "companyBankAccount": "บัญชีธนาคารบริษัท"
+    },
+    "placeholders": {
+      "selectCompanyBankAccount": "เลือกบัญชีธนาคารบริษัท"
     },
     "paymentMethod": {
       "cash": "เงินสด",
@@ -480,8 +531,11 @@
       "amountExceedsOutstanding": "จำนวนเงินต้องไม่เกินยอดหนี้คงเหลือ ({amount})",
       "amountRequired": "จำนวนเงินต้องมากกว่า 0",
       "bankNameRequired": "กรุณาระบุชื่อธนาคาร",
+      "bankAccountRequired": "กรุณาเลือกบัญชีธนาคารบริษัท",
       "accountNumberRequired": "กรุณาระบุเลขที่บัญชี",
-      "timeRequired": "กรุณาระบุเวลา"
+      "timeRequired": "กรุณาระบุเวลา",
+      "dateRequired": "กรุณาระบุวันที่",
+      "futureDateNotAllowed": "วันที่ต้องไม่เป็นอนาคต"
     }
   },
   "Departments": {
@@ -767,6 +821,7 @@
   "Nav": {
     "banks": "ธนาคาร",
     "branches": "สาขา",
+    "companyBanks": "บัญชีธนาคาร",
     "departments": "แผนก",
     "documentTypes": "ประเภทเอกสาร",
     "orgProfile": "ข้อมูลองค์กร",

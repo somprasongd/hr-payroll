@@ -1,6 +1,11 @@
 package company
 
 import (
+	bankaccountcreate "hrms/modules/company/internal/feature/bankaccount/create"
+	bankaccountdelete "hrms/modules/company/internal/feature/bankaccount/delete"
+	bankaccountgetbyid "hrms/modules/company/internal/feature/bankaccount/getbyid"
+	bankaccountlist "hrms/modules/company/internal/feature/bankaccount/list"
+	bankaccountupdate "hrms/modules/company/internal/feature/bankaccount/update"
 	"hrms/modules/company/internal/feature/createcompany"
 	"hrms/modules/company/internal/feature/createdefaultbranch"
 	"hrms/modules/company/internal/feature/get"
@@ -40,6 +45,13 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*get.Query, *get.Response](get.NewHandler(m.repo))
 	mediator.Register[*update.Command, *update.Response](update.NewHandler(m.repo, eb))
 
+	// Register bank account handlers
+	mediator.Register[*bankaccountlist.Query, *bankaccountlist.Response](bankaccountlist.NewHandler(m.repo))
+	mediator.Register[*bankaccountgetbyid.Query, *bankaccountgetbyid.Response](bankaccountgetbyid.NewHandler(m.repo))
+	mediator.Register[*bankaccountcreate.Command, *bankaccountcreate.Response](bankaccountcreate.NewHandler(m.repo))
+	mediator.Register[*bankaccountupdate.Command, *bankaccountupdate.Response](bankaccountupdate.NewHandler(m.repo))
+	mediator.Register[*bankaccountdelete.Command, *bankaccountdelete.Response](bankaccountdelete.NewHandler(m.repo))
+
 	// Register contract handlers for superadmin module to use via mediator
 	mediator.Register[*contracts.ListAllCompaniesQuery, *contracts.ListAllCompaniesResponse](listall.NewHandler(m.repo))
 	mediator.Register[*contracts.GetCompanyByIDQuery, *contracts.GetCompanyByIDResponse](getbyid.NewHandler(m.repo))
@@ -57,7 +69,14 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	admin := r.Group("/admin/company", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware(), middleware.RequireRoles("admin"))
 
-	// Register CQRS endpoints
+	// Register company endpoints
 	get.NewEndpoint(admin)
 	update.NewEndpoint(admin)
+
+	// Register bank account endpoints
+	bankaccountlist.NewEndpoint(admin)
+	bankaccountgetbyid.NewEndpoint(admin)
+	bankaccountcreate.NewEndpoint(admin)
+	bankaccountupdate.NewEndpoint(admin)
+	bankaccountdelete.NewEndpoint(admin)
 }
