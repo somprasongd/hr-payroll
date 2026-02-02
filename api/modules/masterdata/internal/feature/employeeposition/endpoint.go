@@ -53,7 +53,7 @@ func NewCreateEndpoint(router fiber.Router) {
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /master/employee-positions/{id} [patch]
 func NewUpdateEndpoint(router fiber.Router) {
-	router.Patch("/:id", func(c fiber.Ctx) error {
+	update := func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")
@@ -71,7 +71,9 @@ func NewUpdateEndpoint(router fiber.Router) {
 			return err
 		}
 		return response.JSON(c, fiber.StatusOK, resp.Record)
-	})
+	}
+	router.Put("/:id", update)
+	router.Patch("/:id", update)
 }
 
 // @Summary Soft delete employee position

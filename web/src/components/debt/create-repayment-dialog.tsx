@@ -26,13 +26,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-input";
-import { Combobox } from "@/components/ui/combobox";
 import { EmployeeSelector } from "@/components/common/employee-selector";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { debtService } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { accumulationService } from '@/services/accumulation.service';
+import { masterDataService, Bank } from '@/services/master-data.service';
 
   interface CreateRepaymentDialogProps {
     open: boolean;
@@ -47,6 +54,7 @@ import { accumulationService } from '@/services/accumulation.service';
     const tCommon = useTranslations('Common');
     const { toast } = useToast();
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [banks, setBanks] = useState<Bank[]>([]);
     const [currentDebt, setCurrentDebt] = useState(0);
 
   const createSchema = (maxAmount: number) => z.object({
@@ -57,16 +65,16 @@ import { accumulationService } from '@/services/accumulation.service';
       .max(maxAmount > 0 ? maxAmount : Number.MAX_SAFE_INTEGER, t('validation.amountExceedsOutstanding', { amount: maxAmount.toLocaleString() })),
     reason: z.string().optional(),
     paymentMethod: z.enum(["cash", "bank_transfer"]),
-    bankName: z.string().optional(),
+    bankId: z.string().optional(),
     bankAccountNumber: z.string().optional(),
     transferTime: z.string().optional(),
   }).superRefine((data, ctx) => {
     if (data.paymentMethod === "bank_transfer") {
-      if (!data.bankName) {
+      if (!data.bankId) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: t('validation.bankNameRequired'),
-          path: ["bankName"],
+          path: ["bankId"],
         });
       }
       if (!data.bankAccountNumber) {
@@ -96,23 +104,33 @@ import { accumulationService } from '@/services/accumulation.service';
       txnDate: format(new Date(), 'yyyy-MM-dd'),
       amount: 0,
       paymentMethod: "cash",
-      bankName: "",
+      bankId: "",
       bankAccountNumber: "",
       transferTime: "",
       reason: "",
     }
   });
 
+  const fetchBanks = async () => {
+    try {
+      const data = await masterDataService.getBanks();
+      setBanks(data || []);
+    } catch (error) {
+      console.error('Failed to fetch banks', error);
+    }
+  };
+
   useEffect(() => {
     if (open) {
       fetchEmployees();
+      fetchBanks();
       const initialEmployeeId = selectedEmployeeId && selectedEmployeeId !== 'all' ? selectedEmployeeId : '';
       form.reset({
         employeeId: initialEmployeeId,
         txnDate: format(new Date(), 'yyyy-MM-dd'),
         amount: 0,
         paymentMethod: "cash",
-        bankName: "",
+        bankId: "",
         bankAccountNumber: "",
         transferTime: "",
         reason: ''
@@ -156,7 +174,7 @@ import { accumulationService } from '@/services/accumulation.service';
         txnDate: data.txnDate,
         reason: data.reason,
         paymentMethod: data.paymentMethod,
-        bankName: data.bankName || undefined,
+        bankId: data.bankId || undefined,
         bankAccountNumber: data.bankAccountNumber || undefined,
         transferTime: data.transferTime || undefined,
       });
@@ -292,13 +310,34 @@ import { accumulationService } from '@/services/accumulation.service';
               <div className="space-y-4 border p-4 rounded-md bg-gray-50">
                 <FormField
                   control={form.control}
-                  name="bankName"
+                  name="bankId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('fields.bankName') || "Bank Name"}</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. KBANK" />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Bank" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {banks.filter(b => b.isEnabled || b.id === field.value).map((bank) => (
+                            <SelectItem key={bank.id} value={bank.id}>
+                              <div className="flex items-center justify-between w-full">
+                                <span>{bank.nameTh} ({bank.code})</span>
+                                {!bank.isEnabled && (
+                                  <span className="ml-2 text-destructive font-medium whitespace-nowrap">
+                                    ({tCommon('inactive')})
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

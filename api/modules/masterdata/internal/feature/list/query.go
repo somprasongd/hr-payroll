@@ -22,6 +22,7 @@ type Response struct {
 	IDDocumentTypes   []repository.MasterRecord `json:"idDocumentTypes,omitempty"`
 	Departments       []repository.MasterRecord `json:"departments,omitempty"`
 	EmployeePositions []repository.MasterRecord `json:"employeePositions,omitempty"`
+	Banks             []repository.BankRecord   `json:"banks,omitempty"`
 }
 
 type Handler struct {
@@ -84,6 +85,14 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 			return nil, err
 		}
 		resp.EmployeePositions = data
+	}
+	if loadAll || q.Only == "banks" {
+		data, err := h.repo.Banks(ctx, companyID)
+		if err != nil {
+			logger.FromContext(ctx).Error("failed to load banks", zap.Error(err))
+			return nil, err
+		}
+		resp.Banks = data
 	}
 	return resp, nil
 }

@@ -126,7 +126,7 @@ export function EmployeeForm({
 
     // Financial Info
     basePayAmount: z.coerce.number().gt(0, t("validation.positive")),
-    bankName: z.string().optional(),
+    bankId: z.string().optional(),
     bankAccountNo: z.string().optional(),
 
     // Benefits
@@ -163,6 +163,22 @@ export function EmployeeForm({
         });
       }
     }
+
+    // Bank validation
+    if (data.bankId && !data.bankAccountNo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.accountNoRequired"),
+        path: ["bankAccountNo"],
+      });
+    }
+    if (!data.bankId && data.bankAccountNo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.bankRequired"),
+        path: ["bankId"],
+      });
+    }
   });
 
   type EmployeeFormValues = z.infer<typeof employeeSchema>;
@@ -188,7 +204,7 @@ export function EmployeeForm({
         new Date().toISOString().split("T")[0],
       employmentEndDate: initialData?.employmentEndDate || null,
       basePayAmount: initialData?.basePayAmount || 0,
-      bankName: initialData?.bankName || "",
+      bankId: initialData?.bankId || "",
       bankAccountNo: initialData?.bankAccountNo || "",
       ssoContribute: initialData?.ssoContribute || false,
       // Use 0 when ssoContribute is false, otherwise use API value
@@ -219,7 +235,7 @@ export function EmployeeForm({
   useEffect(() => {
     const fetchMasterData = async () => {
       try {
-        const data = await masterDataService.getAll();
+        const data = await masterDataService.getAllWithBanks();
         setMasterData(data);
       } catch (error) {
         console.error("Failed to fetch master data", error);
@@ -389,7 +405,7 @@ export function EmployeeForm({
     }
 
     // Check financial tab fields
-    if (errors.basePayAmount) {
+    if (errors.basePayAmount || errors.bankId || errors.bankAccountNo) {
       tabsWithErrors.push(t("financialInfo"));
     }
 
@@ -402,7 +418,7 @@ export function EmployeeForm({
         setActiveTab("personal");
       } else if (errors.employeeNumber || errors.employeeTypeId || errors.employmentStartDate || errors.employmentEndDate) {
         setActiveTab("employment");
-      } else if (errors.basePayAmount) {
+      } else if (errors.basePayAmount || errors.bankId || errors.bankAccountNo) {
         setActiveTab("financial");
       }
     }
@@ -1324,13 +1340,37 @@ export function EmployeeForm({
                     />
                     <FormField
                       control={form.control}
-                      name="bankName"
+                      name="bankId"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>{t("fields.bank")}</FormLabel>
-                          <FormControl>
-                            <Input {...field} onFocus={handleFocus} />
-                          </FormControl>
+                          <Select
+                            onValueChange={(value) => field.onChange(value === "__clear__" ? "" : value)}
+                            value={field.value || ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("placeholders.selectBank")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="__clear__" className="text-muted-foreground">
+                                - {t("placeholders.selectBank")} -
+                              </SelectItem>
+                              {masterData?.banks?.filter(b => b.isEnabled || b.id === field.value).map((bank) => (
+                                <SelectItem key={bank.id} value={bank.id}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>{bank.nameTh} ({bank.code})</span>
+                                    {!bank.isEnabled && (
+                                      <span className="ml-2 text-destructive font-medium whitespace-nowrap">
+                                        ({tCommon('inactive')})
+                                      </span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

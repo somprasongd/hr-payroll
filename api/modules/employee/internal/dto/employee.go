@@ -49,7 +49,7 @@ type Detail struct {
 	BasePayAmount               float64    `json:"basePayAmount"`
 	EmploymentStartDate         string     `json:"employmentStartDate"`
 	EmploymentEndDate           *string    `json:"employmentEndDate,omitempty"`
-	BankName                    *string    `json:"bankName,omitempty"`
+	BankID                      *uuid.UUID `json:"bankId,omitempty"`
 	BankAccountNo               *string    `json:"bankAccountNo,omitempty"`
 	SSOContribute               bool       `json:"ssoContribute"`
 	SSODeclaredWage             *float64   `json:"ssoDeclaredWage,omitempty"`
@@ -110,7 +110,7 @@ func FromDetailRecord(r repository.DetailRecord) Detail {
 		BasePayAmount:               r.BasePayAmount,
 		EmploymentStartDate:         r.EmploymentStartDate.Format(dateLayout),
 		EmploymentEndDate:           endDateStr,
-		BankName:                    r.BankName,
+		BankID:                      r.BankID,
 		BankAccountNo:               r.BankAccountNo,
 		SSOContribute:               r.SSOContribute,
 		SSODeclaredWage:             r.SSODeclaredWage,

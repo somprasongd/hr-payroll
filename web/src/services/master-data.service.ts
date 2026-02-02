@@ -10,12 +10,24 @@ export interface MasterData {
   Name?: string;
 }
 
+export interface Bank {
+  id: string;
+  code: string;
+  nameTh: string;
+  nameEn: string;
+  nameMy: string;
+  isSystem: boolean;
+  isEnabled: boolean;
+  isActive: boolean;
+}
+
 export interface AllMasterData {
   personTitles: MasterData[];
   employeeTypes: MasterData[];
   idDocumentTypes: MasterData[];
   departments: MasterData[];
   employeePositions: MasterData[];
+  banks?: Bank[];
 }
 
 export interface CreateMasterDataRequest {
@@ -31,6 +43,19 @@ export interface UpdateMasterDataRequest {
 export const masterDataService = {
   getAll: async (): Promise<AllMasterData> => {
     return apiClient.get<AllMasterData>('/master/all');
+  },
+  
+  getAllWithBanks: async (): Promise<AllMasterData> => {
+    // Get base master data
+    const baseData = await apiClient.get<AllMasterData>('/master/all');
+    // Get banks - endpoint returns Bank[] directly
+    const banks = await apiClient.get<Bank[]>('/master/banks?admin=true');
+    return { ...baseData, banks: banks || [] };
+  },
+
+  getBanks: async (): Promise<Bank[]> => {
+    // Endpoint returns Bank[] directly
+    return apiClient.get<Bank[]>('/master/banks?admin=true');
   },
 
   // Departments CRUD
@@ -65,6 +90,43 @@ export const masterDataService = {
 
   deletePosition: async (id: string): Promise<void> => {
     await apiClient.delete(`/master/employee-positions/${id}`);
+  },
+
+  // Bank Management (Company Admin)
+  createBank: async (data: any): Promise<Bank> => {
+    return apiClient.post<Bank>('/master/banks', data);
+  },
+
+  updateBank: async (id: string, data: any): Promise<Bank> => {
+    return apiClient.put<Bank>(`/master/banks/${id}`, data);
+  },
+
+  deleteBank: async (id: string): Promise<void> => {
+    await apiClient.delete(`/master/banks/${id}`);
+  },
+
+  toggleBank: async (id: string, isEnabled: boolean): Promise<void> => {
+    await apiClient.post(`/master/banks/${id}/toggle`, { isEnabled });
+  },
+
+  // Bank Management (Super Admin)
+  getSystemBanks: async (): Promise<Bank[]> => {
+    return apiClient.get<Bank[]>('/super-admin/master/system-banks');
+  },
+
+  createSystemBank: async (data: any): Promise<Bank> => {
+    return apiClient.post<Bank>('/super-admin/master/system-banks', data);
+  },
+
+  updateSystemBank: async (id: string, data: any): Promise<Bank> => {
+    return apiClient.put<Bank>(`/super-admin/master/system-banks/${id}`, data);
+  },
+
+  deleteSystemBank: async (id: string): Promise<void> => {
+    await apiClient.delete(`/super-admin/master/system-banks/${id}`);
+  },
+  toggleSystemBank: async (id: string, isActive: boolean): Promise<void> => {
+    await apiClient.post(`/super-admin/master/system-banks/${id}/toggle`, { isActive });
   },
 };
 

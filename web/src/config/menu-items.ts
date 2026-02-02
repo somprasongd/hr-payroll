@@ -9,6 +9,7 @@ import {
   Building2,
   FileText,
   ClipboardList,
+  Landmark,
   LucideIcon
 } from "lucide-react"
 
@@ -116,6 +117,7 @@ export const menuConfig: MenuGroup[] = [
           { titleKey: "departments", namespace: "Nav", href: "/admin/departments" },
           { titleKey: "positions", namespace: "Nav", href: "/admin/positions" },
           { titleKey: "documentTypes", namespace: "Nav", href: "/admin/document-types" },
+          { titleKey: "banks", namespace: "Nav", href: "/admin/banks" },
           { titleKey: "users", href: "/admin/users" },
           { titleKey: "activityLogs", href: "/admin/activity-logs" },
           { titleKey: "settings", href: "/admin/settings" }
@@ -133,7 +135,14 @@ export const menuConfig: MenuGroup[] = [
         href: "/super-admin/companies"
       },
       {
+        titleKey: "banks",
+        namespace: "Nav",
+        icon: Landmark,
+        href: "/super-admin/banks"
+      },
+      {
         titleKey: "documentTypes",
+
         namespace: "Nav",
         icon: FileText,
         href: "/super-admin/document-types"

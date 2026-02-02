@@ -21,15 +21,15 @@ import (
 )
 
 type Command struct {
-	EmployeeID        uuid.UUID `json:"employeeId" validate:"required"`
-	TxnDateRaw        string    `json:"txnDate" validate:"required"`
-	Amount            float64   `json:"amount" validate:"required,gt=0"`
-	Reason            *string   `json:"reason,omitempty"`
-	PaymentMethod     *string   `json:"paymentMethod,omitempty"`
-	BankName          *string   `json:"bankName,omitempty"`
-	BankAccountNumber *string   `json:"bankAccountNumber,omitempty"`
-	TransferTime      *string   `json:"transferTime,omitempty"`
-	ActorID           uuid.UUID `validate:"required"`
+	EmployeeID        uuid.UUID  `json:"employeeId" validate:"required"`
+	TxnDateRaw        string     `json:"txnDate" validate:"required"`
+	Amount            float64    `json:"amount" validate:"required,gt=0"`
+	Reason            *string    `json:"reason,omitempty"`
+	PaymentMethod     *string    `json:"paymentMethod,omitempty"`
+	BankID            *uuid.UUID `json:"bankId,omitempty"`
+	BankAccountNumber *string    `json:"bankAccountNumber,omitempty"`
+	TransferTime      *string    `json:"transferTime,omitempty"`
+	ActorID           uuid.UUID  `validate:"required"`
 }
 
 type Response struct {
@@ -69,8 +69,8 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 	}
 
 	if cmd.PaymentMethod != nil && *cmd.PaymentMethod == "bank_transfer" {
-		if cmd.BankName == nil || strings.TrimSpace(*cmd.BankName) == "" {
-			return nil, errs.BadRequest("Bank name is required")
+		if cmd.BankID == nil {
+			return nil, errs.BadRequest("Bank is required")
 		}
 		if cmd.BankAccountNumber == nil || strings.TrimSpace(*cmd.BankAccountNumber) == "" {
 			return nil, errs.BadRequest("Bank account number is required")
@@ -87,7 +87,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		TxnType:           "repayment",
 		Status:            "pending",
 		PaymentMethod:     cmd.PaymentMethod,
-		BankName:          cmd.BankName,
+		BankID:            cmd.BankID,
 		BankAccountNumber: cmd.BankAccountNumber,
 		TransferTime:      cmd.TransferTime,
 	}

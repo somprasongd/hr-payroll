@@ -50,6 +50,11 @@ func (app *Application) registerModuleRoutes(m module.Module) {
 	prefix := app.buildGroupPrefix(m)
 	group := app.httpServer.Group(prefix)
 	m.RegisterRoutes(group)
+
+	// Check if module implements SuperAdminRouteRegistrar
+	if sar, ok := m.(module.SuperAdminRouteRegistrar); ok {
+		sar.RegisterSuperAdminRoutes(group)
+	}
 }
 
 func (app *Application) buildGroupPrefix(m module.Module) string {

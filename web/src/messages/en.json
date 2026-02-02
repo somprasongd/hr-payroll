@@ -44,6 +44,51 @@
     "noData": "No activity logs found",
     "title": "Activity Logs"
   },
+  "Banks": {
+    "createDescription": "Enter bank details",
+    "createTitle": "Create New Bank",
+    "description": "Manage banks in the system",
+    "systemDescription": "Manage system bank information",
+    "companyDescription": "Manage company bank information",
+    "editDescription": "Update bank details",
+    "editTitle": "Edit Bank",
+    "errors": {
+      "deleteFailed": "Failed to delete",
+      "fetchFailed": "Failed to load banks",
+      "saveFailed": "Failed to save",
+      "toggleFailed": "Failed to toggle status"
+    },
+    "fields": {
+      "code": "Bank Code",
+      "nameEn": "Name (English)",
+      "nameTh": "Name (Thai)",
+      "status": "Status"
+    },
+    "noData": "No banks found",
+    "placeholders": {
+      "code": "e.g. KBANK, SCB",
+      "nameEn": "e.g. Kasikornbank",
+      "nameTh": "e.g. ธนาคารกสิกรไทย"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "success": {
+      "created": "Bank created successfully",
+      "deleted": "Bank deleted successfully",
+      "updated": "Bank updated successfully",
+      "statusChanged": "Status changed successfully"
+    },
+    "systemType": "System",
+    "customType": "Custom",
+    "title": "Bank Management",
+    "validation": {
+      "codeRequired": "Please enter bank code",
+      "nameThRequired": "Please enter bank name (Thai)",
+      "nameEnRequired": "Please enter bank name (English)"
+    }
+  },
   "Bonus": {
     "actions": {
       "approve": "Approve",
@@ -235,6 +280,7 @@
     "export": "Export",
     "filter": "Filter",
     "import": "Import",
+    "inactive": "Inactive",
     "lineChart": "Line Chart",
     "loading": "Loading...",
     "next": "Next",
@@ -249,6 +295,7 @@
     "selectBranch": "Select Branch",
     "submit": "Submit",
     "success": "Success",
+    "type": "Type",
     "view": "View",
     "yes": "Yes"
   },
@@ -636,6 +683,7 @@
     "photoUploadSuccess": "Photo uploaded successfully",
     "photoUploading": "Uploading...",
     "placeholders": {
+      "selectBank": "Select bank",
       "selectDepartment": "Select department",
       "selectPosition": "Select position",
       "selectTitle": "Select title",
@@ -659,7 +707,9 @@
       "incompleteData": "Incomplete Data",
       "positive": "Value must be positive",
       "required": "This field is required",
-      "tabsWithErrors": "Please check the following tabs: {tabs}"
+      "tabsWithErrors": "Please check the following tabs: {tabs}",
+      "bankRequired": "Please select bank",
+      "accountNoRequired": "Please enter account number"
     },
     "errors": {
       "hasPendingPayoutPT": "Cannot change employee type because there are pending part-time payout records"
@@ -713,6 +763,7 @@
     "worklogPT": "Part-Time"
   },
   "Nav": {
+    "banks": "Banks",
     "branches": "Branches",
     "departments": "Departments",
     "documentTypes": "Document Types",
