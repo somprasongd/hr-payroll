@@ -42,7 +42,7 @@ export interface ManualRepaymentRequest {
   amount: number;
   reason?: string;
   paymentMethod?: 'cash' | 'bank_transfer';
-  bankName?: string;
+  bankId?: string;
   bankAccountNumber?: string;
   transferTime?: string;
 }

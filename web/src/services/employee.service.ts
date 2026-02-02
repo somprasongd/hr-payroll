@@ -21,7 +21,7 @@ export interface Employee {
   basePayAmount: number;
   employmentStartDate: string;
   employmentEndDate?: string;
-  bankName?: string;
+  bankId?: string;
   bankAccountNo?: string;
   ssoContribute: boolean;
   ssoDeclaredWage?: number;
@@ -69,7 +69,7 @@ export interface CreateEmployeeRequest {
   positionId?: string;
   basePayAmount: number;
   employmentStartDate: string;
-  bankName?: string;
+  bankId?: string;
   bankAccountNo?: string;
   ssoContribute: boolean;
   ssoDeclaredWage?: number;
@@ -108,7 +108,7 @@ export interface UpdateEmployeeRequest {
   positionId?: string;
   employmentStartDate?: string;
   employmentEndDate?: string;
-  bankName?: string;
+  bankId?: string;
   bankAccountNo?: string;
   ssoContribute?: boolean;
   ssoDeclaredWage?: number;

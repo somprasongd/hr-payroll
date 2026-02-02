@@ -620,6 +620,7 @@
     "photoUploadSuccess": "ဓာတ်ပုံ အပ်လုဒ် အောင်မြင်ပါသည်",
     "photoUploading": "တင်နေသည်...",
     "placeholders": {
+      "selectBank": "ဘဏ် ရွေးပါ",
       "selectDepartment": "ဌာန ရွေးပါ",
       "selectPosition": "ရာထူး ရွေးပါ",
       "selectTitle": "ခေါင်းစဉ် ရွေးပါ",

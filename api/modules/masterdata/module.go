@@ -2,6 +2,7 @@ package masterdata
 
 import (
 	"hrms/modules/masterdata/internal/feature"
+	"hrms/modules/masterdata/internal/feature/bank"
 	"hrms/modules/masterdata/internal/feature/department"
 	"hrms/modules/masterdata/internal/feature/employeeposition"
 	"hrms/modules/masterdata/internal/feature/list"
@@ -42,10 +43,22 @@ func (m *Module) Init(eb eventbus.EventBus) error {
 	mediator.Register[*employeeposition.CreateCommand, *employeeposition.Response](employeeposition.NewCreateHandler(m.repo, eb))
 	mediator.Register[*employeeposition.UpdateCommand, *employeeposition.Response](employeeposition.NewUpdateHandler(m.repo, eb))
 	mediator.Register[*employeeposition.DeleteCommand, mediator.NoResponse](employeeposition.NewDeleteHandler(m.repo, eb))
+	// Bank handlers
+	mediator.Register[*bank.ListQuery, *bank.ListResponse](bank.NewListHandler(m.repo))
+	mediator.Register[*bank.ListSystemBanksQuery, *bank.ListSystemBanksResponse](bank.NewListSystemBanksHandler(m.repo))
+	mediator.Register[*bank.CreateCommand, *bank.Response](bank.NewCreateHandler(m.repo, eb))
+	mediator.Register[*bank.UpdateCommand, *bank.Response](bank.NewUpdateHandler(m.repo, eb))
+	mediator.Register[*bank.DeleteCommand, mediator.NoResponse](bank.NewDeleteHandler(m.repo, eb))
+	mediator.Register[*bank.ToggleCommand, mediator.NoResponse](bank.NewToggleHandler(m.repo, eb))
 	return nil
 }
 
 func (m *Module) RegisterRoutes(r fiber.Router) {
 	group := r.Group("/master", middleware.Auth(m.tokenSvc), middleware.TenantMiddleware())
 	feature.Register(group)
+}
+
+func (m *Module) RegisterSuperAdminRoutes(r fiber.Router) {
+	group := r.Group("/master", middleware.Auth(m.tokenSvc), middleware.RequireRoles("superadmin"))
+	feature.RegisterSystemBanks(group)
 }

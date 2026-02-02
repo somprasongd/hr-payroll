@@ -51,4 +51,11 @@ func Register(router fiber.Router) {
 		}
 		return response.JSON(c, fiber.StatusOK, resp.EmployeePositions)
 	})
+	router.Get("/banks", func(c fiber.Ctx) error {
+		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{Only: "banks"})
+		if err != nil {
+			return err
+		}
+		return response.JSON(c, fiber.StatusOK, resp.Banks)
+	})
 }

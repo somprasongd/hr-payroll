@@ -612,6 +612,10 @@ definitions:
         items:
           $ref: '#/definitions/dashboard_internal_feature_attendance_top_employees.TopEmployeeDTO'
         type: array
+      lateCount:
+        items:
+          $ref: '#/definitions/dashboard_internal_feature_attendance_top_employees.TopEmployeeDTO'
+        type: array
       leaveDay:
         items:
           $ref: '#/definitions/dashboard_internal_feature_attendance_top_employees.TopEmployeeDTO'
@@ -761,6 +765,8 @@ definitions:
         type: number
       bankAccountNumber:
         type: string
+      bankId:
+        type: string
       bankName:
         type: string
       createdAt:
@@ -846,6 +852,8 @@ definitions:
         type: number
       bankAccountNumber:
         type: string
+      bankId:
+        type: string
       bankName:
         type: string
       createdAt:
@@ -890,6 +898,8 @@ definitions:
       amount:
         type: number
       bankAccountNumber:
+        type: string
+      bankId:
         type: string
       bankName:
         type: string
@@ -960,7 +970,7 @@ definitions:
         type: number
       bankAccountNumber:
         type: string
-      bankName:
+      bankId:
         type: string
       employeeId:
         type: string
@@ -983,6 +993,8 @@ definitions:
       amount:
         type: number
       bankAccountNumber:
+        type: string
+      bankId:
         type: string
       bankName:
         type: string
@@ -1068,8 +1080,8 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
-        type: string
+      bankId:
+        $ref: '#/definitions/employee_internal_feature_create.OptionalUUID'
       basePayAmount:
         type: number
       departmentId:
@@ -1146,7 +1158,7 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
+      bankId:
         type: string
       basePayAmount:
         type: number
@@ -1372,7 +1384,7 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
+      bankId:
         type: string
       basePayAmount:
         type: number
@@ -1473,7 +1485,7 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
+      bankId:
         type: string
       basePayAmount:
         type: number
@@ -2236,6 +2248,10 @@ definitions:
         items:
           $ref: '#/definitions/hrms_modules_dashboard_internal_feature_attendance_top_employees.TopEmployeeDTO'
         type: array
+      lateCount:
+        items:
+          $ref: '#/definitions/hrms_modules_dashboard_internal_feature_attendance_top_employees.TopEmployeeDTO'
+        type: array
       leaveDay:
         items:
           $ref: '#/definitions/hrms_modules_dashboard_internal_feature_attendance_top_employees.TopEmployeeDTO'
@@ -2385,6 +2401,8 @@ definitions:
         type: number
       bankAccountNumber:
         type: string
+      bankId:
+        type: string
       bankName:
         type: string
       createdAt:
@@ -2436,6 +2454,8 @@ definitions:
       amount:
         type: number
       bankAccountNumber:
+        type: string
+      bankId:
         type: string
       bankName:
         type: string
@@ -2522,6 +2542,8 @@ definitions:
         type: number
       bankAccountNumber:
         type: string
+      bankId:
+        type: string
       bankName:
         type: string
       createdAt:
@@ -2566,6 +2588,8 @@ definitions:
       amount:
         type: number
       bankAccountNumber:
+        type: string
+      bankId:
         type: string
       bankName:
         type: string
@@ -2636,7 +2660,7 @@ definitions:
         type: number
       bankAccountNumber:
         type: string
-      bankName:
+      bankId:
         type: string
       employeeId:
         type: string
@@ -2659,6 +2683,8 @@ definitions:
       amount:
         type: number
       bankAccountNumber:
+        type: string
+      bankId:
         type: string
       bankName:
         type: string
@@ -2776,8 +2802,8 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
-        type: string
+      bankId:
+        $ref: '#/definitions/hrms_modules_employee_internal_feature_create.OptionalUUID'
       basePayAmount:
         type: number
       departmentId:
@@ -2854,7 +2880,7 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
+      bankId:
         type: string
       basePayAmount:
         type: number
@@ -3080,7 +3106,7 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
+      bankId:
         type: string
       basePayAmount:
         type: number
@@ -3181,7 +3207,7 @@ definitions:
         type: boolean
       bankAccountNo:
         type: string
-      bankName:
+      bankId:
         type: string
       basePayAmount:
         type: number
@@ -3337,6 +3363,66 @@ definitions:
       lastName:
         type: string
     type: object
+  hrms_modules_masterdata_internal_feature_bank.CreateCommand:
+    properties:
+      code:
+        type: string
+      companyID:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameMy:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  hrms_modules_masterdata_internal_feature_bank.ListResponse:
+    properties:
+      records:
+        items:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_repository.BankRecord'
+        type: array
+    type: object
+  hrms_modules_masterdata_internal_feature_bank.ListSystemBanksResponse:
+    properties:
+      records:
+        items:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_repository.BankRecord'
+        type: array
+    type: object
+  hrms_modules_masterdata_internal_feature_bank.Response:
+    properties:
+      record:
+        $ref: '#/definitions/hrms_modules_masterdata_internal_repository.BankRecord'
+    type: object
+  hrms_modules_masterdata_internal_feature_bank.ToggleCommand:
+    properties:
+      bankId:
+        type: string
+      companyID:
+        type: string
+      isEnabled:
+        type: boolean
+    type: object
+  hrms_modules_masterdata_internal_feature_bank.UpdateCommand:
+    properties:
+      code:
+        type: string
+      companyID:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameMy:
+        type: string
+      nameTh:
+        type: string
+    type: object
   hrms_modules_masterdata_internal_feature_department.CreateCommand:
     properties:
       code:
@@ -3379,6 +3465,26 @@ definitions:
       name:
         type: string
     type: object
+  hrms_modules_masterdata_internal_repository.BankRecord:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      isEnabled:
+        description: For company-specific settings
+        type: boolean
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameMy:
+        type: string
+      nameTh:
+        type: string
+    type: object
   hrms_modules_masterdata_internal_repository.MasterRecord:
     properties:
       code:
@@ -3390,12 +3496,8 @@ definitions:
     type: object
   hrms_modules_payoutpt_internal_feature_create.Command:
     properties:
-      eb: {}
       employeeId:
         type: string
-      repo:
-        $ref: '#/definitions/hrms_modules_payoutpt_internal_repository.Repository'
-      tx: {}
       worklogIds:
         items:
           type: string
@@ -3497,8 +3599,6 @@ definitions:
         type: string
       worklogId:
         type: string
-    type: object
-  hrms_modules_payoutpt_internal_repository.Repository:
     type: object
   hrms_modules_payrollconfig_internal_dto.Config:
     properties:
@@ -5569,6 +5669,66 @@ definitions:
       workDate:
         type: string
     type: object
+  masterdata_internal_feature_bank.CreateCommand:
+    properties:
+      code:
+        type: string
+      companyID:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameMy:
+        type: string
+      nameTh:
+        type: string
+    type: object
+  masterdata_internal_feature_bank.ListResponse:
+    properties:
+      records:
+        items:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_repository.BankRecord'
+        type: array
+    type: object
+  masterdata_internal_feature_bank.ListSystemBanksResponse:
+    properties:
+      records:
+        items:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_repository.BankRecord'
+        type: array
+    type: object
+  masterdata_internal_feature_bank.Response:
+    properties:
+      record:
+        $ref: '#/definitions/hrms_modules_masterdata_internal_repository.BankRecord'
+    type: object
+  masterdata_internal_feature_bank.ToggleCommand:
+    properties:
+      bankId:
+        type: string
+      companyID:
+        type: string
+      isEnabled:
+        type: boolean
+    type: object
+  masterdata_internal_feature_bank.UpdateCommand:
+    properties:
+      code:
+        type: string
+      companyID:
+        type: string
+      id:
+        type: string
+      isSystem:
+        type: boolean
+      nameEn:
+        type: string
+      nameMy:
+        type: string
+      nameTh:
+        type: string
+    type: object
   masterdata_internal_feature_department.CreateCommand:
     properties:
       code:
@@ -5613,12 +5773,8 @@ definitions:
     type: object
   payoutpt_internal_feature_create.Command:
     properties:
-      eb: {}
       employeeId:
         type: string
-      repo:
-        $ref: '#/definitions/hrms_modules_payoutpt_internal_repository.Repository'
-      tx: {}
       worklogIds:
         items:
           type: string
@@ -7206,7 +7362,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/activitylog_internal_feature_filteroptions.Response'
+            $ref: '#/definitions/hrms_modules_activitylog_internal_feature_filteroptions.Response'
       security:
       - BearerAuth: []
       summary: Get filter options for activity logs
@@ -7246,7 +7402,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/branch_internal_feature_create.CreateRequest'
+          $ref: '#/definitions/hrms_modules_branch_internal_feature_create.CreateRequest'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -7261,7 +7417,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/branch_internal_feature_create.Branch'
+            $ref: '#/definitions/hrms_modules_branch_internal_feature_create.Branch'
       security:
       - BearerAuth: []
       summary: Create a new branch
@@ -7404,7 +7560,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_branch_internal_feature_employeecount.EmployeeCountResponse'
+            $ref: '#/definitions/branch_internal_feature_employeecount.EmployeeCountResponse'
       security:
       - BearerAuth: []
       summary: Get employee count for a branch
@@ -7425,7 +7581,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_branch_internal_feature_changestatus.StatusChangeRequest'
+          $ref: '#/definitions/branch_internal_feature_changestatus.StatusChangeRequest'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -7440,7 +7596,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_branch_internal_feature_changestatus.StatusChangeResponse'
+            $ref: '#/definitions/branch_internal_feature_changestatus.StatusChangeResponse'
       security:
       - BearerAuth: []
       summary: Change branch status
@@ -7545,7 +7701,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/payrollconfig_internal_feature_create.RequestBody'
+          $ref: '#/definitions/hrms_modules_payrollconfig_internal_feature_create.RequestBody'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -7560,7 +7716,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/payrollconfig_internal_feature_create.Response'
+            $ref: '#/definitions/hrms_modules_payrollconfig_internal_feature_create.Response'
         "400":
           description: Bad Request
         "401":
@@ -7594,7 +7750,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_payrollconfig_internal_feature_effective.Response'
+            $ref: '#/definitions/payrollconfig_internal_feature_effective.Response'
         "404":
           description: Not Found
       security:
@@ -7627,7 +7783,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_feature_uploadlogo.Response'
+            $ref: '#/definitions/payrollorgprofile_internal_feature_uploadlogo.Response'
         "400":
           description: Bad Request
         "401":
@@ -7843,7 +7999,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_payrollorgprofile_internal_feature_effective.Response'
+            $ref: '#/definitions/payrollorgprofile_internal_feature_effective.Response'
         "404":
           description: Not Found
       security:
@@ -7869,7 +8025,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/userbranch_internal_feature_listusers.CompanyUser'
+              $ref: '#/definitions/hrms_modules_userbranch_internal_feature_listusers.CompanyUser'
             type: array
       security:
       - BearerAuth: []
@@ -8037,7 +8193,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_user_internal_feature_updaterole.RequestBody'
+          $ref: '#/definitions/user_internal_feature_updaterole.RequestBody'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -8052,7 +8208,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_user_internal_feature_updaterole.User'
+            $ref: '#/definitions/user_internal_feature_updaterole.User'
       security:
       - BearerAuth: []
       summary: Update user role
@@ -8081,7 +8237,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/userbranch_internal_feature_getbranches.BranchAccess'
+              $ref: '#/definitions/hrms_modules_userbranch_internal_feature_getbranches.BranchAccess'
             type: array
       security:
       - BearerAuth: []
@@ -8136,14 +8292,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_auth_internal_feature_login.RequestBody'
+          $ref: '#/definitions/auth_internal_feature_login.RequestBody'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_auth_internal_feature_login.Response'
+            $ref: '#/definitions/auth_internal_feature_login.Response'
         "400":
           description: Bad Request
         "401":
@@ -8161,7 +8317,7 @@ paths:
         in: body
         name: request
         schema:
-          $ref: '#/definitions/hrms_modules_auth_internal_feature_logout.RequestBody'
+          $ref: '#/definitions/auth_internal_feature_logout.RequestBody'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -8861,7 +9017,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/debt_internal_feature_approve.Response'
+            $ref: '#/definitions/hrms_modules_debt_internal_feature_approve.Response'
         "400":
           description: Bad Request
         "401":
@@ -8924,7 +9080,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/debt_internal_feature_repayment.Command'
+          $ref: '#/definitions/hrms_modules_debt_internal_feature_repayment.Command'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -8939,7 +9095,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/debt_internal_feature_repayment.Response'
+            $ref: '#/definitions/hrms_modules_debt_internal_feature_repayment.Response'
         "400":
           description: Bad Request
         "401":
@@ -9183,7 +9339,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_employee_internal_feature_create.RequestBody'
+          $ref: '#/definitions/employee_internal_feature_create.RequestBody'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -9198,7 +9354,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/hrms_modules_employee_internal_feature_create.Response'
+            $ref: '#/definitions/employee_internal_feature_create.Response'
         "400":
           description: Bad Request
         "401":
@@ -9267,7 +9423,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_employee_internal_feature_get.Response'
+            $ref: '#/definitions/employee_internal_feature_get.Response'
         "400":
           description: Bad Request
         "401":
@@ -9347,7 +9503,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/employee_internal_feature_accum_list.Response'
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_accum_list.Response'
       security:
       - BearerAuth: []
       summary: List accumulations
@@ -9461,7 +9617,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/employee_internal_feature_document_upload.Response'
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_document_upload.Response'
         "400":
           description: Bad Request
         "401":
@@ -9527,7 +9683,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_employee_internal_feature_document_update.requestBody'
+          $ref: '#/definitions/employee_internal_feature_document_update.requestBody'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -9542,7 +9698,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_employee_internal_feature_document_update.Response'
+            $ref: '#/definitions/employee_internal_feature_document_update.Response'
         "400":
           description: Bad Request
         "401":
@@ -9679,7 +9835,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_employee_internal_feature_checkduplicate.Response'
+            $ref: '#/definitions/employee_internal_feature_checkduplicate.Response'
         "400":
           description: Bad Request
         "401":
@@ -9714,7 +9870,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/employee_internal_feature_photo_upload.Response'
+            $ref: '#/definitions/hrms_modules_employee_internal_feature_photo_upload.Response'
         "400":
           description: Bad Request
         "401":
@@ -9763,6 +9919,186 @@ paths:
       summary: Download employee photo by ID
       tags:
       - Employees
+  /master/banks:
+    get:
+      parameters:
+      - description: If true, returns all banks including disabled system ones
+        in: query
+        name: admin
+        type: boolean
+      - description: Company ID
+        in: header
+        name: X-Company-ID
+        type: string
+      - description: Branch ID
+        in: header
+        name: X-Branch-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.ListResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List company banks (combined system + custom)
+      tags:
+      - Master
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: bank payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.CreateCommand'
+      - description: Company ID
+        in: header
+        name: X-Company-ID
+        type: string
+      - description: Branch ID
+        in: header
+        name: X-Branch-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create custom bank for company
+      tags:
+      - Master
+  /master/banks/{id}:
+    delete:
+      parameters:
+      - description: bank id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Company ID
+        in: header
+        name: X-Company-ID
+        type: string
+      - description: Branch ID
+        in: header
+        name: X-Branch-ID
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Soft delete custom bank for company
+      tags:
+      - Master
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: bank id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: bank payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.UpdateCommand'
+      - description: Company ID
+        in: header
+        name: X-Company-ID
+        type: string
+      - description: Branch ID
+        in: header
+        name: X-Branch-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update custom bank for company
+      tags:
+      - Master
+  /master/banks/{id}/toggle:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: bank id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: toggle payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.ToggleCommand'
+      - description: Company ID
+        in: header
+        name: X-Company-ID
+        type: string
+      - description: Branch ID
+        in: header
+        name: X-Branch-ID
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Toggle system bank visibility for company
+      tags:
+      - Master
   /master/departments:
     post:
       consumes:
@@ -9987,6 +10323,111 @@ paths:
       summary: Update employee position
       tags:
       - Master
+  /master/system-banks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.ListSystemBanksResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: List all system banks
+      tags:
+      - Master
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: bank payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.CreateCommand'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Create system bank
+      tags:
+      - Master
+  /master/system-banks/{id}:
+    delete:
+      parameters:
+      - description: bank id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Soft delete system bank
+      tags:
+      - Master
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: bank id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: bank payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.UpdateCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/hrms_modules_masterdata_internal_feature_bank.Response'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Update system bank
+      tags:
+      - Master
   /me:
     get:
       produces:
@@ -9995,7 +10436,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_user_internal_feature_me.User'
+            $ref: '#/definitions/user_internal_feature_me.User'
       security:
       - BearerAuth: []
       summary: Get current user profile
@@ -10019,7 +10460,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/user_internal_feature_mecompanies.Response'
+            $ref: '#/definitions/hrms_modules_user_internal_feature_mecompanies.Response'
         "401":
           description: Unauthorized
       security:
@@ -10222,7 +10663,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/payoutpt_internal_feature_pay.Payout'
+            $ref: '#/definitions/hrms_modules_payoutpt_internal_feature_pay.Payout'
       security:
       - BearerAuth: []
       summary: Mark payout paid
@@ -10251,7 +10692,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_items_get.GetResponse'
+            $ref: '#/definitions/payrollrun_internal_feature_items_get.GetResponse'
         "400":
           description: Bad Request
         "401":
@@ -10280,7 +10721,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_items_update.UpdateRequest'
+          $ref: '#/definitions/payrollrun_internal_feature_items_update.UpdateRequest'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -10295,7 +10736,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_items_update.UpdateResponse'
+            $ref: '#/definitions/payrollrun_internal_feature_items_update.UpdateResponse'
         "400":
           description: Bad Request
         "401":
@@ -10347,7 +10788,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_payrollrun_internal_feature_list.Response'
+            $ref: '#/definitions/payrollrun_internal_feature_list.Response'
       security:
       - BearerAuth: []
       summary: List payroll runs
@@ -10666,7 +11107,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/salaryadvance_internal_feature_create.Request'
+          $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_create.Request'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -10681,7 +11122,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/salaryadvance_internal_feature_create.Response'
+            $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_create.Response'
         "400":
           description: Bad Request
         "401":
@@ -10748,7 +11189,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/salaryadvance_internal_feature_get.Response'
+            $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_get.Response'
         "400":
           description: Bad Request
         "401":
@@ -10777,7 +11218,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_update.Request'
+          $ref: '#/definitions/salaryadvance_internal_feature_update.Request'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -10792,7 +11233,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_salaryadvance_internal_feature_update.Response'
+            $ref: '#/definitions/salaryadvance_internal_feature_update.Response'
         "400":
           description: Bad Request
         "401":
@@ -10935,7 +11376,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/salaryraise_internal_feature_get.Response'
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_get.Response'
         "400":
           description: Bad Request
         "401":
@@ -11019,7 +11460,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items_list.Response'
+            $ref: '#/definitions/salaryraise_internal_feature_items_list.Response'
       security:
       - BearerAuth: []
       summary: List salary raise items
@@ -11040,7 +11481,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/salaryraise_internal_feature_items_update.Command'
+          $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items_update.Command'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -11055,7 +11496,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/salaryraise_internal_feature_items_update.Response'
+            $ref: '#/definitions/hrms_modules_salaryraise_internal_feature_items_update.Response'
         "400":
           description: Bad Request
         "401":
@@ -11139,7 +11580,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_activitylog_internal_feature_superadminfilteroptions.Response'
+            $ref: '#/definitions/activitylog_internal_feature_superadminfilteroptions.Response'
       security:
       - BearerAuth: []
       summary: Get filter options for system activity logs (super admin)
@@ -11179,7 +11620,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_superadmin_internal_feature_company_create.CreateCompanyRequest'
+          $ref: '#/definitions/superadmin_internal_feature_company_create.CreateCompanyRequest'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -11194,7 +11635,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/hrms_modules_superadmin_internal_feature_company_create.Response'
+            $ref: '#/definitions/superadmin_internal_feature_company_create.Response'
       security:
       - BearerAuth: []
       summary: Create a new company with admin user
@@ -11639,7 +12080,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_worklog_internal_feature_pt.ListResponse'
+            $ref: '#/definitions/worklog_internal_feature_pt.ListResponse'
         "400":
           description: Bad Request
         "401":
@@ -11661,7 +12102,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_worklog_internal_feature_pt.CreateRequest'
+          $ref: '#/definitions/worklog_internal_feature_pt.CreateRequest'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -11676,7 +12117,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/hrms_modules_worklog_internal_feature_pt.CreateResponse'
+            $ref: '#/definitions/worklog_internal_feature_pt.CreateResponse'
         "400":
           description: Bad Request
         "401":
@@ -11743,7 +12184,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_worklog_internal_feature_pt.GetResponse'
+            $ref: '#/definitions/worklog_internal_feature_pt.GetResponse'
         "400":
           description: Bad Request
         "401":
@@ -11773,7 +12214,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/hrms_modules_worklog_internal_feature_pt.UpdateRequest'
+          $ref: '#/definitions/worklog_internal_feature_pt.UpdateRequest'
       - description: Company ID
         in: header
         name: X-Company-ID
@@ -11788,7 +12229,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/hrms_modules_worklog_internal_feature_pt.UpdateResponse'
+            $ref: '#/definitions/worklog_internal_feature_pt.UpdateResponse'
         "400":
           description: Bad Request
         "401":

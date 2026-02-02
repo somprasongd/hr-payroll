@@ -48,6 +48,7 @@ type Record struct {
 	EmployeeCode      string     `db:"employee_code" json:"employee_code"`
 	Installments      RecordList `db:"installments" json:"installments"`
 	PaymentMethod     *string    `db:"payment_method" json:"payment_method"`
+	BankID            *uuid.UUID `db:"bank_id" json:"bank_id"`
 	BankName          *string    `db:"bank_name" json:"bank_name"`
 	BankAccountNumber *string    `db:"bank_account_number" json:"bank_account_number"`
 	TransferTime      *string    `db:"transfer_time" json:"transfer_time"`
@@ -431,12 +432,12 @@ func (r Repository) InsertRepayment(ctx context.Context, tenant contextx.TenantI
 	const q = `
 INSERT INTO debt_txn (
   employee_id, company_id, branch_id, txn_date, txn_type, amount, reason, status, created_by, updated_by,
-  payment_method, bank_name, bank_account_number, transfer_time
-) VALUES ($1,$2,$3,$4,'repayment',$5,$6,'pending',$7,$7,$8,$9,$10,$11)
+  payment_method, bank_id, bank_name, bank_account_number, transfer_time
+) VALUES ($1,$2,$3,$4,'repayment',$5,$6,'pending',$7,$7,$8,$9,(SELECT name_th FROM banks WHERE id = $9),$10,$11)
 RETURNING *`
 	var out Record
 	if err := db.GetContext(ctx, &out, q, rec.EmployeeID, tenant.CompanyID, branchID, rec.TxnDate, rec.Amount, rec.Reason, actor,
-		rec.PaymentMethod, rec.BankName, rec.BankAccountNumber, rec.TransferTime); err != nil {
+		rec.PaymentMethod, rec.BankID, rec.BankAccountNumber, rec.TransferTime); err != nil {
 		return nil, err
 	}
 	return &out, nil

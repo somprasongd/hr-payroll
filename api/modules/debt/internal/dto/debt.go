@@ -25,6 +25,7 @@ type Item struct {
 	UpdatedAt         time.Time  `json:"updatedAt"`
 	Installments      []Item     `json:"installments,omitempty"`
 	PaymentMethod     *string    `json:"paymentMethod,omitempty"`
+	BankID            *uuid.UUID `json:"bankId,omitempty"`
 	BankName          *string    `json:"bankName,omitempty"`
 	BankAccountNumber *string    `json:"bankAccountNumber,omitempty"`
 	TransferTime      *string    `json:"transferTime,omitempty"`
@@ -53,6 +54,7 @@ func FromRecord(r repository.Record) Item {
 		CreatedAt:         r.CreatedAt,
 		UpdatedAt:         r.UpdatedAt,
 		PaymentMethod:     r.PaymentMethod,
+		BankID:            r.BankID,
 		BankName:          r.BankName,
 		BankAccountNumber: r.BankAccountNumber,
 		TransferTime:      r.TransferTime,

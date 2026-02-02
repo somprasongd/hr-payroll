@@ -635,6 +635,7 @@
     "photoUploadSuccess": "อัปโหลดรูปสำเร็จ",
     "photoUploading": "กำลังอัปโหลด...",
     "placeholders": {
+      "selectBank": "เลือกธนาคาร",
       "selectDepartment": "เลือกแผนก",
       "selectPosition": "เลือกตำแหน่ง",
       "selectTitle": "เลือกคำนำหน้า",

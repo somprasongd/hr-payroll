@@ -126,7 +126,7 @@ export function EmployeeForm({
 
     // Financial Info
     basePayAmount: z.coerce.number().gt(0, t("validation.positive")),
-    bankName: z.string().optional(),
+    bankId: z.string().optional(),
     bankAccountNo: z.string().optional(),
 
     // Benefits
@@ -188,7 +188,7 @@ export function EmployeeForm({
         new Date().toISOString().split("T")[0],
       employmentEndDate: initialData?.employmentEndDate || null,
       basePayAmount: initialData?.basePayAmount || 0,
-      bankName: initialData?.bankName || "",
+      bankId: initialData?.bankId || "",
       bankAccountNo: initialData?.bankAccountNo || "",
       ssoContribute: initialData?.ssoContribute || false,
       // Use 0 when ssoContribute is false, otherwise use API value
@@ -219,7 +219,7 @@ export function EmployeeForm({
   useEffect(() => {
     const fetchMasterData = async () => {
       try {
-        const data = await masterDataService.getAll();
+        const data = await masterDataService.getAllWithBanks();
         setMasterData(data);
       } catch (error) {
         console.error("Failed to fetch master data", error);
@@ -1324,13 +1324,30 @@ export function EmployeeForm({
                     />
                     <FormField
                       control={form.control}
-                      name="bankName"
+                      name="bankId"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>{t("fields.bank")}</FormLabel>
-                          <FormControl>
-                            <Input {...field} onFocus={handleFocus} />
-                          </FormControl>
+                          <Select
+                            onValueChange={(value) => field.onChange(value === "__clear__" ? "" : value)}
+                            value={field.value || ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("placeholders.selectBank")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="__clear__" className="text-muted-foreground">
+                                - {t("placeholders.selectBank")} -
+                              </SelectItem>
+                              {masterData?.banks?.map((bank) => (
+                                <SelectItem key={bank.id} value={bank.id}>
+                                  {bank.nameTh} ({bank.code})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

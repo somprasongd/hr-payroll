@@ -58,7 +58,7 @@ type DetailRecord struct {
 	BasePayAmount               float64    `db:"base_pay_amount"`
 	EmploymentStartDate         time.Time  `db:"employment_start_date"`
 	EmploymentEndDate           *time.Time `db:"employment_end_date"`
-	BankName                    *string    `db:"bank_name"`
+	BankID                      *uuid.UUID `db:"bank_id"`
 	BankAccountNo               *string    `db:"bank_account_no"`
 	SSOContribute               bool       `db:"sso_contribute"`
 	SSODeclaredWage             *float64   `db:"sso_declared_wage"`
@@ -294,7 +294,7 @@ SELECT
   e.base_pay_amount,
   e.employment_start_date,
   e.employment_end_date,
-  e.bank_name,
+  e.bank_id,
   e.bank_account_no,
   e.sso_contribute,
   e.sso_declared_wage,
@@ -376,7 +376,7 @@ INSERT INTO employees (
   id_document_type_id, id_document_number, id_document_other_description,
   phone, email, photo_id, employee_type_id, department_id, position_id, base_pay_amount,
   employment_start_date, employment_end_date,
-  bank_name, bank_account_no,
+  bank_id, bank_account_no,
   sso_contribute, sso_declared_wage, sso_hospital_name,
   provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
   withhold_tax,
@@ -389,7 +389,7 @@ INSERT INTO employees (
   :id_document_type_id, :id_document_number, :id_document_other_description,
   :phone, :email, :photo_id, :employee_type_id, :department_id, :position_id, :base_pay_amount,
   :employment_start_date, :employment_end_date,
-  :bank_name, :bank_account_no,
+  :bank_id, :bank_account_no,
   :sso_contribute, :sso_declared_wage, :sso_hospital_name,
   :provident_fund_contribute, :provident_fund_rate_employee, :provident_fund_rate_employer,
   :withhold_tax,
@@ -427,7 +427,7 @@ INSERT INTO employees (
 		"base_pay_amount":                payload.BasePayAmount,
 		"employment_start_date":          payload.EmploymentStartDate,
 		"employment_end_date":            payload.EmploymentEndDate,
-		"bank_name":                      payload.BankName,
+		"bank_id":                        payload.BankID,
 		"bank_account_no":                payload.BankAccountNo,
 		"sso_contribute":                 payload.SSOContribute,
 		"sso_declared_wage":              payload.SSODeclaredWage,
@@ -477,7 +477,7 @@ UPDATE employees SET
   base_pay_amount=:base_pay_amount,
   employment_start_date=:employment_start_date,
   employment_end_date=:employment_end_date,
-  bank_name=:bank_name,
+  bank_id=:bank_id,
   bank_account_no=:bank_account_no,
   sso_contribute=:sso_contribute,
   sso_declared_wage=:sso_declared_wage,
@@ -530,7 +530,7 @@ RETURNING *`
 		"base_pay_amount":                payload.BasePayAmount,
 		"employment_start_date":          payload.EmploymentStartDate,
 		"employment_end_date":            payload.EmploymentEndDate,
-		"bank_name":                      payload.BankName,
+		"bank_id":                        payload.BankID,
 		"bank_account_no":                payload.BankAccountNo,
 		"sso_contribute":                 payload.SSOContribute,
 		"sso_declared_wage":              payload.SSODeclaredWage,

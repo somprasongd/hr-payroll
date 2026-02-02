@@ -636,6 +636,7 @@
     "photoUploadSuccess": "Photo uploaded successfully",
     "photoUploading": "Uploading...",
     "placeholders": {
+      "selectBank": "Select bank",
       "selectDepartment": "Select department",
       "selectPosition": "Select position",
       "selectTitle": "Select title",

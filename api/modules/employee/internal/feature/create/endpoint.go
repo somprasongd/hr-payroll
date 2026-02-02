@@ -61,7 +61,7 @@ type RequestBody struct {
 	BasePayAmount               float64      `json:"basePayAmount" validate:"gt=0"`
 	EmploymentStartDate         string       `json:"employmentStartDate" validate:"required"`
 	EmploymentEndDate           *string      `json:"employmentEndDate"`
-	BankName                    *string      `json:"bankName"`
+	BankID                      OptionalUUID `json:"bankId"`
 	BankAccountNo               *string      `json:"bankAccountNo"`
 	SSOContribute               bool         `json:"ssoContribute"`
 	SSODeclaredWage             *float64     `json:"ssoDeclaredWage"`
@@ -109,7 +109,7 @@ func (p RequestBody) ToDetailRecord() repository.DetailRecord {
 		BasePayAmount:               p.BasePayAmount,
 		EmploymentStartDate:         p.ParsedEmploymentStartDate,
 		EmploymentEndDate:           p.ParsedEmploymentEndDate,
-		BankName:                    p.BankName,
+		BankID:                      p.BankID.Ptr(),
 		BankAccountNo:               p.BankAccountNo,
 		SSOContribute:               p.SSOContribute,
 		SSODeclaredWage:             ssoDeclaredWage,

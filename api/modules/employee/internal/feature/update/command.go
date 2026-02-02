@@ -204,7 +204,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 					"basePayAmount":              updated.BasePayAmount,
 					"employmentStartDate":        updated.EmploymentStartDate,
 					"employmentEndDate":          updated.EmploymentEndDate,
-					"bankName":                   updated.BankName,
+					"bankId":                     updated.BankID,
 					"bankAccountNo":              updated.BankAccountNo,
 					"ssoContribute":              updated.SSOContribute,
 					"ssoDeclaredWage":            updated.SSODeclaredWage,
