@@ -1,11 +1,38 @@
 # Changelog
 
-## [Unreleased]
+## v2.4.0 - 2026-02-03
 
 ### Added
 
-- Add late count display and data fetching to the attendance leaderboard widget. (7891d79)
+- Add `hasOutstanding` filter to debt list API and UI, and enable filtering by employee from the debt list. (cac3cae)
 
+- Restructure admin menu into Master Data and Settings sections, and update associated translations. (69b8d71)
+
+- Implement company bank account management and integrate it into debt repayment. (#5) (0ece377)
+
+### Fixed
+
+- restrict bank activation toggle to system-defined banks only. (0777c3b)
+
+- Improve E2E test stability by increasing visibility timeouts, refining branch switching logic, and configuring login tests for a no-setup environment. (09e3d2a)
+
+### Other
+
+- Enhance Employee Form Validation and Bank Management System (#4)
+
+* feat: Implement bank master data management and integrate bank ID into employee records.
+
+* feat: Introduce bank management pages and API, and update department endpoint to support both PUT and PATCH methods.
+
+* feat: Display inactive bank status in select dropdowns and add bank account number validation.
+
+* feat: implement system bank active status toggle functionality and update master data API routes (838bcfe)
+
+## v2.3.3 - 2026-02-01
+
+### Added
+
+- Add late count display and data fetching to the attendance leaderboard widget. (b6f1eaf)
 
 ### Docs
 
@@ -17,7 +44,6 @@
 
 - Release version v2.3.1 in CHANGELOG.md. (363b95e)
 
-
 ### Fixed
 
 - Remove branch-level filtering from employee number uniqueness check and update web dependencies. (af3f0f9)
@@ -27,7 +53,6 @@
 ### Changed
 
 - Centralize API root URL configuration using `API_CONFIG.rootURL`. (04b8a74)
-
 
 ### Docs
 
@@ -53,7 +78,6 @@
 
 - Enhance API error message extraction in frontend components and implement build-time API versioning with improved display. (1350c48)
 
-
 ### Fixed
 
 - Normalize empty email before validation in employee endpoints (080fe9d)
@@ -64,11 +88,9 @@
 
 - Document Printing, Payment Cover Sheets, and Payroll Settings Snapshots (#3) (0184e34)
 
-
 ### Chore
 
 - release v2.1.0 (14941ef)
-
 
 ### Docs
 
@@ -83,7 +105,6 @@
 - update swagger tenant headers and stabilize cookie-based auth (#2) (4d9608f)
 
 - Expand Dockerfile to include dependency caching for additional modules and shared components. (5c25890)
-
 
 ### Docs
 
@@ -119,11 +140,9 @@
 
 - Add employee fields for nickname, ID document description, and SSO hospital name with associated validation, UI, and migration updates. (e9a63f2)
 
-
 ### Changed
 
 - adjust route paths and permissions for payroll and user modules (0a42bb1)
-
 
 ### Fixed
 
@@ -145,11 +164,9 @@
 
 - Add radio group for selecting full/half day leave duration in worklog form, automatically setting quantity. (f378f23)
 
-
 ### Changed
 
 - handle SSO declared wage null and update import syntax (bf6e573)
-
 
 ### Fixed
 
@@ -303,18 +320,15 @@
 
 - add CI workflow and migration support to Docker builds (c69f0a8)
 
-
 ### Build
 
 - Add `activitylog`, `dashboard`, and `shared/events` Go module dependencies to Dockerfile. (773e61d)
-
 
 ### CI
 
 - Add steps to start web server and wait for API and web readiness before E2E tests. (1943f34)
 
 - add NEXT_PUBLIC_API_BASE_URL environment variable to E2E standalone build step. (b20640f)
-
 
 ### Changed
 
@@ -326,7 +340,6 @@
 
 - add attendance bonus flags to employee detail DTO (2d3b132)
 
-
 ### Chore
 
 - Add favicon.ico route to return 204 No Content. (53a6844)
@@ -337,13 +350,11 @@
 
 - add v1.0.0 release notes (c48230a)
 
-
 ### Docs
 
 - Add HR Payroll system color palette documentation and its associated image asset. (4d18530)
 
 - add initial CHANGELOG.md with release notes (5ccba9f)
-
 
 ### Fixed
 
@@ -355,15 +366,12 @@
 
 - default position and department data to empty array on null API responses (0bdf061)
 
-
 ### Other
 
 - init api (19a38c7)
 
 - update next.js dependency to version 16.0.10. (38c5564)
 
-
 ### Tests
 
 - update E2E tests for filters functionality (883c2b6)
-
