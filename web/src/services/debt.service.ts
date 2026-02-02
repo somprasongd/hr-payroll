@@ -54,6 +54,7 @@ export const debtService = {
     status?: string;
     startDate?: string;
     endDate?: string;
+    hasOutstanding?: boolean;
     page?: number;
     limit?: number;
   }) {

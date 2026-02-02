@@ -23,6 +23,7 @@ import (
 // @Param status query string false "pending|approved|all"
 // @Param startDate query string false "YYYY-MM-DD"
 // @Param endDate query string false "YYYY-MM-DD"
+// @Param hasOutstanding query boolean false "filter only with outstanding debt"
 // @Security BearerAuth
 // @Success 200 {object} Response
 // @Failure 400
@@ -62,14 +63,21 @@ func NewEndpoint(router fiber.Router) {
 			endDate = &d
 		}
 
+		var hasOutstanding *bool
+		if v := c.Query("hasOutstanding"); v != "" {
+			b := v == "true"
+			hasOutstanding = &b
+		}
+
 		resp, err := mediator.Send[*Query, *Response](c.Context(), &Query{
-			Page:       page,
-			Limit:      limit,
-			EmployeeID: empID,
-			Type:       typ,
-			Status:     status,
-			StartDate:  startDate,
-			EndDate:    endDate,
+			Page:           page,
+			Limit:          limit,
+			EmployeeID:     empID,
+			Type:           typ,
+			Status:         status,
+			StartDate:      startDate,
+			EndDate:        endDate,
+			HasOutstanding: hasOutstanding,
 		})
 		if err != nil {
 			return err

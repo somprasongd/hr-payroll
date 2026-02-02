@@ -203,7 +203,7 @@ func (r Repository) fetchEmployeeBranch(ctx context.Context, tenant contextx.Ten
 	return branchID, nil
 }
 
-func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, empID *uuid.UUID, txnType, status string, startDate, endDate *time.Time) (ListResult, error) {
+func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, limit int, empID *uuid.UUID, txnType, status string, startDate, endDate *time.Time, hasOutstanding *bool) (ListResult, error) {
 	offset := (page - 1) * limit
 	var where []string
 	var args []interface{}
@@ -240,6 +240,13 @@ func (r Repository) List(ctx context.Context, tenant contextx.TenantInfo, page, 
 	if endDate != nil {
 		args = append(args, *endDate)
 		where = append(where, fmt.Sprintf("t.txn_date <= $%d", len(args)))
+	}
+	if hasOutstanding != nil {
+		if *hasOutstanding {
+			where = append(where, "EXISTS (SELECT 1 FROM payroll_accumulation pa WHERE pa.employee_id = t.employee_id AND pa.accum_type = 'loan_outstanding' AND pa.amount > 0)")
+		} else {
+			where = append(where, "NOT EXISTS (SELECT 1 FROM payroll_accumulation pa WHERE pa.employee_id = t.employee_id AND pa.accum_type = 'loan_outstanding' AND pa.amount > 0)")
+		}
 	}
 
 	whereClause := strings.Join(where, " AND ")

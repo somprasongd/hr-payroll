@@ -17,13 +17,14 @@ import (
 )
 
 type Query struct {
-	Page       int
-	Limit      int
-	EmployeeID *uuid.UUID
-	Type       string
-	Status     string
-	StartDate  *time.Time
-	EndDate    *time.Time
+	Page           int
+	Limit          int
+	EmployeeID     *uuid.UUID
+	Type           string
+	Status         string
+	StartDate      *time.Time
+	EndDate        *time.Time
+	HasOutstanding *bool
 }
 
 type Response struct {
@@ -54,7 +55,7 @@ func (h *Handler) Handle(ctx context.Context, q *Query) (*Response, error) {
 		return nil, errs.Unauthorized("missing tenant context")
 	}
 
-	res, err := h.repo.List(ctx, tenant, q.Page, q.Limit, q.EmployeeID, q.Type, q.Status, q.StartDate, q.EndDate)
+	res, err := h.repo.List(ctx, tenant, q.Page, q.Limit, q.EmployeeID, q.Type, q.Status, q.StartDate, q.EndDate, q.HasOutstanding)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to list debt transactions", zap.Error(err))
 		return nil, errs.Internal("failed to list debt transactions")

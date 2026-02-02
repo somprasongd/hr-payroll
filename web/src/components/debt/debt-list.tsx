@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Filter, Plus, Trash2, Eye, RotateCcw, Wallet, Clock, Pencil } from "lucide-react";
+import { Filter, Plus, Trash2, Eye, RotateCcw, Wallet, Clock, Pencil, ExternalLink } from "lucide-react";
 import { debtService, DebtTxn } from '@/services/debt.service';
 import { employeeService, Employee } from '@/services/employee.service';
 import { format } from 'date-fns';
@@ -151,6 +151,7 @@ export function DebtList() {
         status: statusFilter === 'all' ? undefined : statusFilter,
         type: typeFilter === 'all' ? undefined : typeFilter,
         employeeId: employeeFilter === 'all' ? undefined : employeeFilter,
+        hasOutstanding: hasOutstandingFilter || undefined,
       });
       // Filter out installment type transactions as they are child records
       const filteredData = (response.data || []).filter(item => item.txnType !== 'installment');
@@ -171,7 +172,7 @@ export function DebtList() {
 
   useEffect(() => {
     fetchData();
-  }, [page, statusFilter, typeFilter, employeeFilter, refreshKey]);
+  }, [page, statusFilter, typeFilter, employeeFilter, hasOutstandingFilter, refreshKey]);
 
   const handleDelete = async () => {
     if (!deleteItem) return;
@@ -210,8 +211,27 @@ export function DebtList() {
       cell: (info: any) => {
         const item = info.getValue() as DebtTxn;
         const emp = employees.find(e => e.id === item.employeeId);
-        if (!emp) return '-';
-        return <EmployeeCellDisplay employee={emp} />;
+        
+        return (
+          <button
+            onClick={() => setEmployeeFilter(item.employeeId)}
+            className="flex items-center gap-1 group text-left hover:text-primary transition-colors"
+          >
+            {emp ? (
+              <EmployeeCellDisplay employee={emp} />
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0">
+                  FT
+                </div>
+                <div className="text-sm font-medium">
+                  {item.employeeCode} - {item.employeeName}
+                </div>
+              </div>
+            )}
+            <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
+          </button>
+        );
       },
     },
     {
