@@ -732,6 +732,7 @@
     "employeeManagement": "ဝန်ထမ်းစီမံခန့်ခွဲမှု",
     "humanResources": "လူ့စွမ်းအား",
     "leaveManagement": "ခွင့်စီမံခန့်ခွဲမှု",
+    "masterData": "အခြေခံ အချက်အလက်",
     "payoutPT": "ကြိုတင်ငွေပေးချေမှု (အချိန်ပိုင်း)",
     "payroll": "လစာ",
     "payrollExpenses": "လစာနှင့် ကုန်ကျစရိတ်",
@@ -740,12 +741,14 @@
     "salaryRaise": "လစာတိုးမြှင့်ခြင်း",
     "settings": "ဆက်တင်များ",
     "systemManagement": "စနစ်စီမံခန့်ခွဲမှု",
-    "users": "အသုံးပြုသူ စီမံခန့်ခွဲမှု",
+    "systemSettings": "စနစ် ဆက်တင်များ",
+    "users": "အသုံးပြုသူများ",
     "worklog": "အလုပ်မှတ်တမ်း",
     "worklogFT": "အချိန်ပြည့်",
     "worklogPT": "အချိန်ပိုင်း"
   },
   "Nav": {
+    "banks": "ဘဏ်များ",
     "branches": "ဘဏ်ခွဲများ",
     "departments": "ဌာနများ",
     "documentTypes": "စာရွက်စာတမ်း အမျိုးအစား",

@@ -749,6 +749,7 @@
     "employeeManagement": "จัดการพนักงาน",
     "humanResources": "ทรัพยากรบุคคล",
     "leaveManagement": "จัดการวันลา",
+    "masterData": "ข้อมูลระบบ",
     "payoutPT": "จ่ายล่วงหน้า (พาร์ทไทม์)",
     "payroll": "เงินเดือน",
     "payrollExpenses": "เงินเดือนและค่าใช้จ่าย",
@@ -757,7 +758,8 @@
     "salaryRaise": "ปรับเงินเดือน",
     "settings": "การตั้งค่า",
     "systemManagement": "การจัดการระบบ",
-    "users": "การจัดการผู้ใช้งาน",
+    "systemSettings": "การตั้งค่าการคำนวณ",
+    "users": "ผู้ใช้งาน",
     "worklog": "บันทึกเวลาทำงาน",
     "worklogFT": "พนักงานประจำ",
     "worklogPT": "พาร์ทไทม์"

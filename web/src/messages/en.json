@@ -749,6 +749,7 @@
     "employeeManagement": "Employee Management",
     "humanResources": "Human Resources",
     "leaveManagement": "Leave Management",
+    "masterData": "Master Data",
     "payoutPT": "Advance Payout (Part-time)",
     "payroll": "Payroll",
     "payrollExpenses": "Payroll & Expenses",
@@ -757,7 +758,8 @@
     "salaryRaise": "Salary Raise",
     "settings": "Settings",
     "systemManagement": "System Management",
-    "users": "User Management",
+    "systemSettings": "System Settings",
+    "users": "Users",
     "worklog": "Work Logs",
     "worklogFT": "Full-Time",
     "worklogPT": "Part-Time"

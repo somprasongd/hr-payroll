@@ -10,6 +10,7 @@ import {
   FileText,
   ClipboardList,
   Landmark,
+  Database,
   LucideIcon
 } from "lucide-react"
 
@@ -106,22 +107,29 @@ export const menuConfig: MenuGroup[] = [
     roles: ['admin'],
     items: [
       {
-        // Let's just use "admin" and if it misses, it misses. Or I can add `label` prop to override translation.
-        titleKey: "admin", 
-        namespace: "Common", // 'admin' likely in Common or just use a known key. 
-        // Wait, the original code loops over subitems for Admin.
-        icon: Settings2,
+        titleKey: "masterData",
+        icon: Database,
         items: [
-          { titleKey: "orgProfile", namespace: "Nav", href: "/admin/org-profile" },
-          { titleKey: "branches", namespace: "Nav", href: "/admin/branches" },
           { titleKey: "departments", namespace: "Nav", href: "/admin/departments" },
           { titleKey: "positions", namespace: "Nav", href: "/admin/positions" },
           { titleKey: "documentTypes", namespace: "Nav", href: "/admin/document-types" },
           { titleKey: "banks", namespace: "Nav", href: "/admin/banks" },
-          { titleKey: "users", href: "/admin/users" },
-          { titleKey: "activityLogs", href: "/admin/activity-logs" },
-          { titleKey: "settings", href: "/admin/settings" }
         ]
+      },
+      {
+        titleKey: "settings",
+        icon: Settings2,
+        items: [
+          { titleKey: "orgProfile", namespace: "Nav", href: "/admin/org-profile" },
+          { titleKey: "branches", namespace: "Nav", href: "/admin/branches" },
+          { titleKey: "users", href: "/admin/users" },
+          { titleKey: "systemSettings", href: "/admin/settings" }
+        ]
+      },
+      {
+        titleKey: "activityLogs",
+        icon: ClipboardList,
+        href: "/admin/activity-logs"
       }
     ]
   },
