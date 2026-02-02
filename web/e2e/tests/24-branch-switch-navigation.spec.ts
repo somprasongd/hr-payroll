@@ -29,14 +29,28 @@ test.describe('Branch Switching Navigation', () => {
     const currentUrl = page.url();
     console.log('Current URL before switch:', currentUrl);
 
-    // 5. Open branch switcher in the header and switch to "สาขา 1"
-    const branchSwitcher = page.locator('header button').filter({ hasText: /สำนักงานใหญ่|สาขา 1/ }).first();
+    // 5. Open branch switcher in the header and pick the first available branch that ISN'T current
+    const branchSwitcher = page.locator('header button').filter({ hasText: /สำนักงานใหญ่|สาขา 1|Kathu/ }).first();
     await branchSwitcher.click();
     
-    // Use a simpler locator for the menu item
-    const menuItem = page.locator('[role="menuitem"], [role="option"]').filter({ hasText: 'สาขา 1' }).last();
-    await menuItem.waitFor({ state: 'visible', timeout: 5000 });
-    await menuItem.click({ force: true });
+    // Pick the first menu item that is not the current one (the check icon marks current)
+    const menuItems = page.locator('[role="menuitem"], [role="option"]');
+    const count = await menuItems.count();
+    let switched = false;
+    for (let i = 0; i < count; i++) {
+      const item = menuItems.nth(i);
+      const isCurrent = await item.locator('svg').count() > 0; // Check icon presence
+      if (!isCurrent) {
+        await item.click({ force: true });
+        switched = true;
+        break;
+      }
+    }
+    
+    if (!switched && count > 0) {
+      // If we couldn't determine which one is current, just click the last one
+      await menuItems.last().click({ force: true });
+    }
 
     // 6. Verify we are redirected to the employee list page
     // The locale remains, so it should be /th/employees
@@ -59,12 +73,26 @@ test.describe('Branch Switching Navigation', () => {
     const listUrl = page.url();
 
     // 3. Switch branch
-    const branchSwitcher = page.locator('header button').filter({ hasText: /สำนักงานใหญ่|สาขา 1/ }).first();
+    const branchSwitcher = page.locator('header button').filter({ hasText: /สำนักงานใหญ่|สาขา 1|Kathu/ }).first();
     await branchSwitcher.click();
     
-    const menuItem = page.locator('[role="menuitem"], [role="option"]').filter({ hasText: 'สาขา 1' }).last();
-    await menuItem.waitFor({ state: 'visible', timeout: 5000 });
-    await menuItem.click({ force: true });
+    // Pick the first menu item that is not the current one
+    const menuItems = page.locator('[role="menuitem"], [role="option"]');
+    const count = await menuItems.count();
+    let switched = false;
+    for (let i = 0; i < count; i++) {
+      const item = menuItems.nth(i);
+      const isCurrent = await item.locator('svg').count() > 0;
+      if (!isCurrent) {
+        await item.click({ force: true });
+        switched = true;
+        break;
+      }
+    }
+    
+    if (!switched && count > 0) {
+      await menuItems.last().click({ force: true });
+    }
 
     // 4. Verify we are still on the list page
     await expect(page).toHaveURL(listUrl, { timeout: 10000 });

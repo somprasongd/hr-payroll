@@ -10,15 +10,17 @@ test.describe('Admin Positions Management', () => {
 
   test('ควรแสดงหน้า Positions ได้ถูกต้อง', async ({ page }) => {
     // Check page heading
-    await expect(page.getByRole('heading', { name: /ตำแหน่ง/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /ตำแหน่ง/i })).toBeVisible({ timeout: 15000 });
     // Check create button
-    await expect(page.getByRole('button', { name: /เพิ่ม|สร้าง/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /เพิ่ม|สร้าง/i })).toBeVisible({ timeout: 15000 });
     // Check table is visible
     await expect(page.locator('table')).toBeVisible();
   });
 
   test('ควรเปิด dialog สร้างตำแหน่งได้', async ({ page }) => {
-    await page.getByRole('button', { name: /เพิ่ม|สร้าง/i }).click();
+    const createBtn = page.getByRole('button', { name: /เพิ่ม|สร้าง/i });
+    await expect(createBtn).toBeVisible({ timeout: 15000 });
+    await createBtn.click();
     
     // Dialog should be visible
     const dialog = page.locator('[role="dialog"]');

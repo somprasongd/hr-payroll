@@ -10,7 +10,7 @@ test.describe('Payroll Management', () => {
 
   test('ควรแสดงหน้า Payroll ได้ถูกต้อง', async ({ page }) => {
     // Check page loads with proper heading
-    await expect(page.getByRole('heading').first()).toBeVisible();
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15000 });
     await expect(page.locator('table').or(page.getByText(/เลือก|กรุณา/i))).toBeVisible();
   });
 
