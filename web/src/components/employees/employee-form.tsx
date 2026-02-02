@@ -1341,7 +1341,7 @@ export function EmployeeForm({
                               <SelectItem value="__clear__" className="text-muted-foreground">
                                 - {t("placeholders.selectBank")} -
                               </SelectItem>
-                              {masterData?.banks?.map((bank) => (
+                              {masterData?.banks?.filter(b => b.isEnabled || b.id === field.value).map((bank) => (
                                 <SelectItem key={bank.id} value={bank.id}>
                                   {bank.nameTh} ({bank.code})
                                 </SelectItem>

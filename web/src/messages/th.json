@@ -44,6 +44,52 @@
     "noData": "ไม่พบข้อมูลประวัติ",
     "title": "ประวัติการใช้งาน"
   },
+  "Banks": {
+    "createDescription": "กรอกข้อมูลธนาคารที่ต้องการสร้าง",
+    "createTitle": "สร้างธนาคารใหม่",
+
+    "description": "จัดการข้อมูลธนาคารในระบบ",
+    "systemDescription": "จัดการข้อมูลธนาคารในระบบ (สำหรับผู้ดูแลระบบสูงสุด)",
+    "companyDescription": "จัดการข้อมูลธนาคารที่ใช้ในบริษัท",
+    "editDescription": "แก้ไขข้อมูลธนาคาร",
+    "editTitle": "แก้ไขธนาคาร",
+    "errors": {
+      "deleteFailed": "ลบไม่สำเร็จ",
+      "fetchFailed": "ไม่สามารถโหลดข้อมูลธนาคารได้",
+      "saveFailed": "บันทึกไม่สำเร็จ",
+      "toggleFailed": "ไม่สามารถเปลี่ยนสถานะธนาคารได้"
+    },
+    "fields": {
+      "code": "รหัสธนาคาร",
+      "nameEn": "ชื่อ (อังกฤษ)",
+      "nameTh": "ชื่อ (ไทย)",
+      "status": "สถานะ"
+    },
+    "noData": "ไม่พบข้อมูลธนาคาร",
+    "placeholders": {
+      "code": "เช่น KBANK, SCB",
+      "nameEn": "เช่น Kasikornbank",
+      "nameTh": "เช่น ธนาคารกสิกรไทย"
+    },
+    "status": {
+      "active": "ใช้งาน",
+      "inactive": "ไม่ใช้งาน"
+    },
+    "success": {
+      "created": "สร้างธนาคารสำเร็จ",
+      "deleted": "ลบธนาคารสำเร็จ",
+      "updated": "แก้ไขธนาคารสำเร็จ",
+      "statusChanged": "เปลี่ยนสถานะสำเร็จ"
+    },
+    "systemType": "ระบบ",
+    "customType": "เฉพาะบริษัท",
+    "title": "จัดการธนาคาร",
+    "validation": {
+      "codeRequired": "กรุณากรอกรหัสธนาคาร",
+      "nameThRequired": "กรุณากรอกชื่อธนาคาร (ไทย)",
+      "nameEnRequired": "กรุณากรอกชื่อธนาคาร (อังกฤษ)"
+    }
+  },
   "Bonus": {
     "actions": {
       "approve": "อนุมัติ",
@@ -249,6 +295,7 @@
     "selectBranch": "เลือกสาขา",
     "submit": "Submit",
     "success": "สำเร็จ",
+    "type": "ประเภท",
     "view": "ดู",
     "yes": "Yes"
   },
@@ -713,6 +760,7 @@
     "worklogPT": "พาร์ทไทม์"
   },
   "Nav": {
+    "banks": "ธนาคาร",
     "branches": "สาขา",
     "departments": "แผนก",
     "documentTypes": "ประเภทเอกสาร",

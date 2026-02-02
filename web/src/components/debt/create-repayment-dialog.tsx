@@ -324,7 +324,7 @@ import { masterDataService, Bank } from '@/services/master-data.service';
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {banks.map((bank) => (
+                          {banks.filter(b => b.isEnabled || b.id === field.value).map((bank) => (
                             <SelectItem key={bank.id} value={bank.id}>
                               {bank.nameTh} ({bank.code})
                             </SelectItem>

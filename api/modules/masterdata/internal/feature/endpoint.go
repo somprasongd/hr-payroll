@@ -15,7 +15,7 @@ func Register(router fiber.Router) {
 	list.Register(router)
 
 	// Admin operations
-	admin := router.Group("", middleware.RequireRoles("admin"))
+	admin := router.Group("", middleware.RequireRoles("admin", "hr"))
 
 	deptGroup := admin.Group("/departments")
 	department.NewCreateEndpoint(deptGroup)

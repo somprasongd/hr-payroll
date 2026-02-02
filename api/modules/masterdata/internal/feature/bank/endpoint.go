@@ -97,7 +97,7 @@ func NewCreateEndpoint(router fiber.Router) {
 // @Param X-Branch-ID header string false "Branch ID"
 // @Router /master/banks/{id} [patch]
 func NewUpdateEndpoint(router fiber.Router) {
-	router.Patch("/:id", func(c fiber.Ctx) error {
+	update := func(c fiber.Ctx) error {
 		tenant, ok := contextx.TenantFromContext(c.Context())
 		if !ok {
 			return errs.Unauthorized("missing tenant context")
@@ -122,7 +122,9 @@ func NewUpdateEndpoint(router fiber.Router) {
 			return err
 		}
 		return response.JSON(c, fiber.StatusOK, resp.Record)
-	})
+	}
+	router.Put("/:id", update)
+	router.Patch("/:id", update)
 }
 
 // @Summary Soft delete custom bank for company
@@ -267,7 +269,7 @@ func NewCreateSystemBankEndpoint(router fiber.Router) {
 // @Failure 404
 // @Router /master/system-banks/{id} [patch]
 func NewUpdateSystemBankEndpoint(router fiber.Router) {
-	router.Patch("/:id", func(c fiber.Ctx) error {
+	update := func(c fiber.Ctx) error {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
 			return errs.BadRequest("invalid id")
@@ -287,7 +289,9 @@ func NewUpdateSystemBankEndpoint(router fiber.Router) {
 			return err
 		}
 		return response.JSON(c, fiber.StatusOK, resp.Record)
-	})
+	}
+	router.Put("/:id", update)
+	router.Patch("/:id", update)
 }
 
 // @Summary Soft delete system bank

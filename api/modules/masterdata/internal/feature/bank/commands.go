@@ -149,15 +149,25 @@ func (h *ListHandler) Handle(ctx context.Context, query *ListQuery) (*ListRespon
 	var records []repository.BankRecord
 	var err error
 
+	l := logger.FromContext(ctx).With(zap.String("companyId", query.CompanyID.String()), zap.Bool("isAdmin", query.IsAdmin))
+
 	if query.IsAdmin {
 		records, err = h.repo.BanksForAdmin(ctx, query.CompanyID)
 	} else {
 		records, err = h.repo.Banks(ctx, query.CompanyID)
 	}
 	if err != nil {
-		logger.FromContext(ctx).Error("failed to list banks", zap.Error(err))
+		l.Error("failed to list banks", zap.Error(err))
 		return nil, errs.Internal("failed to list banks")
 	}
+
+	l.Debug("listed banks", zap.Int("count", len(records)))
+	for _, r := range records {
+		if r.Code == "BLL" {
+			l.Info("debug bank status", zap.String("id", r.ID.String()), zap.Bool("enabled", r.IsEnabled))
+		}
+	}
+
 	return &ListResponse{Records: records}, nil
 }
 
@@ -287,7 +297,7 @@ func (h *ToggleHandler) Handle(ctx context.Context, cmd *ToggleCommand) (mediato
 		return mediator.NoResponse{}, errs.Unauthorized("missing user context")
 	}
 
-	if err := h.repo.ToggleSystemBankForCompany(ctx, cmd.BankID, cmd.CompanyID, cmd.IsEnabled, user.ID); err != nil {
+	if err := h.repo.ToggleBankForCompany(ctx, cmd.BankID, cmd.CompanyID, cmd.IsEnabled, user.ID); err != nil {
 		logger.FromContext(ctx).Error("failed to toggle bank", zap.Error(err), zap.String("bankId", cmd.BankID.String()))
 		return mediator.NoResponse{}, errs.Internal("failed to toggle bank")
 	}

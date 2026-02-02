@@ -9,15 +9,14 @@ import (
 
 // BankRecord represents a bank record from database
 type BankRecord struct {
-	ID       uuid.UUID `db:"id" json:"id"`
-	Code     string    `db:"code" json:"code"`
-	NameTH   string    `db:"name_th" json:"nameTh"`
-	NameEN   string    `db:"name_en" json:"nameEn"`
-	NameMY   string    `db:"name_my" json:"nameMy"`
-	IsSystem bool      `db:"is_system" json:"isSystem"`
-	IsActive bool      `db:"is_active" json:"isActive"`
-	// For company-specific settings
-	IsEnabled *bool `db:"is_enabled" json:"isEnabled,omitempty"`
+	ID        uuid.UUID `db:"id" json:"id"`
+	Code      string    `db:"code" json:"code"`
+	NameTH    string    `db:"name_th" json:"nameTh"`
+	NameEN    string    `db:"name_en" json:"nameEn"`
+	NameMY    string    `db:"name_my" json:"nameMy"`
+	IsSystem  bool      `db:"is_system" json:"isSystem"`
+	IsActive  bool      `db:"is_active" json:"isActive"`
+	IsEnabled bool      `db:"is_enabled" json:"isEnabled"`
 }
 
 // Banks returns list of available banks for a company
@@ -30,18 +29,14 @@ func (r Repository) Banks(ctx context.Context, companyID uuid.UUID) ([]BankRecor
 SELECT 
 	b.id, b.code, b.name_th, b.name_en, b.name_my, b.is_system, b.is_active,
 	CASE 
-		WHEN b.is_system THEN COALESCE(cbs.is_enabled, TRUE)
+		WHEN cbs.is_enabled IS NOT NULL THEN cbs.is_enabled
 		ELSE TRUE
 	END AS is_enabled
 FROM banks b
-LEFT JOIN company_bank_settings cbs ON cbs.bank_id = b.id AND cbs.company_id = $1
+LEFT JOIN company_bank_settings cbs ON b.id = cbs.bank_id AND cbs.company_id = $1
 WHERE b.deleted_at IS NULL
 	AND b.is_active = TRUE
-	AND (
-		(b.is_system = TRUE AND COALESCE(cbs.is_enabled, TRUE) = TRUE)
-		OR 
-		(b.is_system = FALSE AND b.company_id = $1)
-	)
+	AND (b.is_system = TRUE OR b.company_id = $1)
 ORDER BY b.is_system DESC, b.name_th
 `
 	if err := db.SelectContext(ctx, &out, q, companyID); err != nil {
@@ -58,11 +53,11 @@ func (r Repository) BanksForAdmin(ctx context.Context, companyID uuid.UUID) ([]B
 SELECT 
 	b.id, b.code, b.name_th, b.name_en, b.name_my, b.is_system, b.is_active,
 	CASE 
-		WHEN b.is_system THEN COALESCE(cbs.is_enabled, TRUE)
+		WHEN cbs.is_enabled IS NOT NULL THEN cbs.is_enabled
 		ELSE TRUE
 	END AS is_enabled
 FROM banks b
-LEFT JOIN company_bank_settings cbs ON cbs.bank_id = b.id AND cbs.company_id = $1
+LEFT JOIN company_bank_settings cbs ON b.id = cbs.bank_id AND cbs.company_id = $1
 WHERE b.deleted_at IS NULL
 	AND (b.is_system = TRUE OR b.company_id = $1)
 ORDER BY b.is_system DESC, b.name_th
@@ -147,8 +142,8 @@ func (r Repository) SoftDeleteBank(ctx context.Context, id uuid.UUID, isSystem b
 	return nil
 }
 
-// ToggleSystemBankForCompany toggles whether a system bank is enabled/disabled for a company
-func (r Repository) ToggleSystemBankForCompany(ctx context.Context, bankID, companyID uuid.UUID, isEnabled bool, actor uuid.UUID) error {
+// ToggleBankForCompany toggles whether a bank is enabled/disabled for a company
+func (r Repository) ToggleBankForCompany(ctx context.Context, bankID, companyID uuid.UUID, isEnabled bool, actor uuid.UUID) error {
 	db := r.dbCtx(ctx)
 	const q = `
 INSERT INTO company_bank_settings (company_id, bank_id, is_enabled, updated_by, updated_at)
