@@ -1,0 +1,93 @@
+# {{PROJECT_NAME}} API - Production Docker Compose
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Database
+  # =============================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: {{PROJECT_NAME}}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-{{PROJECT_NAME}}db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # =============================================================================
+  # Database Migrations
+  # =============================================================================
+  migrate:
+    image: migrate/migrate:v4.17.0
+    container_name: {{PROJECT_NAME}}-migrate
+    volumes:
+      - ./migrations:/migrations
+    environment:
+      DB_DSN: postgres://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-{{PROJECT_NAME}}db}?sslmode=disable
+    command: ["-path", "/migrations", "-database", "$${DB_DSN}", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: on-failure
+
+  # =============================================================================
+  # API Server
+  # =============================================================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: {{PROJECT_NAME}}-api
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-{{PROJECT_NAME}}-api}
+      HTTP_PORT: 8080
+      DB_DSN: postgres://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-{{PROJECT_NAME}}db}?sslmode=disable
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-720h}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - backend
+      - frontend
+
+  # =============================================================================
+  # Nginx Reverse Proxy
+  # =============================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: {{PROJECT_NAME}}-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    networks:
+      - frontend
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
+    internal: true
+  frontend:
