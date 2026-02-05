@@ -334,6 +334,11 @@ type Item struct {
 	AllowElectric           bool       `db:"allow_electric"`
 	AllowInternet           bool       `db:"allow_internet"`
 	AllowDoctorFee          bool       `db:"allow_doctor_fee"`
+	IsManualTax             bool       `db:"is_manual_tax"`
+	IsManualPf              bool       `db:"is_manual_pf"`
+	IsManualInternet        bool       `db:"is_manual_internet"`
+	IsManualWater           bool       `db:"is_manual_water"`
+	IsManualElectric        bool       `db:"is_manual_electric"`
 }
 
 type ItemListResult struct {
@@ -392,7 +397,12 @@ SELECT pri.id, pri.run_id, pri.employee_id, %s AS employee_name, e.employee_numb
        COALESCE((pri.employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
        COALESCE((pri.employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
        COALESCE((pri.employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
-       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee
+       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee,
+       COALESCE(pri.is_manual_tax, false) AS is_manual_tax,
+       COALESCE(pri.is_manual_pf, false) AS is_manual_pf,
+       COALESCE(pri.is_manual_internet, false) AS is_manual_internet,
+       COALESCE(pri.is_manual_water, false) AS is_manual_water,
+       COALESCE(pri.is_manual_electric, false) AS is_manual_electric
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
@@ -475,7 +485,12 @@ func (r Repository) UpdateItem(ctx context.Context, tenant contextx.TenantInfo, 
         COALESCE((employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
         COALESCE((employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
         COALESCE((employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
-        COALESCE((employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee`, setClause, where, netPayExpr, deductionExpr)
+        COALESCE((employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee,
+        COALESCE(is_manual_tax, false) AS is_manual_tax,
+        COALESCE(is_manual_pf, false) AS is_manual_pf,
+        COALESCE(is_manual_internet, false) AS is_manual_internet,
+        COALESCE(is_manual_water, false) AS is_manual_water,
+        COALESCE(is_manual_electric, false) AS is_manual_electric`, setClause, where, netPayExpr, deductionExpr)
 	var it Item
 	if err := db.GetContext(ctx, &it, q, args...); err != nil {
 		return nil, err
@@ -509,7 +524,12 @@ func (r Repository) GetItem(ctx context.Context, tenant contextx.TenantInfo, id 
        COALESCE((pri.employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
        COALESCE((pri.employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
        COALESCE((pri.employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
-       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee
+       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee,
+       COALESCE(pri.is_manual_tax, false) AS is_manual_tax,
+       COALESCE(pri.is_manual_pf, false) AS is_manual_pf,
+       COALESCE(pri.is_manual_internet, false) AS is_manual_internet,
+       COALESCE(pri.is_manual_water, false) AS is_manual_water,
+       COALESCE(pri.is_manual_electric, false) AS is_manual_electric
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id
@@ -599,7 +619,12 @@ func (r Repository) GetItemDetail(ctx context.Context, tenant contextx.TenantInf
        COALESCE((pri.employee_settings_snapshot->>'allow_water')::boolean, false) AS allow_water,
        COALESCE((pri.employee_settings_snapshot->>'allow_electric')::boolean, false) AS allow_electric,
        COALESCE((pri.employee_settings_snapshot->>'allow_internet')::boolean, false) AS allow_internet,
-       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee
+       COALESCE((pri.employee_settings_snapshot->>'allow_doctor_fee')::boolean, false) AS allow_doctor_fee,
+       COALESCE(pri.is_manual_tax, false) AS is_manual_tax,
+       COALESCE(pri.is_manual_pf, false) AS is_manual_pf,
+       COALESCE(pri.is_manual_internet, false) AS is_manual_internet,
+       COALESCE(pri.is_manual_water, false) AS is_manual_water,
+       COALESCE(pri.is_manual_electric, false) AS is_manual_electric
 FROM payroll_run_item pri
 JOIN employees e ON e.id = pri.employee_id
 LEFT JOIN person_title pt ON pt.id = e.title_id

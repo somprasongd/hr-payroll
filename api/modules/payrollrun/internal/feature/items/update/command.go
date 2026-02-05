@@ -201,6 +201,23 @@ func (h *updateHandler) Handle(ctx context.Context, cmd *UpdateCommand) (*Update
 	if cmd.Payload.DoctorFee != nil {
 		fields["doctor_fee"] = *cmd.Payload.DoctorFee
 	}
+
+	// [FIX] Set manual flags to true ONLY if value has changed AND not already manual
+	if !itemDetail.IsManualTax && cmd.Payload.TaxMonthAmount != nil && *cmd.Payload.TaxMonthAmount != itemDetail.TaxMonthAmount {
+		fields["is_manual_tax"] = true
+	}
+	if !itemDetail.IsManualPf && cmd.Payload.PfMonthAmount != nil && *cmd.Payload.PfMonthAmount != itemDetail.PFMonthAmount {
+		fields["is_manual_pf"] = true
+	}
+	if !itemDetail.IsManualInternet && cmd.Payload.InternetAmount != nil && *cmd.Payload.InternetAmount != itemDetail.InternetAmount {
+		fields["is_manual_internet"] = true
+	}
+	if !itemDetail.IsManualWater && cmd.Payload.WaterAmount != nil && *cmd.Payload.WaterAmount != itemDetail.WaterAmount {
+		fields["is_manual_water"] = true
+	}
+	if !itemDetail.IsManualElectric && cmd.Payload.ElectricAmount != nil && *cmd.Payload.ElectricAmount != itemDetail.ElectricAmount {
+		fields["is_manual_electric"] = true
+	}
 	if len(fields) == 0 {
 		return nil, errs.BadRequest("no fields to update")
 	}

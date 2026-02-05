@@ -117,6 +117,7 @@ export interface OtherIncomeItem {
 export type OtherDeductionItem = OtherIncomeItem;
 
 export interface LoanRepaymentItem {
+  txn_id?: string;
   name: string;
   value: number;
 }

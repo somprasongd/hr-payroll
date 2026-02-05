@@ -1066,7 +1066,7 @@ export function PayslipEditDialog({
                             placeholder={t('payslip.itemName')}
                             value={item.name ?? ''}
                             onChange={(e) => updateLoanRepayment(index, 'name', e.target.value)}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !!item.txn_id}
                             className="flex-1"
                           />
                           <Input
@@ -1076,10 +1076,10 @@ export function PayslipEditDialog({
                             placeholder={t('payslip.itemValue')}
                             value={item.value ?? 0}
                             onChange={(e) => updateLoanRepayment(index, 'value', parseFloat(e.target.value) || 0)}
-                            disabled={!canEdit}
+                            disabled={!canEdit || !!item.txn_id}
                             className="w-32"
                           />
-                          {canEdit && (
+                          {canEdit && !item.txn_id && (
                             <Button
                               type="button"
                               variant="ghost"
@@ -1088,6 +1088,9 @@ export function PayslipEditDialog({
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
+                          )}
+                          {canEdit && !!item.txn_id && (
+                             <div className="w-10 h-10" /> 
                           )}
                         </div>
                       ))}

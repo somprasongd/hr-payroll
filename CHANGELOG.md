@@ -1,6 +1,16 @@
 # Changelog
 
-## v2.4.0 - 2026-02-03
+## v2.4.1 - 2026-02-05
+
+### Added
+
+- Add company bank account validation to repayment command handler. (3f4dd64)
+
+- add shared-validator for request validation using go-playground/validator (5b1484d)
+
+- preserve manual payroll edits and restrict system debt items (2a793a4)
+
+## v2.4.0 - 2026-02-02
 
 ### Added
 
@@ -9,6 +19,10 @@
 - Restructure admin menu into Master Data and Settings sections, and update associated translations. (69b8d71)
 
 - Implement company bank account management and integrate it into debt repayment. (#5) (0ece377)
+
+### Docs
+
+- update changelog with v2.4.0 and v2.3.3 release notes. (49407cb)
 
 ### Fixed
 
