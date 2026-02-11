@@ -78,14 +78,14 @@ services:
       db:
         condition: service_healthy
 
-  postgresus:
-    container_name: postgresus
-    image: rostislavdugin/postgresus:latest
+  databasus:
+    container_name: databasus
+    image: databasus/databasus:latest
     restart: unless-stopped
     ports:
       - "4005:4005"
     volumes:
-      - postgresus_data:/postgresus-data
+      - databasus_data:/databasus-data
     depends_on:
       db:
         condition: service_healthy
