@@ -108,4 +108,4 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
-  postgresus_data:
+  databasus_data:
