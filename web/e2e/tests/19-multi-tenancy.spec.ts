@@ -1,21 +1,12 @@
-import { test, expect } from '../fixtures/test.fixture';
+import { test, expect, performFullLogin } from '../fixtures/test.fixture';
 import { testUsers } from '../fixtures/auth.fixture';
 
 test.describe('Multi-tenancy & Branch Isolation', () => {
   // Use a fresh context for each test in this file
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  /**
-   * Helper to perform full login with company/branch selection
-   */
-  const performFullLogin = async (loginPage: any, user: any, company: string, branch: string) => {
-    await loginPage.goto();
-    await loginPage.fullLogin(user.username, user.password, company, branch);
-    await loginPage.page.waitForLoadState('networkidle');
-  };
-
   // Test 1: login with admin2 (COMPANY2) and verify isolation
-  test('Admin of COMPANY2 should only see their own employees and branches', async ({ page, context, loginPage }) => {
+  test('Admin of COMPANY2 should only see their own employees and branches', async ({ page, loginPage }) => {
     await performFullLogin(loginPage, testUsers.admin2, 'COMPANY2', 'สำนักงานใหญ่');
     
     // Go to Employees list

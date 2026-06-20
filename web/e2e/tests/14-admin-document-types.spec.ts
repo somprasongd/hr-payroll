@@ -1,15 +1,9 @@
-import { test, expect } from '../fixtures/test.fixture';
+import { test, expect, performFullLogin } from '../fixtures/test.fixture';
 import { testUsers } from '../fixtures/auth.fixture';
 
 test.describe('Admin Document Types Management', () => {
   // Use a fresh context for each test in this file
   test.use({ storageState: { cookies: [], origins: [] } });
-
-  const performFullLogin = async (loginPage: any, user: any, company: string, branch: string) => {
-    await loginPage.goto();
-    await loginPage.fullLogin(user.username, user.password, company, branch);
-    await loginPage.page.waitForLoadState('networkidle');
-  };
 
   test('Admin ควรเห็นทั้ง System Document Types และของบริษัทตัวเอง (DEFAULT)', async ({ page, loginPage }) => {
     await performFullLogin(loginPage, testUsers.admin, 'DEFAULT', 'สำนักงานใหญ่');

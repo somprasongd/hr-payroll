@@ -1,15 +1,9 @@
-import { test, expect } from '../fixtures/test.fixture';
+import { test, expect, performFullLogin } from '../fixtures/test.fixture';
 import { testUsers } from '../fixtures/auth.fixture';
 
 test.describe('Branch-Level Cycle Isolation & Constraints', () => {
   // Use a fresh context for each test in this file
   test.use({ storageState: { cookies: [], origins: [] } });
-
-  const performFullLogin = async (loginPage: any, user: any, company: string, branch: string) => {
-    await loginPage.goto();
-    await loginPage.fullLogin(user.username, user.password, company, branch);
-    await loginPage.page.waitForLoadState('networkidle');
-  };
 
   test('แต่ละสาขาควรมี Bonus Cycle และ Salary Raise Cycle ของตัวเองได้อิสระ', async ({ page, loginPage }) => {
     // 1. ล็อกอินเข้าสาขา สำนักงานใหญ่ ของ COMPANY2

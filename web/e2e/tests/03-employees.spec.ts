@@ -26,8 +26,7 @@ test.describe('Employees Management', () => {
   });
 
   test.describe('เปิดหน้าสร้างพนักงาน', () => {
-    // NOTE: Skipped due to flaky link click behavior in parallel test runs
-    test.skip('ควรเปิดหน้าสร้างพนักงานได้', async ({ page }) => {
+    test('ควรเปิดหน้าสร้างพนักงานได้', async ({ page }) => {
       await employeesPage.openCreateForm();
       
       // Should navigate to new employee page (includes /th/ locale prefix)

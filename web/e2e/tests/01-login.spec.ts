@@ -13,7 +13,7 @@ test.describe('Login', () => {
   });
 
   test.describe('ทดสอบ Login', () => {
-    test('ควรแสดงหน้า Login ได้ถูกต้อง', async ({ page }) => {
+    test('ควรแสดงหน้า Login ได้ถูกต้อง', async () => {
       await expect(loginPage.usernameInput).toBeVisible();
       await expect(loginPage.passwordInput).toBeVisible();
       await expect(loginPage.loginButton).toBeVisible();
@@ -30,7 +30,7 @@ test.describe('Login', () => {
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
     });
 
-    test('ควรแสดง Error เมื่อใส่ Password ผิด', async ({ page }) => {
+    test('ควรแสดง Error เมื่อใส่ Password ผิด', async () => {
       await loginPage.login('admin', 'wrongpassword');
       
       // Should show error message

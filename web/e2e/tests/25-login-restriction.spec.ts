@@ -16,7 +16,7 @@ test.describe('Login Restriction', () => {
     loginPage = new LoginPage(page);
   });
 
-  test('ควรแสดงข้อความแจ้งเตือนเมื่อ Login ด้วยบริษัทที่ถูกระงับ (Suspended)', async ({ page }) => {
+  test('ควรแสดงข้อความแจ้งเตือนเมื่อ Login ด้วยบริษัทที่ถูกระงับ (Suspended)', async () => {
     const testAdminUser = 'admin_susp';
     const testAdminPass = 'changeme';
 
@@ -27,7 +27,7 @@ test.describe('Login Restriction', () => {
     await expect(loginPage.errorMessage).toContainText(/ระงับ|ยกเลิก|ผู้ดูแลระบบ/i);
   });
 
-  test('ควรแสดงข้อความแจ้งเตือนเมื่อ Login ด้วยบริษัทที่ถูกยกเลิก (Archived)', async ({ page }) => {
+  test('ควรแสดงข้อความแจ้งเตือนเมื่อ Login ด้วยบริษัทที่ถูกยกเลิก (Archived)', async () => {
     const testAdminUser = 'admin_arch';
     const testAdminPass = 'changeme';
 

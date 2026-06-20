@@ -28,7 +28,7 @@ test.describe('Filters and Navigation', () => {
   });
 
   test('ควรเข้าถึง Settings ได้', async ({ page }) => {
-    await page.goto('/th/settings');
+    await page.goto('/th/admin/settings');
     await page.waitForLoadState('domcontentloaded');
     await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15000 });
   });

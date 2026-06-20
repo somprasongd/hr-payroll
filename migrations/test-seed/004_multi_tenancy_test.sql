@@ -25,6 +25,8 @@ DECLARE
   v_th_cid_id UUID;
   v_ft_id UUID;
   v_pt_id UUID;
+  v_bank_kbank UUID;
+  v_bank_bay UUID;
   
   -- Dept/Position for COMPANY2
   v_dept_production UUID;
@@ -46,6 +48,8 @@ BEGIN
   SELECT id INTO v_th_cid_id FROM id_document_type WHERE code = 'th_cid' LIMIT 1;
   SELECT id INTO v_ft_id FROM employee_type WHERE code = 'full_time' LIMIT 1;
   SELECT id INTO v_pt_id FROM employee_type WHERE code = 'part_time' LIMIT 1;
+  SELECT id INTO v_bank_kbank FROM banks WHERE code = 'KBANK' AND deleted_at IS NULL LIMIT 1;
+  SELECT id INTO v_bank_bay FROM banks WHERE code = 'BAY' AND deleted_at IS NULL LIMIT 1;
   
   -- ====== 1. Create COMPANY2 ======
   IF NOT EXISTS (SELECT 1 FROM companies WHERE code = 'COMPANY2') THEN
@@ -178,7 +182,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -187,7 +191,7 @@ BEGIN
     ) VALUES (
       'C2-FT-001', v_mr_id, 'Itsara', 'Jongjit', v_th_cid_id, '1200000000011', '0830000001', 'itsara@company2.com',
       v_ft_id, v_dept_production, v_pos_supervisor, v_company2_id, v_branch2_hq_id,
-      38000.00, DATE '2024-01-05', 'KBank', '789-1-00001-7',
+      38000.00, DATE '2024-01-05', v_bank_kbank, '789-1-00001-7',
       TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
       v_admin2_id, v_admin2_id
     );
@@ -204,7 +208,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -213,7 +217,7 @@ BEGIN
     ) VALUES (
       'C2-PT-001', v_mr_id, 'Lertchai', 'Manee', v_th_cid_id, '1200000000111', '0840000001', 'lertchai@company2.com',
       v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_branch2_hq_id,
-      100.00, DATE '2024-04-01', 'KBank', '789-4-10000-1',
+      100.00, DATE '2024-04-01', v_bank_kbank, '789-4-10000-1',
       TRUE, 6000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
       v_admin2_id, v_admin2_id
     );
@@ -230,7 +234,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -239,7 +243,7 @@ BEGIN
     ) VALUES (
       'C2-FT-101', v_mr_id, 'Noppadon', 'Orachai', v_th_cid_id, '1200000000045', '0830000101', 'noppadon@company2.com',
       v_ft_id, v_dept_production, v_pos_supervisor, v_company2_id, v_branch2_second_id,
-      33000.00, DATE '2024-01-15', 'Krungsri', '890-1-00101-1',
+      33000.00, DATE '2024-01-15', v_bank_bay, '890-1-00101-1',
       TRUE, 15000.00, TRUE, 0.04, 0.04, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE,
       v_admin2_id, v_admin2_id
     );
@@ -256,7 +260,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -265,7 +269,7 @@ BEGIN
     ) VALUES (
       'C2-PT-101', v_mr_id, 'Rattana', 'Somboon', v_th_cid_id, '1200000000137', '0840000101', 'rattana@company2.com',
       v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_branch2_second_id,
-      95.00, DATE '2024-05-01', 'KBank', '890-4-10101-4',
+      95.00, DATE '2024-05-01', v_bank_kbank, '890-4-10101-4',
       TRUE, 5000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
       v_admin2_id, v_admin2_id
     );

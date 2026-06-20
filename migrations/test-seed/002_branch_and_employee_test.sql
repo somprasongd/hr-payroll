@@ -23,6 +23,8 @@ DECLARE
   v_mr_id UUID;
   v_ms_id UUID;
   v_th_cid_id UUID;
+  v_bank_kbank UUID;
+  v_bank_bay UUID;
 BEGIN
   -- Get DEFAULT company and admin
   SELECT id INTO v_default_company_id FROM companies WHERE code = 'DEFAULT' LIMIT 1;
@@ -36,6 +38,8 @@ BEGIN
   SELECT id INTO v_th_cid_id FROM id_document_type WHERE code = 'th_cid' LIMIT 1;
   SELECT id INTO v_ft_id FROM employee_type WHERE code = 'full_time' LIMIT 1;
   SELECT id INTO v_pt_id FROM employee_type WHERE code = 'part_time' LIMIT 1;
+  SELECT id INTO v_bank_kbank FROM banks WHERE code = 'KBANK' AND deleted_at IS NULL LIMIT 1;
+  SELECT id INTO v_bank_bay FROM banks WHERE code = 'BAY' AND deleted_at IS NULL LIMIT 1;
   
   -- Create Department if not exists
   INSERT INTO department (code, name_th, company_id, created_by, updated_by)
@@ -87,7 +91,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -96,7 +100,7 @@ BEGIN
     ) VALUES (
       'FT-001', v_mr_id, 'Arthit', 'Prasert', v_th_cid_id, '1100000000011', '0810000001', 'arthit@default.com',
       v_ft_id, v_dept_id, v_pos_id, v_default_company_id, v_default_hq_id,
-      32000.00, DATE '2024-01-10', 'KBank', '123-4-00001-0',
+      32000.00, DATE '2024-01-10', v_bank_kbank, '123-4-00001-0',
       TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
       v_admin_id, v_admin_id
     );
@@ -113,7 +117,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -122,7 +126,7 @@ BEGIN
     ) VALUES (
       'PT-001', v_mr_id, 'Prasit', 'Kaewkla', v_th_cid_id, '1100000000111', '0820000001', 'prasit@default.com',
       v_pt_id, v_dept_id, v_pos_id, v_default_company_id, v_default_hq_id,
-      120.00, DATE '2024-03-20', 'KBank', '123-4-20100-1',
+      120.00, DATE '2024-03-20', v_bank_kbank, '123-4-20100-1',
       TRUE, 9000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
       v_admin_id, v_admin_id
     );
@@ -139,7 +143,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -166,7 +170,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -175,7 +179,7 @@ BEGIN
     ) VALUES (
       'FT-101', v_mr_id, 'Danai', 'Chanthep', v_th_cid_id, '1100000000045', '0810000101', 'danai@default.com',
       v_ft_id, v_dept_id, v_pos_id, v_default_company_id, v_branch1_id,
-      40000.00, DATE '2024-01-20', 'Krungsri', '333-3-00004-3',
+      40000.00, DATE '2024-01-20', v_bank_bay, '333-3-00004-3',
       TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
       v_admin_id, v_admin_id
     );
@@ -192,7 +196,7 @@ BEGIN
       id_document_type_id, id_document_number, phone, email,
       employee_type_id, department_id, position_id, company_id, branch_id,
       base_pay_amount, employment_start_date,
-      bank_name, bank_account_no,
+      bank_id, bank_account_no,
       sso_contribute, sso_declared_wage,
       provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
       withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -201,7 +205,7 @@ BEGIN
     ) VALUES (
       'PT-101', v_mr_id, 'Gomin', 'Rattana', v_th_cid_id, '1100000000137', '0820000101', 'gomin@default.com',
       v_pt_id, v_dept_id, v_pos_id, v_default_company_id, v_branch1_id,
-      150.00, DATE '2024-04-10', 'KBank', '666-6-10100-6',
+      150.00, DATE '2024-04-10', v_bank_kbank, '666-6-10100-6',
       TRUE, 7000.00, FALSE, 0.00, 0.00, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
       v_admin_id, v_admin_id
     );

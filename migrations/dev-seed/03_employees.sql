@@ -24,6 +24,13 @@ DECLARE
   -- Employee type IDs
   v_ft_id UUID;
   v_pt_id UUID;
+
+  -- Bank IDs
+  v_bank_bbl UUID;
+  v_bank_kbank UUID;
+  v_bank_ktb UUID;
+  v_bank_scb UUID;
+  v_bank_bay UUID;
   
   -- Department & Position IDs (per company)
   v_dept_hr UUID; v_dept_finance UUID; v_dept_sales UUID; v_dept_it UUID; v_dept_ops UUID;
@@ -64,6 +71,12 @@ BEGIN
   -- Get employee types
   SELECT id INTO v_ft_id FROM employee_type WHERE code = 'full_time' LIMIT 1;
   SELECT id INTO v_pt_id FROM employee_type WHERE code = 'part_time' LIMIT 1;
+
+  SELECT id INTO v_bank_bbl FROM banks WHERE code = 'BBL' AND deleted_at IS NULL LIMIT 1;
+  SELECT id INTO v_bank_kbank FROM banks WHERE code = 'KBANK' AND deleted_at IS NULL LIMIT 1;
+  SELECT id INTO v_bank_ktb FROM banks WHERE code = 'KTB' AND deleted_at IS NULL LIMIT 1;
+  SELECT id INTO v_bank_scb FROM banks WHERE code = 'SCB' AND deleted_at IS NULL LIMIT 1;
+  SELECT id INTO v_bank_bay FROM banks WHERE code = 'BAY' AND deleted_at IS NULL LIMIT 1;
   
   -- Get departments for DEFAULT
   SELECT id INTO v_dept_hr FROM department WHERE code = 'hr' AND company_id = v_default_company_id AND deleted_at IS NULL LIMIT 1;
@@ -101,7 +114,7 @@ BEGIN
     id_document_type_id, id_document_number, phone, email,
     employee_type_id, department_id, position_id, company_id, branch_id,
     base_pay_amount, employment_start_date,
-    bank_name, bank_account_no,
+    bank_id, bank_account_no,
     sso_contribute, sso_declared_wage,
     provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
     withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -111,25 +124,25 @@ BEGIN
   -- FT-001: Full options
   ('FT-001', v_mr_id, 'Arthit', 'Prasert', v_th_cid_id, '1100000000011', '0810000001', 'arthit@default.com',
    v_ft_id, v_dept_hr, v_pos_manager, v_default_company_id, v_default_hq_branch_id,
-   32000.00, DATE '2024-01-10', 'KBank', '123-4-00001-0',
+   32000.00, DATE '2024-01-10', v_bank_kbank, '123-4-00001-0',
    TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
    v_admin_id, v_admin_id),
   -- FT-002: Partial options
   ('FT-002', v_mrs_id, 'Benjamas', 'Sooksai', v_th_cid_id, '1100000000029', '0810000002', 'benjamas@default.com',
    v_ft_id, v_dept_finance, v_pos_analyst, v_default_company_id, v_default_hq_branch_id,
-   28000.00, DATE '2024-02-15', 'SCB', '111-2-00002-1',
+   28000.00, DATE '2024-02-15', v_bank_scb, '111-2-00002-1',
    TRUE, 14000.00, TRUE, 0.03, 0.03, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE,
    v_admin_id, v_admin_id),
   -- FT-003: Minimal options
   ('FT-003', v_ms_id, 'Chalida', 'Wongthai', v_th_cid_id, '1100000000037', '0810000003', 'chalida@default.com',
    v_ft_id, v_dept_sales, v_pos_staff, v_default_company_id, v_default_hq_branch_id,
-   25000.00, DATE '2024-03-01', 'Bangkok Bank', '222-1-00003-2',
+   25000.00, DATE '2024-03-01', v_bank_bbl, '222-1-00003-2',
    FALSE, NULL, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE,
    v_admin_id, v_admin_id),
   -- PT-001: Part-time with SSO
   ('PT-001', v_mr_id, 'Prasit', 'Kaewkla', v_th_cid_id, '1100000000111', '0820000001', 'prasit@default.com',
    v_pt_id, v_dept_ops, v_pos_staff, v_default_company_id, v_default_hq_branch_id,
-   120.00, DATE '2024-03-20', 'KBank', '123-4-20100-1',
+   120.00, DATE '2024-03-20', v_bank_kbank, '123-4-20100-1',
    TRUE, 9000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
    v_admin_id, v_admin_id),
   -- PT-002: Part-time without SSO
@@ -148,7 +161,7 @@ BEGIN
     id_document_type_id, id_document_number, phone, email,
     employee_type_id, department_id, position_id, company_id, branch_id,
     base_pay_amount, employment_start_date,
-    bank_name, bank_account_no,
+    bank_id, bank_account_no,
     sso_contribute, sso_declared_wage,
     provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
     withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -158,25 +171,25 @@ BEGIN
   -- FT-101
   ('FT-101', v_mr_id, 'Danai', 'Chanthep', v_th_cid_id, '1100000000045', '0810000101', 'danai@default.com',
    v_ft_id, v_dept_sales, v_pos_lead, v_default_company_id, v_default_branch1_id,
-   40000.00, DATE '2024-01-20', 'Krungsri', '333-3-00004-3',
+   40000.00, DATE '2024-01-20', v_bank_bay, '333-3-00004-3',
    TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
    v_admin_id, v_admin_id),
   -- FT-102
   ('FT-102', v_ms_id, 'Ekkarat', 'Thongchai', v_th_cid_id, '1100000000053', '0810000102', 'ekkarat@default.com',
    v_ft_id, v_dept_it, v_pos_developer, v_default_company_id, v_default_branch1_id,
-   35000.00, DATE '2024-02-01', 'KTB', '444-0-00005-4',
+   35000.00, DATE '2024-02-01', v_bank_ktb, '444-0-00005-4',
    TRUE, 15000.00, TRUE, 0.03, 0.03, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE,
    v_admin_id, v_admin_id),
   -- FT-103
   ('FT-103', v_mrs_id, 'Faisai', 'Meechai', v_th_cid_id, '1100000000061', '0810000103', 'faisai@default.com',
    v_ft_id, v_dept_finance, v_pos_analyst, v_default_company_id, v_default_branch1_id,
-   30000.00, DATE '2024-03-15', 'SCB', '555-5-00006-5',
+   30000.00, DATE '2024-03-15', v_bank_scb, '555-5-00006-5',
    TRUE, 15000.00, FALSE, 0.00, 0.00, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE,
    v_admin_id, v_admin_id),
   -- PT-101
   ('PT-101', v_mr_id, 'Gomin', 'Rattana', v_th_cid_id, '1100000000137', '0820000101', 'gomin@default.com',
    v_pt_id, v_dept_ops, v_pos_staff, v_default_company_id, v_default_branch1_id,
-   150.00, DATE '2024-04-10', 'KBank', '666-6-10100-6',
+   150.00, DATE '2024-04-10', v_bank_kbank, '666-6-10100-6',
    TRUE, 7000.00, FALSE, 0.00, 0.00, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
    v_admin_id, v_admin_id),
   -- PT-102
@@ -195,7 +208,7 @@ BEGIN
     id_document_type_id, id_document_number, phone, email,
     employee_type_id, department_id, position_id, company_id, branch_id,
     base_pay_amount, employment_start_date,
-    bank_name, bank_account_no,
+    bank_id, bank_account_no,
     sso_contribute, sso_declared_wage,
     provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
     withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -205,25 +218,25 @@ BEGIN
   -- C2-FT-001
   ('C2-FT-001', v_mr_id, 'Itsara', 'Jongjit', v_th_cid_id, '1200000000011', '0830000001', 'itsara@company2.com',
    v_ft_id, v_dept_production, v_pos_supervisor, v_company2_id, v_company2_hq_branch_id,
-   38000.00, DATE '2024-01-05', 'KBank', '789-1-00001-7',
+   38000.00, DATE '2024-01-05', v_bank_kbank, '789-1-00001-7',
    TRUE, 15000.00, TRUE, 0.05, 0.05, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
    v_admin2_id, v_admin2_id),
   -- C2-FT-002
   ('C2-FT-002', v_mrs_id, 'Jutamas', 'Khemkhao', v_th_cid_id, '1200000000029', '0830000002', 'jutamas@company2.com',
    v_ft_id, v_dept_marketing, v_pos_clerk, v_company2_id, v_company2_hq_branch_id,
-   26000.00, DATE '2024-02-10', 'SCB', '789-2-00002-8',
+   26000.00, DATE '2024-02-10', v_bank_scb, '789-2-00002-8',
    TRUE, 13000.00, FALSE, 0.00, 0.00, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE, FALSE,
    v_admin2_id, v_admin2_id),
   -- C2-FT-003
   ('C2-FT-003', v_ms_id, 'Kanokwan', 'Limjira', v_th_cid_id, '1200000000037', '0830000003', 'kanokwan@company2.com',
    v_ft_id, v_dept_admin2, v_pos_clerk, v_company2_id, v_company2_hq_branch_id,
-   24000.00, DATE '2024-03-05', 'Bangkok Bank', '789-3-00003-9',
+   24000.00, DATE '2024-03-05', v_bank_bbl, '789-3-00003-9',
    FALSE, NULL, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE,
    v_admin2_id, v_admin2_id),
   -- C2-PT-001
   ('C2-PT-001', v_mr_id, 'Lertchai', 'Manee', v_th_cid_id, '1200000000111', '0840000001', 'lertchai@company2.com',
    v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_company2_hq_branch_id,
-   100.00, DATE '2024-04-01', 'KBank', '789-4-10000-1',
+   100.00, DATE '2024-04-01', v_bank_kbank, '789-4-10000-1',
    TRUE, 6000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
    v_admin2_id, v_admin2_id),
   -- C2-PT-002
@@ -242,7 +255,7 @@ BEGIN
     id_document_type_id, id_document_number, phone, email,
     employee_type_id, department_id, position_id, company_id, branch_id,
     base_pay_amount, employment_start_date,
-    bank_name, bank_account_no,
+    bank_id, bank_account_no,
     sso_contribute, sso_declared_wage,
     provident_fund_contribute, provident_fund_rate_employee, provident_fund_rate_employer,
     withhold_tax, allow_housing, allow_water, allow_electric, allow_internet, allow_doctor_fee,
@@ -252,31 +265,31 @@ BEGIN
   -- C2-FT-101
   ('C2-FT-101', v_mr_id, 'Noppadon', 'Orachai', v_th_cid_id, '1200000000045', '0830000101', 'noppadon@company2.com',
    v_ft_id, v_dept_production, v_pos_technician, v_company2_id, v_company2_branch1_id,
-   33000.00, DATE '2024-01-15', 'Krungsri', '890-1-00101-1',
+   33000.00, DATE '2024-01-15', v_bank_bay, '890-1-00101-1',
    TRUE, 15000.00, TRUE, 0.04, 0.04, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE,
    v_admin2_id, v_admin2_id),
   -- C2-FT-102
   ('C2-FT-102', v_mrs_id, 'Orawan', 'Pakdee', v_th_cid_id, '1200000000053', '0830000102', 'orawan@company2.com',
    v_ft_id, v_dept_warehouse, v_pos_operator, v_company2_id, v_company2_branch1_id,
-   28000.00, DATE '2024-02-20', 'KTB', '890-2-00102-2',
+   28000.00, DATE '2024-02-20', v_bank_ktb, '890-2-00102-2',
    TRUE, 14000.00, FALSE, 0.00, 0.00, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE,
    v_admin2_id, v_admin2_id),
   -- C2-FT-103
   ('C2-FT-103', v_ms_id, 'Pornchai', 'Qin', v_th_cid_id, '1200000000061', '0830000103', 'pornchai@company2.com',
    v_ft_id, v_dept_support, v_pos_clerk, v_company2_id, v_company2_branch1_id,
-   25000.00, DATE '2024-03-25', 'SCB', '890-3-00103-3',
+   25000.00, DATE '2024-03-25', v_bank_scb, '890-3-00103-3',
    FALSE, NULL, TRUE, 0.03, 0.03, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE, FALSE,
    v_admin2_id, v_admin2_id),
   -- C2-PT-101
   ('C2-PT-101', v_mr_id, 'Rattana', 'Somboon', v_th_cid_id, '1200000000137', '0840000101', 'rattana@company2.com',
    v_pt_id, v_dept_warehouse, v_pos_helper, v_company2_id, v_company2_branch1_id,
-   95.00, DATE '2024-05-01', 'KBank', '890-4-10101-4',
+   95.00, DATE '2024-05-01', v_bank_kbank, '890-4-10101-4',
    TRUE, 5000.00, FALSE, 0.00, 0.00, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
    v_admin2_id, v_admin2_id),
   -- C2-PT-102
   ('C2-PT-102', v_ms_id, 'Siriwan', 'Thong', v_th_cid_id, '1200000000145', '0840000102', 'siriwan@company2.com',
    v_pt_id, v_dept_support, v_pos_helper, v_company2_id, v_company2_branch1_id,
-   105.00, DATE '2024-05-15', 'SCB', '890-5-10102-5',
+   105.00, DATE '2024-05-15', v_bank_scb, '890-5-10102-5',
    FALSE, NULL, FALSE, 0.00, 0.00, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
    v_admin2_id, v_admin2_id)
   ON CONFLICT DO NOTHING;
