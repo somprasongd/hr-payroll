@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- re-resolve nginx upstreams via Docker DNS after container recreation (2aba297)
+
 ## v2.4.2 - 2026-09-02
 
 ### Changed
