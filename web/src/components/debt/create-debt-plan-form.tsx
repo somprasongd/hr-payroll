@@ -64,8 +64,8 @@ const formSchema = z.object({
   
   if (data.hasInstallment && data.installments && data.installments.length > 0) {
     const totalInstallment = data.installments.reduce((sum, item) => sum + item.amount, 0);
-    // Allow small floating point difference
-    if (Math.abs(totalInstallment - data.amount) > 0.01) {
+    // Compare at cent precision (matches API validation); raw float subtraction is unreliable
+    if (Math.round((totalInstallment - data.amount) * 100) !== 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Total installments (${totalInstallment.toLocaleString()}) must equal loan amount (${data.amount.toLocaleString()})`,
@@ -129,7 +129,8 @@ export function CreateDebtPlanForm() {
   const amount = form.watch("amount") as number;
   const installments = form.watch("installments") || [];
   const totalInstallment = installments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-  const diff = amount - totalInstallment;
+  // Round to cent precision and normalize -0 (float artifacts like 42735 - 42735.00000000001 would display as -0)
+  const diff = Math.round((amount - totalInstallment) * 100) / 100 || 0;
 
   useEffect(() => {
     fetchEmployees();
@@ -450,13 +451,13 @@ export function CreateDebtPlanForm() {
                     <div className="flex justify-end gap-8 pt-4 border-t">
                       <div className="text-sm">
                         <span className="text-gray-500">{t('create.totalInstallment')}:</span>
-                        <span className={cn("ml-2 font-medium", Math.abs(diff) > 0.01 ? "text-red-600" : "text-green-600")}>
+                        <span className={cn("ml-2 font-medium", Math.abs(diff) >= 0.01 ? "text-red-600" : "text-green-600")}>
                           {totalInstallment.toLocaleString()}
                         </span>
                       </div>
                       <div className="text-sm">
                         <span className="text-gray-500">{t('create.diff')}:</span>
-                        <span className={cn("ml-2 font-medium", Math.abs(diff) > 0.01 ? "text-red-600" : "text-green-600")}>
+                        <span className={cn("ml-2 font-medium", Math.abs(diff) >= 0.01 ? "text-red-600" : "text-green-600")}>
                           {diff.toLocaleString()}
                         </span>
                       </div>
@@ -479,8 +480,8 @@ export function CreateDebtPlanForm() {
             </Button>
             <Button 
               type="submit"
-              disabled={hasInstallment && Math.abs(diff) > 0.01}
-              title={hasInstallment && Math.abs(diff) > 0.01 ? t('create.mustMatchAmount') : ''}
+              disabled={hasInstallment && Math.abs(diff) >= 0.01}
+              title={hasInstallment && Math.abs(diff) >= 0.01 ? t('create.mustMatchAmount') : ''}
             >
               {tCommon('save')}
             </Button>

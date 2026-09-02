@@ -286,9 +286,10 @@ const AgreementPage = ({
                     </tr>
                 </tfoot>
             </table>
-            {totalInstallmentAmount !== debt.amount && (
+            {/* Compare at cent precision to avoid float artifacts (e.g. 42735.00000000001 !== 42735) */}
+            {Math.round(totalInstallmentAmount * 100) !== Math.round(debt.amount * 100) && (
                  <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>
-                    * ยอดรวมผ่อนชำระไม่ตรงกับยอดเงินกู้ (ส่วนต่าง: {formatNumber(debt.amount - totalInstallmentAmount)})
+                    * ยอดรวมผ่อนชำระไม่ตรงกับยอดเงินกู้ (ส่วนต่าง: {formatNumber(Math.round((debt.amount - totalInstallmentAmount) * 100) / 100)})
                  </div>
             )}
           </>

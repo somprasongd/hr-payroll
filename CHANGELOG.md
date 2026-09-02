@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.4.2 - 2026-09-02
+
+### Changed
+
+- rename postgresus service, container, image, and volume to databasus. (acbccc8)
+
+
+### Chore
+
+- rename postgresus_data volume to databasus_data (895d06e)
+
+
+### Fixed
+
+- compare debt plan installment sums at cent precision (bf9ccde)
+
+
+### Other
+
+- Harden E2E workflow and switch employee seeds to bank IDs (3bab9e4)
+
 ## v2.4.1 - 2026-02-05
 
 ### Added

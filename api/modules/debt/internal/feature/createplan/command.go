@@ -3,6 +3,7 @@ package createplan
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -77,7 +78,9 @@ func (h *Handler) Handle(ctx context.Context, cmd *Command) (*Response, error) {
 		for _, ins := range parsedInstallments {
 			sum += ins.Amount
 		}
-		if sum != cmd.Amount {
+		// Compare at cent precision; repeated float64 additions accumulate error
+		// (e.g. 8*4748.33+4748.36 = 42735.00000000001).
+		if math.Round(sum*100) != math.Round(cmd.Amount*100) {
 			return nil, errs.BadRequest("sum of installments must equal amount")
 		}
 	}
